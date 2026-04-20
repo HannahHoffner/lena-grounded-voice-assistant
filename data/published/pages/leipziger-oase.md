@@ -1,7 +1,32 @@
+---
+title: "Leipziger Oase"
+category: "housing"
+language: "de"
+publisher: "Diakonie Leipzig"
+address: "Kleiderkammer in der Nürnberger Straße 37"
+opening_hours:
+  - "Montag bis Freitag: 08:00 bis 16:00 Uhr, Samstag (inkl. Feiertage) 09:00 bis 14:00 Uhr"
+  - "Die Sozialberatung der Oase ist gegenwärtig montags bis freitags zwischen 09:00 und 15:00 Uhr zu erreichen, das Postbüro zwischen 12:30 und 14:30 Uhr."
+  - "- Wäscheservice (Mo. und Do. 09:00 bis 12:00 Uhr)"
+  - "- Postadressendienst (Mo. bis Fr. 12:30 bis 14:30 Uhr)"
+description: "Täglich kommen ca. 100 Menschen in die “Oase” – jeder mit seiner eigenen Geschichte, seinen Sorgen und Fragen. Oftmals verschärft sich die persönliche Notsituation noch durch gesundheitliche Einschränkungen, Arbeitslosigkeit etc. In der „Oase“ werden Wohnungslose so angenommen un"
+tags:
+  - "oase"
+  - "tageseinrichtung"
+  - "wohnungslos"
+aliases:
+  - "leipziger"
+  - "leipziger oase"
+  - "oase"
+  - "tageseinrichtung"
+  - "wohnungslos"
+source_url: "https://www.diakonie-leipzig.de/hilfe-angebote/beratung-nothilfe/wohnungslosenhilfe-leipziger-oase-tageseinrichtung-fur-wohnungslose-menschen/"
+last_updated: "2026-04-20"
+---
 # Leipziger Oase
 
 - Source: https://www.diakonie-leipzig.de/hilfe-angebote/beratung-nothilfe/wohnungslosenhilfe-leipziger-oase-tageseinrichtung-fur-wohnungslose-menschen/
-- Generated: 2026-04-20T09:54:20.503559+00:00
+- Generated: 2026-04-20T13:19:28.217523+00:00
 
 Wohnungslosenhilfe – Leipziger Oase
 Unsere Angebote der Leipziger Oase

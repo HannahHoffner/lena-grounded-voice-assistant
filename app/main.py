@@ -11,6 +11,7 @@ from fastapi.staticfiles import StaticFiles
 from .config import load_settings
 from .kb import KnowledgeBase
 from .models import (
+    ConversationContext,
     QueryAnswerResponse,
     QueryRequest,
     SynthesizeRequest,
@@ -21,8 +22,13 @@ from .models import (
 from .providers.rewrite import create_rewrite_provider
 from .providers.stt import create_stt_provider
 from .providers.tts import create_tts_provider
+from .retrieval import normalize_text
 from .scraper.pipeline import promote_dataset, run_pipeline
 from .transcripts import TranscriptStore
+
+
+REFERENTIAL_TERMS = (" it ", " there ", " that place", " this place", "dort", "da", "diese stelle", "dieser ort")
+ALTERNATIVE_TERMS = ("another", "other", "different", "else", "another place", "andere", "weiteres", "alternative")
 
 
 def create_app() -> FastAPI:
@@ -83,7 +89,16 @@ def create_app() -> FastAPI:
 
     @app.post("/api/query/answer", response_model=QueryAnswerResponse)
     async def answer_query(payload: QueryRequest) -> QueryAnswerResponse:
-        answer = await app.state.rewrite_provider.answer(payload.transcript, payload.language, app.state.kb)
+        session_id = payload.session_id or uuid.uuid4().hex
+        session_payload = payload.model_copy(update={"session_id": session_id})
+        recent_events = app.state.transcript_store.recent_events(session_id, limit=3)
+        conversation_context = _build_conversation_context(session_payload, recent_events, app.state.kb)
+        answer = await app.state.rewrite_provider.answer(
+            payload.transcript,
+            payload.language,
+            app.state.kb,
+            conversation_context=conversation_context,
+        )
         response = QueryAnswerResponse(
             answer_text=answer.answer_text,
             status=answer.status,
@@ -93,11 +108,13 @@ def create_app() -> FastAPI:
             retrieved_page_ids=answer.retrieved_page_ids,
             provider=app.state.rewrite_provider.name,
             model=app.state.rewrite_provider.model_name,
+            session_id=session_id,
         )
         _store_event(
             app.state.transcript_store,
-            payload,
+            session_payload,
             response,
+            resolved_transcript=conversation_context.resolved_transcript,
             kb_version=app.state.kb.dataset.manifest.kb_version,
             rewrite_provider=app.state.rewrite_provider.name,
             rewrite_model=app.state.rewrite_provider.model_name,
@@ -174,6 +191,7 @@ def _store_event(
     store: TranscriptStore,
     payload: QueryRequest,
     response: QueryAnswerResponse,
+    resolved_transcript: str,
     kb_version: str,
     rewrite_provider: str,
     rewrite_model: str | None,
@@ -183,9 +201,10 @@ def _store_event(
     store.append(
         TranscriptEvent(
             timestamp=__import__("datetime").datetime.now(__import__("datetime").UTC),
-            session_id=uuid.uuid4().hex,
+            session_id=payload.session_id or uuid.uuid4().hex,
             language=payload.language,
             transcript=payload.transcript,
+            resolved_transcript=resolved_transcript,
             retrieved_page_ids=response.retrieved_page_ids,
             answer_text=response.answer_text,
             status=response.status,
@@ -197,3 +216,71 @@ def _store_event(
             tts_provider=tts_provider,
         )
     )
+
+
+def _build_conversation_context(
+    payload: QueryRequest,
+    recent_events: list[TranscriptEvent],
+    kb: KnowledgeBase,
+) -> ConversationContext:
+    session_id = payload.session_id or uuid.uuid4().hex
+    context = ConversationContext(session_id=session_id, resolved_transcript=payload.transcript)
+    if not recent_events:
+        return context
+
+    latest = recent_events[-1]
+    latest_titles = []
+    for page_id in latest.retrieved_page_ids[:3]:
+        try:
+            latest_titles.append(kb.get_page(page_id).title)
+        except KeyError:
+            continue
+
+    history_summary = f"Previous user request: {latest.transcript}"
+    if latest_titles:
+        history_summary += f"\nPrevious result pages: {', '.join(latest_titles)}"
+    context.history_summary = history_summary
+    normalized = f" {normalize_text(payload.transcript)} "
+
+    if _is_alternative_followup(normalized):
+        anchor_event = _find_anchor_event(recent_events)
+        context.follow_up_mode = "alternative"
+        context.excluded_page_ids = latest.retrieved_page_ids[:1]
+        context.preferred_page_ids = anchor_event.retrieved_page_ids[1:3]
+        context.reference_page_ids = anchor_event.retrieved_page_ids[:3]
+        context.history_summary = f"Previous user request: {anchor_event.transcript}"
+        if anchor_event.retrieved_page_ids:
+            anchor_titles = []
+            for page_id in anchor_event.retrieved_page_ids[:3]:
+                try:
+                    anchor_titles.append(kb.get_page(page_id).title)
+                except KeyError:
+                    continue
+            if anchor_titles:
+                context.history_summary += f"\nPrevious result pages: {', '.join(anchor_titles)}"
+        context.resolved_transcript = f"{payload.transcript} {anchor_event.transcript}"
+        return context
+
+    if _is_referential_followup(normalized):
+        context.follow_up_mode = "referential"
+        context.preferred_page_ids = latest.retrieved_page_ids[:1]
+        context.reference_page_ids = latest.retrieved_page_ids[:1]
+        context.resolved_transcript = " ".join([payload.transcript, *latest_titles[:1]]).strip()
+
+    return context
+
+
+def _is_referential_followup(normalized_transcript: str) -> bool:
+    return any(term in normalized_transcript for term in REFERENTIAL_TERMS)
+
+
+def _is_alternative_followup(normalized_transcript: str) -> bool:
+    return any(term in normalized_transcript for term in ALTERNATIVE_TERMS)
+
+
+def _find_anchor_event(recent_events: list[TranscriptEvent]) -> TranscriptEvent:
+    for event in reversed(recent_events):
+        normalized = f" {normalize_text(event.transcript)} "
+        if not _is_referential_followup(normalized) and not _is_alternative_followup(normalized):
+            return event
+    return recent_events[-1]

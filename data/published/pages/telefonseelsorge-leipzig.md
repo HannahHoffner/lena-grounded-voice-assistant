@@ -1,7 +1,28 @@
+---
+title: "TelefonSeelsorge Leipzig"
+category: "crisis"
+language: "de"
+publisher: "Diakonie Leipzig"
+description: "Beratungsnummer:"
+tags:
+  - "krise"
+  - "telefonseelsorge"
+  - "notlage"
+  - "beratung"
+aliases:
+  - "beratung"
+  - "krise"
+  - "leipzig"
+  - "notlage"
+  - "telefonseelsorge"
+  - "telefonseelsorge leipzig"
+source_url: "https://www.diakonie-leipzig.de/hilfe-angebote/beratung-nothilfe/telefonseelsorge/"
+last_updated: "2026-04-20"
+---
 # TelefonSeelsorge Leipzig
 
 - Source: https://www.diakonie-leipzig.de/hilfe-angebote/beratung-nothilfe/telefonseelsorge/
-- Generated: 2026-04-20T09:54:20.503559+00:00
+- Generated: 2026-04-20T13:19:28.217523+00:00
 
 TelefonSeelsorge Leipzig
 Beratungsnummer:

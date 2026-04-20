@@ -38,6 +38,7 @@ def test_answer_endpoint_returns_weak_match_or_ok(monkeypatch) -> None:
     assert body["status"] in {"ok", "weak_match"}
     assert body["answer_text"]
     assert body["retrieved_page_ids"]
+    assert body["session_id"]
 
 
 def test_unknown_query_returns_unknown(monkeypatch) -> None:
@@ -99,6 +100,45 @@ def test_answer_endpoint_prefers_debt_counseling_page(monkeypatch) -> None:
     assert body["status"] == "ok"
     assert body["retrieved_page_ids"][0] == "caritas-schuldnerberatung"
     assert "Schuldner" in body["answer_text"]
+
+
+def test_session_follow_up_prefers_previous_place(monkeypatch) -> None:
+    monkeypatch.setenv("LENA_BOOTSTRAP_RUNTIME_FROM_SCRAPER", "false")
+    monkeypatch.setenv("LENA_REWRITE_PROVIDER", "template")
+    app = create_app()
+    client = TestClient(app)
+
+    first = client.post(
+        "/api/query/answer",
+        json={"transcript": "where can i get food in leipzig", "language": "en", "session_id": "session-1"},
+    ).json()
+    second = client.post(
+        "/api/query/answer",
+        json={"transcript": "is it open today?", "language": "en", "session_id": "session-1"},
+    ).json()
+
+    assert first["retrieved_page_ids"][0] == "tafel-leipzig"
+    assert second["retrieved_page_ids"][0] == "tafel-leipzig"
+    assert second["session_id"] == "session-1"
+
+
+def test_session_alternative_request_prefers_different_place(monkeypatch) -> None:
+    monkeypatch.setenv("LENA_BOOTSTRAP_RUNTIME_FROM_SCRAPER", "false")
+    monkeypatch.setenv("LENA_REWRITE_PROVIDER", "template")
+    app = create_app()
+    client = TestClient(app)
+
+    first = client.post(
+        "/api/query/answer",
+        json={"transcript": "where can i get food in leipzig", "language": "en", "session_id": "session-2"},
+    ).json()
+    second = client.post(
+        "/api/query/answer",
+        json={"transcript": "is there another place?", "language": "en", "session_id": "session-2"},
+    ).json()
+
+    assert first["retrieved_page_ids"][0] == "tafel-leipzig"
+    assert second["retrieved_page_ids"][0] != first["retrieved_page_ids"][0]
 
 
 def test_transcribe_endpoint_accepts_form_language_string(monkeypatch, tmp_path: Path) -> None:

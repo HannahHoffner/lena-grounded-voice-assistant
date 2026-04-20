@@ -1,7 +1,30 @@
+---
+title: "Schadensminimierung"
+category: "addiction"
+language: "de"
+publisher: "Stadt Leipzig"
+opening_hours:
+  - "> Sonntag 09:00 - 15:00 Uhr"
+  - "Donnerstag ab 15:00 Uhr"
+  - "jeden Donnerstag 16:00 bis 17:30 Uhr auf dem Lindenauer Markt"
+  - "> jeden Dienstag 17:00 bis 18:00 Uhr am Schwanenteich (Goethestraße)"
+description: "Straßensozialarbeit und Wohnungslosenhilfe"
+tags:
+  - "sucht"
+  - "schadensminimierung"
+  - "gesundheit"
+aliases:
+  - "gesundheit"
+  - "leipzig"
+  - "schadensminimierung"
+  - "sucht"
+source_url: "https://www.leipzig.de/leben-in-leipzig/gesundheit/suchthilfe/schadensminimierung"
+last_updated: "2026-04-20"
+---
 # Schadensminimierung
 
 - Source: https://www.leipzig.de/leben-in-leipzig/gesundheit/suchthilfe/schadensminimierung
-- Generated: 2026-04-20T09:54:20.503559+00:00
+- Generated: 2026-04-20T13:19:28.217523+00:00
 
 Straßensozialarbeit und Wohnungslosenhilfe
 Für Menschen in Existenzkrisen, die in ihrer derzeitigen Situation keine Möglichkeit haben, ihren Konsum zu ändern, gibt es verschiedene Angebote. Das Ziel ist, dass diese Phase mit möglichst wenig psychischen, körperlichen oder sozialen Schäden durchlebt werden kann und die betroffenen Menschen in weiterführende Hilfen vermittelt werden.

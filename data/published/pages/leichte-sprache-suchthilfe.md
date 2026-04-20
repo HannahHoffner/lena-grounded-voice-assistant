@@ -1,7 +1,29 @@
+---
+title: "Sucht-Hilfe in leichter Sprache"
+category: "addiction"
+language: "de"
+publisher: "Stadt Leipzig"
+description: "Hilfen bei Sucht-Krankheiten"
+tags:
+  - "leichte sprache"
+  - "sucht"
+  - "hilfe"
+aliases:
+  - "hilfe"
+  - "leichte"
+  - "leichte sprache"
+  - "leichter"
+  - "sprache"
+  - "sucht"
+  - "sucht-hilfe in leichter sprache"
+  - "suchthilfe"
+source_url: "https://barrierefrei.leipzig.de/jugend-familie-und-soziales/gesundheit/sucht-hilfe"
+last_updated: "2026-04-20"
+---
 # Sucht-Hilfe in leichter Sprache
 
 - Source: https://barrierefrei.leipzig.de/jugend-familie-und-soziales/gesundheit/sucht-hilfe
-- Generated: 2026-04-20T09:54:20.503559+00:00
+- Generated: 2026-04-20T13:19:28.217523+00:00
 
 Hilfen bei Sucht-Krankheiten
 Hier geht es um das Thema Sucht.

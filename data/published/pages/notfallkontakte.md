@@ -1,7 +1,31 @@
+---
+title: "Notdienste fuer Notfaelle"
+category: "emergency"
+language: "de"
+publisher: "Stadt Leipzig"
+description: "Feuerwehr/ Rettungsdienst"
+tags:
+  - "notfall"
+  - "notdienst"
+  - "gewalt"
+  - "medizin"
+aliases:
+  - "fuer"
+  - "gewalt"
+  - "medizin"
+  - "notdienst"
+  - "notdienste"
+  - "notdienste fuer notfaelle"
+  - "notfaelle"
+  - "notfall"
+  - "notfallkontakte"
+source_url: "https://www.leipzig.de/service-portal/themen-und-lebenslagen/notfall"
+last_updated: "2026-04-20"
+---
 # Notdienste fuer Notfaelle
 
 - Source: https://www.leipzig.de/service-portal/themen-und-lebenslagen/notfall
-- Generated: 2026-04-20T09:54:20.503559+00:00
+- Generated: 2026-04-20T13:19:28.217523+00:00
 
 Feuerwehr/ Rettungsdienst
 Telefon: [112](tel:112)

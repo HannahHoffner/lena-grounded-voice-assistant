@@ -20,5 +20,7 @@ def test_pages_json_matches_minimum_shape() -> None:
     for item in pages:
         page = PageMetadata.model_validate(item)
         assert page.page_id
+        assert page.category
+        assert page.description
+        assert page.aliases
         assert page.file_path.endswith(".md")
-

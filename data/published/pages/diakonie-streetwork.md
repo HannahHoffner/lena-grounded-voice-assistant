@@ -1,7 +1,32 @@
+---
+title: "Diakonie Strassensozialarbeit"
+category: "social"
+language: "de"
+publisher: "Diakonie Leipzig"
+address: "Stadt Leipzig in der Prager Straße 21"
+opening_hours:
+  - "Büro | Dienstag 10:00 bis 14:00 Uhr"
+description: "Straßensozialarbeit | Streetwork"
+tags:
+  - "streetwork"
+  - "wohnungslosigkeit"
+  - "beratung"
+  - "hilfe"
+aliases:
+  - "beratung"
+  - "diakonie"
+  - "diakonie strassensozialarbeit"
+  - "hilfe"
+  - "strassensozialarbeit"
+  - "streetwork"
+  - "wohnungslosigkeit"
+source_url: "https://www.diakonie-leipzig.de/hilfe-angebote/beratung-nothilfe/wohnungslosenhilfe-leipziger-oase-tageseinrichtung-fur-wohnungslose-menschen/strassensozialarbeit-streetwork/"
+last_updated: "2026-04-20"
+---
 # Diakonie Strassensozialarbeit
 
 - Source: https://www.diakonie-leipzig.de/hilfe-angebote/beratung-nothilfe/wohnungslosenhilfe-leipziger-oase-tageseinrichtung-fur-wohnungslose-menschen/strassensozialarbeit-streetwork/
-- Generated: 2026-04-20T09:54:20.503559+00:00
+- Generated: 2026-04-20T13:19:28.217523+00:00
 
 Straßensozialarbeit | Streetwork
 Die Streetworker besuchen obdachlose Menschen in entlegenen – mitunter sehr verborgenen – Gebieten der Stadt in Zelten oder zeltähnlichen Konstruktionen im Zentrum, Süden und Osten des Stadtgebiets. Dabei haben sie immer eine Thermoskanne Tee im Gepäck und die Frage, ob und wie sie helfen können. Sie gehen auf die wohnungslosen Menschen zu und bieten Hilfe an- ohne sich aufzudrängen. Darüber hinaus beteiligen sie sich auch an bereits bestehenden Hilfsangeboten wie Brötchen- oder Suppenausgabe sowie mobile Kleiderkammer im Leipziger Stadtgebiet und bieten soziale Beratung an. Sie wollen ein Bewusstsein für die sich zunehmend verschärfende Situation in Leipzig schaffen und mehr Akzeptanz für die wohnungslosen Menschen in der Leipziger Bevölkerung erreichen.

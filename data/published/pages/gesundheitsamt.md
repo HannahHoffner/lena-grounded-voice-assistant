@@ -1,7 +1,26 @@
+---
+title: "Gesundheitsamt Leipzig"
+category: "medical"
+language: "de"
+publisher: "Stadt Leipzig"
+description: "Gesundheit"
+tags:
+  - "gesundheitsamt"
+  - "gesundheit"
+  - "medizin"
+aliases:
+  - "gesundheit"
+  - "gesundheitsamt"
+  - "gesundheitsamt leipzig"
+  - "leipzig"
+  - "medizin"
+source_url: "https://www.leipzig.de/leben-in-leipzig/gesundheit#c102834"
+last_updated: "2026-04-20"
+---
 # Gesundheitsamt Leipzig
 
 - Source: https://www.leipzig.de/leben-in-leipzig/gesundheit#c102834
-- Generated: 2026-04-20T09:54:20.503559+00:00
+- Generated: 2026-04-20T13:19:28.217523+00:00
 
 Gesundheit
 Materialien zu Migration und Gesundheit

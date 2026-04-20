@@ -1,7 +1,33 @@
+---
+title: "Suchtzentrum SAFE Team Konsum"
+category: "addiction"
+language: "de"
+publisher: "Suchtzentrum gGmbH"
+opening_hours:
+  - "jeden Donnerstag 16 bis 17.30 Uhr auf dem Lindenauer Markt (Beratung, Information, Ausgabe von warmen Getränken und kleinen Snacks)"
+  - "Bürosprechzeit: mittwochs von 10:00 Uhr bis 16:00 Uhr"
+description: "Standzeiten:"
+tags:
+  - "konsum"
+  - "streetwork"
+  - "sucht"
+  - "beratung"
+aliases:
+  - "beratung"
+  - "konsum"
+  - "safe"
+  - "streetwork"
+  - "sucht"
+  - "suchtzentrum"
+  - "suchtzentrum safe team konsum"
+  - "team"
+source_url: "https://www.suchtzentrum.de/safe/team-konsum"
+last_updated: "2026-04-20"
+---
 # Suchtzentrum SAFE Team Konsum
 
 - Source: https://www.suchtzentrum.de/safe/team-konsum
-- Generated: 2026-04-20T09:54:20.503559+00:00
+- Generated: 2026-04-20T13:19:28.217523+00:00
 
 Standzeiten:
 jeden Donnerstag 16 bis 17.30 Uhr auf dem Lindenauer Markt (Beratung, Information, Ausgabe von warmen Getränken und kleinen Snacks)

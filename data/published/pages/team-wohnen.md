@@ -1,7 +1,28 @@
+---
+title: "SAFE Team Wohnen"
+category: "housing"
+language: "de"
+publisher: "Suchtzentrum gGmbH"
+opening_hours:
+  - "Bürosprechzeiten: dienstags 10:00 Uhr -16:00 Uhr"
+description: "Standzeiten:"
+tags:
+  - "safe"
+  - "wohnen"
+  - "streetwork"
+aliases:
+  - "safe"
+  - "safe team wohnen"
+  - "streetwork"
+  - "team"
+  - "wohnen"
+source_url: "https://www.suchtzentrum.de/safe/team-wohnen"
+last_updated: "2026-04-20"
+---
 # SAFE Team Wohnen
 
 - Source: https://www.suchtzentrum.de/safe/team-wohnen
-- Generated: 2026-04-20T09:54:20.503559+00:00
+- Generated: 2026-04-20T13:19:28.217523+00:00
 
 Standzeiten:
 jeden Dienstag von 17 bis 18 Uhr am Schwanenteich (Goethestraße) in Kooperation mit dem Streetwork der Diakonie (Beratung, Information, Ausgabe von warmen Mahlzeiten und Getränken)

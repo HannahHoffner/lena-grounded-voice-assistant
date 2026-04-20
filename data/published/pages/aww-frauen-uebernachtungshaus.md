@@ -1,7 +1,31 @@
+---
+title: "AWW Uebernachtungshaus fuer wohnungslose Frauen"
+category: "housing"
+language: "de"
+publisher: "AWW Leipzig"
+description: "Übernachtungshaus"
+tags:
+  - "frauen"
+  - "notunterkunft"
+  - "uebernachtung"
+  - "wohnungslosigkeit"
+aliases:
+  - "aww"
+  - "aww uebernachtungshaus fuer wohnungslose frauen"
+  - "frauen"
+  - "fuer"
+  - "notunterkunft"
+  - "uebernachtung"
+  - "uebernachtungshaus"
+  - "wohnungslose"
+  - "wohnungslosigkeit"
+source_url: "https://obdachlosenhaus.de/"
+last_updated: "2026-04-20"
+---
 # AWW Uebernachtungshaus fuer wohnungslose Frauen
 
 - Source: https://obdachlosenhaus.de/
-- Generated: 2026-04-20T09:54:20.503559+00:00
+- Generated: 2026-04-20T13:19:28.217523+00:00
 
 Übernachtungshaus
 für wohnungslose Frauen in Leipzig

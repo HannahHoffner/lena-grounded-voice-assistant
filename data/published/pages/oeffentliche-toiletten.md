@@ -1,7 +1,26 @@
+---
+title: "Oeffentliche Toiletten"
+category: "hygiene"
+language: "de"
+publisher: "Stadt Leipzig"
+description: "In der folgenden Karte sind die Standorte aller Toilettenanlagen im Außenbereich zu sehen. Mit einem Klick auf den Standort erhalten Sie weiterführende Informationen zum Ort, den Öffnungszeiten, der Ausstattung und den Kontaktmöglichkeiten."
+tags:
+  - "toiletten"
+  - "hygiene"
+  - "oeffentlich"
+aliases:
+  - "hygiene"
+  - "oeffentlich"
+  - "oeffentliche"
+  - "oeffentliche toiletten"
+  - "toiletten"
+source_url: "https://www.leipzig.de/service-portal/themen-und-lebenslagen/sicherheit-und-ordnung/oeffentliche-toiletten"
+last_updated: "2026-04-20"
+---
 # Oeffentliche Toiletten
 
 - Source: https://www.leipzig.de/service-portal/themen-und-lebenslagen/sicherheit-und-ordnung/oeffentliche-toiletten
-- Generated: 2026-04-20T09:54:20.503559+00:00
+- Generated: 2026-04-20T13:19:28.217523+00:00
 
 In der folgenden Karte sind die Standorte aller Toilettenanlagen im Außenbereich zu sehen. Mit einem Klick auf den Standort erhalten Sie weiterführende Informationen zum Ort, den Öffnungszeiten, der Ausstattung und den Kontaktmöglichkeiten.
 Die Stadt Leipzig betreibt an über 20 Standorten öffentliche Toiletten, die rund um die Uhr geöffnet sind (Stand Januar 2025). Für die Errichtung und den dauerhaften Betrieb der Toilettenanlagen (Modell „City-Toilette“) wurde die Firma RBL Media GmbH beauftragt.

@@ -110,7 +110,7 @@ GERMAN_EQUIVALENTS = str.maketrans(
     }
 )
 QUERY_EXPANSION_RULES: tuple[tuple[set[str], tuple[str, ...]], ...] = (
-    ({"essen", "food", "jedzenie", "mancare", "еда"}, ("tafel", "lebensmittel", "lebensmittelausgabe", "mahlzeit")),
+    ({"essen", "food", "jedzenie", "mancare", "еда"}, ("tafel", "lebensmittel", "lebensmittelausgabe", "mahlzeit", "mittagstisch", "fruehstueck", "suppe")),
     ({"kleidung", "clothes", "clothing", "ubrania", "haine", "одежда"}, ("kleiderkammer", "kleidung", "kleiderspenden")),
     ({"arzt", "doctor", "medical", "medizin", "medic", "lekarz", "doctor", "врач"}, ("gesundheit", "sprechstunde", "arzt", "medizin")),
     ({"schulden", "debt", "debts", "zadluzenie", "datorii", "долг"}, ("schuldnerberatung", "schulden", "beratung")),
@@ -123,6 +123,22 @@ PHRASE_EXPANSION_RULES: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("sans assurance", ("arzt", "medizin", "sprechstunde", "krankenversicherung")),
 )
 DOCUMENT_HINTS = {"broschuere", "jahresbericht", "bericht"}
+LOCATION_QUERY_TOKENS = {"adresse", "ort", "platz", "naehe", "nahe", "closest", "close", "location"}
+HOURS_QUERY_TOKENS = {"offen", "open", "oeffnungszeiten", "hours", "today", "heute", "sonntag", "sunday"}
+CATEGORY_QUERY_HINTS = {
+    "food": {"essen", "food", "tafel", "lebensmittel", "mittagstisch", "mahlzeit", "fruehstueck", "suppe"},
+    "housing": {"unterkunft", "shelter", "uebernachtung", "notunterkunft", "wohnungslosigkeit"},
+    "medical": {"arzt", "medical", "medizin", "sprechstunde", "gesundheit"},
+    "addiction": {"sucht", "drug", "drugs", "methadon", "substitution", "konsum"},
+    "clothing": {"kleidung", "clothing", "kleiderkammer", "kleiderspenden"},
+}
+RELATED_CATEGORIES = {
+    "food": {"food", "social", "housing"},
+    "housing": {"housing", "social"},
+    "medical": {"medical", "social"},
+    "addiction": {"addiction", "social", "housing"},
+    "clothing": {"clothing", "social", "housing"},
+}
 
 
 def normalize_text(text: str) -> str:
@@ -162,7 +178,7 @@ def query_tokens_for_search(text: str, language: Language | None = None) -> list
 
 def content_lines(markdown: str) -> list[str]:
     lines: list[str] = []
-    for raw_line in markdown.splitlines():
+    for raw_line in strip_frontmatter(markdown).splitlines():
         line = raw_line.strip()
         if not line:
             continue
@@ -173,6 +189,15 @@ def content_lines(markdown: str) -> list[str]:
             continue
         lines.append(cleaned)
     return lines
+
+
+def strip_frontmatter(markdown: str) -> str:
+    if not markdown.startswith("---\n"):
+        return markdown
+    parts = markdown.split("\n---\n", 1)
+    if len(parts) == 2:
+        return parts[1]
+    return markdown
 
 
 def extract_relevant_passages(
@@ -229,7 +254,14 @@ class RetrievalEngine:
     def __init__(self, kb: KnowledgeBase) -> None:
         self.kb = kb
 
-    def retrieve(self, transcript: str, language: Language, limit: int = 3) -> list[RetrievedPage]:
+    def retrieve(
+        self,
+        transcript: str,
+        language: Language,
+        limit: int = 3,
+        preferred_page_ids: list[str] | None = None,
+        excluded_page_ids: list[str] | None = None,
+    ) -> list[RetrievedPage]:
         tokens = query_tokens_for_search(transcript, language)
         if not tokens:
             return []
@@ -238,19 +270,39 @@ class RetrievalEngine:
         query_token_set = set(tokens)
         normalized_query = normalize_text(transcript).strip()
         alias_hits = self._alias_hits(transcript, tokens)
+        preferred_page_ids = preferred_page_ids or []
+        excluded_page_ids = set(excluded_page_ids or [])
         ranked: list[tuple[float, PageMetadata]] = []
+        location_query = bool(query_token_set & LOCATION_QUERY_TOKENS)
+        hours_query = bool(query_token_set & HOURS_QUERY_TOKENS)
+        query_category = _detect_query_category(query_token_set)
 
         for page in self.kb.dataset.pages:
+            if page.page_id in excluded_page_ids:
+                continue
             markdown = self.kb.get_page_markdown(page.page_id)
             score = 0.0
             score += self._field_score(query_counts, page.title, weight=3.2)
             score += self._field_score(query_counts, page.page_id.replace("-", " "), weight=2.8)
+            score += self._field_score(query_counts, page.category, weight=0.9)
+            score += self._field_score(query_counts, page.description, weight=1.4)
             score += self._field_score(query_counts, " ".join(page.tags), weight=2.2)
+            score += self._field_score(query_counts, " ".join(page.aliases), weight=2.4)
+            score += self._field_score(query_counts, page.address or "", weight=2.1)
+            score += self._field_score(query_counts, " ".join(page.opening_hours), weight=1.8)
+            score += self._field_score(query_counts, page.publisher or "", weight=0.35)
             score += self._field_score(query_counts, page.summary, weight=0.55)
             score += self._best_passage_score(query_counts, markdown) * 2.4
             score += alias_hits.get(page.page_id, 0.0)
             if page.language == language.value:
                 score += 0.08
+            if location_query and page.address:
+                score += 0.12
+            if hours_query and page.opening_hours:
+                score += 0.14
+            if page.page_id in preferred_page_ids:
+                score += 0.28
+            score += self._category_score(query_category, page)
             score += self._exact_match_boost(normalized_query, query_token_set, page)
             score -= self._document_penalty(page)
             if score > 0.04:
@@ -295,6 +347,31 @@ class RetrievalEngine:
         if any(hint in normalized for hint in DOCUMENT_HINTS):
             return 0.08
         return 0.0
+
+    def _category_score(self, query_category: str | None, page: PageMetadata) -> float:
+        if not query_category:
+            return 0.0
+        page_tokens = set(
+            tokenize(
+                " ".join(
+                    [
+                        page.title,
+                        page.description,
+                        page.summary,
+                        page.category,
+                        " ".join(page.tags),
+                        " ".join(page.aliases),
+                    ]
+                )
+            )
+        )
+        if page.category == query_category:
+            return 0.65
+        if page.category in RELATED_CATEGORIES.get(query_category, set()):
+            if page_tokens & CATEGORY_QUERY_HINTS.get(query_category, set()):
+                return 0.35
+            return -0.55
+        return -0.8
 
     def _alias_hits(self, transcript: str, tokens: list[str]) -> dict[str, float]:
         scores: dict[str, float] = {}
@@ -361,6 +438,13 @@ def _is_generic_query(tokens: list[str]) -> bool:
         return False
     informative_tokens = [token for token in tokens if token not in GENERIC_QUERY_TOKENS]
     return not informative_tokens or len(informative_tokens) == 1 and len(tokens) <= 2
+
+
+def _detect_query_category(query_token_set: set[str]) -> str | None:
+    for category, hints in CATEGORY_QUERY_HINTS.items():
+        if query_token_set & hints:
+            return category
+    return None
 
 
 def _is_low_signal_line(text: str) -> bool:

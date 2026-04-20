@@ -1,7 +1,27 @@
+---
+title: "Leipziger Trinkwasserbrunnen"
+category: "water"
+language: "de"
+publisher: "L-Gruppe"
+description: "["
+tags:
+  - "wasser"
+  - "trinkwasser"
+  - "brunnen"
+aliases:
+  - "brunnen"
+  - "leipziger"
+  - "leipziger trinkwasserbrunnen"
+  - "trinkwasser"
+  - "trinkwasserbrunnen"
+  - "wasser"
+source_url: "https://www.l.de/wasserwerke/leipziger-wasser/trinkwasserbrunnen/"
+last_updated: "2026-04-20"
+---
 # Leipziger Trinkwasserbrunnen
 
 - Source: https://www.l.de/wasserwerke/leipziger-wasser/trinkwasserbrunnen/
-- Generated: 2026-04-20T09:54:20.503559+00:00
+- Generated: 2026-04-20T13:19:28.217523+00:00
 
 [
 ](/blog/nahrungsmittel-nr-1-woher-kommt-das-trinkwasser-in-leipzig/)

@@ -2,14 +2,29 @@
   {
     "page_id": "leipzig-suchthilfe",
     "title": "Suchthilfe Gesundheitsamt",
+    "category": "addiction",
     "language": "de",
     "source_url": "https://www.leipzig.de/leben-in-leipzig/gesundheit/suchthilfe",
     "last_updated": "2026-04-20",
+    "publisher": "Stadt Leipzig",
+    "address": null,
+    "opening_hours": [],
+    "description": "[ 28.04.2026 · 16:00 – 18:00 Uhr Gesundheitsamt Stadt Leipzig ](/kultur-und-freizeit/veranstaltungen/eventsingle/event/depressiv-sprich-darueber-20260428-10)",
     "tags": [
       "sucht",
       "gesundheit",
       "beratung",
       "hilfe"
+    ],
+    "aliases": [
+      "beratung",
+      "gesundheit",
+      "gesundheitsamt",
+      "hilfe",
+      "leipzig",
+      "sucht",
+      "suchthilfe",
+      "suchthilfe gesundheitsamt"
     ],
     "summary": "Suchthilfe und Suchtprävention in Leipzig Termine - - KiK: Komm-in-Kontakt-Café - Selbsthilfe-Treff für junge Menschen von 18 bis 35 Jahre Depressiv? Sprich darüber! WWT: Wind und Wetter - Draußen-Selbsthilfetreff für junge Menschen von 18 bis 35 Jahre Depressiv? Sprich darüber! Die Suchthilfearbeit richtet sich nach d...",
     "file_path": "leipzig-suchthilfe.md"
@@ -17,13 +32,29 @@
   {
     "page_id": "leipzig-schadensminimierung",
     "title": "Schadensminimierung",
+    "category": "addiction",
     "language": "de",
     "source_url": "https://www.leipzig.de/leben-in-leipzig/gesundheit/suchthilfe/schadensminimierung",
     "last_updated": "2026-04-20",
+    "publisher": "Stadt Leipzig",
+    "address": null,
+    "opening_hours": [
+      "> Sonntag 09:00 - 15:00 Uhr",
+      "Donnerstag ab 15:00 Uhr",
+      "jeden Donnerstag 16:00 bis 17:30 Uhr auf dem Lindenauer Markt",
+      "> jeden Dienstag 17:00 bis 18:00 Uhr am Schwanenteich (Goethestraße)"
+    ],
+    "description": "Straßensozialarbeit und Wohnungslosenhilfe",
     "tags": [
       "sucht",
       "schadensminimierung",
       "gesundheit"
+    ],
+    "aliases": [
+      "gesundheit",
+      "leipzig",
+      "schadensminimierung",
+      "sucht"
     ],
     "summary": "Straßensozialarbeit und Wohnungslosenhilfe Für Menschen in Existenzkrisen, die in ihrer derzeitigen Situation keine Möglichkeit haben, ihren Konsum zu ändern, gibt es verschiedene Angebote. Das Ziel ist, dass diese Phase mit möglichst wenig psychischen, körperlichen oder sozialen Schäden durchlebt werden kann und die b...",
     "file_path": "leipzig-schadensminimierung.md"
@@ -31,13 +62,27 @@
   {
     "page_id": "wohnungsnotfallhilfe-pdf",
     "title": "Angebote der Wohnungsnotfallhilfe und Notunterbringung",
+    "category": "housing",
     "language": "de",
     "source_url": "https://static.leipzig.de/fileadmin/mediendatenbank/leipzig-de/Stadt/02.5_Dez5_Jugend_Soziales_Gesundheit_Schule/50_Sozialamt/Wohnungsnotfallhilfe_und_Notunterbringung/Angebote-der-Wohnungsnotfallhilfe-und-Notunterbringung-in-der-Stadt-Leipzig.pdf",
     "last_updated": "2026-04-20",
+    "publisher": "Stadt Leipzig",
+    "address": "der Stadt Leipzig Anschrift Schönauer Straße 230 04207 Leipzig",
+    "opening_hours": [],
+    "description": "Angebote der Wohnungsnotfallhilfe und Notunterbringung",
     "tags": [
       "wohnungslosigkeit",
       "notunterbringung",
       "unterkunft"
+    ],
+    "aliases": [
+      "angebote",
+      "angebote der wohnungsnotfallhilfe und notunterbringung",
+      "notunterbringung",
+      "pdf",
+      "unterkunft",
+      "wohnungslosigkeit",
+      "wohnungsnotfallhilfe"
     ],
     "summary": "Wohnungsnotfallhilfe Verantwortliches Amt Wer? Wo? Was? Angebote der Wohnungsnotfallhilfe und Notunterbringung in der Stadt Leipzig »Eine Bank ist kein zu Hause« Notunterbringung 3.2 Übernachtungshaus für wohnungslose Männer • Unterkunft für wohnungslose Männer • Grundversorgung und Selbstversorgung • Persönliche Hilfe...",
     "file_path": "wohnungsnotfallhilfe-pdf.md"
@@ -45,12 +90,26 @@
   {
     "page_id": "mietrechtsbroschuere-pdf",
     "title": "Mietrechtsbroschuere",
+    "category": "documents",
     "language": "de",
     "source_url": "https://static.leipzig.de/fileadmin/mediendatenbank/leipzig-de/Stadt/02.5_Dez5_Jugend_Soziales_Gesundheit_Schule/50_Sozialamt/Veroeffentlichungen/Mietrechtsbroschuere.pdf",
     "last_updated": "2026-04-20",
+    "publisher": "Stadt Leipzig",
+    "address": "leipzig.de Anschrift Prager straße 21, 04103 leipzig",
+    "opening_hours": [
+      "Wohnen als Mieter Rechte, Pflichten, tiPPs 1 2 Wohnen als Mieter Rechte, Pflichten, Tipps Diese Broschüre wurde vom Quartiersmanagement leipziger Osten im Auftrag des sozialamte..."
+    ],
+    "description": "Mietrechtsbroschuere",
     "tags": [
       "mietrecht",
       "dokumente",
+      "wohnen"
+    ],
+    "aliases": [
+      "dokumente",
+      "mietrecht",
+      "mietrechtsbroschuere",
+      "pdf",
       "wohnen"
     ],
     "summary": "Wohnen als Mieter Rechte, Pflichten, tiPPs 1 2 Wohnen als Mieter Rechte, Pflichten, Tipps Diese Broschüre wurde vom Quartiersmanagement leipziger Osten im Auftrag des sozialamtes in Zusammenarbeit mit dem Amt für Wohnungsbau und stadterneuerung erstellt. Die Grund- lage bildet die Berliner Broschüre „erste hilfe Mietre...",
@@ -59,12 +118,28 @@
   {
     "page_id": "uebernachtungshaus-ruecke",
     "title": "Flyer Uebernachtungshaus Ruecke",
+    "category": "housing",
     "language": "de",
     "source_url": "https://static.leipzig.de/fileadmin/mediendatenbank/leipzig-de/Stadt/02.5_Dez5_Jugend_Soziales_Gesundheit_Schule/50_Sozialamt/Wohnungsnotfallhilfe_und_Notunterbringung/Flyer_%C3%9Cbernachtungshaus_R%C3%BCcke.pdf",
     "last_updated": "2026-04-20",
+    "publisher": "Stadt Leipzig",
+    "address": "Rückmarsdorfer Str. 5-7, 04179 Leipzig",
+    "opening_hours": [
+      "Montag bis Freitag 16:00 bis 8:00 Uhr"
+    ],
+    "description": "Flyer Uebernachtungshaus Ruecke",
     "tags": [
       "uebernachtung",
       "notunterkunft",
+      "wohnungslosigkeit"
+    ],
+    "aliases": [
+      "flyer",
+      "flyer uebernachtungshaus ruecke",
+      "notunterkunft",
+      "ruecke",
+      "uebernachtung",
+      "uebernachtungshaus",
       "wohnungslosigkeit"
     ],
     "summary": "Das Übernachtungshaus „Rücke“ ist eine öffentliche Einrichtung der Stadt Leipzig. Es ist eine vorübergehende Notunterkunft für wohnungslose Männer. Welche Hilfe bekomme ich in der „Rücke“?  Übernachtung (5,00 € pro Nacht)  professionelle Unterstützung durch Sozialarbeiter/-innen zur Beendigung der Wohnungslosigkeit ...",
@@ -73,12 +148,28 @@
   {
     "page_id": "hilfe-bei-obdachlosigkeit",
     "title": "Hilfe bei Obdachlosigkeit in Leipzig",
+    "category": "housing",
     "language": "de",
     "source_url": "https://www.leipzig.de/leben-in-leipzig/soziales/soziale-hilfen/hilfe-bei-obdachlosigkeit-in-leipzig",
     "last_updated": "2026-04-20",
+    "publisher": "Stadt Leipzig",
+    "address": null,
+    "opening_hours": [
+      "Montag bis Freitag: von 16:00 Uhr bis 08:00 Uhr geöffnet",
+      "Montag bis Freitag: ab 18:00 Uhr geöffnet",
+      "Montag bis Freitag: von 18:00 Uhr bis 10:00 Uhr geöffnet"
+    ],
+    "description": "Übernachtungshaus für wohnungslose Männer \"Rücke\"",
     "tags": [
       "obdachlosigkeit",
       "hilfe",
+      "unterkunft"
+    ],
+    "aliases": [
+      "hilfe",
+      "hilfe bei obdachlosigkeit in leipzig",
+      "leipzig",
+      "obdachlosigkeit",
       "unterkunft"
     ],
     "summary": "Übernachtungshaus für wohnungslose Männer \"Rücke\" Rückmarsdorfer Straße. 5-7 E-Mail: [notunterbringung@leipzig.de](mailto:notunterbringung@leipzig.de) Montag bis Freitag: von 16:00 Uhr bis 08:00 Uhr geöffnet Samstag, Sonntag, Feiertag: ganztägig geöffnet Übernachtungshaus für wohnungslose Frauen Scharnhorststraße 27 Mo...",
@@ -87,13 +178,28 @@
   {
     "page_id": "leichte-sprache-suchthilfe",
     "title": "Sucht-Hilfe in leichter Sprache",
+    "category": "addiction",
     "language": "de",
     "source_url": "https://barrierefrei.leipzig.de/jugend-familie-und-soziales/gesundheit/sucht-hilfe",
     "last_updated": "2026-04-20",
+    "publisher": "Stadt Leipzig",
+    "address": null,
+    "opening_hours": [],
+    "description": "Hilfen bei Sucht-Krankheiten",
     "tags": [
       "leichte sprache",
       "sucht",
       "hilfe"
+    ],
+    "aliases": [
+      "hilfe",
+      "leichte",
+      "leichte sprache",
+      "leichter",
+      "sprache",
+      "sucht",
+      "sucht-hilfe in leichter sprache",
+      "suchthilfe"
     ],
     "summary": "Hilfen bei Sucht-Krankheiten Hier geht es um das Thema Sucht. Sie finden Infos zur Sucht-Hilfe in Leipzig. Es gibt auch Infos zu: Die Infos sind noch nicht in Leichter Sprache. Termine zu Veranstaltungen Hier finden Sie [Termine zu Veranstaltungen zum Thema Sucht-Hilfe](https://www.leipzig.de/leben-in-leipzig/gesundhei...",
     "file_path": "leichte-sprache-suchthilfe.md"
@@ -101,13 +207,26 @@
   {
     "page_id": "trinkwasserbrunnen",
     "title": "Leipziger Trinkwasserbrunnen",
+    "category": "water",
     "language": "de",
     "source_url": "https://www.l.de/wasserwerke/leipziger-wasser/trinkwasserbrunnen/",
     "last_updated": "2026-04-20",
+    "publisher": "L-Gruppe",
+    "address": null,
+    "opening_hours": [],
+    "description": "[",
     "tags": [
       "wasser",
       "trinkwasser",
       "brunnen"
+    ],
+    "aliases": [
+      "brunnen",
+      "leipziger",
+      "leipziger trinkwasserbrunnen",
+      "trinkwasser",
+      "trinkwasserbrunnen",
+      "wasser"
     ],
     "summary": "[ ](/blog/nahrungsmittel-nr-1-woher-kommt-das-trinkwasser-in-leipzig/) Nahrungsmittel Nr. 1 Woher kommt das Trinkwasser in Leipzig? Immer schon frisch bleiben – Unsere Trinkbrunnen in und um Leipzig sind startklar und versorgen euch jetzt wieder rund um die Uhr mit bestem Leipziger Trinkwasser. Wo genau ihr unsere kost...",
     "file_path": "trinkwasserbrunnen.md"
@@ -115,13 +234,25 @@
   {
     "page_id": "oeffentliche-toiletten",
     "title": "Oeffentliche Toiletten",
+    "category": "hygiene",
     "language": "de",
     "source_url": "https://www.leipzig.de/service-portal/themen-und-lebenslagen/sicherheit-und-ordnung/oeffentliche-toiletten",
     "last_updated": "2026-04-20",
+    "publisher": "Stadt Leipzig",
+    "address": null,
+    "opening_hours": [],
+    "description": "In der folgenden Karte sind die Standorte aller Toilettenanlagen im Außenbereich zu sehen. Mit einem Klick auf den Standort erhalten Sie weiterführende Informationen zum Ort, den Öffnungszeiten, der Ausstattung und den Kontaktmöglichkeiten.",
     "tags": [
       "toiletten",
       "hygiene",
       "oeffentlich"
+    ],
+    "aliases": [
+      "hygiene",
+      "oeffentlich",
+      "oeffentliche",
+      "oeffentliche toiletten",
+      "toiletten"
     ],
     "summary": "In der folgenden Karte sind die Standorte aller Toilettenanlagen im Außenbereich zu sehen. Mit einem Klick auf den Standort erhalten Sie weiterführende Informationen zum Ort, den Öffnungszeiten, der Ausstattung und den Kontaktmöglichkeiten. Die Stadt Leipzig betreibt an über 20 Standorten öffentliche Toiletten, die run...",
     "file_path": "oeffentliche-toiletten.md"
@@ -129,14 +260,30 @@
   {
     "page_id": "notfallkontakte",
     "title": "Notdienste fuer Notfaelle",
+    "category": "emergency",
     "language": "de",
     "source_url": "https://www.leipzig.de/service-portal/themen-und-lebenslagen/notfall",
     "last_updated": "2026-04-20",
+    "publisher": "Stadt Leipzig",
+    "address": null,
+    "opening_hours": [],
+    "description": "Feuerwehr/ Rettungsdienst",
     "tags": [
       "notfall",
       "notdienst",
       "gewalt",
       "medizin"
+    ],
+    "aliases": [
+      "fuer",
+      "gewalt",
+      "medizin",
+      "notdienst",
+      "notdienste",
+      "notdienste fuer notfaelle",
+      "notfaelle",
+      "notfall",
+      "notfallkontakte"
     ],
     "summary": "Feuerwehr/ Rettungsdienst Homepage Feuerwehr Leipzig: [www.feuerwehr.leipzig.de](http://www.feuerwehr.leipzig.de) Polizei Das wird am Notruftelefon gefragt: - Wo ist es geschehen? genaue Adresse und Etage angeben, gegebenenfalls Zufahrtsmöglichkeit nennen - Was ist geschehen? - Wie viele Personen sind verletzt? - Wer m...",
     "file_path": "notfallkontakte.md"
@@ -144,12 +291,24 @@
   {
     "page_id": "gesundheitsamt",
     "title": "Gesundheitsamt Leipzig",
+    "category": "medical",
     "language": "de",
     "source_url": "https://www.leipzig.de/leben-in-leipzig/gesundheit#c102834",
     "last_updated": "2026-04-20",
+    "publisher": "Stadt Leipzig",
+    "address": null,
+    "opening_hours": [],
+    "description": "Gesundheit",
     "tags": [
       "gesundheitsamt",
       "gesundheit",
+      "medizin"
+    ],
+    "aliases": [
+      "gesundheit",
+      "gesundheitsamt",
+      "gesundheitsamt leipzig",
+      "leipzig",
       "medizin"
     ],
     "summary": "Gesundheit Materialien zu Migration und Gesundheit Derzeit gibt es eine Vielzahl von fremdsprachigen Materialien im Bereich Gesundheitsförderung und -aufklärung. Wir haben einige grundlegende Materialien für Multiplikatoren zusammengestellt. Themen Weitere Informationen Veranstaltungen - Patienteninfoveranstaltung: Ein...",
@@ -158,13 +317,25 @@
   {
     "page_id": "suchtzentrum",
     "title": "Suchtzentrum Leipzig",
+    "category": "addiction",
     "language": "de",
     "source_url": "https://www.suchtzentrum.de/",
     "last_updated": "2026-04-20",
+    "publisher": "Suchtzentrum gGmbH",
+    "address": null,
+    "opening_hours": [],
+    "description": "Unsere Suchtberatungsstellen sind ein Angebot an Menschen, deren Leben zunehmend durch Alkohol, illegalisierte Drogen oder Glücksspielen beeinträchtigt wird.",
     "tags": [
       "suchtzentrum",
       "beratung",
       "hilfe"
+    ],
+    "aliases": [
+      "beratung",
+      "hilfe",
+      "leipzig",
+      "suchtzentrum",
+      "suchtzentrum leipzig"
     ],
     "summary": "Unsere Suchtberatungsstellen sind ein Angebot an Menschen, deren Leben zunehmend durch Alkohol, illegalisierte Drogen oder Glücksspielen beeinträchtigt wird. Beratungsstellen finden Sie in [Leipzig](/impuls), [Dresden](/horizont) und [Stollberg](/sprungbrett) bzw. [Oelsnitz](/beratung-in-der-außenstelle-oelsnitz). Eben...",
     "file_path": "suchtzentrum.md"
@@ -172,12 +343,26 @@
   {
     "page_id": "safe-jahresbericht",
     "title": "Jahresbericht SAFE Leipzig 2024",
+    "category": "reference",
     "language": "de",
     "source_url": "https://www.suchtzentrum.de/files/Leipzig_SafeLE/Jahresbericht_SAFE_Leipzig_2024.pdf",
     "last_updated": "2026-04-20",
+    "publisher": "Suchtzentrum gGmbH",
+    "address": null,
+    "opening_hours": [
+      "2024 Jahresabschluss Straßen- sozialarbeit für Erwachsene 3Jahresbericht 2024 Safe Straßensozialarbeit für Erwachsene 4 Einführung Anmerkung Datenerhebung 5 Wer wir sind? 6 Die..."
+    ],
+    "description": "Jahresbericht SAFE Leipzig 2024",
     "tags": [
       "safe",
       "jahresbericht",
+      "streetwork"
+    ],
+    "aliases": [
+      "jahresbericht",
+      "jahresbericht safe leipzig 2024",
+      "leipzig",
+      "safe",
       "streetwork"
     ],
     "summary": "2024 Jahresabschluss Straßen- sozialarbeit für Erwachsene 3Jahresbericht 2024 Safe Straßensozialarbeit für Erwachsene 4 Einführung Anmerkung Datenerhebung 5 Wer wir sind? 6 Die Teams von Safe in Leipzig Team KONSUM Allgemein Büroberatung Standzeiten Alter der Adressat*innen Konsum legaler und Illegalisierter Substanzen...",
@@ -186,13 +371,25 @@
   {
     "page_id": "szl-betterplace",
     "title": "SZL bei betterplace",
+    "category": "reference",
     "language": "de",
     "source_url": "https://www.betterplace.org/de/organisations/38535-szl-suchtzentrum-ggmbh",
     "last_updated": "2026-04-20",
+    "publisher": "betterplace",
+    "address": null,
+    "opening_hours": [],
+    "description": "SZL Suchtzentrum gGmbH",
     "tags": [
       "szl",
       "suchtzentrum",
       "organisation"
+    ],
+    "aliases": [
+      "betterplace",
+      "organisation",
+      "suchtzentrum",
+      "szl",
+      "szl bei betterplace"
     ],
     "summary": "SZL Suchtzentrum gGmbH wird verwaltet von Tino Über uns Die SZL Suchtzentrum gGmbH, eine 100-prozentige Tochter des Suchtzentrum Leipzig e.V., ist als gemeinnützig anerkannt, beim Amtsgericht Leipzig unter HRB: 20914 registriert und Mitglied im Paritätischen Wohlfahrtsverband Landesverband Sachsen. In seinem über 25-jä...",
     "file_path": "szl-betterplace.md"
@@ -200,13 +397,27 @@
   {
     "page_id": "team-wohnen",
     "title": "SAFE Team Wohnen",
+    "category": "housing",
     "language": "de",
     "source_url": "https://www.suchtzentrum.de/safe/team-wohnen",
     "last_updated": "2026-04-20",
+    "publisher": "Suchtzentrum gGmbH",
+    "address": null,
+    "opening_hours": [
+      "Bürosprechzeiten: dienstags 10:00 Uhr -16:00 Uhr"
+    ],
+    "description": "Standzeiten:",
     "tags": [
       "safe",
       "wohnen",
       "streetwork"
+    ],
+    "aliases": [
+      "safe",
+      "safe team wohnen",
+      "streetwork",
+      "team",
+      "wohnen"
     ],
     "summary": "Standzeiten: jeden Dienstag von 17 bis 18 Uhr am Schwanenteich (Goethestraße) in Kooperation mit dem Streetwork der Diakonie (Beratung, Information, Ausgabe von warmen Mahlzeiten und Getränken) Safe – Straßensozialarbeit für Erwachsene Das Team „Wohnen“ der Straßensozialarbeit für Erwachsene (Safe) sucht regelmäßig ver...",
     "file_path": "team-wohnen.md"
@@ -214,10 +425,27 @@
   {
     "page_id": "leipziger-oase",
     "title": "Leipziger Oase",
+    "category": "housing",
     "language": "de",
     "source_url": "https://www.diakonie-leipzig.de/hilfe-angebote/beratung-nothilfe/wohnungslosenhilfe-leipziger-oase-tageseinrichtung-fur-wohnungslose-menschen/",
     "last_updated": "2026-04-20",
+    "publisher": "Diakonie Leipzig",
+    "address": "Kleiderkammer in der Nürnberger Straße 37",
+    "opening_hours": [
+      "Montag bis Freitag: 08:00 bis 16:00 Uhr, Samstag (inkl. Feiertage) 09:00 bis 14:00 Uhr",
+      "Die Sozialberatung der Oase ist gegenwärtig montags bis freitags zwischen 09:00 und 15:00 Uhr zu erreichen, das Postbüro zwischen 12:30 und 14:30 Uhr.",
+      "- Wäscheservice (Mo. und Do. 09:00 bis 12:00 Uhr)",
+      "- Postadressendienst (Mo. bis Fr. 12:30 bis 14:30 Uhr)"
+    ],
+    "description": "Täglich kommen ca. 100 Menschen in die “Oase” – jeder mit seiner eigenen Geschichte, seinen Sorgen und Fragen. Oftmals verschärft sich die persönliche Notsituation noch durch gesundheitliche Einschränkungen, Arbeitslosigkeit etc. In der „Oase“ werden Wohnungslose so angenommen un",
     "tags": [
+      "oase",
+      "tageseinrichtung",
+      "wohnungslos"
+    ],
+    "aliases": [
+      "leipziger",
+      "leipziger oase",
       "oase",
       "tageseinrichtung",
       "wohnungslos"
@@ -228,13 +456,25 @@
   {
     "page_id": "kippe-leipzig",
     "title": "Kippe Leipzig",
+    "category": "social",
     "language": "de",
     "source_url": "https://kippe-leipzig.de/",
     "last_updated": "2026-04-20",
+    "publisher": "Kippe Leipzig",
+    "address": null,
+    "opening_hours": [],
+    "description": "Lieblingsthema Wetter – Was Leipzig meteorologisch zu bieten hat",
     "tags": [
       "kippe",
       "begegnung",
       "hilfe"
+    ],
+    "aliases": [
+      "begegnung",
+      "hilfe",
+      "kippe",
+      "kippe leipzig",
+      "leipzig"
     ],
     "summary": "Lieblingsthema Wetter – Was Leipzig meteorologisch zu bieten hat In eigener Sache: Hausverbote und nun? [mehr](/15-news/themen/787-kippe-hausverbot) Stilles Hilfesignal: Einfache Handbewegung [mehr](/15-news/themen/788-kippe-hilfesignal) Neues Ateliergespräch: Kraft der Weiblichkeit [mehr](/15-news/themen/789-kippe-ate...",
     "file_path": "kippe-leipzig.md"
@@ -242,13 +482,29 @@
   {
     "page_id": "bahnhofsmission-bund",
     "title": "Bahnhofsmission Leipzig (bund)",
+    "category": "social",
     "language": "de",
     "source_url": "https://www.bahnhofsmission.de/index.php?bm=41&id=99",
     "last_updated": "2026-04-20",
+    "publisher": "Bahnhofsmission Deutschland",
+    "address": null,
+    "opening_hours": [
+      "Sonntags: 13:30 Uhr - 17:30 Uhr",
+      "Sonntags: 13:30 - 17:30 Uhr"
+    ],
+    "description": "Willy-Brandt-Platz 2a",
     "tags": [
       "bahnhofsmission",
       "bahnhof",
       "hilfe"
+    ],
+    "aliases": [
+      "bahnhof",
+      "bahnhofsmission",
+      "bahnhofsmission leipzig (bund)",
+      "bund",
+      "hilfe",
+      "leipzig"
     ],
     "summary": "Willy-Brandt-Platz 2a Hauptbahnhof Preußenseite, gegenüber Eingang Parkhaus West Email: [leipzig@bahnhofsmission.de](mailto:leipzig@bahnhofsmission.de) Website: [https://www.caritas-leipzig.de/hilfeundberatung/sozialenotlagen/bahnhofsmission/](https://www.caritas-leipzig.de/hilfeundberatung/sozialenotlagen/bahnhofsmiss...",
     "file_path": "bahnhofsmission-bund.md"
@@ -256,13 +512,25 @@
   {
     "page_id": "bahnhofsmission-caritas",
     "title": "Bahnhofsmission Leipzig (Caritas)",
+    "category": "social",
     "language": "de",
     "source_url": "https://www.caritas-leipzig.de/hilfeundberatung/sozialenotlagen/bahnhofsmission/",
     "last_updated": "2026-04-20",
+    "publisher": "Caritas Leipzig",
+    "address": null,
+    "opening_hours": [],
+    "description": "Ökumenische Bahnhofsmission Leipzig",
     "tags": [
       "bahnhofsmission",
       "caritas",
       "hilfe"
+    ],
+    "aliases": [
+      "bahnhofsmission",
+      "bahnhofsmission leipzig (caritas)",
+      "caritas",
+      "hilfe",
+      "leipzig"
     ],
     "summary": "Ökumenische Bahnhofsmission Leipzig Die Bahnhofsmission versteht sich als erste soziale Anlaufstelle in der Mitte der Stadt, die eingebunden ist in das lokale Hilfesystem von Leipzig. Sie setzt sich tatkräftig für jedwede Belange der Menschen ein, die Hilfe am Bahnhof suchen - unabhängig von deren sozialem Status, Reli...",
     "file_path": "bahnhofsmission-caritas.md"
@@ -270,13 +538,25 @@
   {
     "page_id": "caritas-leipzig",
     "title": "Caritas Leipzig",
+    "category": "social",
     "language": "de",
     "source_url": "https://www.caritas-leipzig.de/",
     "last_updated": "2026-04-20",
+    "publisher": "Caritas Leipzig",
+    "address": null,
+    "opening_hours": [],
+    "description": "Im Bistum Dresden-Meißen werden vom 11. bis 20. April 2026 rund 50 Sammlerinnen und Sammler auf den Straßen unterwegs sein und um Geldspenden bitten. Die Bürgerinnen und Bürger sind aufgerufen, soziale Projekte zu unterstützen. Mehr zum Thema mit Link zur Seite: 'Soziale Projekte",
     "tags": [
       "caritas",
       "hilfe",
       "beratung"
+    ],
+    "aliases": [
+      "beratung",
+      "caritas",
+      "caritas leipzig",
+      "hilfe",
+      "leipzig"
     ],
     "summary": "Im Bistum Dresden-Meißen werden vom 11. bis 20. April 2026 rund 50 Sammlerinnen und Sammler auf den Straßen unterwegs sein und um Geldspenden bitten. Die Bürgerinnen und Bürger sind aufgerufen, soziale Projekte zu unterstützen. Mehr zum Thema mit Link zur Seite: 'Soziale Projekte unterstützen: Caritas-Frühjahrssammlung...",
     "file_path": "caritas-leipzig.md"
@@ -284,13 +564,27 @@
   {
     "page_id": "caritas-soziale-notlagen",
     "title": "Caritas Soziale Notlagen",
+    "category": "social",
     "language": "de",
     "source_url": "https://www.caritas-leipzig.de/hilfeundberatung/sozialenotlagen/soziale-notlagen",
     "last_updated": "2026-04-20",
+    "publisher": "Caritas Leipzig",
+    "address": null,
+    "opening_hours": [],
+    "description": "Soziale Notlagen Wir bieten Hilfe, Beratung und Begleitung in den verschiedensten persönlichen Not- und Problemlagen",
     "tags": [
       "soziale notlagen",
       "beratung",
       "hilfe"
+    ],
+    "aliases": [
+      "beratung",
+      "caritas",
+      "caritas soziale notlagen",
+      "hilfe",
+      "notlagen",
+      "soziale",
+      "soziale notlagen"
     ],
     "summary": "Soziale Notlagen Wir bieten Hilfe, Beratung und Begleitung in den verschiedensten persönlichen Not- und Problemlagen",
     "file_path": "caritas-soziale-notlagen.md"
@@ -298,13 +592,24 @@
   {
     "page_id": "caritas-wohnungslosigkeit",
     "title": "Caritas Wohnungslosigkeit",
+    "category": "housing",
     "language": "de",
     "source_url": "https://www.caritas-leipzig.de/hilfeundberatung/sozialenotlagen/wohnungslosigkeit/wohnungslosigkeit",
     "last_updated": "2026-04-20",
+    "publisher": "Caritas Leipzig",
+    "address": null,
+    "opening_hours": [],
+    "description": "Wohnungslosigkeit",
     "tags": [
       "wohnungslosigkeit",
       "caritas",
       "hilfe"
+    ],
+    "aliases": [
+      "caritas",
+      "caritas wohnungslosigkeit",
+      "hilfe",
+      "wohnungslosigkeit"
     ],
     "summary": "Wohnungslosigkeit Je nach Ihrer persönlichen Situation können Sie durch eines oder mehrere der folgenden Angebote Unterstützung erhalten. Als erste Anlaufstelle empfehlen wir die Allgemeine Soziale Beratung. Je nach Ihrer persönlichen Situation können Sie durch eines oder mehrere der folgenden Angebote Unterstützung er...",
     "file_path": "caritas-wohnungslosigkeit.md"
@@ -312,12 +617,28 @@
   {
     "page_id": "drk-soziale-beratung",
     "title": "DRK Allgemeine Soziale Beratung",
+    "category": "social",
     "language": "de",
     "source_url": "https://www.drk-leipzig.de/allgemeine-soziale-beratung.html",
     "last_updated": "2026-04-20",
+    "publisher": "DRK Leipzig",
+    "address": "Zwickauer Str. 127c",
+    "opening_hours": [
+      "Montag 13:00-15:30 Uhr",
+      "Mittwoch 9:00-12:00 Uhr"
+    ],
+    "description": "In den Sprechstunden der Allgemeinen Sozialen Beratung erhalten Menschen Unterstützung und Hilfestellung, um ihre individuellen und sozialen Problemlagen zu bewältigen.",
     "tags": [
       "drk",
       "beratung",
+      "soziales"
+    ],
+    "aliases": [
+      "allgemeine",
+      "beratung",
+      "drk",
+      "drk allgemeine soziale beratung",
+      "soziale",
       "soziales"
     ],
     "summary": "In den Sprechstunden der Allgemeinen Sozialen Beratung erhalten Menschen Unterstützung und Hilfestellung, um ihre individuellen und sozialen Problemlagen zu bewältigen. Ratsuchenden helfen wir beim Ausfüllen von Anträgen und Beantragen von Leistungen zum Beispiel Bürgergeld, Bildung und Teilhabe, Kinderzuschlag, Wohnge...",
@@ -326,12 +647,24 @@
   {
     "page_id": "drk-kurse",
     "title": "DRK Kursangebote",
+    "category": "medical",
     "language": "de",
     "source_url": "https://www.drk-leipzig.de/kursangebote.html",
     "last_updated": "2026-04-20",
+    "publisher": "DRK Leipzig",
+    "address": null,
+    "opening_hours": [],
+    "description": "Wir bieten verschiedene Erste-Hilfe-Kurse an: Von der Ausbildung zum Betrieblichen Ersthelfer, über den Erste-Hilfe-Lehrgang für den Führerschein, kurze Module zu ausgewählten Erste-Hilfe-Themen bis hin zu Erste Hilfe Outdoor. Wir haben bestimmt den passenden Kurs auch für Sie.",
     "tags": [
       "drk",
       "erste hilfe",
+      "kurse"
+    ],
+    "aliases": [
+      "drk",
+      "drk kursangebote",
+      "erste hilfe",
+      "kursangebote",
       "kurse"
     ],
     "summary": "Wir bieten verschiedene Erste-Hilfe-Kurse an: Von der Ausbildung zum Betrieblichen Ersthelfer, über den Erste-Hilfe-Lehrgang für den Führerschein, kurze Module zu ausgewählten Erste-Hilfe-Themen bis hin zu Erste Hilfe Outdoor. Wir haben bestimmt den passenden Kurs auch für Sie. Fühlen Sie sich unsicher, in einem Notfal...",
@@ -340,14 +673,30 @@
   {
     "page_id": "diakonie-streetwork",
     "title": "Diakonie Strassensozialarbeit",
+    "category": "social",
     "language": "de",
     "source_url": "https://www.diakonie-leipzig.de/hilfe-angebote/beratung-nothilfe/wohnungslosenhilfe-leipziger-oase-tageseinrichtung-fur-wohnungslose-menschen/strassensozialarbeit-streetwork/",
     "last_updated": "2026-04-20",
+    "publisher": "Diakonie Leipzig",
+    "address": "Stadt Leipzig in der Prager Straße 21",
+    "opening_hours": [
+      "Büro | Dienstag 10:00 bis 14:00 Uhr"
+    ],
+    "description": "Straßensozialarbeit | Streetwork",
     "tags": [
       "streetwork",
       "wohnungslosigkeit",
       "beratung",
       "hilfe"
+    ],
+    "aliases": [
+      "beratung",
+      "diakonie",
+      "diakonie strassensozialarbeit",
+      "hilfe",
+      "strassensozialarbeit",
+      "streetwork",
+      "wohnungslosigkeit"
     ],
     "summary": "Straßensozialarbeit | Streetwork Die Streetworker besuchen obdachlose Menschen in entlegenen – mitunter sehr verborgenen – Gebieten der Stadt in Zelten oder zeltähnlichen Konstruktionen im Zentrum, Süden und Osten des Stadtgebiets. Dabei haben sie immer eine Thermoskanne Tee im Gepäck und die Frage, ob und wie sie helf...",
     "file_path": "diakonie-streetwork.md"
@@ -355,14 +704,33 @@
   {
     "page_id": "diakonie-kleiderkammern",
     "title": "Diakonie Kleiderkammern",
+    "category": "clothing",
     "language": "de",
     "source_url": "https://www.diakonie-leipzig.de/kleiderspenden/",
     "last_updated": "2026-04-20",
+    "publisher": "Diakonie Leipzig",
+    "address": "Nürnberger Straße 37",
+    "opening_hours": [
+      "Dienstag: 15:00 – 18:00 Uhr",
+      "Mittwoch: 11:00 – 18:00 Uhr",
+      "Donnerstag: 09:30 – 15:00 Uhr",
+      "Freitag: 12:30 – 18:00 Uhr"
+    ],
+    "description": "Kleiderspenden",
     "tags": [
       "kleiderkammer",
       "kleidung",
       "spenden",
       "beduerftige"
+    ],
+    "aliases": [
+      "beduerftige",
+      "diakonie",
+      "diakonie kleiderkammern",
+      "kleiderkammer",
+      "kleiderkammern",
+      "kleidung",
+      "spenden"
     ],
     "summary": "Kleiderspenden Die Kleiderkammer Passgenau und die Kleiderkammer in der Nürnberger Straße sind Angebote der ökumenischen Kontaktstube für wohnungslose Menschen Leipziger Oase. In den Kleiderkammern können bedürftige Menschen Kleidung für einen symbolischen Betrag von 1 € bis 3 € erwerben. Wir suchen und bieten gut erha...",
     "file_path": "diakonie-kleiderkammern.md"
@@ -370,14 +738,37 @@
   {
     "page_id": "cabl-uvo",
     "title": "CABL Medizinische Sprechstunden fuer Wohnungslose",
+    "category": "medical",
     "language": "de",
     "source_url": "https://cab-leipzig.de/wp/startseite/uvo/",
     "last_updated": "2026-04-20",
+    "publisher": "CABL e.V.",
+    "address": "Nürnberger Straße 31, 04103 Leipzig",
+    "opening_hours": [
+      "Das Projekt UVO wurde Anfang 2024 um die aufsuchende Versorgung mit dem Medibus erweitert. Der Medibus ist ein umgerüsteter Rettungswagen, bereitgestellt durch die Stadt Leipzig...",
+      "montags 15:00-16:00 Uhr – pflegerische Sprechstunde",
+      "dienstags 13:00-15:00 Uhr – ärztliche Sprechstunde",
+      "donnerstag 19:30-21:00 Uhr"
+    ],
+    "description": "Im November 2020 wurde die Förderung des Projekts „Umfeldnahe Versorgung von Menschen ohne festen Wohnsitz“ im Leipziger Stadtrat beschlossen und der Verein CABL e.V. mit der Umsetzung beauftragt (-> [Beschlussvorlage](https://ratsinfo.leipzig.de/bi/vo020.asp?VOLFDNR=1016991)). K",
     "tags": [
       "medizin",
       "sprechstunde",
       "wohnungslosigkeit",
       "gesundheit"
+    ],
+    "aliases": [
+      "cabl",
+      "cabl medizinische sprechstunden fuer wohnungslose",
+      "fuer",
+      "gesundheit",
+      "medizin",
+      "medizinische",
+      "sprechstunde",
+      "sprechstunden",
+      "uvo",
+      "wohnungslose",
+      "wohnungslosigkeit"
     ],
     "summary": "Im November 2020 wurde die Förderung des Projekts „Umfeldnahe Versorgung von Menschen ohne festen Wohnsitz“ im Leipziger Stadtrat beschlossen und der Verein CABL e.V. mit der Umsetzung beauftragt (-> [Beschlussvorlage](https://ratsinfo.leipzig.de/bi/vo020.asp?VOLFDNR=1016991)). Kernpunkt des Projekts ist, in den Leipzi...",
     "file_path": "cabl-uvo.md"
@@ -385,13 +776,29 @@
   {
     "page_id": "aww-frauen-uebernachtungshaus",
     "title": "AWW Uebernachtungshaus fuer wohnungslose Frauen",
+    "category": "housing",
     "language": "de",
     "source_url": "https://obdachlosenhaus.de/",
     "last_updated": "2026-04-20",
+    "publisher": "AWW Leipzig",
+    "address": null,
+    "opening_hours": [],
+    "description": "Übernachtungshaus",
     "tags": [
       "frauen",
       "notunterkunft",
       "uebernachtung",
+      "wohnungslosigkeit"
+    ],
+    "aliases": [
+      "aww",
+      "aww uebernachtungshaus fuer wohnungslose frauen",
+      "frauen",
+      "fuer",
+      "notunterkunft",
+      "uebernachtung",
+      "uebernachtungshaus",
+      "wohnungslose",
       "wohnungslosigkeit"
     ],
     "summary": "Übernachtungshaus für wohnungslose Frauen in Leipzig Das Übernachtungshaus für wohnungslose Frauen … … ist eine Einrichtung zur Notunterbringung von alleinstehenden, volljährigen Frauen, die von akuter unfreiwilliger Wohnungslosigkeit betroffen sind. Das Übernachtungshaus bietet: einen Schlafplatz Als vorübergehende So...",
@@ -400,14 +807,32 @@
   {
     "page_id": "tafel-leipzig",
     "title": "Tafel Leipzig",
+    "category": "food",
     "language": "de",
     "source_url": "https://tafel-leipzig.de/",
     "last_updated": "2026-04-20",
+    "publisher": "Tafel Leipzig e.V.",
+    "address": "Neue Straße 2, 04416 Markkleeberg",
+    "opening_hours": [
+      "An- oder Ummeldung: Mo-Fr 9:30 – 10:30 Uhr",
+      "Lebensmittelausgabe: Mo-Fr 10:30 – 15:30 Uhr",
+      "An- oder Ummeldung: Mo – Fr 9:30 – 10:30 Uhr",
+      "Lebensmittelausgabe: Mo – Fr 12:00 – 15:30 Uhr"
+    ],
+    "description": "Unsere Ausgabestellen",
     "tags": [
       "tafel",
       "lebensmittel",
       "essen",
       "ausgabestellen"
+    ],
+    "aliases": [
+      "ausgabestellen",
+      "essen",
+      "lebensmittel",
+      "leipzig",
+      "tafel",
+      "tafel leipzig"
     ],
     "summary": "[Clients] Unsere Ausgabestellen Die Ausgabestellen des Tafel Leipzig e.V. Ausgabe nur nach [Registrierung](https://tafel-leipzig.de/kunde-werden/). ZENTRALE - Lindenau/ West An- oder Ummeldung: Mo-Fr 9:30 – 10:30 Uhr Lebensmittelausgabe: Mo-Fr 10:30 – 15:30 Uhr Telefon: Ost/ Volkmarsdorf An- oder Ummeldung: Mo – Fr 9:3...",
     "file_path": "tafel-leipzig.md"
@@ -415,14 +840,28 @@
   {
     "page_id": "heilsarmee-begegnungszentrum",
     "title": "Heilsarmee Begegnungszentrum Die Bruecke",
+    "category": "social",
     "language": "de",
     "source_url": "https://www.heilsarmee.de/leipzig/begegnungszentrum.html",
     "last_updated": "2026-04-20",
+    "publisher": "Heilsarmee Leipzig",
+    "address": null,
+    "opening_hours": [],
+    "description": "Begegnungszentrum \"Die Brücke\"",
     "tags": [
       "begegnungszentrum",
       "kleiderkammer",
       "mittagstisch",
       "jobcenter"
+    ],
+    "aliases": [
+      "begegnungszentrum",
+      "bruecke",
+      "heilsarmee",
+      "heilsarmee begegnungszentrum die bruecke",
+      "jobcenter",
+      "kleiderkammer",
+      "mittagstisch"
     ],
     "summary": "Begegnungszentrum \"Die Brücke\" Das Begegnungszentrum \"Die Brücke\" ist ein städtisch gefördertes Projekt. Seit Beginn der Tätigkeit in L-Paunsdorf stehen die Türen für alle Interessierten offen. Religion, Geschlecht, Alter und politische Ansichten sind für den Besuch und die Teilnahme an Veranstaltungen nicht von Bedeut...",
     "file_path": "heilsarmee-begegnungszentrum.md"
@@ -430,14 +869,29 @@
   {
     "page_id": "caritas-allgemeine-soziale-beratung",
     "title": "Caritas Allgemeine Soziale Beratung",
+    "category": "social",
     "language": "de",
     "source_url": "https://www.caritas-leipzig.de/hilfeundberatung/sozialenotlagen/allgemeinesozialeberatung/",
     "last_updated": "2026-04-20",
+    "publisher": "Caritas Leipzig",
+    "address": null,
+    "opening_hours": [],
+    "description": "Allgemeine Soziale Beratung",
     "tags": [
       "beratung",
       "soziale notlagen",
       "wohnungslosigkeit",
       "hilfe"
+    ],
+    "aliases": [
+      "allgemeine",
+      "beratung",
+      "caritas",
+      "caritas allgemeine soziale beratung",
+      "hilfe",
+      "soziale",
+      "soziale notlagen",
+      "wohnungslosigkeit"
     ],
     "summary": "Allgemeine Soziale Beratung Wenn Sie sich in einer sozialen Notlage befinden, können Sie sich bei uns kostenlos beraten lassen. Wir beraten zum Beispiel regelmäßig Menschen mit geringem Einkommen, Schuldner, wohnungslose oder von Wohnungslosigkeit bedrohte Menschen, Straffällige und Haftentlassene. Wir beraten Sie gern...",
     "file_path": "caritas-allgemeine-soziale-beratung.md"
@@ -445,13 +899,31 @@
   {
     "page_id": "caritas-schuldnerberatung",
     "title": "Caritas Schuldner- und Insolvenzberatung",
+    "category": "documents",
     "language": "de",
     "source_url": "https://www.caritas-leipzig.de/hilfeundberatung/sozialenotlagen/schuldenundinsolvenz/schulden-und-insolvenz",
     "last_updated": "2026-04-20",
+    "publisher": "Caritas Leipzig",
+    "address": null,
+    "opening_hours": [
+      "Aufgrund der bevorstehenden Ferien möchten wir Sie darauf hinweisen, dass am Dienstag (07.04.26) weniger Berater(innen) zur Verfügung stehen werden. Dies kann zu längeren Wartez..."
+    ],
+    "description": "Wir empfehlen daher, nur bei Notfällen oder Anliegen zu P-Konten an diesem Tag zur Sprechzeit zu kommen. Ab dem 14. April 2026 stehen wir wieder in gewohnter Weise für Erstgespräche zur Verfügung.",
     "tags": [
       "schulden",
       "insolvenz",
       "beratung",
+      "wohnen"
+    ],
+    "aliases": [
+      "beratung",
+      "caritas",
+      "caritas schuldner- und insolvenzberatung",
+      "insolvenz",
+      "insolvenzberatung",
+      "schulden",
+      "schuldner",
+      "schuldnerberatung",
       "wohnen"
     ],
     "summary": "Aufgrund der bevorstehenden Ferien möchten wir Sie darauf hinweisen, dass am Dienstag (07.04.26) weniger Berater(innen) zur Verfügung stehen werden. Dies kann zu längeren Wartezeiten während der Sprechzeit führen. Wir empfehlen daher, nur bei Notfällen oder Anliegen zu P-Konten an diesem Tag zur Sprechzeit zu kommen. A...",
@@ -460,14 +932,30 @@
   {
     "page_id": "caritas-abw-wohnungslosigkeit",
     "title": "Caritas Ambulant Betreutes Wohnen Wohnungslosigkeit",
+    "category": "housing",
     "language": "de",
     "source_url": "https://www.caritas-leipzig.de/hilfeundberatung/sozialenotlagen/ambulantbetreuteswohnen/ambulant-betreutes-wohnen",
     "last_updated": "2026-04-20",
+    "publisher": "Caritas Leipzig",
+    "address": null,
+    "opening_hours": [],
+    "description": "Wohnungslosigkeit",
     "tags": [
       "ambulant betreutes wohnen",
       "wohnungslosigkeit",
       "beratung",
       "wohnen"
+    ],
+    "aliases": [
+      "abw",
+      "ambulant",
+      "ambulant betreutes wohnen",
+      "beratung",
+      "betreutes",
+      "caritas",
+      "caritas ambulant betreutes wohnen wohnungslosigkeit",
+      "wohnen",
+      "wohnungslosigkeit"
     ],
     "summary": "Wohnungslosigkeit Je nach Ihrer persönlichen Situation können Sie durch eines oder mehrere der folgenden Angebote Unterstützung erhalten. Als erste Anlaufstelle empfehlen wir die Allgemeine Soziale Beratung. Je nach Ihrer persönlichen Situation können Sie durch eines oder mehrere der folgenden Angebote Unterstützung er...",
     "file_path": "caritas-abw-wohnungslosigkeit.md"
@@ -475,14 +963,29 @@
   {
     "page_id": "suchtzentrum-safe-streetwork",
     "title": "Suchtzentrum SAFE Strassensozialarbeit",
+    "category": "addiction",
     "language": "de",
     "source_url": "https://www.suchtzentrum.de/unsere-angebote/streetwork/safe",
     "last_updated": "2026-04-20",
+    "publisher": "Suchtzentrum gGmbH",
+    "address": null,
+    "opening_hours": [],
+    "description": "Wo arbeiten wir?",
     "tags": [
       "streetwork",
       "sucht",
       "wohnungslosigkeit",
       "hilfe"
+    ],
+    "aliases": [
+      "hilfe",
+      "safe",
+      "strassensozialarbeit",
+      "streetwork",
+      "sucht",
+      "suchtzentrum",
+      "suchtzentrum safe strassensozialarbeit",
+      "wohnungslosigkeit"
     ],
     "summary": "Wo arbeiten wir? Safe - Straßensozialarbeit für Erwachsene sucht öffentliche Plätze im Leipziger Westen und Norden auf, um dort mit den Menschen in Kontakt zu kommen, die sich hier regelmäßig aufhalten. Mit wem arbeiten wir? Safe – Straßensozialarbeit für Erwachsene arbeitet auf Szeneplätzen mit Menschen, die sich in s...",
     "file_path": "suchtzentrum-safe-streetwork.md"
@@ -490,14 +993,32 @@
   {
     "page_id": "suchtzentrum-team-konsum",
     "title": "Suchtzentrum SAFE Team Konsum",
+    "category": "addiction",
     "language": "de",
     "source_url": "https://www.suchtzentrum.de/safe/team-konsum",
     "last_updated": "2026-04-20",
+    "publisher": "Suchtzentrum gGmbH",
+    "address": null,
+    "opening_hours": [
+      "jeden Donnerstag 16 bis 17.30 Uhr auf dem Lindenauer Markt (Beratung, Information, Ausgabe von warmen Getränken und kleinen Snacks)",
+      "Bürosprechzeit: mittwochs von 10:00 Uhr bis 16:00 Uhr"
+    ],
+    "description": "Standzeiten:",
     "tags": [
       "konsum",
       "streetwork",
       "sucht",
       "beratung"
+    ],
+    "aliases": [
+      "beratung",
+      "konsum",
+      "safe",
+      "streetwork",
+      "sucht",
+      "suchtzentrum",
+      "suchtzentrum safe team konsum",
+      "team"
     ],
     "summary": "Standzeiten: jeden Donnerstag 16 bis 17.30 Uhr auf dem Lindenauer Markt (Beratung, Information, Ausgabe von warmen Getränken und kleinen Snacks) Das Team „Konsum“ von „Safe – Straßensozialarbeit für Erwachsene“ besteht aus Sozialarbeiter*innen, die regelmäßig im Leipziger Westen öffentliche Plätze aufsuchen, um mit den...",
     "file_path": "suchtzentrum-team-konsum.md"
@@ -505,14 +1026,34 @@
   {
     "page_id": "diakonie-suchtberatung-blaues-kreuz",
     "title": "Diakonie Suchtberatung Blaues Kreuz",
+    "category": "addiction",
     "language": "de",
     "source_url": "https://www.diakonie-leipzig.de/hilfe-angebote/beratung-nothilfe/suchtberatung-blaues-kreuz/",
     "last_updated": "2026-04-20",
+    "publisher": "Diakonie Leipzig",
+    "address": null,
+    "opening_hours": [
+      "Montag | 12:00 – 16:30 Uhr |",
+      "Dienstag | 09:00 – 12:00 und 13:00 – 18:00 Uhr |",
+      "Mittwoch | 09:00 – 16:30 Uhr |",
+      "Donnerstag | 09:00 – 14:00 Uhr |"
+    ],
+    "description": "Suchtberatung | Blaues Kreuz",
     "tags": [
       "suchtberatung",
       "blaues kreuz",
       "beratung",
       "abhaengigkeit"
+    ],
+    "aliases": [
+      "abhaengigkeit",
+      "beratung",
+      "blaues",
+      "blaues kreuz",
+      "diakonie",
+      "diakonie suchtberatung blaues kreuz",
+      "kreuz",
+      "suchtberatung"
     ],
     "summary": "Suchtberatung | Blaues Kreuz Die Suchtberatungsstelle bietet Beratung, Behandlung, Prävention sowie Vermittlung und Nachsorge - Wir beraten suchtgefährdete Menschen dabei, einen risikofreien Umgang mit Suchtmitteln wiederzufinden. - Wir helfen suchtkranken Menschen beim Ausstieg aus der Sucht und begleiten beim Leben i...",
     "file_path": "diakonie-suchtberatung-blaues-kreuz.md"
@@ -520,14 +1061,27 @@
   {
     "page_id": "telefonseelsorge-leipzig",
     "title": "TelefonSeelsorge Leipzig",
+    "category": "crisis",
     "language": "de",
     "source_url": "https://www.diakonie-leipzig.de/hilfe-angebote/beratung-nothilfe/telefonseelsorge/",
     "last_updated": "2026-04-20",
+    "publisher": "Diakonie Leipzig",
+    "address": null,
+    "opening_hours": [],
+    "description": "Beratungsnummer:",
     "tags": [
       "krise",
       "telefonseelsorge",
       "notlage",
       "beratung"
+    ],
+    "aliases": [
+      "beratung",
+      "krise",
+      "leipzig",
+      "notlage",
+      "telefonseelsorge",
+      "telefonseelsorge leipzig"
     ],
     "summary": "TelefonSeelsorge Leipzig Beratungsnummer: Mail- und Chatberatung: [online.telefonseelsorge.de](https://online.telefonseelsorge.de/) Wir möchten für möglichst viele Menschen erreichbar sein. Deshalb ist das TelefonSeelsorge-Angebot in Sachsen auf maximal ein Gespräch am Tag beschränkt. Ökumenische TelefonSeelsorge Leipz...",
     "file_path": "telefonseelsorge-leipzig.md"

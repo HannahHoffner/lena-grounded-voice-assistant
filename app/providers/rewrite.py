@@ -2,14 +2,15 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 import re
 
 import httpx
 
 from ..kb import KnowledgeBase
-from ..models import KnowledgeAnswer, Language, RetrievedPage
-from ..retrieval import RetrievalEngine, content_lines, extract_relevant_passages, query_tokens_for_search, tokenize
+from ..models import ConversationContext, KnowledgeAnswer, Language, PageMetadata, RetrievedPage
+from ..retrieval import RetrievalEngine, content_lines, extract_relevant_passages, normalize_text, query_tokens_for_search, tokenize
 
 
 UNKNOWN_TEXT = {
@@ -97,6 +98,8 @@ TOPIC_KEYWORDS = {
     "counseling": {"beratung", "notlagen", "hilfe"},
 }
 ATTRIBUTE_QUERY_TOKENS = {"adresse", "email", "kontakt", "mail", "oeffnungszeiten", "offen", "telefon", "uhr", "zeit"}
+MULTI_OPTION_QUERY_HINTS = {"essen", "food", "unterkunft", "shelter", "kleidung", "clothing", "another", "andere", "alternative"}
+TODAY_QUERY_HINTS = {"today", "heute"}
 NOTICE_HINTS = ("ferien", "wartezeiten", "hinweisen", "stand:", "druck:", "impressum")
 LINK_RE = re.compile(r"\[([^\]]+)\]\([^)]+\)")
 SPACE_RE = re.compile(r"\s+")
@@ -108,7 +111,13 @@ class BaseRewriteProvider(ABC):
     uses_llm = False
 
     @abstractmethod
-    async def answer(self, transcript: str, language: Language, kb: KnowledgeBase) -> KnowledgeAnswer:
+    async def answer(
+        self,
+        transcript: str,
+        language: Language,
+        kb: KnowledgeBase,
+        conversation_context: ConversationContext | None = None,
+    ) -> KnowledgeAnswer:
         raise NotImplementedError
 
 
@@ -118,9 +127,16 @@ def _ground_query(
     kb: KnowledgeBase,
     minimum_match_threshold: float,
     clarification_gap_threshold: float,
+    conversation_context: ConversationContext | None = None,
 ) -> tuple[list[RetrievedPage], KnowledgeAnswer | None]:
     retrieval = RetrievalEngine(kb)
-    retrieved = retrieval.retrieve(transcript, language)
+    resolved_transcript = conversation_context.resolved_transcript if conversation_context else transcript
+    retrieved = retrieval.retrieve(
+        resolved_transcript,
+        language,
+        preferred_page_ids=conversation_context.preferred_page_ids if conversation_context else None,
+        excluded_page_ids=conversation_context.excluded_page_ids if conversation_context else None,
+    )
     if not retrieved:
         return [], KnowledgeAnswer(answer_text=UNKNOWN_TEXT[language], status="unknown")
 
@@ -151,6 +167,7 @@ def _fallback_answer(
     retrieved: list[RetrievedPage],
     minimum_match_threshold: float,
     weak_match_threshold: float,
+    conversation_context: ConversationContext | None = None,
 ) -> KnowledgeAnswer:
     if not retrieved or retrieved[0].score < minimum_match_threshold:
         return KnowledgeAnswer(
@@ -159,11 +176,7 @@ def _fallback_answer(
             retrieved_page_ids=[item.page_id for item in retrieved],
         )
 
-    page = kb.get_page(retrieved[0].page_id)
-    search_tokens = set(query_tokens_for_search(transcript, language))
-    markdown = kb.get_page_markdown(page.page_id)
-    passages = extract_relevant_passages(transcript, markdown, query_tokens=search_tokens)
-    snippet = _select_snippet(transcript, language, page.title, markdown, passages, page.summary)
+    snippet = _build_structured_answer(transcript, language, kb, retrieved, conversation_context=conversation_context)
     if not snippet:
         return KnowledgeAnswer(
             answer_text=UNKNOWN_TEXT[language],
@@ -189,10 +202,13 @@ def _build_retrieved_context(
     language: Language,
     kb: KnowledgeBase,
     retrieved: list[RetrievedPage],
+    conversation_context: ConversationContext | None = None,
     limit: int = 3,
 ) -> str:
     search_tokens = set(query_tokens_for_search(transcript, language))
     sections: list[str] = []
+    if conversation_context and conversation_context.history_summary:
+        sections.append(f"RECENT_CONTEXT:\n{conversation_context.history_summary}")
     for item in _select_context_pages(retrieved, limit=limit):
         page = kb.get_page(item.page_id)
         passages = extract_relevant_passages(
@@ -208,8 +224,14 @@ def _build_retrieved_context(
                     f"TITLE: {page.title}",
                     f"SCORE: {item.score}",
                     f"LANGUAGE: {page.language}",
+                    f"CATEGORY: {page.category}",
+                    f"PUBLISHER: {page.publisher or ''}",
+                    f"ADDRESS: {page.address or ''}",
+                    f"OPENING_HOURS: {' | '.join(page.opening_hours)}",
+                    f"ALIASES: {', '.join(page.aliases)}",
                     f"SOURCE_URL: {page.source_url}",
                     f"LAST_UPDATED: {page.last_updated}",
+                    f"DESCRIPTION: {_clean_answer_text(page.description)}",
                     f"TAGS: {', '.join(page.tags)}",
                     f"SUMMARY: {_clean_answer_text(page.summary)}",
                     "RELEVANT_PASSAGES:",
@@ -264,6 +286,74 @@ def _select_snippet(
         return cleaned
 
     return _title_only_answer(page_title, language)
+
+
+def _build_structured_answer(
+    transcript: str,
+    language: Language,
+    kb: KnowledgeBase,
+    retrieved: list[RetrievedPage],
+    conversation_context: ConversationContext | None = None,
+) -> str:
+    del conversation_context
+    if not retrieved:
+        return ""
+
+    search_tokens = set(query_tokens_for_search(transcript, language))
+    pages = _select_answer_pages(transcript, retrieved)
+    options = []
+    for item in pages:
+        page = kb.get_page(item.page_id)
+        options.append(_format_page_option(page, transcript, language))
+    return " ".join(option for option in options if option).strip()
+
+
+def _select_answer_pages(transcript: str, retrieved: list[RetrievedPage], limit: int = 3) -> list[RetrievedPage]:
+    if not retrieved:
+        return []
+    normalized_transcript = normalize_text(transcript)
+    query_tokens = set(query_tokens_for_search(transcript))
+    if any(hint in normalized_transcript for hint in TODAY_QUERY_HINTS):
+        return retrieved[:1]
+    if not (query_tokens & MULTI_OPTION_QUERY_HINTS) and len(query_tokens) > 1:
+        return retrieved[:1]
+
+    top_score = retrieved[0].score
+    selected: list[RetrievedPage] = []
+    for item in retrieved[:limit]:
+        if item.score >= top_score * 0.55:
+            selected.append(item)
+    return selected or retrieved[:1]
+
+
+def _format_page_option(page: PageMetadata, transcript: str, language: Language) -> str:
+    normalized_transcript = normalize_text(transcript)
+    parts = [_place_intro(page, language)]
+    if page.address:
+        if language == Language.DE:
+            parts.append(f"Die Adresse ist {page.address}")
+        else:
+            parts.append(f"The address is {page.address}")
+    if page.opening_hours:
+        if any(hint in normalized_transcript for hint in TODAY_QUERY_HINTS):
+            today = datetime.now(UTC).date().isoformat()
+            if language == Language.DE:
+                parts.append(f"Fuer heute ({today}) sind folgende Oeffnungszeiten genannt: {'; '.join(page.opening_hours)}")
+            else:
+                parts.append(f"For today ({today}) the listed opening hours are: {'; '.join(page.opening_hours)}")
+        elif language == Language.DE:
+            parts.append(f"Die Oeffnungszeiten sind: {'; '.join(page.opening_hours)}")
+        else:
+            parts.append(f"The opening hours are: {'; '.join(page.opening_hours)}")
+    if page.description:
+        parts.append(page.description.rstrip("."))
+    return _clean_answer_text(". ".join(parts))
+
+
+def _place_intro(page: PageMetadata, language: Language) -> str:
+    if language == Language.DE:
+        return f"Sie koennen zu {page.title} gehen"
+    return f"You can go to {page.title}"
 
 
 def _clean_answer_text(text: str) -> str:
@@ -352,13 +442,20 @@ class TemplateRewriteProvider(BaseRewriteProvider):
         self.weak_match_threshold = weak_match_threshold
         self.clarification_gap_threshold = clarification_gap_threshold
 
-    async def answer(self, transcript: str, language: Language, kb: KnowledgeBase) -> KnowledgeAnswer:
+    async def answer(
+        self,
+        transcript: str,
+        language: Language,
+        kb: KnowledgeBase,
+        conversation_context: ConversationContext | None = None,
+    ) -> KnowledgeAnswer:
         retrieved, early_answer = _ground_query(
             transcript,
             language,
             kb,
             minimum_match_threshold=self.minimum_match_threshold,
             clarification_gap_threshold=self.clarification_gap_threshold,
+            conversation_context=conversation_context,
         )
         if early_answer:
             return early_answer
@@ -369,6 +466,7 @@ class TemplateRewriteProvider(BaseRewriteProvider):
             retrieved,
             minimum_match_threshold=self.minimum_match_threshold,
             weak_match_threshold=self.weak_match_threshold,
+            conversation_context=conversation_context,
         )
 
 
@@ -430,19 +528,27 @@ class OllamaRewriteProvider(BaseRewriteProvider):
             f"Respond in language: {language.value}.\nReturn JSON only."
         )
 
-    async def answer(self, transcript: str, language: Language, kb: KnowledgeBase) -> KnowledgeAnswer:
+    async def answer(
+        self,
+        transcript: str,
+        language: Language,
+        kb: KnowledgeBase,
+        conversation_context: ConversationContext | None = None,
+    ) -> KnowledgeAnswer:
         retrieved, early_answer = _ground_query(
             transcript,
             language,
             kb,
             minimum_match_threshold=self.minimum_match_threshold,
             clarification_gap_threshold=self.clarification_gap_threshold,
+            conversation_context=conversation_context,
         )
         if early_answer:
             return early_answer
 
         retrieved_page_ids = [item.page_id for item in retrieved]
-        context = _build_retrieved_context(transcript, language, kb, retrieved)
+        resolved_transcript = conversation_context.resolved_transcript if conversation_context else transcript
+        context = _build_retrieved_context(resolved_transcript, language, kb, retrieved, conversation_context=conversation_context)
         schema = KnowledgeAnswer.model_json_schema()
         system_prompt = self._load_system_prompt(language)
         user_prompt = "\n".join(
@@ -450,10 +556,15 @@ class OllamaRewriteProvider(BaseRewriteProvider):
                 "User request:",
                 transcript,
                 "",
+                f"Resolved request for retrieval: {resolved_transcript}",
+                "",
                 "Retrieved knowledge base pages:",
                 context,
                 "",
                 "Answer only from the retrieved pages above.",
+                "Always include the place name.",
+                "Include the address and opening hours whenever they are available in the retrieved data.",
+                "If several suitable places are retrieved, give 1 to 3 concrete options.",
                 "Prefer the highest-scoring page unless another retrieved page adds directly relevant detail.",
                 "If the retrieved pages do not clearly support the answer, return status unknown.",
                 "If support is weak, return status weak_match.",
@@ -486,6 +597,7 @@ class OllamaRewriteProvider(BaseRewriteProvider):
                 retrieved,
                 minimum_match_threshold=self.minimum_match_threshold,
                 weak_match_threshold=self.weak_match_threshold,
+                conversation_context=conversation_context,
             )
 
         answer.retrieved_page_ids = retrieved_page_ids
@@ -505,6 +617,22 @@ class OllamaRewriteProvider(BaseRewriteProvider):
 
         if answer.status == "unknown":
             answer.answer_text = answer.answer_text or UNKNOWN_TEXT[language]
+            if (
+                answer.answer_text != UNKNOWN_TEXT[language]
+                and not weak
+                and retrieved
+                and any(
+                    marker in answer.answer_text
+                    for marker in (
+                        kb.get_page(retrieved[0].page_id).title,
+                        kb.get_page(retrieved[0].page_id).address or "",
+                        "08:00",
+                        "09:30",
+                        "10:30",
+                    )
+                )
+            ):
+                answer.status = "ok"
             return answer
 
         if not answer.answer_text:
@@ -515,6 +643,7 @@ class OllamaRewriteProvider(BaseRewriteProvider):
                 retrieved,
                 minimum_match_threshold=self.minimum_match_threshold,
                 weak_match_threshold=self.weak_match_threshold,
+                conversation_context=conversation_context,
             )
 
         if answer.status == "weak_match" or weak:

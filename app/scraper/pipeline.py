@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 from datetime import UTC, datetime
 from io import BytesIO
@@ -16,6 +17,27 @@ from pypdf import PdfReader
 
 from ..models import Manifest, SourceDefinition
 from ..retrieval import tokenize
+
+
+ADDRESS_LINE_RE = re.compile(
+    r"\b(?:[A-ZÄÖÜ][\wÄÖÜäöüß.\-/]+(?:\s+[A-ZÄÖÜ][\wÄÖÜäöüß.\-/]+){0,4})\s+"
+    r"(?:straße|strasse|str\.|weg|platz|allee|ring|ufer|gasse|markt|chaussee|pfad|damm|bogen|promenade)"
+    r"\s*\d+[a-zA-Z]?(?:\s*[-/]\s*\d+[a-zA-Z]?)?(?:,\s*|\s+)\d{5}\s+[A-ZÄÖÜ][\wÄÖÜäöüß.\-/]+",
+    re.IGNORECASE,
+)
+STREET_ONLY_RE = re.compile(
+    r"\b(?:[A-ZÄÖÜ][\wÄÖÜäöüß.\-/]+(?:\s+[A-ZÄÖÜ][\wÄÖÜäöüß.\-/]+){0,4})\s+"
+    r"(?:straße|strasse|str\.|weg|platz|allee|ring|ufer|gasse|markt|chaussee|pfad|damm|bogen|promenade)"
+    r"\s*\d+[a-zA-Z]?(?:\s*[-/]\s*\d+[a-zA-Z]?)?",
+    re.IGNORECASE,
+)
+TIME_RE = re.compile(r"\b\d{1,2}[:.]\d{2}\b")
+OPENING_HOURS_HINT_RE = re.compile(
+    r"(montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonntag|mo\b|di\b|mi\b|do\b|fr\b|sa\b|so\b|"
+    r"monday|tuesday|wednesday|thursday|friday|saturday|sunday|opening|oeffnung|öffnungszeiten)",
+    re.IGNORECASE,
+)
+NOTICE_HINT_RE = re.compile(r"(ferien|wartezeit|impressum|spendenkonto|herausgeber|druck)", re.IGNORECASE)
 
 
 def load_sources(path: Path) -> list[SourceDefinition]:
@@ -58,18 +80,49 @@ def _extract_pdf(content: bytes) -> str:
 def extract_content(html: str) -> tuple[str, str]:
     extracted = trafilatura.extract(html, include_comments=False, include_links=True)
     if extracted:
+        extracted = repair_text(extracted.strip())
         title = extracted.splitlines()[0].strip("# ").strip() if extracted.splitlines() else "Untitled"
-        return title or "Untitled", extracted.strip()
+        return repair_text(title or "Untitled"), extracted
 
     soup = BeautifulSoup(html, "html.parser")
-    title = (soup.title.string if soup.title and soup.title.string else "Untitled").strip()
-    text = " ".join(fragment.strip() for fragment in soup.get_text("\n").splitlines() if fragment.strip())
+    title = repair_text((soup.title.string if soup.title and soup.title.string else "Untitled").strip())
+    text = repair_text(" ".join(fragment.strip() for fragment in soup.get_text("\n").splitlines() if fragment.strip()))
     return title, text
 
 
+def repair_text(text: str) -> str:
+    if not text:
+        return text
+    if any(marker in text for marker in ("Ã", "â€", "Â")):
+        try:
+            repaired = text.encode("latin1").decode("utf-8")
+            if repaired.count("Ã") < text.count("Ã"):
+                return repaired
+        except UnicodeError:
+            return text
+    return text
+
+
 def build_markdown(source: SourceDefinition, title: str, text: str, generated_at: datetime) -> str:
+    fields = extract_structured_fields(source, title, text)
+    frontmatter = build_frontmatter(
+        {
+            "title": title,
+            "category": source.category,
+            "language": source.language,
+            "publisher": source.publisher,
+            "address": fields["address"],
+            "opening_hours": fields["opening_hours"],
+            "description": fields["description"],
+            "tags": source.tags,
+            "aliases": fields["aliases"],
+            "source_url": source.url,
+            "last_updated": generated_at.date().isoformat(),
+        }
+    )
     return "\n".join(
         [
+            frontmatter,
             f"# {title}",
             "",
             f"- Source: {source.url}",
@@ -102,15 +155,147 @@ def summarize_text(text: str, max_chars: int = 320) -> str:
     return summary
 
 
+def extract_structured_fields(source: SourceDefinition, title: str, text: str) -> dict[str, object]:
+    lines = _clean_lines(text)
+    return {
+        "address": extract_address(lines),
+        "opening_hours": extract_opening_hours(lines),
+        "description": extract_description(lines, title),
+        "aliases": build_aliases(source, title),
+    }
+
+
+def extract_address(lines: list[str]) -> str | None:
+    for line in lines:
+        match = ADDRESS_LINE_RE.search(line)
+        if match:
+            return _normalize_spaces(match.group(0))
+    for line in lines:
+        match = STREET_ONLY_RE.search(line)
+        if match:
+            return _normalize_spaces(match.group(0))
+    return None
+
+
+def extract_opening_hours(lines: list[str], limit: int = 4) -> list[str]:
+    hours: list[str] = []
+    include_next = False
+    for line in lines:
+        normalized = _normalize_spaces(line)
+        if not normalized:
+            continue
+        if "öffnungszeiten" in normalized.casefold() or "oeffnungszeiten" in normalized.casefold():
+            include_next = True
+            continue
+        if OPENING_HOURS_HINT_RE.search(normalized) and TIME_RE.search(normalized):
+            normalized = _compact_hours_line(normalized)
+            if normalized not in hours:
+                hours.append(normalized)
+                include_next = False
+        elif include_next and TIME_RE.search(normalized):
+            normalized = _compact_hours_line(normalized)
+            if normalized not in hours:
+                hours.append(normalized)
+        else:
+            include_next = False
+        if len(hours) >= limit:
+            break
+    return hours
+
+
+def extract_description(lines: list[str], title: str) -> str:
+    normalized_title = _normalize_spaces(title).casefold()
+    for line in lines:
+        normalized = _normalize_spaces(line)
+        if not normalized or normalized.casefold() == normalized_title:
+            continue
+        if normalized.startswith("[") and normalized.endswith("]"):
+            continue
+        if normalized.casefold() in {"[clients]", "clients", "unsere angebote", "angebote", "kontakt"}:
+            continue
+        if normalized_title in normalized.casefold():
+            continue
+        if TIME_RE.search(normalized) and len(normalized) < 40:
+            continue
+        if NOTICE_HINT_RE.search(normalized):
+            continue
+        return normalized[:280].rstrip()
+    return _normalize_spaces(title)
+
+
+def build_aliases(source: SourceDefinition, title: str) -> list[str]:
+    aliases: set[str] = {tag.strip().lower() for tag in source.tags if tag.strip()}
+    aliases.update(tokenize(title))
+    aliases.update(tokenize(source.source_id.replace("-", " ")))
+    aliases.add(title.strip().lower())
+    return sorted(alias for alias in aliases if alias)
+
+
+def build_frontmatter(fields: dict[str, object]) -> str:
+    lines = ["---"]
+    for key, value in fields.items():
+        if value is None or value == "":
+            continue
+        if isinstance(value, list):
+            if not value:
+                continue
+            lines.append(f"{key}:")
+            for item in value:
+                lines.append(f"  - {json.dumps(item, ensure_ascii=False)}")
+        else:
+            lines.append(f"{key}: {json.dumps(value, ensure_ascii=False)}")
+    lines.append("---")
+    return "\n".join(lines)
+
+
+def _normalize_spaces(text: str) -> str:
+    return " ".join(text.split()).strip()
+
+
+def _clean_lines(text: str) -> list[str]:
+    lines: list[str] = []
+    for raw_line in text.splitlines():
+        line = _normalize_spaces(raw_line)
+        if not line:
+            continue
+        lines.append(line)
+    return lines
+
+
+def _compact_hours_line(line: str) -> str:
+    lowered = line.casefold()
+    if "wann ist" in lowered and "wie erreiche" in lowered:
+        line = line.split("Wie erreiche", 1)[0].strip()
+    if len(line) <= 180:
+        return line
+    match = re.search(r"(Montag.*?Uhr.*?(?:Feiertagen durchgehend|Wochenenden und Feiertagen durchgehend)?)", line)
+    if match:
+        return match.group(1).strip()
+    return line[:177].rstrip() + "..."
+
+
 def alias_terms(record: dict) -> set[str]:
-    aliases = {tag.strip().lower() for tag in record["tags"] if tag.strip()}
+    aliases = {alias.strip().lower() for alias in record.get("aliases", []) if alias.strip()}
+    aliases.update({tag.strip().lower() for tag in record["tags"] if tag.strip()})
     aliases.update(tokenize(record["title"]))
     aliases.update(tokenize(record["page_id"].replace("-", " ")))
     return aliases
 
 
 def validate_page_record(record: dict) -> None:
-    required = ["page_id", "title", "language", "source_url", "last_updated", "tags", "summary", "file_path"]
+    required = [
+        "page_id",
+        "title",
+        "category",
+        "language",
+        "source_url",
+        "last_updated",
+        "description",
+        "aliases",
+        "tags",
+        "summary",
+        "file_path",
+    ]
     missing = [field for field in required if not record.get(field)]
     if missing:
         raise ValueError(f"Invalid page record, missing: {', '.join(missing)}")
@@ -143,6 +328,9 @@ def publish_dataset(records: list[dict], pages: dict[str, str], output_root: Pat
                 aliases.setdefault(alias, []).append(record["page_id"])
             chunk_text = pages[record["page_id"]][:500]
             page_chunks.append({"chunk_id": f'{record["page_id"]}-0', "page_id": record["page_id"], "text": chunk_text})
+
+        for record in records:
+            record.pop("_raw_text", None)
 
         (index_root / "manifest.json").write_text(manifest.model_dump_json(indent=2), encoding="utf-8")
         (index_root / "pages.json").write_text(json.dumps(records, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -207,17 +395,25 @@ async def run_pipeline(source_registry: Path, output_root: Path, raw_root: Path,
             raw_snapshot = raw_root / f"{source.source_id}-{generated_at.strftime('%Y%m%d%H%M%S')}.html"
             raw_snapshot.write_text(html, encoding="utf-8")
             title, text = extract_content(html)
+            structured = extract_structured_fields(source, source.title or title, text)
             page_id = source.source_id
             file_path = f"{page_id}.md"
             record = {
                 "page_id": page_id,
                 "title": source.title or title,
+                "category": source.category,
                 "language": source.language,
                 "source_url": source.url,
                 "last_updated": generated_at.date().isoformat(),
+                "publisher": source.publisher,
+                "address": structured["address"],
+                "opening_hours": structured["opening_hours"],
+                "description": structured["description"],
                 "tags": source.tags,
+                "aliases": structured["aliases"],
                 "summary": summarize_text(text),
                 "file_path": file_path,
+                "_raw_text": text,
             }
             records.append(record)
             pages[page_id] = build_markdown(source, record["title"], text, generated_at)

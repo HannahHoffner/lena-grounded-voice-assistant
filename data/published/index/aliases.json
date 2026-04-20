@@ -63,10 +63,16 @@
     "leipzig-suchthilfe",
     "leichte-sprache-suchthilfe"
   ],
+  "suchthilfe gesundheitsamt": [
+    "leipzig-suchthilfe"
+  ],
   "schadensminimierung": [
     "leipzig-schadensminimierung"
   ],
   "angebote": [
+    "wohnungsnotfallhilfe-pdf"
+  ],
+  "angebote der wohnungsnotfallhilfe und notunterbringung": [
     "wohnungsnotfallhilfe-pdf"
   ],
   "notunterbringung": [
@@ -112,6 +118,9 @@
   "flyer": [
     "uebernachtungshaus-ruecke"
   ],
+  "flyer uebernachtungshaus ruecke": [
+    "uebernachtungshaus-ruecke"
+  ],
   "notunterkunft": [
     "uebernachtungshaus-ruecke",
     "aww-frauen-uebernachtungshaus"
@@ -126,6 +135,9 @@
   "uebernachtungshaus": [
     "uebernachtungshaus-ruecke",
     "aww-frauen-uebernachtungshaus"
+  ],
+  "hilfe bei obdachlosigkeit in leipzig": [
+    "hilfe-bei-obdachlosigkeit"
   ],
   "obdachlosigkeit": [
     "hilfe-bei-obdachlosigkeit"
@@ -142,12 +154,18 @@
   "sprache": [
     "leichte-sprache-suchthilfe"
   ],
+  "sucht-hilfe in leichter sprache": [
+    "leichte-sprache-suchthilfe"
+  ],
   "brunnen": [
     "trinkwasserbrunnen"
   ],
   "leipziger": [
     "trinkwasserbrunnen",
     "leipziger-oase"
+  ],
+  "leipziger trinkwasserbrunnen": [
+    "trinkwasserbrunnen"
   ],
   "trinkwasser": [
     "trinkwasserbrunnen"
@@ -165,6 +183,9 @@
     "oeffentliche-toiletten"
   ],
   "oeffentliche": [
+    "oeffentliche-toiletten"
+  ],
+  "oeffentliche toiletten": [
     "oeffentliche-toiletten"
   ],
   "toiletten": [
@@ -189,6 +210,9 @@
   "notdienste": [
     "notfallkontakte"
   ],
+  "notdienste fuer notfaelle": [
+    "notfallkontakte"
+  ],
   "notfaelle": [
     "notfallkontakte"
   ],
@@ -198,13 +222,22 @@
   "notfallkontakte": [
     "notfallkontakte"
   ],
+  "gesundheitsamt leipzig": [
+    "gesundheitsamt"
+  ],
   "suchtzentrum": [
     "suchtzentrum",
     "szl-betterplace",
     "suchtzentrum-safe-streetwork",
     "suchtzentrum-team-konsum"
   ],
+  "suchtzentrum leipzig": [
+    "suchtzentrum"
+  ],
   "jahresbericht": [
+    "safe-jahresbericht"
+  ],
+  "jahresbericht safe leipzig 2024": [
     "safe-jahresbericht"
   ],
   "safe": [
@@ -229,9 +262,18 @@
   "szl": [
     "szl-betterplace"
   ],
+  "szl bei betterplace": [
+    "szl-betterplace"
+  ],
+  "safe team wohnen": [
+    "team-wohnen"
+  ],
   "team": [
     "team-wohnen",
     "suchtzentrum-team-konsum"
+  ],
+  "leipziger oase": [
+    "leipziger-oase"
   ],
   "oase": [
     "leipziger-oase"
@@ -248,6 +290,9 @@
   "kippe": [
     "kippe-leipzig"
   ],
+  "kippe leipzig": [
+    "kippe-leipzig"
+  ],
   "bahnhof": [
     "bahnhofsmission-bund"
   ],
@@ -255,8 +300,14 @@
     "bahnhofsmission-bund",
     "bahnhofsmission-caritas"
   ],
+  "bahnhofsmission leipzig (bund)": [
+    "bahnhofsmission-bund"
+  ],
   "bund": [
     "bahnhofsmission-bund"
+  ],
+  "bahnhofsmission leipzig (caritas)": [
+    "bahnhofsmission-caritas"
   ],
   "caritas": [
     "bahnhofsmission-caritas",
@@ -266,6 +317,12 @@
     "caritas-allgemeine-soziale-beratung",
     "caritas-schuldnerberatung",
     "caritas-abw-wohnungslosigkeit"
+  ],
+  "caritas leipzig": [
+    "caritas-leipzig"
+  ],
+  "caritas soziale notlagen": [
+    "caritas-soziale-notlagen"
   ],
   "notlagen": [
     "caritas-soziale-notlagen"
@@ -279,6 +336,9 @@
     "caritas-soziale-notlagen",
     "caritas-allgemeine-soziale-beratung"
   ],
+  "caritas wohnungslosigkeit": [
+    "caritas-wohnungslosigkeit"
+  ],
   "allgemeine": [
     "drk-soziale-beratung",
     "caritas-allgemeine-soziale-beratung"
@@ -287,8 +347,14 @@
     "drk-soziale-beratung",
     "drk-kurse"
   ],
+  "drk allgemeine soziale beratung": [
+    "drk-soziale-beratung"
+  ],
   "soziales": [
     "drk-soziale-beratung"
+  ],
+  "drk kursangebote": [
+    "drk-kurse"
   ],
   "erste hilfe": [
     "drk-kurse"
@@ -304,11 +370,17 @@
     "diakonie-kleiderkammern",
     "diakonie-suchtberatung-blaues-kreuz"
   ],
+  "diakonie strassensozialarbeit": [
+    "diakonie-streetwork"
+  ],
   "strassensozialarbeit": [
     "diakonie-streetwork",
     "suchtzentrum-safe-streetwork"
   ],
   "beduerftige": [
+    "diakonie-kleiderkammern"
+  ],
+  "diakonie kleiderkammern": [
     "diakonie-kleiderkammern"
   ],
   "kleiderkammer": [
@@ -325,6 +397,9 @@
     "diakonie-kleiderkammern"
   ],
   "cabl": [
+    "cabl-uvo"
+  ],
+  "cabl medizinische sprechstunden fuer wohnungslose": [
     "cabl-uvo"
   ],
   "medizinische": [
@@ -346,6 +421,9 @@
   "aww": [
     "aww-frauen-uebernachtungshaus"
   ],
+  "aww uebernachtungshaus fuer wohnungslose frauen": [
+    "aww-frauen-uebernachtungshaus"
+  ],
   "frauen": [
     "aww-frauen-uebernachtungshaus"
   ],
@@ -361,6 +439,9 @@
   "tafel": [
     "tafel-leipzig"
   ],
+  "tafel leipzig": [
+    "tafel-leipzig"
+  ],
   "begegnungszentrum": [
     "heilsarmee-begegnungszentrum"
   ],
@@ -370,11 +451,20 @@
   "heilsarmee": [
     "heilsarmee-begegnungszentrum"
   ],
+  "heilsarmee begegnungszentrum die bruecke": [
+    "heilsarmee-begegnungszentrum"
+  ],
   "jobcenter": [
     "heilsarmee-begegnungszentrum"
   ],
   "mittagstisch": [
     "heilsarmee-begegnungszentrum"
+  ],
+  "caritas allgemeine soziale beratung": [
+    "caritas-allgemeine-soziale-beratung"
+  ],
+  "caritas schuldner- und insolvenzberatung": [
+    "caritas-schuldnerberatung"
   ],
   "insolvenz": [
     "caritas-schuldnerberatung"
@@ -403,7 +493,16 @@
   "betreutes": [
     "caritas-abw-wohnungslosigkeit"
   ],
+  "caritas ambulant betreutes wohnen wohnungslosigkeit": [
+    "caritas-abw-wohnungslosigkeit"
+  ],
+  "suchtzentrum safe strassensozialarbeit": [
+    "suchtzentrum-safe-streetwork"
+  ],
   "konsum": [
+    "suchtzentrum-team-konsum"
+  ],
+  "suchtzentrum safe team konsum": [
     "suchtzentrum-team-konsum"
   ],
   "abhaengigkeit": [
@@ -413,6 +512,9 @@
     "diakonie-suchtberatung-blaues-kreuz"
   ],
   "blaues kreuz": [
+    "diakonie-suchtberatung-blaues-kreuz"
+  ],
+  "diakonie suchtberatung blaues kreuz": [
     "diakonie-suchtberatung-blaues-kreuz"
   ],
   "kreuz": [
@@ -428,6 +530,9 @@
     "telefonseelsorge-leipzig"
   ],
   "telefonseelsorge": [
+    "telefonseelsorge-leipzig"
+  ],
+  "telefonseelsorge leipzig": [
     "telefonseelsorge-leipzig"
   ]
 }

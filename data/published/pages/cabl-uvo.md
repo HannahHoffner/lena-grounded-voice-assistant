@@ -1,7 +1,39 @@
+---
+title: "CABL Medizinische Sprechstunden fuer Wohnungslose"
+category: "medical"
+language: "de"
+publisher: "CABL e.V."
+address: "Nürnberger Straße 31, 04103 Leipzig"
+opening_hours:
+  - "Das Projekt UVO wurde Anfang 2024 um die aufsuchende Versorgung mit dem Medibus erweitert. Der Medibus ist ein umgerüsteter Rettungswagen, bereitgestellt durch die Stadt Leipzig..."
+  - "montags 15:00-16:00 Uhr – pflegerische Sprechstunde"
+  - "dienstags 13:00-15:00 Uhr – ärztliche Sprechstunde"
+  - "donnerstag 19:30-21:00 Uhr"
+description: "Im November 2020 wurde die Förderung des Projekts „Umfeldnahe Versorgung von Menschen ohne festen Wohnsitz“ im Leipziger Stadtrat beschlossen und der Verein CABL e.V. mit der Umsetzung beauftragt (-> [Beschlussvorlage](https://ratsinfo.leipzig.de/bi/vo020.asp?VOLFDNR=1016991)). K"
+tags:
+  - "medizin"
+  - "sprechstunde"
+  - "wohnungslosigkeit"
+  - "gesundheit"
+aliases:
+  - "cabl"
+  - "cabl medizinische sprechstunden fuer wohnungslose"
+  - "fuer"
+  - "gesundheit"
+  - "medizin"
+  - "medizinische"
+  - "sprechstunde"
+  - "sprechstunden"
+  - "uvo"
+  - "wohnungslose"
+  - "wohnungslosigkeit"
+source_url: "https://cab-leipzig.de/wp/startseite/uvo/"
+last_updated: "2026-04-20"
+---
 # CABL Medizinische Sprechstunden fuer Wohnungslose
 
 - Source: https://cab-leipzig.de/wp/startseite/uvo/
-- Generated: 2026-04-20T09:54:20.503559+00:00
+- Generated: 2026-04-20T13:19:28.217523+00:00
 
 Im November 2020 wurde die Förderung des Projekts „Umfeldnahe Versorgung von Menschen ohne festen Wohnsitz“ im Leipziger Stadtrat beschlossen und der Verein CABL e.V. mit der Umsetzung beauftragt (-> [Beschlussvorlage](https://ratsinfo.leipzig.de/bi/vo020.asp?VOLFDNR=1016991)). Kernpunkt des Projekts ist, in den Leipziger Übernachtungshäusern und Tagestreffs regelmäßige Sprechstunden zu etablieren, in denen eine medizinische Versorgung durch ehrenamtlich tätige Ärzt:innen in Anspruch genommen werden kann. Ziel des Projektes soll insbesondere sein, nicht nur niedrigschwellige Zugänge zu medizinischer Versorgung für die Betroffenen zu ermöglichen, sondern auch langfristige Lösungen für eine verbesserte gesundheitliche Versorgung wohnungsloser Menschen im Raum Leipzig zu finden – zum Beispiel durch die Weitervermittlung in die Regelversorgung.
 Aufsuchende medizinische Versorgung:

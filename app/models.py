@@ -18,10 +18,16 @@ class Language(StrEnum):
 class PageMetadata(BaseModel):
     page_id: str
     title: str
+    category: str = "general"
     language: str
     source_url: str
     last_updated: str
+    publisher: str | None = None
+    address: str | None = None
+    opening_hours: list[str] = Field(default_factory=list)
+    description: str = ""
     tags: list[str] = Field(default_factory=list)
+    aliases: list[str] = Field(default_factory=list)
     summary: str
     file_path: str
 
@@ -43,6 +49,7 @@ class TranscribeResponse(BaseModel):
 class QueryRequest(BaseModel):
     transcript: str
     language: Language
+    session_id: str | None = None
 
 
 class RetrievedPage(BaseModel):
@@ -60,6 +67,7 @@ class QueryAnswerResponse(BaseModel):
     retrieved_page_ids: list[str] = Field(default_factory=list)
     provider: str
     model: str | None = None
+    session_id: str
 
 
 class KnowledgeAnswer(BaseModel):
@@ -88,6 +96,7 @@ class TranscriptEvent(BaseModel):
     session_id: str
     language: Language
     transcript: str
+    resolved_transcript: str | None = None
     retrieved_page_ids: list[str] = Field(default_factory=list)
     answer_text: str
     status: str
@@ -115,3 +124,13 @@ class PublishedDataset(BaseModel):
     pages: list[PageMetadata]
     aliases: dict[str, list[str]]
     page_chunks: list[dict]
+
+
+class ConversationContext(BaseModel):
+    session_id: str
+    resolved_transcript: str
+    history_summary: str | None = None
+    preferred_page_ids: list[str] = Field(default_factory=list)
+    excluded_page_ids: list[str] = Field(default_factory=list)
+    reference_page_ids: list[str] = Field(default_factory=list)
+    follow_up_mode: Literal["none", "referential", "alternative"] = "none"

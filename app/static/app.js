@@ -12,6 +12,7 @@ let recording = false;
 let runtimeHealth = null;
 let browserRecognition = null;
 let submitting = false;
+let sessionId = null;
 
 const languageMap = {
   de: "de-DE",
@@ -101,7 +102,7 @@ async function answerQuery(transcript, language) {
   const response = await fetch("/api/query/answer", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ transcript, language }),
+    body: JSON.stringify({ transcript, language, session_id: sessionId }),
   });
   if (!response.ok) {
     throw new Error("Answer generation failed");
@@ -138,6 +139,7 @@ async function submitTranscript(transcript, language) {
 
   try {
     const answer = await answerQuery(transcript, language);
+    sessionId = answer.session_id || sessionId;
     answerText.textContent = answer.answer_text;
     setStatus(answer.status === "clarification_needed" ? "Clarifying" : "Speaking");
 
@@ -315,4 +317,8 @@ loadHealth().then(() => {
   if (!runtimeHealth) {
     setReadyStatus();
   }
+});
+
+languageSelect.addEventListener("change", () => {
+  sessionId = null;
 });

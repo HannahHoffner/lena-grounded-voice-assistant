@@ -1,7 +1,30 @@
+---
+title: "Bahnhofsmission Leipzig (bund)"
+category: "social"
+language: "de"
+publisher: "Bahnhofsmission Deutschland"
+opening_hours:
+  - "Sonntags: 13:30 Uhr - 17:30 Uhr"
+  - "Sonntags: 13:30 - 17:30 Uhr"
+description: "Willy-Brandt-Platz 2a"
+tags:
+  - "bahnhofsmission"
+  - "bahnhof"
+  - "hilfe"
+aliases:
+  - "bahnhof"
+  - "bahnhofsmission"
+  - "bahnhofsmission leipzig (bund)"
+  - "bund"
+  - "hilfe"
+  - "leipzig"
+source_url: "https://www.bahnhofsmission.de/index.php?bm=41&id=99"
+last_updated: "2026-04-20"
+---
 # Bahnhofsmission Leipzig (bund)
 
 - Source: https://www.bahnhofsmission.de/index.php?bm=41&id=99
-- Generated: 2026-04-20T09:54:20.503559+00:00
+- Generated: 2026-04-20T13:19:28.217523+00:00
 
 Willy-Brandt-Platz 2a
 Hauptbahnhof Preußenseite, gegenüber Eingang Parkhaus West

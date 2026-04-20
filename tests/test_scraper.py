@@ -39,6 +39,12 @@ def test_scraper_publishes_valid_dataset(tmp_path) -> None:
     assert manifest.page_count == 1
     assert (output_root / "index" / "manifest.json").exists()
     assert (output_root / "pages" / "sample-help.md").exists()
+    page_markdown = (output_root / "pages" / "sample-help.md").read_text(encoding="utf-8")
+    assert page_markdown.startswith("---\n")
+    pages = json.loads((output_root / "index" / "pages.json").read_text(encoding="utf-8"))
+    assert pages[0]["category"] == "general"
+    assert pages[0]["description"]
+    assert pages[0]["aliases"]
     aliases = json.loads((output_root / "index" / "aliases.json").read_text(encoding="utf-8"))
     assert "sample" in aliases
     assert any(reports_root.iterdir())
