@@ -1,0 +1,142 @@
+:root {
+  color-scheme: light;
+  --bg: #f6f3ee;
+  --surface: #fffaf1;
+  --text: #241b14;
+  --accent: #0b6e4f;
+  --accent-strong: #084f39;
+  --border: #d8cbb9;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Georgia, "Times New Roman", serif;
+  background:
+    radial-gradient(circle at top, rgba(214, 190, 142, 0.35), transparent 40%),
+    linear-gradient(180deg, var(--bg), #efe5d6);
+  color: var(--text);
+}
+
+.app-shell {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 3rem;
+}
+
+.header h1 {
+  margin-bottom: 0.25rem;
+}
+
+.controls,
+.voice-panel,
+.answer-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.controls label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.controls select,
+.record-button,
+.manual-input,
+.manual-submit {
+  width: 100%;
+  font-size: 1rem;
+  border-radius: 14px;
+}
+
+.controls select {
+  padding: 0.8rem;
+  border: 1px solid var(--border);
+  background: white;
+}
+
+.record-button {
+  border: 0;
+  padding: 1rem;
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.record-button:hover {
+  background: var(--accent-strong);
+}
+
+.record-button:disabled,
+.manual-submit:disabled,
+.manual-input:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
+
+.status {
+  margin: 0.75rem 0 0;
+  color: var(--accent-strong);
+  font-weight: 600;
+}
+
+.manual-form {
+  margin-top: 1rem;
+}
+
+.manual-form label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.manual-input-row {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.manual-input {
+  flex: 1;
+  padding: 0.8rem;
+  border: 1px solid var(--border);
+  background: white;
+  min-width: 0;
+}
+
+.manual-submit {
+  width: auto;
+  border: 1px solid var(--accent);
+  padding: 0.8rem 1.1rem;
+  background: transparent;
+  color: var(--accent-strong);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.manual-submit:hover {
+  background: rgba(11, 110, 79, 0.08);
+}
+
+.answer-text {
+  min-height: 4rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 560px) {
+  .manual-input-row {
+    flex-direction: column;
+  }
+
+  .manual-submit {
+    width: 100%;
+  }
+}

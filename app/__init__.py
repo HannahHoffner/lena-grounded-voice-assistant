@@ -1,0 +1,2 @@
+"""LENA prototype application."""
+

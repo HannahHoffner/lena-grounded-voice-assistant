@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.venv/
+venv/
+
+# Node / frontend tooling
+node_modules/
+dist/
+build/
+
+# Local environment
+.env
+.env.*
+
+# Runtime and generated workspace data
+data/runtime/
+data/scraper_workspace/
+
+# Local test artifacts
+test-stt.wav
+
+# OS / editor noise
+.DS_Store
+Thumbs.db

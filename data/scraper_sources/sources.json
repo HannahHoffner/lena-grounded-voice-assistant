@@ -1,0 +1,372 @@
+[
+  {
+    "source_id": "leipzig-suchthilfe",
+    "title": "Suchthilfe Gesundheitsamt",
+    "url": "https://www.leipzig.de/leben-in-leipzig/gesundheit/suchthilfe",
+    "language": "de",
+    "category": "addiction",
+    "publisher": "Stadt Leipzig",
+    "format": "html",
+    "tags": ["sucht", "gesundheit", "beratung", "hilfe"]
+  },
+  {
+    "source_id": "leipzig-schadensminimierung",
+    "title": "Schadensminimierung",
+    "url": "https://www.leipzig.de/leben-in-leipzig/gesundheit/suchthilfe/schadensminimierung",
+    "language": "de",
+    "category": "addiction",
+    "publisher": "Stadt Leipzig",
+    "format": "html",
+    "tags": ["sucht", "schadensminimierung", "gesundheit"]
+  },
+  {
+    "source_id": "wohnungsnotfallhilfe-pdf",
+    "title": "Angebote der Wohnungsnotfallhilfe und Notunterbringung",
+    "url": "https://static.leipzig.de/fileadmin/mediendatenbank/leipzig-de/Stadt/02.5_Dez5_Jugend_Soziales_Gesundheit_Schule/50_Sozialamt/Wohnungsnotfallhilfe_und_Notunterbringung/Angebote-der-Wohnungsnotfallhilfe-und-Notunterbringung-in-der-Stadt-Leipzig.pdf",
+    "language": "de",
+    "category": "housing",
+    "publisher": "Stadt Leipzig",
+    "format": "pdf",
+    "tags": ["wohnungslosigkeit", "notunterbringung", "unterkunft"]
+  },
+  {
+    "source_id": "mietrechtsbroschuere-pdf",
+    "title": "Mietrechtsbroschuere",
+    "url": "https://static.leipzig.de/fileadmin/mediendatenbank/leipzig-de/Stadt/02.5_Dez5_Jugend_Soziales_Gesundheit_Schule/50_Sozialamt/Veroeffentlichungen/Mietrechtsbroschuere.pdf",
+    "language": "de",
+    "category": "documents",
+    "publisher": "Stadt Leipzig",
+    "format": "pdf",
+    "tags": ["mietrecht", "dokumente", "wohnen"]
+  },
+  {
+    "source_id": "uebernachtungshaus-ruecke",
+    "title": "Flyer Uebernachtungshaus Ruecke",
+    "url": "https://static.leipzig.de/fileadmin/mediendatenbank/leipzig-de/Stadt/02.5_Dez5_Jugend_Soziales_Gesundheit_Schule/50_Sozialamt/Wohnungsnotfallhilfe_und_Notunterbringung/Flyer_%C3%9Cbernachtungshaus_R%C3%BCcke.pdf",
+    "language": "de",
+    "category": "housing",
+    "publisher": "Stadt Leipzig",
+    "format": "pdf",
+    "tags": ["uebernachtung", "notunterkunft", "wohnungslosigkeit"]
+  },
+  {
+    "source_id": "hilfe-bei-obdachlosigkeit",
+    "title": "Hilfe bei Obdachlosigkeit in Leipzig",
+    "url": "https://www.leipzig.de/leben-in-leipzig/soziales/soziale-hilfen/hilfe-bei-obdachlosigkeit-in-leipzig",
+    "language": "de",
+    "category": "housing",
+    "publisher": "Stadt Leipzig",
+    "format": "html",
+    "tags": ["obdachlosigkeit", "hilfe", "unterkunft"]
+  },
+  {
+    "source_id": "leichte-sprache-suchthilfe",
+    "title": "Sucht-Hilfe in leichter Sprache",
+    "url": "https://barrierefrei.leipzig.de/jugend-familie-und-soziales/gesundheit/sucht-hilfe",
+    "language": "de",
+    "category": "addiction",
+    "publisher": "Stadt Leipzig",
+    "format": "html",
+    "tags": ["leichte sprache", "sucht", "hilfe"]
+  },
+  {
+    "source_id": "trinkwasserbrunnen",
+    "title": "Leipziger Trinkwasserbrunnen",
+    "url": "https://www.l.de/wasserwerke/leipziger-wasser/trinkwasserbrunnen/",
+    "language": "de",
+    "category": "water",
+    "publisher": "L-Gruppe",
+    "format": "html",
+    "tags": ["wasser", "trinkwasser", "brunnen"]
+  },
+  {
+    "source_id": "oeffentliche-toiletten",
+    "title": "Oeffentliche Toiletten",
+    "url": "https://www.leipzig.de/service-portal/themen-und-lebenslagen/sicherheit-und-ordnung/oeffentliche-toiletten",
+    "language": "de",
+    "category": "hygiene",
+    "publisher": "Stadt Leipzig",
+    "format": "html",
+    "tags": ["toiletten", "hygiene", "oeffentlich"]
+  },
+  {
+    "source_id": "notfallkontakte",
+    "title": "Notdienste fuer Notfaelle",
+    "url": "https://www.leipzig.de/service-portal/themen-und-lebenslagen/notfall",
+    "language": "de",
+    "category": "emergency",
+    "publisher": "Stadt Leipzig",
+    "format": "html",
+    "tags": ["notfall", "notdienst", "gewalt", "medizin"]
+  },
+  {
+    "source_id": "gesundheitsamt",
+    "title": "Gesundheitsamt Leipzig",
+    "url": "https://www.leipzig.de/leben-in-leipzig/gesundheit#c102834",
+    "language": "de",
+    "category": "medical",
+    "publisher": "Stadt Leipzig",
+    "format": "html",
+    "tags": ["gesundheitsamt", "gesundheit", "medizin"]
+  },
+  {
+    "source_id": "suchtzentrum",
+    "title": "Suchtzentrum Leipzig",
+    "url": "https://www.suchtzentrum.de/",
+    "language": "de",
+    "category": "addiction",
+    "publisher": "Suchtzentrum gGmbH",
+    "format": "html",
+    "tags": ["suchtzentrum", "beratung", "hilfe"]
+  },
+  {
+    "source_id": "safe-jahresbericht",
+    "title": "Jahresbericht SAFE Leipzig 2024",
+    "url": "https://www.suchtzentrum.de/files/Leipzig_SafeLE/Jahresbericht_SAFE_Leipzig_2024.pdf",
+    "language": "de",
+    "category": "reference",
+    "publisher": "Suchtzentrum gGmbH",
+    "format": "pdf",
+    "tags": ["safe", "jahresbericht", "streetwork"]
+  },
+  {
+    "source_id": "szl-betterplace",
+    "title": "SZL bei betterplace",
+    "url": "https://www.betterplace.org/de/organisations/38535-szl-suchtzentrum-ggmbh",
+    "language": "de",
+    "category": "reference",
+    "publisher": "betterplace",
+    "format": "html",
+    "tags": ["szl", "suchtzentrum", "organisation"]
+  },
+  {
+    "source_id": "team-wohnen",
+    "title": "SAFE Team Wohnen",
+    "url": "https://www.suchtzentrum.de/safe/team-wohnen",
+    "language": "de",
+    "category": "housing",
+    "publisher": "Suchtzentrum gGmbH",
+    "format": "html",
+    "tags": ["safe", "wohnen", "streetwork"]
+  },
+  {
+    "source_id": "leipziger-oase",
+    "title": "Leipziger Oase",
+    "url": "https://www.diakonie-leipzig.de/hilfe-angebote/beratung-nothilfe/wohnungslosenhilfe-leipziger-oase-tageseinrichtung-fur-wohnungslose-menschen/",
+    "language": "de",
+    "category": "housing",
+    "publisher": "Diakonie Leipzig",
+    "format": "html",
+    "tags": ["oase", "tageseinrichtung", "wohnungslos"]
+  },
+  {
+    "source_id": "kippe-leipzig",
+    "title": "Kippe Leipzig",
+    "url": "https://kippe-leipzig.de/",
+    "language": "de",
+    "category": "social",
+    "publisher": "Kippe Leipzig",
+    "format": "html",
+    "tags": ["kippe", "begegnung", "hilfe"]
+  },
+  {
+    "source_id": "bahnhofsmission-bund",
+    "title": "Bahnhofsmission Leipzig (bund)",
+    "url": "https://www.bahnhofsmission.de/index.php?bm=41&id=99",
+    "language": "de",
+    "category": "social",
+    "publisher": "Bahnhofsmission Deutschland",
+    "format": "html",
+    "tags": ["bahnhofsmission", "bahnhof", "hilfe"]
+  },
+  {
+    "source_id": "bahnhofsmission-caritas",
+    "title": "Bahnhofsmission Leipzig (Caritas)",
+    "url": "https://www.caritas-leipzig.de/hilfeundberatung/sozialenotlagen/bahnhofsmission/",
+    "language": "de",
+    "category": "social",
+    "publisher": "Caritas Leipzig",
+    "format": "html",
+    "tags": ["bahnhofsmission", "caritas", "hilfe"]
+  },
+  {
+    "source_id": "caritas-leipzig",
+    "title": "Caritas Leipzig",
+    "url": "https://www.caritas-leipzig.de/",
+    "language": "de",
+    "category": "social",
+    "publisher": "Caritas Leipzig",
+    "format": "html",
+    "tags": ["caritas", "hilfe", "beratung"]
+  },
+  {
+    "source_id": "caritas-soziale-notlagen",
+    "title": "Caritas Soziale Notlagen",
+    "url": "https://www.caritas-leipzig.de/hilfeundberatung/sozialenotlagen/soziale-notlagen",
+    "language": "de",
+    "category": "social",
+    "publisher": "Caritas Leipzig",
+    "format": "html",
+    "tags": ["soziale notlagen", "beratung", "hilfe"]
+  },
+  {
+    "source_id": "caritas-wohnungslosigkeit",
+    "title": "Caritas Wohnungslosigkeit",
+    "url": "https://www.caritas-leipzig.de/hilfeundberatung/sozialenotlagen/wohnungslosigkeit/wohnungslosigkeit",
+    "language": "de",
+    "category": "housing",
+    "publisher": "Caritas Leipzig",
+    "format": "html",
+    "tags": ["wohnungslosigkeit", "caritas", "hilfe"]
+  },
+  {
+    "source_id": "drk-soziale-beratung",
+    "title": "DRK Allgemeine Soziale Beratung",
+    "url": "https://www.drk-leipzig.de/allgemeine-soziale-beratung.html",
+    "language": "de",
+    "category": "social",
+    "publisher": "DRK Leipzig",
+    "format": "html",
+    "tags": ["drk", "beratung", "soziales"]
+  },
+  {
+    "source_id": "drk-kurse",
+    "title": "DRK Kursangebote",
+    "url": "https://www.drk-leipzig.de/kursangebote.html",
+    "language": "de",
+    "category": "medical",
+    "publisher": "DRK Leipzig",
+    "format": "html",
+    "tags": ["drk", "erste hilfe", "kurse"]
+  },
+  {
+    "source_id": "diakonie-streetwork",
+    "title": "Diakonie Strassensozialarbeit",
+    "url": "https://www.diakonie-leipzig.de/hilfe-angebote/beratung-nothilfe/wohnungslosenhilfe-leipziger-oase-tageseinrichtung-fur-wohnungslose-menschen/strassensozialarbeit-streetwork/",
+    "language": "de",
+    "category": "social",
+    "publisher": "Diakonie Leipzig",
+    "format": "html",
+    "tags": ["streetwork", "wohnungslosigkeit", "beratung", "hilfe"]
+  },
+  {
+    "source_id": "diakonie-kleiderkammern",
+    "title": "Diakonie Kleiderkammern",
+    "url": "https://www.diakonie-leipzig.de/kleiderspenden/",
+    "language": "de",
+    "category": "clothing",
+    "publisher": "Diakonie Leipzig",
+    "format": "html",
+    "tags": ["kleiderkammer", "kleidung", "spenden", "beduerftige"]
+  },
+  {
+    "source_id": "cabl-uvo",
+    "title": "CABL Medizinische Sprechstunden fuer Wohnungslose",
+    "url": "https://cab-leipzig.de/wp/startseite/uvo/",
+    "language": "de",
+    "category": "medical",
+    "publisher": "CABL e.V.",
+    "format": "html",
+    "tags": ["medizin", "sprechstunde", "wohnungslosigkeit", "gesundheit"]
+  },
+  {
+    "source_id": "aww-frauen-uebernachtungshaus",
+    "title": "AWW Uebernachtungshaus fuer wohnungslose Frauen",
+    "url": "https://obdachlosenhaus.de/",
+    "language": "de",
+    "category": "housing",
+    "publisher": "AWW Leipzig",
+    "format": "html",
+    "tags": ["frauen", "notunterkunft", "uebernachtung", "wohnungslosigkeit"]
+  },
+  {
+    "source_id": "tafel-leipzig",
+    "title": "Tafel Leipzig",
+    "url": "https://tafel-leipzig.de/",
+    "language": "de",
+    "category": "food",
+    "publisher": "Tafel Leipzig e.V.",
+    "format": "html",
+    "tags": ["tafel", "lebensmittel", "essen", "ausgabestellen"]
+  },
+  {
+    "source_id": "heilsarmee-begegnungszentrum",
+    "title": "Heilsarmee Begegnungszentrum Die Bruecke",
+    "url": "https://www.heilsarmee.de/leipzig/begegnungszentrum.html",
+    "language": "de",
+    "category": "social",
+    "publisher": "Heilsarmee Leipzig",
+    "format": "html",
+    "tags": ["begegnungszentrum", "kleiderkammer", "mittagstisch", "jobcenter"]
+  },
+  {
+    "source_id": "caritas-allgemeine-soziale-beratung",
+    "title": "Caritas Allgemeine Soziale Beratung",
+    "url": "https://www.caritas-leipzig.de/hilfeundberatung/sozialenotlagen/allgemeinesozialeberatung/",
+    "language": "de",
+    "category": "social",
+    "publisher": "Caritas Leipzig",
+    "format": "html",
+    "tags": ["beratung", "soziale notlagen", "wohnungslosigkeit", "hilfe"]
+  },
+  {
+    "source_id": "caritas-schuldnerberatung",
+    "title": "Caritas Schuldner- und Insolvenzberatung",
+    "url": "https://www.caritas-leipzig.de/hilfeundberatung/sozialenotlagen/schuldenundinsolvenz/schulden-und-insolvenz",
+    "language": "de",
+    "category": "documents",
+    "publisher": "Caritas Leipzig",
+    "format": "html",
+    "tags": ["schulden", "insolvenz", "beratung", "wohnen"]
+  },
+  {
+    "source_id": "caritas-abw-wohnungslosigkeit",
+    "title": "Caritas Ambulant Betreutes Wohnen Wohnungslosigkeit",
+    "url": "https://www.caritas-leipzig.de/hilfeundberatung/sozialenotlagen/ambulantbetreuteswohnen/ambulant-betreutes-wohnen",
+    "language": "de",
+    "category": "housing",
+    "publisher": "Caritas Leipzig",
+    "format": "html",
+    "tags": ["ambulant betreutes wohnen", "wohnungslosigkeit", "beratung", "wohnen"]
+  },
+  {
+    "source_id": "suchtzentrum-safe-streetwork",
+    "title": "Suchtzentrum SAFE Strassensozialarbeit",
+    "url": "https://www.suchtzentrum.de/unsere-angebote/streetwork/safe",
+    "language": "de",
+    "category": "addiction",
+    "publisher": "Suchtzentrum gGmbH",
+    "format": "html",
+    "tags": ["streetwork", "sucht", "wohnungslosigkeit", "hilfe"]
+  },
+  {
+    "source_id": "suchtzentrum-team-konsum",
+    "title": "Suchtzentrum SAFE Team Konsum",
+    "url": "https://www.suchtzentrum.de/safe/team-konsum",
+    "language": "de",
+    "category": "addiction",
+    "publisher": "Suchtzentrum gGmbH",
+    "format": "html",
+    "tags": ["konsum", "streetwork", "sucht", "beratung"]
+  },
+  {
+    "source_id": "diakonie-suchtberatung-blaues-kreuz",
+    "title": "Diakonie Suchtberatung Blaues Kreuz",
+    "url": "https://www.diakonie-leipzig.de/hilfe-angebote/beratung-nothilfe/suchtberatung-blaues-kreuz/",
+    "language": "de",
+    "category": "addiction",
+    "publisher": "Diakonie Leipzig",
+    "format": "html",
+    "tags": ["suchtberatung", "blaues kreuz", "beratung", "abhaengigkeit"]
+  },
+  {
+    "source_id": "telefonseelsorge-leipzig",
+    "title": "TelefonSeelsorge Leipzig",
+    "url": "https://www.diakonie-leipzig.de/hilfe-angebote/beratung-nothilfe/telefonseelsorge/",
+    "language": "de",
+    "category": "crisis",
+    "publisher": "Diakonie Leipzig",
+    "format": "html",
+    "tags": ["krise", "telefonseelsorge", "notlage", "beratung"]
+  }
+]

@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LENA Prototype</title>
+    <link rel="stylesheet" href="/static/styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="header">
+        <h1>LENA</h1>
+        <p>Local referral assistant prototype</p>
+      </header>
+
+      <section class="controls">
+        <label for="language">Language</label>
+        <select id="language">
+          <option value="de">Deutsch</option>
+          <option value="en">English</option>
+          <option value="pl">Polski</option>
+          <option value="ro">Română</option>
+          <option value="ru">Русский</option>
+        </select>
+      </section>
+
+      <section class="voice-panel">
+        <button id="recordButton" class="record-button" type="button">Speak</button>
+        <p id="status" class="status">Idle</p>
+        <form id="manualQuestionForm" class="manual-form">
+          <label for="manualQuestion">Typed test question</label>
+          <div class="manual-input-row">
+            <input
+              id="manualQuestion"
+              class="manual-input"
+              name="manualQuestion"
+              type="text"
+              placeholder="Type a question for quick testing"
+              autocomplete="off"
+            >
+            <button id="manualSubmitButton" class="manual-submit" type="submit">Send</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="answer-panel">
+        <h2>Answer</h2>
+        <p id="answerText" class="answer-text">Your answer will appear here.</p>
+      </section>
+    </main>
+
+    <script src="/static/app.js" type="module"></script>
+  </body>
+</html>

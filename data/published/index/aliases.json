@@ -1,0 +1,433 @@
+{
+  "beratung": [
+    "leipzig-suchthilfe",
+    "suchtzentrum",
+    "caritas-leipzig",
+    "caritas-soziale-notlagen",
+    "drk-soziale-beratung",
+    "diakonie-streetwork",
+    "caritas-allgemeine-soziale-beratung",
+    "caritas-schuldnerberatung",
+    "caritas-abw-wohnungslosigkeit",
+    "suchtzentrum-team-konsum",
+    "diakonie-suchtberatung-blaues-kreuz",
+    "telefonseelsorge-leipzig"
+  ],
+  "gesundheit": [
+    "leipzig-suchthilfe",
+    "leipzig-schadensminimierung",
+    "gesundheitsamt",
+    "cabl-uvo"
+  ],
+  "gesundheitsamt": [
+    "leipzig-suchthilfe",
+    "gesundheitsamt"
+  ],
+  "hilfe": [
+    "leipzig-suchthilfe",
+    "hilfe-bei-obdachlosigkeit",
+    "leichte-sprache-suchthilfe",
+    "suchtzentrum",
+    "kippe-leipzig",
+    "bahnhofsmission-bund",
+    "bahnhofsmission-caritas",
+    "caritas-leipzig",
+    "caritas-soziale-notlagen",
+    "caritas-wohnungslosigkeit",
+    "diakonie-streetwork",
+    "caritas-allgemeine-soziale-beratung",
+    "suchtzentrum-safe-streetwork"
+  ],
+  "leipzig": [
+    "leipzig-suchthilfe",
+    "leipzig-schadensminimierung",
+    "hilfe-bei-obdachlosigkeit",
+    "gesundheitsamt",
+    "suchtzentrum",
+    "safe-jahresbericht",
+    "kippe-leipzig",
+    "bahnhofsmission-bund",
+    "bahnhofsmission-caritas",
+    "caritas-leipzig",
+    "tafel-leipzig",
+    "telefonseelsorge-leipzig"
+  ],
+  "sucht": [
+    "leipzig-suchthilfe",
+    "leipzig-schadensminimierung",
+    "leichte-sprache-suchthilfe",
+    "suchtzentrum-safe-streetwork",
+    "suchtzentrum-team-konsum"
+  ],
+  "suchthilfe": [
+    "leipzig-suchthilfe",
+    "leichte-sprache-suchthilfe"
+  ],
+  "schadensminimierung": [
+    "leipzig-schadensminimierung"
+  ],
+  "angebote": [
+    "wohnungsnotfallhilfe-pdf"
+  ],
+  "notunterbringung": [
+    "wohnungsnotfallhilfe-pdf"
+  ],
+  "pdf": [
+    "wohnungsnotfallhilfe-pdf",
+    "mietrechtsbroschuere-pdf"
+  ],
+  "unterkunft": [
+    "wohnungsnotfallhilfe-pdf",
+    "hilfe-bei-obdachlosigkeit"
+  ],
+  "wohnungslosigkeit": [
+    "wohnungsnotfallhilfe-pdf",
+    "uebernachtungshaus-ruecke",
+    "caritas-wohnungslosigkeit",
+    "diakonie-streetwork",
+    "cabl-uvo",
+    "aww-frauen-uebernachtungshaus",
+    "caritas-allgemeine-soziale-beratung",
+    "caritas-abw-wohnungslosigkeit",
+    "suchtzentrum-safe-streetwork"
+  ],
+  "wohnungsnotfallhilfe": [
+    "wohnungsnotfallhilfe-pdf"
+  ],
+  "dokumente": [
+    "mietrechtsbroschuere-pdf"
+  ],
+  "mietrecht": [
+    "mietrechtsbroschuere-pdf"
+  ],
+  "mietrechtsbroschuere": [
+    "mietrechtsbroschuere-pdf"
+  ],
+  "wohnen": [
+    "mietrechtsbroschuere-pdf",
+    "team-wohnen",
+    "caritas-schuldnerberatung",
+    "caritas-abw-wohnungslosigkeit"
+  ],
+  "flyer": [
+    "uebernachtungshaus-ruecke"
+  ],
+  "notunterkunft": [
+    "uebernachtungshaus-ruecke",
+    "aww-frauen-uebernachtungshaus"
+  ],
+  "ruecke": [
+    "uebernachtungshaus-ruecke"
+  ],
+  "uebernachtung": [
+    "uebernachtungshaus-ruecke",
+    "aww-frauen-uebernachtungshaus"
+  ],
+  "uebernachtungshaus": [
+    "uebernachtungshaus-ruecke",
+    "aww-frauen-uebernachtungshaus"
+  ],
+  "obdachlosigkeit": [
+    "hilfe-bei-obdachlosigkeit"
+  ],
+  "leichte": [
+    "leichte-sprache-suchthilfe"
+  ],
+  "leichte sprache": [
+    "leichte-sprache-suchthilfe"
+  ],
+  "leichter": [
+    "leichte-sprache-suchthilfe"
+  ],
+  "sprache": [
+    "leichte-sprache-suchthilfe"
+  ],
+  "brunnen": [
+    "trinkwasserbrunnen"
+  ],
+  "leipziger": [
+    "trinkwasserbrunnen",
+    "leipziger-oase"
+  ],
+  "trinkwasser": [
+    "trinkwasserbrunnen"
+  ],
+  "trinkwasserbrunnen": [
+    "trinkwasserbrunnen"
+  ],
+  "wasser": [
+    "trinkwasserbrunnen"
+  ],
+  "hygiene": [
+    "oeffentliche-toiletten"
+  ],
+  "oeffentlich": [
+    "oeffentliche-toiletten"
+  ],
+  "oeffentliche": [
+    "oeffentliche-toiletten"
+  ],
+  "toiletten": [
+    "oeffentliche-toiletten"
+  ],
+  "fuer": [
+    "notfallkontakte",
+    "cabl-uvo",
+    "aww-frauen-uebernachtungshaus"
+  ],
+  "gewalt": [
+    "notfallkontakte"
+  ],
+  "medizin": [
+    "notfallkontakte",
+    "gesundheitsamt",
+    "cabl-uvo"
+  ],
+  "notdienst": [
+    "notfallkontakte"
+  ],
+  "notdienste": [
+    "notfallkontakte"
+  ],
+  "notfaelle": [
+    "notfallkontakte"
+  ],
+  "notfall": [
+    "notfallkontakte"
+  ],
+  "notfallkontakte": [
+    "notfallkontakte"
+  ],
+  "suchtzentrum": [
+    "suchtzentrum",
+    "szl-betterplace",
+    "suchtzentrum-safe-streetwork",
+    "suchtzentrum-team-konsum"
+  ],
+  "jahresbericht": [
+    "safe-jahresbericht"
+  ],
+  "safe": [
+    "safe-jahresbericht",
+    "team-wohnen",
+    "suchtzentrum-safe-streetwork",
+    "suchtzentrum-team-konsum"
+  ],
+  "streetwork": [
+    "safe-jahresbericht",
+    "team-wohnen",
+    "diakonie-streetwork",
+    "suchtzentrum-safe-streetwork",
+    "suchtzentrum-team-konsum"
+  ],
+  "betterplace": [
+    "szl-betterplace"
+  ],
+  "organisation": [
+    "szl-betterplace"
+  ],
+  "szl": [
+    "szl-betterplace"
+  ],
+  "team": [
+    "team-wohnen",
+    "suchtzentrum-team-konsum"
+  ],
+  "oase": [
+    "leipziger-oase"
+  ],
+  "tageseinrichtung": [
+    "leipziger-oase"
+  ],
+  "wohnungslos": [
+    "leipziger-oase"
+  ],
+  "begegnung": [
+    "kippe-leipzig"
+  ],
+  "kippe": [
+    "kippe-leipzig"
+  ],
+  "bahnhof": [
+    "bahnhofsmission-bund"
+  ],
+  "bahnhofsmission": [
+    "bahnhofsmission-bund",
+    "bahnhofsmission-caritas"
+  ],
+  "bund": [
+    "bahnhofsmission-bund"
+  ],
+  "caritas": [
+    "bahnhofsmission-caritas",
+    "caritas-leipzig",
+    "caritas-soziale-notlagen",
+    "caritas-wohnungslosigkeit",
+    "caritas-allgemeine-soziale-beratung",
+    "caritas-schuldnerberatung",
+    "caritas-abw-wohnungslosigkeit"
+  ],
+  "notlagen": [
+    "caritas-soziale-notlagen"
+  ],
+  "soziale": [
+    "caritas-soziale-notlagen",
+    "drk-soziale-beratung",
+    "caritas-allgemeine-soziale-beratung"
+  ],
+  "soziale notlagen": [
+    "caritas-soziale-notlagen",
+    "caritas-allgemeine-soziale-beratung"
+  ],
+  "allgemeine": [
+    "drk-soziale-beratung",
+    "caritas-allgemeine-soziale-beratung"
+  ],
+  "drk": [
+    "drk-soziale-beratung",
+    "drk-kurse"
+  ],
+  "soziales": [
+    "drk-soziale-beratung"
+  ],
+  "erste hilfe": [
+    "drk-kurse"
+  ],
+  "kursangebote": [
+    "drk-kurse"
+  ],
+  "kurse": [
+    "drk-kurse"
+  ],
+  "diakonie": [
+    "diakonie-streetwork",
+    "diakonie-kleiderkammern",
+    "diakonie-suchtberatung-blaues-kreuz"
+  ],
+  "strassensozialarbeit": [
+    "diakonie-streetwork",
+    "suchtzentrum-safe-streetwork"
+  ],
+  "beduerftige": [
+    "diakonie-kleiderkammern"
+  ],
+  "kleiderkammer": [
+    "diakonie-kleiderkammern",
+    "heilsarmee-begegnungszentrum"
+  ],
+  "kleiderkammern": [
+    "diakonie-kleiderkammern"
+  ],
+  "kleidung": [
+    "diakonie-kleiderkammern"
+  ],
+  "spenden": [
+    "diakonie-kleiderkammern"
+  ],
+  "cabl": [
+    "cabl-uvo"
+  ],
+  "medizinische": [
+    "cabl-uvo"
+  ],
+  "sprechstunde": [
+    "cabl-uvo"
+  ],
+  "sprechstunden": [
+    "cabl-uvo"
+  ],
+  "uvo": [
+    "cabl-uvo"
+  ],
+  "wohnungslose": [
+    "cabl-uvo",
+    "aww-frauen-uebernachtungshaus"
+  ],
+  "aww": [
+    "aww-frauen-uebernachtungshaus"
+  ],
+  "frauen": [
+    "aww-frauen-uebernachtungshaus"
+  ],
+  "ausgabestellen": [
+    "tafel-leipzig"
+  ],
+  "essen": [
+    "tafel-leipzig"
+  ],
+  "lebensmittel": [
+    "tafel-leipzig"
+  ],
+  "tafel": [
+    "tafel-leipzig"
+  ],
+  "begegnungszentrum": [
+    "heilsarmee-begegnungszentrum"
+  ],
+  "bruecke": [
+    "heilsarmee-begegnungszentrum"
+  ],
+  "heilsarmee": [
+    "heilsarmee-begegnungszentrum"
+  ],
+  "jobcenter": [
+    "heilsarmee-begegnungszentrum"
+  ],
+  "mittagstisch": [
+    "heilsarmee-begegnungszentrum"
+  ],
+  "insolvenz": [
+    "caritas-schuldnerberatung"
+  ],
+  "insolvenzberatung": [
+    "caritas-schuldnerberatung"
+  ],
+  "schulden": [
+    "caritas-schuldnerberatung"
+  ],
+  "schuldner": [
+    "caritas-schuldnerberatung"
+  ],
+  "schuldnerberatung": [
+    "caritas-schuldnerberatung"
+  ],
+  "abw": [
+    "caritas-abw-wohnungslosigkeit"
+  ],
+  "ambulant": [
+    "caritas-abw-wohnungslosigkeit"
+  ],
+  "ambulant betreutes wohnen": [
+    "caritas-abw-wohnungslosigkeit"
+  ],
+  "betreutes": [
+    "caritas-abw-wohnungslosigkeit"
+  ],
+  "konsum": [
+    "suchtzentrum-team-konsum"
+  ],
+  "abhaengigkeit": [
+    "diakonie-suchtberatung-blaues-kreuz"
+  ],
+  "blaues": [
+    "diakonie-suchtberatung-blaues-kreuz"
+  ],
+  "blaues kreuz": [
+    "diakonie-suchtberatung-blaues-kreuz"
+  ],
+  "kreuz": [
+    "diakonie-suchtberatung-blaues-kreuz"
+  ],
+  "suchtberatung": [
+    "diakonie-suchtberatung-blaues-kreuz"
+  ],
+  "krise": [
+    "telefonseelsorge-leipzig"
+  ],
+  "notlage": [
+    "telefonseelsorge-leipzig"
+  ],
+  "telefonseelsorge": [
+    "telefonseelsorge-leipzig"
+  ]
+}
