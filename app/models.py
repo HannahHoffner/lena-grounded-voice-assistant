@@ -120,6 +120,7 @@ class TranscriptEvent(BaseModel):
     rewrite_model: str | None = None
     stt_provider: str | None = None
     tts_provider: str | None = None
+    follow_up_mode: Literal["none", "referential", "alternative", "topic_shift"] = "none"
 
 
 class SourceDefinition(BaseModel):
@@ -152,4 +153,4 @@ class ConversationContext(BaseModel):
     preferred_page_ids: list[str] = Field(default_factory=list)
     excluded_page_ids: list[str] = Field(default_factory=list)
     reference_page_ids: list[str] = Field(default_factory=list)
-    follow_up_mode: Literal["none", "referential", "alternative"] = "none"
+    follow_up_mode: Literal["none", "referential", "alternative", "topic_shift"] = "none"

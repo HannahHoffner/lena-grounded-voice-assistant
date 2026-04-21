@@ -129,6 +129,7 @@ TOPIC_KEYWORDS = {
 }
 ATTRIBUTE_QUERY_TOKENS = {
     "adresse",
+    "appointment",
     "dusche",
     "duschen",
     "duschgelegenheit",
@@ -139,6 +140,7 @@ ATTRIBUTE_QUERY_TOKENS = {
     "oeffnungszeiten",
     "offen",
     "telefon",
+    "termin",
     "uhr",
     "waeschepflege",
     "waschen",
@@ -146,6 +148,25 @@ ATTRIBUTE_QUERY_TOKENS = {
 }
 MULTI_OPTION_QUERY_HINTS = {"essen", "food", "unterkunft", "shelter", "kleidung", "clothing", "another", "andere", "alternative"}
 TODAY_QUERY_HINTS = {"today", "heute"}
+APPOINTMENT_QUERY_TOKENS = {"termin", "appointment", "anmeldung", "registration"}
+DAY_QUERY_TOKENS = {
+    "montag",
+    "dienstag",
+    "mittwoch",
+    "donnerstag",
+    "freitag",
+    "samstag",
+    "samstags",
+    "sonntag",
+    "sonntags",
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+}
 NOTICE_HINTS = ("ferien", "wartezeiten", "hinweisen", "stand:", "druck:", "impressum")
 LINK_RE = re.compile(r"\[([^\]]+)\]\([^)]+\)")
 SPACE_RE = re.compile(r"\s+")
@@ -691,48 +712,153 @@ def _format_page_option(page: PageMetadata, transcript: str, language: Language)
     attribute_query = bool(query_tokens & ATTRIBUTE_QUERY_TOKENS)
     location_query = bool(query_tokens & LOCATION_QUERY_TOKENS)
     hours_query = bool(query_tokens & HOURS_QUERY_TOKENS)
-    parts = [_place_intro(page, language)]
-    if page.address:
-        if language == Language.DE:
-            parts.append(f"Die Adresse ist {page.address}")
-        else:
-            parts.append(f"The address is {page.address}")
-    elif location_query:
-        if language == Language.DE:
-            parts.append("Eine genaue Adresse ist in der Wissensbasis nicht klar angegeben")
-        else:
-            parts.append("The knowledge base does not clearly list an exact address")
-    if page.opening_hours:
-        if any(hint in normalized_transcript for hint in TODAY_QUERY_HINTS):
-            today = datetime.now(UTC).date().isoformat()
-            if language == Language.DE:
-                parts.append(f"Fuer heute ({today}) sind folgende Oeffnungszeiten genannt: {'; '.join(page.opening_hours)}")
-            else:
-                parts.append(f"For today ({today}) the listed opening hours are: {'; '.join(page.opening_hours)}")
-        elif language == Language.DE:
-            parts.append(f"Die Oeffnungszeiten sind: {'; '.join(page.opening_hours)}")
-        else:
-            parts.append(f"The opening hours are: {'; '.join(page.opening_hours)}")
-    elif hours_query or attribute_query:
-        if language == Language.DE:
-            parts.append("Konkrete Oeffnungszeiten sind in der Wissensbasis nicht klar angegeben")
-        else:
-            parts.append("The knowledge base does not clearly list opening hours")
+    appointment_query = bool(query_tokens & APPOINTMENT_QUERY_TOKENS)
+    intro = _place_intro(page, transcript, language)
+    parts = [intro]
+    include_address = location_query or not (hours_query or appointment_query)
+    address_sentence = _address_sentence(page, include_address, language)
+    if address_sentence and page.address and normalize_text(page.address) in normalize_text(intro):
+        address_sentence = ""
+    hours_sentence = _hours_sentence(
+        page,
+        normalized_transcript,
+        query_tokens,
+        hours_query or (attribute_query and not appointment_query and not location_query),
+        language,
+    )
+    appointment_sentence = _appointment_sentence(page, appointment_query, language)
+    if address_sentence:
+        parts.append(address_sentence)
+    if hours_sentence:
+        parts.append(hours_sentence)
+    if appointment_sentence:
+        parts.append(appointment_sentence)
     service_label = _service_type_label(page, language)
-    if service_label:
+    if service_label and not page.description:
         if language == Language.DE:
             parts.append(f"Das ist {service_label}")
         else:
             parts.append(f"This is {service_label}")
-    if page.description:
+    if page.description and not _description_redundant(page):
         parts.append(page.description.rstrip("."))
     return _clean_answer_text(". ".join(parts))
 
 
-def _place_intro(page: PageMetadata, language: Language) -> str:
+def _place_intro(page: PageMetadata, transcript: str, language: Language) -> str:
+    normalized_transcript = normalize_text(transcript)
+    query_tokens = set(query_tokens_for_search(transcript, language))
+    location_query = bool(query_tokens & LOCATION_QUERY_TOKENS) or normalized_transcript.startswith("wo ist ") or normalized_transcript.startswith("where is ") or normalized_transcript.startswith("wo finde ")
+    hours_query = bool(query_tokens & HOURS_QUERY_TOKENS)
+    appointment_query = bool(query_tokens & APPOINTMENT_QUERY_TOKENS)
+    need_label = _query_need_label(query_tokens, language)
     if language == Language.DE:
-        return f"{page.title} ist eine passende Anlaufstelle"
-    return f"{page.title} is one suitable option"
+        if location_query and page.address:
+            return f"{page.title} finden Sie in {page.address}"
+        if hours_query:
+            return f"Bei {page.title} sind folgende Zeiten genannt"
+        if appointment_query:
+            return f"Zu {page.title} steht in der Wissensbasis Folgendes"
+        if need_label:
+            return f"Fuer {need_label} ist {page.title} eine gute Anlaufstelle"
+        return f"{page.title} ist eine gute Anlaufstelle"
+    if location_query and page.address:
+        return f"You can find {page.title} at {page.address}"
+    if hours_query:
+        return f"For {page.title}, the knowledge base lists these hours"
+    if appointment_query:
+        return f"For {page.title}, the knowledge base says this"
+    if need_label:
+        return f"For {need_label}, {page.title} is a good option"
+    return f"{page.title} is a good option"
+
+
+def _address_sentence(page: PageMetadata, include: bool, language: Language) -> str:
+    if not include:
+        return ""
+    if page.address:
+        if language == Language.DE:
+            return f"Die Adresse ist {page.address}"
+        return f"The address is {page.address}"
+    if language == Language.DE:
+        return "Eine genaue Adresse ist in der Wissensbasis nicht klar angegeben"
+    return "The knowledge base does not clearly list an exact address"
+
+
+def _hours_sentence(
+    page: PageMetadata,
+    normalized_transcript: str,
+    query_tokens: set[str],
+    include: bool,
+    language: Language,
+) -> str:
+    if not include:
+        return ""
+    if page.opening_hours:
+        day_specific_tokens = query_tokens & DAY_QUERY_TOKENS
+        if day_specific_tokens:
+            normalized_hours = normalize_text(" ".join(page.opening_hours))
+            if not any(day_token in normalized_hours for day_token in day_specific_tokens):
+                if language == Language.DE:
+                    return "Fuer diesen Wochentag sind in der Wissensbasis keine eigenen Oeffnungszeiten genannt"
+                return "The knowledge base does not list separate opening hours for that day"
+        if any(hint in normalized_transcript for hint in TODAY_QUERY_HINTS):
+            today = datetime.now(UTC).date().isoformat()
+            if language == Language.DE:
+                return f"Fuer heute ({today}) sind folgende Oeffnungszeiten genannt: {'; '.join(page.opening_hours)}"
+            return f"For today ({today}) the listed opening hours are: {'; '.join(page.opening_hours)}"
+        if language == Language.DE:
+            return f"Die Oeffnungszeiten sind: {'; '.join(page.opening_hours)}"
+        return f"The opening hours are: {'; '.join(page.opening_hours)}"
+    if language == Language.DE:
+        return "Konkrete Oeffnungszeiten sind in der Wissensbasis nicht klar angegeben"
+    return "The knowledge base does not clearly list opening hours"
+
+
+def _appointment_sentence(page: PageMetadata, appointment_query: bool, language: Language) -> str:
+    if not appointment_query:
+        return ""
+    if page.requires_registration is True:
+        if language == Language.DE:
+            return "Eine Anmeldung ist vorher noetig"
+        return "Registration is needed in advance"
+    if page.requires_registration is False:
+        if language == Language.DE:
+            return "Eine Anmeldung ist nicht erwaehnt"
+        return "The knowledge base does not mention that an appointment is needed"
+    if language == Language.DE:
+        return "Ob ein Termin noetig ist, steht in der Wissensbasis nicht klar"
+    return "The knowledge base does not clearly say whether an appointment is needed"
+
+
+def _description_redundant(page: PageMetadata) -> bool:
+    description_tokens = set(tokenize(page.description))
+    service_tokens = set(tokenize(page.service_type.replace("_", " ")))
+    return bool(description_tokens and service_tokens and service_tokens <= description_tokens)
+
+
+def _query_need_label(query_tokens: set[str], language: Language) -> str | None:
+    labels_de = {
+        "food": "Essen",
+        "hygiene": "Duschen oder Koerperpflege",
+        "shelter": "eine Unterkunft",
+        "clothing": "Kleidung",
+        "medical": "medizinische Hilfe",
+        "addiction": "Suchtberatung",
+    }
+    labels_en = {
+        "food": "food",
+        "hygiene": "showering or hygiene support",
+        "shelter": "shelter",
+        "clothing": "clothing",
+        "medical": "medical help",
+        "addiction": "addiction support",
+    }
+    for category, hints in TOPIC_KEYWORDS.items():
+        if query_tokens & hints:
+            return (labels_de if language == Language.DE else labels_en).get(category)
+    if query_tokens & {"dusche", "duschen", "duschgelegenheit", "shower", "koerperpflege", "waeschepflege"}:
+        return (labels_de if language == Language.DE else labels_en)["hygiene"]
+    return None
 
 
 def _clean_answer_text(text: str) -> str:

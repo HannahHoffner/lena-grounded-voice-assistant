@@ -49,3 +49,22 @@ def test_specific_location_query_prefers_atomic_tafel_page() -> None:
     results = engine.retrieve("tafel lindenau", Language.DE)
     assert results
     assert results[0].page_id == "tafel-leipzig-zentrale-lindenau-west"
+
+
+def test_supported_language_shower_queries_retrieve_hygiene_relevant_pages() -> None:
+    engine = _engine()
+    expectations = [
+        ("gdzie moge wziac prysznic", Language.PL),
+        ("unde pot face dus", Language.RO),
+        ("gde ya mogu pomytsya", Language.RU),
+    ]
+    valid_top_ids = {
+        "leipziger-oase",
+        "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog",
+        "wohnungsnotfallhilfe-pdf-insel",
+        "oeffentliche-toiletten",
+    }
+    for query, language in expectations:
+        results = engine.retrieve(query, language)
+        assert results, query
+        assert results[0].page_id in valid_top_ids, (query, results[0].page_id)

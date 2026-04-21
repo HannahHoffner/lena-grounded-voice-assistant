@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import uuid
 from pathlib import Path
+import re
 
 from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.responses import FileResponse
@@ -27,8 +28,70 @@ from .scraper.pipeline import promote_dataset, run_pipeline
 from .transcripts import TranscriptStore
 
 
-REFERENTIAL_TERMS = (" it ", " there ", " that place", " this place", "dort", "da", "diese stelle", "dieser ort")
+REFERENTIAL_TERMS = (
+    " it ",
+    " there ",
+    " that place",
+    " this place",
+    " es ",
+    " dort",
+    " da ",
+    "diese stelle",
+    "dieser ort",
+    "diesen ort",
+    "diese anlaufstelle",
+)
 ALTERNATIVE_TERMS = ("another", "other", "different", "else", "another place", "andere", "weiteres", "alternative")
+FOLLOW_UP_TOKEN_RE = re.compile(r"[a-z0-9]+")
+ATTRIBUTE_FOLLOWUP_TOKENS = {
+    "adresse",
+    "address",
+    "appointment",
+    "anmeldung",
+    "brauche",
+    "email",
+    "kontakt",
+    "oeffnungszeiten",
+    "offen",
+    "open",
+    "sonntag",
+    "sonntags",
+    "sunday",
+    "termin",
+    "uhrzeit",
+    "wann",
+    "where",
+    "wie",
+    "wo",
+}
+TARGET_GROUP_FOLLOWUP_TOKENS = {
+    "frau",
+    "frauen",
+    "familien",
+    "families",
+    "maenner",
+    "mann",
+    "men",
+    "women",
+}
+TOPIC_TOKENS = {
+    "beratung",
+    "clothing",
+    "dusche",
+    "duschen",
+    "essen",
+    "food",
+    "frau",
+    "frauen",
+    "kleidung",
+    "medical",
+    "medizin",
+    "shower",
+    "shelter",
+    "unterkunft",
+    "women",
+}
+TOPIC_SHIFT_PREFIXES = ("und ", "and ", "what about ", "was ist mit ", "und fuer ", "und für ", "fuer ", "für ")
 
 
 def create_app() -> FastAPI:
@@ -132,6 +195,7 @@ def create_app() -> FastAPI:
             rewrite_model=app.state.rewrite_provider.model_name,
             stt_provider=app.state.stt_provider.name,
             tts_provider=app.state.tts_provider.name,
+            follow_up_mode=conversation_context.follow_up_mode,
         )
         return response
 
@@ -209,6 +273,7 @@ def _store_event(
     rewrite_model: str | None,
     stt_provider: str,
     tts_provider: str,
+    follow_up_mode: str = "none",
 ) -> None:
     store.append(
         TranscriptEvent(
@@ -226,6 +291,7 @@ def _store_event(
             rewrite_model=rewrite_model,
             stt_provider=stt_provider,
             tts_provider=tts_provider,
+            follow_up_mode=follow_up_mode,  # type: ignore[arg-type]
         )
     )
 
@@ -241,6 +307,7 @@ def _build_conversation_context(
         return context
 
     latest = recent_events[-1]
+    anchor_event = _find_anchor_event(recent_events)
     latest_titles = []
     for page_id in latest.retrieved_page_ids[:3]:
         try:
@@ -253,12 +320,14 @@ def _build_conversation_context(
         history_summary += f"\nPrevious result pages: {', '.join(latest_titles)}"
     context.history_summary = history_summary
     normalized = f" {normalize_text(payload.transcript)} "
+    normalized_tokens = _normalized_follow_up_tokens(payload.transcript)
 
     if _is_alternative_followup(normalized):
-        anchor_event = _find_anchor_event(recent_events)
         context.follow_up_mode = "alternative"
-        context.excluded_page_ids = latest.retrieved_page_ids[:1]
-        context.preferred_page_ids = anchor_event.retrieved_page_ids[1:3]
+        context.excluded_page_ids = _family_related_page_ids(latest.retrieved_page_ids[:3], kb)
+        context.preferred_page_ids = [
+            page_id for page_id in anchor_event.retrieved_page_ids[1:4] if page_id not in context.excluded_page_ids
+        ][:3]
         context.reference_page_ids = anchor_event.retrieved_page_ids[:3]
         context.history_summary = f"Previous user request: {anchor_event.transcript}"
         if anchor_event.retrieved_page_ids:
@@ -273,11 +342,27 @@ def _build_conversation_context(
         context.resolved_transcript = f"{payload.transcript} {anchor_event.transcript}"
         return context
 
-    if _is_referential_followup(normalized):
+    if _is_same_place_followup(normalized, normalized_tokens):
         context.follow_up_mode = "referential"
         context.preferred_page_ids = latest.retrieved_page_ids[:1]
         context.reference_page_ids = latest.retrieved_page_ids[:1]
-        context.resolved_transcript = " ".join([payload.transcript, *latest_titles[:1]]).strip()
+        context.resolved_transcript = " ".join([payload.transcript, *latest_titles[:1], latest.transcript]).strip()
+        return context
+
+    if _is_topic_shift_followup(normalized, normalized_tokens):
+        context.follow_up_mode = "topic_shift"
+        context.reference_page_ids = anchor_event.retrieved_page_ids[:3]
+        context.history_summary = f"Previous user request: {anchor_event.transcript}"
+        if anchor_event.retrieved_page_ids:
+            anchor_titles = []
+            for page_id in anchor_event.retrieved_page_ids[:3]:
+                try:
+                    anchor_titles.append(kb.get_page(page_id).title)
+                except KeyError:
+                    continue
+            if anchor_titles:
+                context.history_summary += f"\nPrevious result pages: {', '.join(anchor_titles)}"
+        context.resolved_transcript = f"{payload.transcript} {anchor_event.transcript}".strip()
 
     return context
 
@@ -290,9 +375,63 @@ def _is_alternative_followup(normalized_transcript: str) -> bool:
     return any(term in normalized_transcript for term in ALTERNATIVE_TERMS)
 
 
+def _normalized_follow_up_tokens(transcript: str) -> set[str]:
+    return set(FOLLOW_UP_TOKEN_RE.findall(normalize_text(transcript)))
+
+
+def _is_same_place_followup(normalized_transcript: str, tokens: set[str]) -> bool:
+    if _is_referential_followup(normalized_transcript):
+        return True
+    if not tokens:
+        return False
+    if tokens <= ATTRIBUTE_FOLLOWUP_TOKENS:
+        return True
+    if len(tokens) <= 4 and tokens & ATTRIBUTE_FOLLOWUP_TOKENS and not tokens & TOPIC_TOKENS:
+        return True
+    return False
+
+
+def _is_topic_shift_followup(normalized_transcript: str, tokens: set[str]) -> bool:
+    trimmed = normalized_transcript.strip()
+    if any(trimmed.startswith(prefix) for prefix in TOPIC_SHIFT_PREFIXES):
+        return True
+    if tokens and tokens <= TARGET_GROUP_FOLLOWUP_TOKENS:
+        return True
+    if len(tokens) <= 4 and tokens & TARGET_GROUP_FOLLOWUP_TOKENS:
+        return True
+    return False
+
+
 def _find_anchor_event(recent_events: list[TranscriptEvent]) -> TranscriptEvent:
     for event in reversed(recent_events):
+        if getattr(event, "follow_up_mode", "none") != "none":
+            continue
         normalized = f" {normalize_text(event.transcript)} "
-        if not _is_referential_followup(normalized) and not _is_alternative_followup(normalized):
+        tokens = _normalized_follow_up_tokens(event.transcript)
+        if (
+            not _is_referential_followup(normalized)
+            and not _is_alternative_followup(normalized)
+            and not _is_same_place_followup(normalized, tokens)
+            and not _is_topic_shift_followup(normalized, tokens)
+        ):
             return event
     return recent_events[-1]
+
+
+def _family_related_page_ids(page_ids: list[str], kb: KnowledgeBase) -> list[str]:
+    if not page_ids:
+        return []
+    try:
+        top_page = kb.get_page(page_ids[0])
+    except KeyError:
+        return page_ids[:1]
+    family = top_page.title.split(" - ", 1)[0].strip()
+    related: list[str] = []
+    for candidate_id in page_ids:
+        try:
+            candidate = kb.get_page(candidate_id)
+        except KeyError:
+            continue
+        if candidate.title.split(" - ", 1)[0].strip() == family and candidate_id not in related:
+            related.append(candidate_id)
+    return related or page_ids[:1]

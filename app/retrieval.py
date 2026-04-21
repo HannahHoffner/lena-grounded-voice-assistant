@@ -87,6 +87,7 @@ STOPWORDS = {
 }
 GENERIC_QUERY_TOKENS = {
     "beratung",
+    "appointment",
     "brauch",
     "brauche",
     "help",
@@ -143,8 +144,26 @@ RELATED_CATEGORIES = {
 }
 EXTRA_QUERY_EXPANSION_RULES: tuple[tuple[set[str], tuple[str, ...]], ...] = (
     (
-        {"dusche", "duschen", "duschgelegenheit", "shower", "wash", "washing", "laundry", "waesche", "waescheservice", "waschen"},
+        {
+            "dus",
+            "dusche",
+            "duschen",
+            "duschgelegenheit",
+            "laundry",
+            "pomytsya",
+            "prysznic",
+            "shower",
+            "wash",
+            "washing",
+            "waesche",
+            "waescheservice",
+            "waschen",
+        },
         ("dusche", "duschgelegenheit", "koerperpflege", "waeschepflege", "tageseinrichtung"),
+    ),
+    (
+        {"termin", "appointment", "anmeldung", "registrierung", "registration"},
+        ("termin", "anmeldung", "sprechstunde", "walk", "walkin"),
     ),
     ({"frau", "frauen", "woman", "women", "kobieta", "femeie"}, ("frauen", "frau", "uebernachtung", "notunterkunft")),
     ({"mann", "maenner", "manner", "men", "man", "barbat"}, ("maenner", "mann", "uebernachtung", "notunterkunft")),

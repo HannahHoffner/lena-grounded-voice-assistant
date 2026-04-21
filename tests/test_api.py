@@ -94,6 +94,7 @@ def test_shower_answer_includes_concrete_place_details(monkeypatch) -> None:
     assert body["status"] == "ok"
     assert "Leipziger Oase" in body["answer_text"]
     assert "08:00" in body["answer_text"]
+    assert "Duschen" in body["answer_text"] or "Koerperpflege" in body["answer_text"]
     assert "Nuernberger Strasse 31" in body["answer_text"] or "Nürnberger Straße 31" in body["answer_text"]
 
 
@@ -107,6 +108,7 @@ def test_location_answer_includes_address_for_specific_place(monkeypatch) -> Non
     body = response.json()
     assert body["status"] == "ok"
     assert "Leipziger Oase" in body["answer_text"]
+    assert "finden Sie" in body["answer_text"] or "Adresse ist" in body["answer_text"]
     assert "Nuernberger Strasse 31" in body["answer_text"] or "Nürnberger Straße 31" in body["answer_text"]
 
 
@@ -135,6 +137,19 @@ def test_answer_endpoint_prefers_debt_counseling_page(monkeypatch) -> None:
     assert body["status"] == "ok"
     assert body["retrieved_page_ids"][0] == "caritas-schuldnerberatung"
     assert "Schuldner" in body["answer_text"]
+
+
+def test_missing_detail_answer_says_so_naturally(monkeypatch) -> None:
+    monkeypatch.setenv("LENA_BOOTSTRAP_RUNTIME_FROM_SCRAPER", "false")
+    monkeypatch.setenv("LENA_REWRITE_PROVIDER", "template")
+    app = create_app()
+    client = TestClient(app)
+    response = client.post("/api/query/answer", json={"transcript": "wie ist die adresse von cabl", "language": "de"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "ok"
+    assert body["retrieved_page_ids"][0] == "cabl-uvo"
+    assert "nicht klar angegeben" in body["answer_text"]
 
 
 def test_session_follow_up_prefers_previous_place(monkeypatch) -> None:
@@ -174,6 +189,68 @@ def test_session_alternative_request_prefers_different_place(monkeypatch) -> Non
 
     assert first["retrieved_page_ids"][0].startswith("tafel-leipzig")
     assert second["retrieved_page_ids"][0] != first["retrieved_page_ids"][0]
+
+
+def test_session_follow_up_keeps_same_place_for_hours_question(monkeypatch) -> None:
+    monkeypatch.setenv("LENA_BOOTSTRAP_RUNTIME_FROM_SCRAPER", "false")
+    monkeypatch.setenv("LENA_REWRITE_PROVIDER", "template")
+    app = create_app()
+    client = TestClient(app)
+
+    first = client.post(
+        "/api/query/answer",
+        json={"transcript": "Wo kann ich duschen?", "language": "de", "session_id": "session-3"},
+    ).json()
+    second = client.post(
+        "/api/query/answer",
+        json={"transcript": "Ist es sonntags offen?", "language": "de", "session_id": "session-3"},
+    ).json()
+
+    assert first["retrieved_page_ids"][0] in {"leipziger-oase", "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog"}
+    assert second["retrieved_page_ids"][0] in {"leipziger-oase", "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog"}
+    assert "keine eigenen Oeffnungszeiten" in second["answer_text"]
+
+
+def test_session_follow_up_keeps_same_place_for_address_question(monkeypatch) -> None:
+    monkeypatch.setenv("LENA_BOOTSTRAP_RUNTIME_FROM_SCRAPER", "false")
+    monkeypatch.setenv("LENA_REWRITE_PROVIDER", "template")
+    app = create_app()
+    client = TestClient(app)
+
+    client.post(
+        "/api/query/answer",
+        json={"transcript": "Wo kann ich duschen?", "language": "de", "session_id": "session-4"},
+    ).json()
+    second = client.post(
+        "/api/query/answer",
+        json={"transcript": "Wie ist die Adresse?", "language": "de", "session_id": "session-4"},
+    ).json()
+
+    assert second["retrieved_page_ids"][0] in {"leipziger-oase", "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog"}
+    assert "Nuernberger Strasse 31" in second["answer_text"] or "NÃ¼rnberger StraÃŸe 31" in second["answer_text"]
+
+
+def test_session_alternative_follow_up_avoids_same_place_family(monkeypatch) -> None:
+    monkeypatch.setenv("LENA_BOOTSTRAP_RUNTIME_FROM_SCRAPER", "false")
+    monkeypatch.setenv("LENA_REWRITE_PROVIDER", "template")
+    app = create_app()
+    client = TestClient(app)
+
+    first = client.post(
+        "/api/query/answer",
+        json={"transcript": "Wo kann ich duschen?", "language": "de", "session_id": "session-5"},
+    ).json()
+    client.post(
+        "/api/query/answer",
+        json={"transcript": "Wie ist die Adresse?", "language": "de", "session_id": "session-5"},
+    ).json()
+    third = client.post(
+        "/api/query/answer",
+        json={"transcript": "Gibt es noch einen anderen Ort?", "language": "de", "session_id": "session-5"},
+    ).json()
+
+    assert first["retrieved_page_ids"][0] in {"leipziger-oase", "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog"}
+    assert third["retrieved_page_ids"][0] not in {"leipziger-oase", "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog"}
 
 
 def test_transcribe_endpoint_accepts_form_language_string(monkeypatch, tmp_path: Path) -> None:
