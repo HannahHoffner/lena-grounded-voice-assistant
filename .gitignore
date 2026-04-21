@@ -21,6 +21,7 @@ build/
 # Runtime and generated workspace data
 data/runtime/
 data/scraper_workspace/
+data/evals/results/
 data/voices/piper/
 tools/piper/
 

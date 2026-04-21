@@ -82,6 +82,8 @@ STOPWORDS = {
     "when",
     "where",
     "wie",
+    "work",
+    "works",
     "wo",
     "you",
 }
@@ -339,39 +341,41 @@ class RetrievalEngine:
             if page.page_id in excluded_page_ids:
                 continue
             markdown = self.kb.get_page_markdown(page.page_id)
-            score = 0.0
-            score += self._field_score(query_counts, page.title, weight=3.2)
-            score += self._field_score(query_counts, page.page_id.replace("-", " "), weight=2.8)
-            score += self._field_score(query_counts, page.category, weight=0.9)
-            score += self._field_score(query_counts, page.service_type, weight=1.35)
-            score += self._field_score(query_counts, page.description, weight=1.4)
-            score += self._field_score(query_counts, " ".join(page.tags), weight=2.2)
-            score += self._field_score(query_counts, " ".join(page.aliases), weight=2.4)
-            score += self._field_score(query_counts, " ".join(page.target_groups), weight=1.7)
-            score += self._field_score(query_counts, page.gender_access or "", weight=1.1)
-            score += self._field_score(query_counts, " ".join(page.languages), weight=0.35)
-            score += self._field_score(query_counts, page.address or "", weight=2.1)
-            score += self._field_score(query_counts, " ".join(page.opening_hours), weight=1.8)
-            score += self._field_score(query_counts, page.phone or "", weight=0.2)
-            score += self._field_score(query_counts, page.email or "", weight=0.2)
-            score += self._field_score(query_counts, page.publisher or "", weight=0.35)
-            score += self._field_score(query_counts, page.summary, weight=0.55)
-            score += self._detail_field_score(detail_query_counts, page.address or "", weight=2.6)
-            score += self._detail_field_score(detail_query_counts, " ".join(page.opening_hours), weight=1.7)
-            score += self._best_passage_score(query_counts, markdown) * 2.4
-            score += alias_hits.get(page.page_id, 0.0)
-            if page.language == language.value:
+            lexical_score = 0.0
+            lexical_score += self._field_score(query_counts, page.title, weight=3.2)
+            lexical_score += self._field_score(query_counts, page.page_id.replace("-", " "), weight=2.8)
+            lexical_score += self._field_score(query_counts, page.category, weight=0.9)
+            lexical_score += self._field_score(query_counts, page.service_type, weight=1.35)
+            lexical_score += self._field_score(query_counts, page.description, weight=1.4)
+            lexical_score += self._field_score(query_counts, " ".join(page.tags), weight=2.2)
+            lexical_score += self._field_score(query_counts, " ".join(page.aliases), weight=2.4)
+            lexical_score += self._field_score(query_counts, " ".join(page.target_groups), weight=1.7)
+            lexical_score += self._field_score(query_counts, page.gender_access or "", weight=1.1)
+            lexical_score += self._field_score(query_counts, " ".join(page.languages), weight=0.35)
+            lexical_score += self._field_score(query_counts, page.address or "", weight=2.1)
+            lexical_score += self._field_score(query_counts, " ".join(page.opening_hours), weight=1.8)
+            lexical_score += self._field_score(query_counts, page.phone or "", weight=0.2)
+            lexical_score += self._field_score(query_counts, page.email or "", weight=0.2)
+            lexical_score += self._field_score(query_counts, page.publisher or "", weight=0.35)
+            lexical_score += self._field_score(query_counts, page.summary, weight=0.55)
+            lexical_score += self._detail_field_score(detail_query_counts, page.address or "", weight=2.6)
+            lexical_score += self._detail_field_score(detail_query_counts, " ".join(page.opening_hours), weight=1.7)
+            lexical_score += self._best_passage_score(query_counts, markdown) * 2.4
+            lexical_score += alias_hits.get(page.page_id, 0.0)
+            lexical_score += self._category_score(query_category, page)
+            lexical_score += self._exact_match_boost(normalized_query, query_token_set, query_category, page)
+            lexical_score += self._detail_match_boost(detail_query_tokens, page)
+
+            has_match_signal = lexical_score > 0.02 or page.page_id in preferred_page_ids
+            score = lexical_score
+            if has_match_signal and page.language == language.value:
                 score += 0.08
-            if location_query and page.address:
+            if has_match_signal and location_query and page.address:
                 score += 0.12
-            if hours_query and page.opening_hours:
+            if has_match_signal and hours_query and page.opening_hours:
                 score += 0.14
             if page.page_id in preferred_page_ids:
-                score += 0.28
-            score += self._category_score(query_category, page)
-            score += self._exact_match_boost(normalized_query, query_token_set, query_category, page)
-            score += self._detail_match_boost(detail_query_tokens, page)
-            has_match_signal = score > 0.01
+                score += 0.6 if has_match_signal else 0.32
             score += self._concrete_page_score(
                 page,
                 location_query=location_query,

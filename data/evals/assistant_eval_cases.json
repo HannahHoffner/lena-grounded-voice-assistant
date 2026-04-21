@@ -1,0 +1,325 @@
+{
+  "version": "2026-04-21",
+  "description": "Compact grounded evaluation set for LENA. All expectations must remain traceable to the local published KB.",
+  "scoring_notes": [
+    "Automated checks focus on grounding-sensitive structure: status, session behavior, retrieved place choice, and required answer details.",
+    "Naturalness, multilingual fluency, and unsupported elaboration still need manual review from the captured outputs.",
+    "The weak-match probe is included for manual review because the current retrieval score scale rarely emits status weak_match under default thresholds."
+  ],
+  "cases": [
+    {
+      "case_id": "direct_place_lookup_de",
+      "case_type": "direct_place_lookup",
+      "description": "Direct place lookup with concrete address detail in German.",
+      "turns": [
+        {
+          "transcript": "Wo ist die Leipziger Oase?",
+          "language": "de",
+          "expect": {
+            "status_in": ["ok"],
+            "top_page_in": ["leipziger-oase", "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog"],
+            "answer_contains_all": ["Leipziger Oase"],
+            "answer_contains_any": ["Nuernberger Strasse 31", "Nürnberger Straße 31"]
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "service_lookup_food_en",
+      "case_type": "service_lookup",
+      "description": "Broad food lookup in English should stay grounded and concrete.",
+      "turns": [
+        {
+          "transcript": "where can i get food in leipzig",
+          "language": "en",
+          "expect": {
+            "status_in": ["ok"],
+            "top_page_prefixes": ["tafel-leipzig"],
+            "answer_contains_any": ["Tafel Leipzig", "food"]
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "followup_address_de",
+      "case_type": "address_followup",
+      "description": "Short address follow-up should stay on the same place.",
+      "turns": [
+        {
+          "transcript": "Wo kann ich duschen?",
+          "language": "de",
+          "expect": {
+            "status_in": ["ok"],
+            "top_page_in": ["leipziger-oase", "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog"],
+            "answer_contains_all": ["Leipziger Oase"]
+          }
+        },
+        {
+          "transcript": "Wie ist die Adresse?",
+          "language": "de",
+          "expect": {
+            "status_in": ["ok"],
+            "session_event": "continued",
+            "same_session_as_previous": true,
+            "top_page_in": ["leipziger-oase", "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog"],
+            "answer_contains_all": ["Leipziger Oase"],
+            "answer_contains_any": ["Nuernberger Strasse 31", "Nürnberger Straße 31"]
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "followup_hours_en",
+      "case_type": "hours_followup",
+      "description": "Hours follow-up should remain anchored to the prior place.",
+      "turns": [
+        {
+          "transcript": "Where can I shower?",
+          "language": "en",
+          "expect": {
+            "status_in": ["ok"],
+            "top_page_in": ["leipziger-oase", "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog"]
+          }
+        },
+        {
+          "transcript": "Is it open on Sunday?",
+          "language": "en",
+          "expect": {
+            "status_in": ["ok"],
+            "session_event": "continued",
+            "same_session_as_previous": true,
+            "top_page_in": ["leipziger-oase", "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog"],
+            "answer_contains_all": ["Leipziger Oase"],
+            "answer_contains_any": ["not list separate opening hours", "keine eigenen Oeffnungszeiten"]
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "alternative_place_en",
+      "case_type": "alternative_followup",
+      "description": "Alternative-place follow-up should not repeat the same top hit.",
+      "turns": [
+        {
+          "transcript": "Where can I get food in Leipzig?",
+          "language": "en",
+          "expect": {
+            "status_in": ["ok"],
+            "top_page_prefixes": ["tafel-leipzig"]
+          }
+        },
+        {
+          "transcript": "Another place?",
+          "language": "en",
+          "expect": {
+            "status_in": ["ok"],
+            "session_event": "continued",
+            "same_session_as_previous": true,
+            "top_page_not_equals_previous": true,
+            "answer_not_contains": ["I could not find reliable information"]
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "topic_continuation_food_after_hygiene_en",
+      "case_type": "topic_continuation",
+      "description": "Topic continuation inside the same session should shift cleanly from hygiene to food.",
+      "turns": [
+        {
+          "transcript": "Where can I shower?",
+          "language": "en",
+          "expect": {
+            "status_in": ["ok"]
+          }
+        },
+        {
+          "transcript": "What about food?",
+          "language": "en",
+          "expect": {
+            "status_in": ["ok"],
+            "session_event": "continued",
+            "same_session_as_previous": true,
+            "top_page_prefixes": ["tafel-leipzig"],
+            "answer_contains_any": ["Tafel Leipzig", "food"]
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "topic_shift_near_station_en",
+      "case_type": "mild_topic_shift",
+      "description": "Near-the-station follow-up should use the same conversation but select a station-related place.",
+      "turns": [
+        {
+          "transcript": "Where can I get food?",
+          "language": "en",
+          "expect": {
+            "status_in": ["ok"]
+          }
+        },
+        {
+          "transcript": "What about near the station?",
+          "language": "en",
+          "expect": {
+            "status_in": ["ok"],
+            "session_event": "continued",
+            "same_session_as_previous": true,
+            "top_page_in": ["wohnungsnotfallhilfe-pdf-bahnhofsmission-leipzig-katalog"],
+            "answer_contains_all": ["Bahnhofsmission Leipzig"]
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "appointment_followup_en",
+      "case_type": "appointment_followup",
+      "description": "Appointment follow-up after CABL should stay attached to the same entity instead of resetting into a generic clarification.",
+      "turns": [
+        {
+          "transcript": "What is CABL?",
+          "language": "en",
+          "expect": {
+            "status_in": ["ok"],
+            "top_page_in": ["cabl-uvo"],
+            "answer_contains_all": ["CABL"]
+          }
+        },
+        {
+          "transcript": "Do I need an appointment?",
+          "language": "en",
+          "expect": {
+            "status_in": ["ok"],
+            "session_event": "continued",
+            "same_session_as_previous": true,
+            "top_page_in": ["cabl-uvo"],
+            "answer_contains_all": ["CABL"],
+            "answer_contains_any": ["appointment", "Termin", "not clearly"]
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "unrelated_reset_en",
+      "case_type": "reset_after_unrelated_query",
+      "description": "An unrelated query should reset instead of inheriting stale context.",
+      "turns": [
+        {
+          "transcript": "Where can I shower?",
+          "language": "en",
+          "expect": {
+            "status_in": ["ok"]
+          }
+        },
+        {
+          "transcript": "How do telescopes work?",
+          "language": "en",
+          "expect": {
+            "status_in": ["unknown"],
+            "session_event": "context_reset",
+            "new_session_after_previous": true,
+            "retrieved_page_count": 0
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "clarification_without_context_en",
+      "case_type": "clarification",
+      "description": "A standalone appointment query should ask for clarification rather than guess a service.",
+      "turns": [
+        {
+          "transcript": "Do I need an appointment?",
+          "language": "en",
+          "expect": {
+            "status_in": ["clarification_needed"],
+            "answer_contains_any": ["briefly say", "what kind of help", "whether you need"]
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "no_match_en",
+      "case_type": "unknown",
+      "description": "No-match query should stay unknown and not invent a place.",
+      "turns": [
+        {
+          "transcript": "astronomy telescope orbit",
+          "language": "en",
+          "expect": {
+            "status_in": ["unknown"],
+            "retrieved_page_count": 0,
+            "answer_not_contains": ["Leipzig", "Bahnhofsmission", "Leipziger Oase", "Tafel Leipzig"]
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "weak_match_probe_de",
+      "case_type": "weak_match_probe",
+      "description": "Manual weak-match probe for a fuzzy station query. Included because the current score scale rarely emits status weak_match.",
+      "manual_review_only": true,
+      "manual_review_focus": [
+        "Does the model resist unsupported elaboration?",
+        "If retrieval is shaky, does the answer stay cautious instead of sounding confidently wrong?"
+      ],
+      "turns": [
+        {
+          "transcript": "bahnhf mission",
+          "language": "de"
+        }
+      ]
+    },
+    {
+      "case_id": "multilingual_place_lookup_pl",
+      "case_type": "multilingual_lookup",
+      "description": "Place lookup in Polish should keep grounding while answering naturally in Polish.",
+      "manual_review_focus": ["output_language", "naturalness"],
+      "turns": [
+        {
+          "transcript": "Gdzie jest Leipziger Oase?",
+          "language": "pl",
+          "expect": {
+            "status_in": ["ok"],
+            "top_page_in": ["leipziger-oase", "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog"],
+            "answer_contains_all": ["Leipziger Oase"]
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "multilingual_place_lookup_ro",
+      "case_type": "multilingual_lookup",
+      "description": "Place lookup in Romanian should keep grounding while answering naturally in Romanian.",
+      "manual_review_focus": ["output_language", "naturalness"],
+      "turns": [
+        {
+          "transcript": "Unde este Leipziger Oase?",
+          "language": "ro",
+          "expect": {
+            "status_in": ["ok"],
+            "top_page_in": ["leipziger-oase", "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog"],
+            "answer_contains_all": ["Leipziger Oase"]
+          }
+        }
+      ]
+    },
+    {
+      "case_id": "multilingual_place_lookup_ru",
+      "case_type": "multilingual_lookup",
+      "description": "Place lookup in Russian should keep grounding while answering naturally in Russian.",
+      "manual_review_focus": ["output_language", "naturalness"],
+      "turns": [
+        {
+          "transcript": "Gde nahoditsya Leipziger Oase?",
+          "language": "ru",
+          "expect": {
+            "status_in": ["ok"],
+            "top_page_in": ["leipziger-oase", "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog"],
+            "answer_contains_all": ["Leipziger Oase"]
+          }
+        }
+      ]
+    }
+  ]
+}

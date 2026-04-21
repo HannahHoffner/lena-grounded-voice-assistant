@@ -18,9 +18,8 @@ class KnowledgeBase:
         manifest = Manifest.model_validate_json((self.index_root / "manifest.json").read_text(encoding="utf-8"))
         pages = [PageMetadata.model_validate(item) for item in json.loads((self.index_root / "pages.json").read_text(encoding="utf-8"))]
         aliases = json.loads((self.index_root / "aliases.json").read_text(encoding="utf-8"))
-        page_chunks = json.loads((self.index_root / "page_chunks.json").read_text(encoding="utf-8"))
         self._pages_by_id = {page.page_id: page for page in pages}
-        return PublishedDataset(manifest=manifest, pages=pages, aliases=aliases, page_chunks=page_chunks)
+        return PublishedDataset(manifest=manifest, pages=pages, aliases=aliases)
 
     def reload(self) -> None:
         self.dataset = self._load()

@@ -66,6 +66,22 @@ class QueryRequest(BaseModel):
     session_id: str | None = None
 
 
+class SessionStatus(StrEnum):
+    ACTIVE = "active"
+    EXPIRED = "expired"
+    ENDED = "ended"
+    RESET = "reset"
+
+
+class SessionEvent(StrEnum):
+    STARTED = "started"
+    CONTINUED = "continued"
+    EXPIRED_RESET = "expired_reset"
+    ENDED_RESET = "ended_reset"
+    CONTEXT_RESET = "context_reset"
+    LANGUAGE_RESET = "language_reset"
+
+
 class RetrievedPage(BaseModel):
     page_id: str
     title: str
@@ -82,6 +98,9 @@ class QueryAnswerResponse(BaseModel):
     provider: str
     model: str | None = None
     session_id: str
+    session_status: SessionStatus = SessionStatus.ACTIVE
+    session_event: SessionEvent = SessionEvent.STARTED
+    session_message: str | None = None
 
 
 class KnowledgeAnswer(BaseModel):
@@ -120,7 +139,9 @@ class TranscriptEvent(BaseModel):
     rewrite_model: str | None = None
     stt_provider: str | None = None
     tts_provider: str | None = None
-    follow_up_mode: Literal["none", "referential", "alternative", "topic_shift"] = "none"
+    follow_up_mode: Literal["none", "referential", "alternative", "topic_shift", "fresh_topic"] = "none"
+    session_status: SessionStatus = SessionStatus.ACTIVE
+    session_event: SessionEvent = SessionEvent.CONTINUED
 
 
 class SourceDefinition(BaseModel):
@@ -143,7 +164,6 @@ class PublishedDataset(BaseModel):
     manifest: Manifest
     pages: list[PageMetadata]
     aliases: dict[str, list[str]]
-    page_chunks: list[dict]
 
 
 class ConversationContext(BaseModel):
@@ -152,5 +172,42 @@ class ConversationContext(BaseModel):
     history_summary: str | None = None
     preferred_page_ids: list[str] = Field(default_factory=list)
     excluded_page_ids: list[str] = Field(default_factory=list)
-    reference_page_ids: list[str] = Field(default_factory=list)
-    follow_up_mode: Literal["none", "referential", "alternative", "topic_shift"] = "none"
+    follow_up_mode: Literal["none", "referential", "alternative", "topic_shift", "fresh_topic"] = "none"
+
+
+class SessionTurn(BaseModel):
+    timestamp: datetime
+    language: Language
+    transcript: str
+    resolved_transcript: str | None = None
+    answer_text: str
+    answer_status: str
+    retrieved_page_ids: list[str] = Field(default_factory=list)
+    primary_page_ids: list[str] = Field(default_factory=list)
+    topic_categories: list[str] = Field(default_factory=list)
+    topic_service_types: list[str] = Field(default_factory=list)
+    follow_up_mode: Literal["none", "referential", "alternative", "topic_shift", "fresh_topic"] = "none"
+
+
+class ConversationSession(BaseModel):
+    session_id: str
+    status: SessionStatus = SessionStatus.ACTIVE
+    created_at: datetime
+    last_activity_at: datetime
+    selected_language: Language
+    recent_turns: list[SessionTurn] = Field(default_factory=list)
+    ended_reason: str | None = None
+    last_session_event: SessionEvent = SessionEvent.STARTED
+    last_session_message: str | None = None
+
+
+class SessionEndRequest(BaseModel):
+    session_id: str
+
+
+class SessionEndResponse(BaseModel):
+    status: Literal["ok"]
+    session_id: str
+    session_status: SessionStatus = SessionStatus.ENDED
+    session_event: SessionEvent = SessionEvent.ENDED_RESET
+    session_message: str | None = None

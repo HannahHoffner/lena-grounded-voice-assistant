@@ -14,7 +14,6 @@ from ..retrieval import (
     HOURS_QUERY_TOKENS,
     LOCATION_QUERY_TOKENS,
     RetrievalEngine,
-    content_lines,
     extract_relevant_passages,
     normalize_text,
     query_tokens_for_search,
@@ -176,6 +175,7 @@ class BaseRewriteProvider(ABC):
     name = "base"
     model_name: str | None = None
     uses_llm = False
+    last_answer_source = "unknown"
 
     @abstractmethod
     async def answer(
@@ -208,7 +208,14 @@ def _ground_query(
     if not retrieved:
         return [], KnowledgeAnswer(answer_text=UNKNOWN_TEXT[language], status="unknown")
 
-    if retrieval.should_clarify(retrieved, transcript, clarification_gap_threshold):
+    anchored_follow_up = bool(
+        conversation_context
+        and conversation_context.follow_up_mode == "referential"
+        and conversation_context.preferred_page_ids
+        and retrieved
+        and retrieved[0].page_id in conversation_context.preferred_page_ids
+    )
+    if not anchored_follow_up and retrieval.should_clarify(retrieved, transcript, clarification_gap_threshold):
         question = _build_clarification_question(language, kb, retrieved)
         return retrieved, KnowledgeAnswer(
             answer_text=question,
@@ -487,9 +494,14 @@ def _build_retrieved_context(
 ) -> str:
     search_tokens = set(query_tokens_for_search(transcript, language))
     sections: list[str] = []
+    effective_limit = limit
+    if conversation_context and (conversation_context.preferred_page_ids or conversation_context.follow_up_mode == "referential"):
+        effective_limit = 1
     if conversation_context and conversation_context.history_summary:
         sections.append(f"RECENT_CONTEXT:\n{conversation_context.history_summary}")
-    for item in _select_context_pages(transcript, kb, retrieved, limit=limit):
+    if conversation_context and conversation_context.follow_up_mode != "none":
+        sections.append(f"FOLLOW_UP_MODE: {conversation_context.follow_up_mode}")
+    for item in _select_context_pages(transcript, kb, retrieved, limit=effective_limit):
         page = kb.get_page(item.page_id)
         passages = extract_relevant_passages(
             transcript,
@@ -590,38 +602,6 @@ def _select_context_pages(transcript: str, kb: KnowledgeBase, retrieved: list[Re
         if item.score >= top_score * 0.45:
             selected.append(item)
     return selected[:limit]
-
-
-def _select_snippet(
-    transcript: str,
-    language: Language,
-    page_title: str,
-    markdown: str,
-    passages: list[str],
-    summary: str,
-) -> str:
-    search_tokens = set(query_tokens_for_search(transcript, language))
-    attribute_query = bool(search_tokens & ATTRIBUTE_QUERY_TOKENS)
-    intro_candidates = content_lines(markdown)[:6]
-    ordered_candidates = passages + intro_candidates if attribute_query else intro_candidates + passages
-    ordered_candidates.append(summary)
-
-    for candidate in ordered_candidates:
-        cleaned = _clean_answer_text(candidate)
-        if not cleaned or _looks_like_notice(cleaned):
-            continue
-        candidate_tokens = set(tokenize(cleaned))
-        if search_tokens and not attribute_query and not candidate_tokens & search_tokens:
-            continue
-        if not attribute_query and _looks_too_detailed(cleaned):
-            continue
-        if "ausgabestellen" in cleaned.casefold():
-            return _distribution_points_answer(page_title, language)
-        if len(tokenize(cleaned)) < 3:
-            continue
-        return cleaned
-
-    return _title_only_answer(page_title, language)
 
 
 def _build_structured_answer(
@@ -963,7 +943,9 @@ class TemplateRewriteProvider(BaseRewriteProvider):
             conversation_context=conversation_context,
         )
         if early_answer:
+            self.last_answer_source = "guardrail"
             return early_answer
+        self.last_answer_source = "template"
         return _fallback_answer(
             transcript,
             language,
@@ -1049,12 +1031,43 @@ class OllamaRewriteProvider(BaseRewriteProvider):
             conversation_context=conversation_context,
         )
         if early_answer:
+            self.last_answer_source = "guardrail"
             return early_answer
+
+        query_tokens = set(query_tokens_for_search(transcript, language))
+        detail_sensitive_follow_up = bool(
+            conversation_context
+            and conversation_context.follow_up_mode == "referential"
+            and query_tokens & (LOCATION_QUERY_TOKENS | HOURS_QUERY_TOKENS | APPOINTMENT_QUERY_TOKENS | DAY_QUERY_TOKENS)
+        )
+        if detail_sensitive_follow_up:
+            self.last_answer_source = "template_detail_guard"
+            return _fallback_answer(
+                transcript,
+                language,
+                kb,
+                retrieved,
+                minimum_match_threshold=self.minimum_match_threshold,
+                weak_match_threshold=self.weak_match_threshold,
+                conversation_context=conversation_context,
+            )
 
         retrieved_page_ids = [item.page_id for item in retrieved]
         resolved_transcript = conversation_context.resolved_transcript if conversation_context else transcript
         context = _build_retrieved_context(resolved_transcript, language, kb, retrieved, conversation_context=conversation_context)
         overview_hint = _build_overview_answer(transcript, language, kb, retrieved)
+        normalized_transcript = normalize_text(transcript)
+        is_location_query = bool(query_tokens & LOCATION_QUERY_TOKENS) or normalized_transcript.startswith(("wo ist ", "where is ", "wo finde ", "gdzie jest ", "unde este "))
+        is_day_specific_query = bool(query_tokens & DAY_QUERY_TOKENS)
+        is_hours_query = bool(query_tokens & HOURS_QUERY_TOKENS)
+        is_appointment_query = bool(query_tokens & APPOINTMENT_QUERY_TOKENS)
+        follow_up_hint = ""
+        if conversation_context and conversation_context.follow_up_mode == "referential":
+            follow_up_hint = "This is a follow-up about the same place. Keep the answer anchored to the referenced place and avoid drifting to another page."
+        elif conversation_context and conversation_context.follow_up_mode == "alternative":
+            follow_up_hint = "This is a request for an alternative option. Do not repeat the same place if another retrieved page fits."
+        elif conversation_context and conversation_context.follow_up_mode == "topic_shift":
+            follow_up_hint = "This continues the same conversation with a related topic shift. Use only the currently retrieved pages for the new subtopic."
         schema = KnowledgeAnswer.model_json_schema()
         system_prompt = self._load_system_prompt(language)
         user_prompt = "\n".join(
@@ -1068,12 +1081,21 @@ class OllamaRewriteProvider(BaseRewriteProvider):
                 context,
                 "",
                 f"Overview hint: {overview_hint}" if overview_hint else "",
+                follow_up_hint,
                 "If several retrieved pages are locations of the same organisation, summarize them together instead of repeating one sentence per location.",
                 "Answer only from the retrieved pages above.",
                 "Always include the place name.",
                 "Include the address and opening hours whenever they are available and directly useful.",
+                "If the user asks where a place is, answer with the place name and address. Do not add opening hours unless the user asked for them." if is_location_query else "",
+                "If the user asks about opening hours, focus on the hours answer and do not add unrelated service details." if is_hours_query or is_day_specific_query else "",
+                "If the user asks about appointments, answer only whether an appointment is required, not required, or not clearly stated in the knowledge base." if is_appointment_query else "",
                 "If several suitable places are retrieved, give 1 to 3 concrete options.",
                 "Prefer the highest-scoring page unless another retrieved page adds directly relevant detail.",
+                "Do not infer facts that are not explicitly supported by the retrieved pages.",
+                "If a specific weekday is asked for, only say that the place is open on that day if that weekday is explicitly listed in OPENING_HOURS.",
+                "Do not infer Sunday opening from Saturday hours or from public-holiday hours.",
+                "If the knowledge base does not clearly say whether an appointment is needed, say that clearly instead of guessing." if is_appointment_query else "",
+                "If the user asks about opening hours for a specific day and that day is not explicitly listed, say that the knowledge base does not clearly list separate hours for that day." if is_day_specific_query or is_hours_query else "",
                 "If the retrieved pages do not clearly support the answer, return status unknown.",
                 "If support is weak, return status weak_match.",
                 "Keep the answer concise, clear, and easy to speak aloud.",
@@ -1098,6 +1120,7 @@ class OllamaRewriteProvider(BaseRewriteProvider):
             parsed = json.loads(content)
             answer = KnowledgeAnswer.model_validate(parsed)
         except Exception:
+            self.last_answer_source = "template_fallback"
             return _fallback_answer(
                 transcript,
                 language,
@@ -1108,6 +1131,7 @@ class OllamaRewriteProvider(BaseRewriteProvider):
                 conversation_context=conversation_context,
             )
 
+        self.last_answer_source = "llm"
         answer.retrieved_page_ids = retrieved_page_ids
         answer.answer_text = _clean_answer_text(answer.answer_text)
         weak = retrieved[0].score < self.weak_match_threshold

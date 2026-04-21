@@ -210,6 +210,41 @@ button {
   font-weight: 700;
 }
 
+.session-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.session-state {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--text-muted);
+}
+
+.end-session-button {
+  flex-shrink: 0;
+  padding: 0.78rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--white);
+  color: var(--blue-primary);
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.end-session-button:hover:not(:disabled) {
+  background: rgba(0, 167, 214, 0.08);
+}
+
+.end-session-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .manual-form {
   margin-top: 1rem;
 }
@@ -286,7 +321,16 @@ button {
     flex-direction: column;
   }
 
+  .session-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
   .manual-submit {
+    width: 100%;
+  }
+
+  .end-session-button {
     width: 100%;
   }
 }

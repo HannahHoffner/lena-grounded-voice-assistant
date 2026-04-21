@@ -1,5 +1,6 @@
 const STORAGE_KEY = "lena.selectedLanguage";
 const SUPPORTED_LANGUAGES = ["de", "en", "pl", "ro", "ru"];
+const SESSION_TIMEOUT_MS = 5 * 60 * 1000;
 
 const elements = {
   brandEyebrow: document.getElementById("brandEyebrow"),
@@ -10,6 +11,8 @@ const elements = {
   languageButtons: [...document.querySelectorAll(".flag-button")],
   interactionLabel: document.getElementById("interactionLabel"),
   interactionHint: document.getElementById("interactionHint"),
+  sessionState: document.getElementById("sessionState"),
+  endConversationButton: document.getElementById("endConversationButton"),
   recordButton: document.getElementById("recordButton"),
   recordButtonText: document.getElementById("recordButtonText"),
   statusText: document.getElementById("status"),
@@ -39,6 +42,7 @@ const translations = {
     languageHint: "Die Auswahl steuert Oberfläche, Spracheingabe, Sprachausgabe und Backend-Anfragen.",
     interactionLabel: "Frage stellen",
     interactionHint: "Sprechen Sie zuerst, oder tippen Sie unten eine kurze Testfrage ein.",
+    endConversation: "Gespräch beenden",
     recordSpeak: "Sprechen",
     recordStop: "Stopp",
     manualLabel: "Oder tippen",
@@ -47,6 +51,15 @@ const translations = {
     answerLabel: "Antwort",
     answerHint: "Die Antwort bleibt auf die lokale Wissensbasis beschränkt.",
     answerPlaceholder: "Die Antwort erscheint hier.",
+    session: {
+      inactive: "Kein aktives Gespräch",
+      active: "Gespräch aktiv",
+      started: "Neues Gespräch gestartet",
+      reset: "Neues Gespräch gestartet",
+      languageReset: "Neues Gespräch nach Sprachwechsel",
+      expired: "Gespräch abgelaufen",
+      ended: "Gespräch beendet",
+    },
     status: {
       idle: "Bereit",
       browserFallback: "Browser-Spracherkennung aktiv",
@@ -74,6 +87,7 @@ const translations = {
     languageHint: "This controls the interface, speech input, speech output, and backend queries.",
     interactionLabel: "Ask a question",
     interactionHint: "Speak first, or type a short test question below.",
+    endConversation: "End conversation",
     recordSpeak: "Speak",
     recordStop: "Stop",
     manualLabel: "Or type instead",
@@ -82,6 +96,15 @@ const translations = {
     answerLabel: "Answer",
     answerHint: "Answers stay grounded in the local knowledge base.",
     answerPlaceholder: "Your answer will appear here.",
+    session: {
+      inactive: "No active conversation",
+      active: "Conversation active",
+      started: "New conversation started",
+      reset: "New conversation started",
+      languageReset: "New conversation after language change",
+      expired: "Conversation expired",
+      ended: "Conversation ended",
+    },
     status: {
       idle: "Ready",
       browserFallback: "Browser speech fallback active",
@@ -109,6 +132,7 @@ const translations = {
     languageHint: "Wybor steruje interfejsem, rozpoznawaniem mowy, synteza mowy i zapytaniami do backendu.",
     interactionLabel: "Zadaj pytanie",
     interactionHint: "Najpierw mow, a ponizej mozesz tez wpisac krotkie pytanie testowe.",
+    endConversation: "Zakoncz rozmowe",
     recordSpeak: "Mow",
     recordStop: "Stop",
     manualLabel: "Lub wpisz",
@@ -117,6 +141,15 @@ const translations = {
     answerLabel: "Odpowiedz",
     answerHint: "Odpowiedz pozostaje oparta na lokalnej bazie wiedzy.",
     answerPlaceholder: "Odpowiedz pojawi sie tutaj.",
+    session: {
+      inactive: "Brak aktywnej rozmowy",
+      active: "Rozmowa aktywna",
+      started: "Rozpoczeto nowa rozmowe",
+      reset: "Rozpoczeto nowa rozmowe",
+      languageReset: "Nowa rozmowa po zmianie jezyka",
+      expired: "Rozmowa wygasla",
+      ended: "Rozmowa zakonczona",
+    },
     status: {
       idle: "Gotowe",
       browserFallback: "Aktywne rozpoznawanie mowy w przegladarce",
@@ -144,6 +177,7 @@ const translations = {
     languageHint: "Selectia controleaza interfata, recunoasterea vorbirii, redarea vocala si cererile catre backend.",
     interactionLabel: "Pune o intrebare",
     interactionHint: "Vorbeste mai intai sau scrie mai jos o intrebare scurta pentru test.",
+    endConversation: "Incheie conversatia",
     recordSpeak: "Vorbeste",
     recordStop: "Stop",
     manualLabel: "Sau scrie",
@@ -152,6 +186,15 @@ const translations = {
     answerLabel: "Raspuns",
     answerHint: "Raspunsul ramane limitat la baza locala de cunostinte.",
     answerPlaceholder: "Raspunsul va aparea aici.",
+    session: {
+      inactive: "Nicio conversatie activa",
+      active: "Conversatie activa",
+      started: "A inceput o conversatie noua",
+      reset: "A inceput o conversatie noua",
+      languageReset: "Conversatie noua dupa schimbarea limbii",
+      expired: "Conversatie expirata",
+      ended: "Conversatie incheiata",
+    },
     status: {
       idle: "Pregatit",
       browserFallback: "Recunoasterea vocala din browser este activa",
@@ -179,6 +222,7 @@ const translations = {
     languageHint: "Vybor upravlyaet interfeisom, raspoznavaniem rechi, ozvuchivaniem i zaprosami k backendu.",
     interactionLabel: "Zadayte vopros",
     interactionHint: "Snachala skazhite vopros, ili vvedite korotkii testovyi zapros nizhe.",
+    endConversation: "Zavershit razgovor",
     recordSpeak: "Govorit",
     recordStop: "Stop",
     manualLabel: "Ili vvedite tekst",
@@ -187,6 +231,15 @@ const translations = {
     answerLabel: "Otvet",
     answerHint: "Otvet ogranichen lokalnoi bazoi znanii.",
     answerPlaceholder: "Otvet poyavitsya zdes.",
+    session: {
+      inactive: "Net aktivnogo razgovora",
+      active: "Razgovor aktiven",
+      started: "Nachat novyi razgovor",
+      reset: "Nachat novyi razgovor",
+      languageReset: "Novyi razgovor posle smeny yazyka",
+      expired: "Razgovor istek",
+      ended: "Razgovor zavershen",
+    },
     status: {
       idle: "Gotovo",
       browserFallback: "Aktivno raspoznavanie rechi v brauzere",
@@ -216,6 +269,9 @@ const state = {
   browserRecognition: null,
   submitting: false,
   sessionId: null,
+  sessionNotice: null,
+  sessionTimerId: null,
+  sessionTimeoutMs: SESSION_TIMEOUT_MS,
   currentAudio: null,
   statusKey: "idle",
   forceBrowserSttFallback: false,
@@ -255,6 +311,75 @@ function showAnswer(text) {
 function setStatus(statusKey) {
   state.statusKey = statusKey;
   renderStatus();
+}
+
+function clearSessionTimer() {
+  if (state.sessionTimerId) {
+    window.clearTimeout(state.sessionTimerId);
+    state.sessionTimerId = null;
+  }
+}
+
+function renderSessionState() {
+  const copy = getCopy();
+  const fallbackText = state.sessionId ? copy.session.active : copy.session.inactive;
+  elements.sessionState.textContent = state.sessionNotice || fallbackText;
+  elements.endConversationButton.disabled = state.submitting || state.recording || !state.sessionId;
+}
+
+function scheduleSessionExpiry() {
+  clearSessionTimer();
+  if (!state.sessionId) {
+    return;
+  }
+  state.sessionTimerId = window.setTimeout(() => {
+    state.sessionId = null;
+    state.sessionNotice = getCopy().session.expired;
+    renderSessionState();
+  }, state.sessionTimeoutMs);
+}
+
+function sessionNoticeForEvent(sessionEvent) {
+  const sessionCopy = getCopy().session;
+  switch (sessionEvent) {
+    case "started":
+      return sessionCopy.started;
+    case "expired_reset":
+      return sessionCopy.expired;
+    case "ended_reset":
+      return sessionCopy.ended;
+    case "context_reset":
+      return sessionCopy.reset;
+    case "language_reset":
+      return sessionCopy.languageReset;
+    default:
+      return null;
+  }
+}
+
+function applySessionResponse(answer) {
+  state.sessionId = answer.session_id || null;
+  const localizedNotice = sessionNoticeForEvent(answer.session_event);
+  if (localizedNotice) {
+    state.sessionNotice = localizedNotice;
+  } else if (answer.session_message) {
+    state.sessionNotice = answer.session_message;
+  } else {
+    state.sessionNotice = state.sessionId ? getCopy().session.active : getCopy().session.inactive;
+  }
+  if (state.sessionId) {
+    scheduleSessionExpiry();
+  } else {
+    clearSessionTimer();
+  }
+  renderSessionState();
+}
+
+function clearSessionState(message) {
+  state.sessionId = null;
+  state.sessionNotice = message || getCopy().session.inactive;
+  clearSessionTimer();
+  renderSessionState();
 }
 
 function renderStatus() {
@@ -360,6 +485,7 @@ function renderCopy() {
   elements.languageHint.textContent = copy.languageHint;
   elements.interactionLabel.textContent = copy.interactionLabel;
   elements.interactionHint.textContent = copy.interactionHint;
+  elements.endConversationButton.textContent = copy.endConversation;
   elements.manualQuestionLabel.textContent = copy.manualLabel;
   elements.manualQuestionInput.placeholder = copy.manualPlaceholder;
   elements.answerLabel.textContent = copy.answerLabel;
@@ -368,6 +494,7 @@ function renderCopy() {
     showPlaceholder();
   }
   renderStatus();
+  renderSessionState();
   updateInputModeUi();
 }
 
@@ -454,6 +581,9 @@ async function loadHealth() {
     state.runtimeHealth = await response.json();
     if (state.runtimeHealth?.speech?.stt?.active_provider !== "mock" && state.runtimeHealth?.speech?.stt?.ready) {
       state.forceBrowserSttFallback = false;
+    }
+    if (Number.isFinite(state.runtimeHealth?.session_timeout_seconds) && state.runtimeHealth.session_timeout_seconds > 0) {
+      state.sessionTimeoutMs = state.runtimeHealth.session_timeout_seconds * 1000;
     }
     updateInputModeUi();
     if (!state.recording && !state.submitting) {
@@ -567,7 +697,7 @@ async function submitTranscript(transcript) {
 
   try {
     const answer = await answerQuery(transcript, state.language);
-    state.sessionId = answer.session_id || state.sessionId;
+    applySessionResponse(answer);
     showAnswer(answer.answer_text);
     setStatus(answer.status === "clarification_needed" ? "clarifying" : "speaking");
     await speakAnswer(answer.answer_text);
@@ -743,13 +873,34 @@ async function handleRecordClick() {
   }
 }
 
+async function handleEndConversation() {
+  if (!state.sessionId || state.submitting || state.recording) {
+    return;
+  }
+  const currentSessionId = state.sessionId;
+  try {
+    const response = await fetch("/api/session/end", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_id: currentSessionId }),
+    });
+    if (!response.ok) {
+      throw new Error("end_session_failed");
+    }
+    const body = await response.json();
+    clearSessionState(sessionNoticeForEvent(body.session_event) || getCopy().session.ended);
+  } catch (error) {
+    handleUiError(error);
+  }
+}
+
 function setLanguage(language) {
   if (!SUPPORTED_LANGUAGES.includes(language) || language === state.language) {
     return;
   }
   cancelCurrentSpeech();
   state.language = language;
-  state.sessionId = null;
+  clearSessionState(getCopy().session.inactive);
   persistLanguage(language);
   showPlaceholder();
   renderCopy();
@@ -758,6 +909,10 @@ function setLanguage(language) {
 
 elements.recordButton.addEventListener("click", () => {
   void handleRecordClick();
+});
+
+elements.endConversationButton.addEventListener("click", () => {
+  void handleEndConversation();
 });
 
 elements.manualQuestionForm.addEventListener("submit", async (event) => {

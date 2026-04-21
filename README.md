@@ -19,7 +19,6 @@ The runtime only reads published KB artifacts from `data/published/`:
 - `index/pages.json`
 - `index/manifest.json`
 - `index/aliases.json`
-- `index/page_chunks.json`
 
 The scraper track generates its own artifacts under `data/scraper_workspace/published/`.
 Those artifacts are promoted into the runtime KB only when explicitly requested.
@@ -71,6 +70,18 @@ The editable Ollama system prompt lives in `data/prompts/system_prompt.md`.
 cd Code
 python -m pytest
 ```
+
+## Evaluation
+
+The reusable model-evaluation baseline lives in `data/evals/assistant_eval_cases.json`.
+Run the shared grounded evaluation pipeline with:
+
+```powershell
+cd Code
+python scripts/evaluate_models.py
+```
+
+Timestamped reports are written to `data/evals/results/` and are treated as generated artifacts rather than tracked source files.
 
 ## Separate Scraper Track
 

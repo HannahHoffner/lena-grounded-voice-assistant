@@ -74,7 +74,6 @@ def test_promote_dataset_copies_workspace_to_runtime(tmp_path) -> None:
     (workspace / "index" / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
     (workspace / "index" / "pages.json").write_text("[]", encoding="utf-8")
     (workspace / "index" / "aliases.json").write_text("{}", encoding="utf-8")
-    (workspace / "index" / "page_chunks.json").write_text("[]", encoding="utf-8")
 
     result = promote_dataset(workspace, runtime)
 

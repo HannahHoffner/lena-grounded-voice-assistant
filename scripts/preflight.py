@@ -40,6 +40,7 @@ def main() -> int:
 
     runtime_ok = settings.runtime_root.exists() and settings.audio_root.exists()
     checks.append(_check("runtime_dirs", runtime_ok, f"runtime={settings.runtime_root} audio={settings.audio_root}")[0])
+    checks.append(_check("sessions", settings.session_timeout_seconds > 0, f"timeout={settings.session_timeout_seconds}s store={settings.sessions_path}")[0])
 
     stt_provider = create_stt_provider(settings.stt_provider)
     stt_health = stt_provider.health()
@@ -66,7 +67,13 @@ def main() -> int:
             with httpx.Client(timeout=5.0) as client:
                 response = client.get(f"{settings.ollama_url.rstrip('/')}/api/tags")
                 response.raise_for_status()
-            checks.append(_check("ollama", True, f"reachable at {settings.ollama_url}")[0])
+                tags = response.json().get("models", [])
+            installed_models = {item.get("name", "") for item in tags if isinstance(item, dict)}
+            model_ok = settings.ollama_model in installed_models
+            detail = f"reachable at {settings.ollama_url}; model={settings.ollama_model}"
+            if not model_ok:
+                detail += " not installed"
+            checks.append(_check("ollama", model_ok, detail)[0])
         except Exception as exc:
             checks.append(_check("ollama", False, f"unreachable at {settings.ollama_url}: {exc}")[0])
     else:

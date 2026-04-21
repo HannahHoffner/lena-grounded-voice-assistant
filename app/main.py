@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import json
-import uuid
 from pathlib import Path
-import re
 
 from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.responses import FileResponse
@@ -12,9 +10,10 @@ from fastapi.staticfiles import StaticFiles
 from .config import load_settings
 from .kb import KnowledgeBase
 from .models import (
-    ConversationContext,
     QueryAnswerResponse,
     QueryRequest,
+    SessionEndRequest,
+    SessionEndResponse,
     SynthesizeRequest,
     SynthesizeResponse,
     TranscriptEvent,
@@ -23,75 +22,9 @@ from .models import (
 from .providers.rewrite import create_rewrite_provider
 from .providers.stt import create_stt_provider
 from .providers.tts import create_tts_provider
-from .retrieval import normalize_text
 from .scraper.pipeline import promote_dataset, run_pipeline
+from .sessions import SessionManager, SessionStore
 from .transcripts import TranscriptStore
-
-
-REFERENTIAL_TERMS = (
-    " it ",
-    " there ",
-    " that place",
-    " this place",
-    " es ",
-    " dort",
-    " da ",
-    "diese stelle",
-    "dieser ort",
-    "diesen ort",
-    "diese anlaufstelle",
-)
-ALTERNATIVE_TERMS = ("another", "other", "different", "else", "another place", "andere", "weiteres", "alternative")
-FOLLOW_UP_TOKEN_RE = re.compile(r"[a-z0-9]+")
-ATTRIBUTE_FOLLOWUP_TOKENS = {
-    "adresse",
-    "address",
-    "appointment",
-    "anmeldung",
-    "brauche",
-    "email",
-    "kontakt",
-    "oeffnungszeiten",
-    "offen",
-    "open",
-    "sonntag",
-    "sonntags",
-    "sunday",
-    "termin",
-    "uhrzeit",
-    "wann",
-    "where",
-    "wie",
-    "wo",
-}
-TARGET_GROUP_FOLLOWUP_TOKENS = {
-    "frau",
-    "frauen",
-    "familien",
-    "families",
-    "maenner",
-    "mann",
-    "men",
-    "women",
-}
-TOPIC_TOKENS = {
-    "beratung",
-    "clothing",
-    "dusche",
-    "duschen",
-    "essen",
-    "food",
-    "frau",
-    "frauen",
-    "kleidung",
-    "medical",
-    "medizin",
-    "shower",
-    "shelter",
-    "unterkunft",
-    "women",
-}
-TOPIC_SHIFT_PREFIXES = ("und ", "and ", "what about ", "was ist mit ", "und fuer ", "und für ", "fuer ", "für ")
 
 
 def create_app() -> FastAPI:
@@ -102,6 +35,8 @@ def create_app() -> FastAPI:
 
     kb = KnowledgeBase(settings.published_root)
     transcript_store = TranscriptStore(settings.transcripts_path)
+    session_store = SessionStore(settings.sessions_path)
+    session_manager = SessionManager(session_store, kb, timeout_seconds=settings.session_timeout_seconds)
     stt_provider = create_stt_provider(settings.stt_provider)
     rewrite_provider = create_rewrite_provider(
         settings.rewrite_provider,
@@ -118,6 +53,8 @@ def create_app() -> FastAPI:
     app.state.settings = settings
     app.state.kb = kb
     app.state.transcript_store = transcript_store
+    app.state.session_store = session_store
+    app.state.session_manager = session_manager
     app.state.stt_provider = stt_provider
     app.state.rewrite_provider = rewrite_provider
     app.state.tts_provider = tts_provider
@@ -141,6 +78,7 @@ def create_app() -> FastAPI:
             "rewrite_model": app.state.rewrite_provider.model_name,
             "llm_active": app.state.rewrite_provider.uses_llm,
             "tts_provider": app.state.tts_provider.name,
+            "session_timeout_seconds": app.state.settings.session_timeout_seconds,
             "tts_configured_provider": tts_health["configured_provider"],
             "tts_ready": tts_health["ready"],
             "tts_detail": tts_health["detail"],
@@ -164,15 +102,13 @@ def create_app() -> FastAPI:
 
     @app.post("/api/query/answer", response_model=QueryAnswerResponse)
     async def answer_query(payload: QueryRequest) -> QueryAnswerResponse:
-        session_id = payload.session_id or uuid.uuid4().hex
-        session_payload = payload.model_copy(update={"session_id": session_id})
-        recent_events = app.state.transcript_store.recent_events(session_id, limit=3)
-        conversation_context = _build_conversation_context(session_payload, recent_events, app.state.kb)
+        session_resolution = app.state.session_manager.prepare_request(payload)
+        session_payload = payload.model_copy(update={"session_id": session_resolution.session.session_id})
         answer = await app.state.rewrite_provider.answer(
             payload.transcript,
             payload.language,
             app.state.kb,
-            conversation_context=conversation_context,
+            conversation_context=session_resolution.context,
         )
         response = QueryAnswerResponse(
             answer_text=answer.answer_text,
@@ -183,21 +119,37 @@ def create_app() -> FastAPI:
             retrieved_page_ids=answer.retrieved_page_ids,
             provider=app.state.rewrite_provider.name,
             model=app.state.rewrite_provider.model_name,
-            session_id=session_id,
+            session_id=session_resolution.session.session_id,
+            session_status=session_resolution.session.status,
+            session_event=session_resolution.session_event,
+            session_message=session_resolution.session_message,
         )
+        updated_session = app.state.session_manager.record_turn(
+            session_resolution.session,
+            session_payload,
+            response,
+            session_resolution.context,
+        )
+        response.session_status = updated_session.status
         _store_event(
             app.state.transcript_store,
             session_payload,
             response,
-            resolved_transcript=conversation_context.resolved_transcript,
+            resolved_transcript=session_resolution.context.resolved_transcript,
             kb_version=app.state.kb.dataset.manifest.kb_version,
             rewrite_provider=app.state.rewrite_provider.name,
             rewrite_model=app.state.rewrite_provider.model_name,
             stt_provider=app.state.stt_provider.name,
             tts_provider=app.state.tts_provider.name,
-            follow_up_mode=conversation_context.follow_up_mode,
+            follow_up_mode=session_resolution.context.follow_up_mode,
         )
         return response
+
+    @app.post("/api/session/end", response_model=SessionEndResponse)
+    async def end_session(payload: SessionEndRequest) -> SessionEndResponse:
+        ended = app.state.session_manager.end_session(payload.session_id)
+        message = ended.last_session_message if ended and ended.last_session_message else "Conversation ended."
+        return SessionEndResponse(status="ok", session_id=payload.session_id, session_message=message)
 
     @app.post("/api/speech/synthesize", response_model=SynthesizeResponse)
     async def synthesize(payload: SynthesizeRequest) -> SynthesizeResponse:
@@ -233,6 +185,7 @@ def create_app() -> FastAPI:
     @app.post("/api/admin/transcripts/clear")
     async def clear_transcripts() -> dict:
         app.state.transcript_store.clear()
+        app.state.session_store.clear()
         return {"status": "ok"}
 
     @app.get("/")
@@ -278,7 +231,7 @@ def _store_event(
     store.append(
         TranscriptEvent(
             timestamp=__import__("datetime").datetime.now(__import__("datetime").UTC),
-            session_id=payload.session_id or uuid.uuid4().hex,
+            session_id=response.session_id,
             language=payload.language,
             transcript=payload.transcript,
             resolved_transcript=resolved_transcript,
@@ -292,146 +245,7 @@ def _store_event(
             stt_provider=stt_provider,
             tts_provider=tts_provider,
             follow_up_mode=follow_up_mode,  # type: ignore[arg-type]
+            session_status=response.session_status,
+            session_event=response.session_event,
         )
     )
-
-
-def _build_conversation_context(
-    payload: QueryRequest,
-    recent_events: list[TranscriptEvent],
-    kb: KnowledgeBase,
-) -> ConversationContext:
-    session_id = payload.session_id or uuid.uuid4().hex
-    context = ConversationContext(session_id=session_id, resolved_transcript=payload.transcript)
-    if not recent_events:
-        return context
-
-    latest = recent_events[-1]
-    anchor_event = _find_anchor_event(recent_events)
-    latest_titles = []
-    for page_id in latest.retrieved_page_ids[:3]:
-        try:
-            latest_titles.append(kb.get_page(page_id).title)
-        except KeyError:
-            continue
-
-    history_summary = f"Previous user request: {latest.transcript}"
-    if latest_titles:
-        history_summary += f"\nPrevious result pages: {', '.join(latest_titles)}"
-    context.history_summary = history_summary
-    normalized = f" {normalize_text(payload.transcript)} "
-    normalized_tokens = _normalized_follow_up_tokens(payload.transcript)
-
-    if _is_alternative_followup(normalized):
-        context.follow_up_mode = "alternative"
-        context.excluded_page_ids = _family_related_page_ids(latest.retrieved_page_ids[:3], kb)
-        context.preferred_page_ids = [
-            page_id for page_id in anchor_event.retrieved_page_ids[1:4] if page_id not in context.excluded_page_ids
-        ][:3]
-        context.reference_page_ids = anchor_event.retrieved_page_ids[:3]
-        context.history_summary = f"Previous user request: {anchor_event.transcript}"
-        if anchor_event.retrieved_page_ids:
-            anchor_titles = []
-            for page_id in anchor_event.retrieved_page_ids[:3]:
-                try:
-                    anchor_titles.append(kb.get_page(page_id).title)
-                except KeyError:
-                    continue
-            if anchor_titles:
-                context.history_summary += f"\nPrevious result pages: {', '.join(anchor_titles)}"
-        context.resolved_transcript = f"{payload.transcript} {anchor_event.transcript}"
-        return context
-
-    if _is_same_place_followup(normalized, normalized_tokens):
-        context.follow_up_mode = "referential"
-        context.preferred_page_ids = latest.retrieved_page_ids[:1]
-        context.reference_page_ids = latest.retrieved_page_ids[:1]
-        context.resolved_transcript = " ".join([payload.transcript, *latest_titles[:1], latest.transcript]).strip()
-        return context
-
-    if _is_topic_shift_followup(normalized, normalized_tokens):
-        context.follow_up_mode = "topic_shift"
-        context.reference_page_ids = anchor_event.retrieved_page_ids[:3]
-        context.history_summary = f"Previous user request: {anchor_event.transcript}"
-        if anchor_event.retrieved_page_ids:
-            anchor_titles = []
-            for page_id in anchor_event.retrieved_page_ids[:3]:
-                try:
-                    anchor_titles.append(kb.get_page(page_id).title)
-                except KeyError:
-                    continue
-            if anchor_titles:
-                context.history_summary += f"\nPrevious result pages: {', '.join(anchor_titles)}"
-        context.resolved_transcript = f"{payload.transcript} {anchor_event.transcript}".strip()
-
-    return context
-
-
-def _is_referential_followup(normalized_transcript: str) -> bool:
-    return any(term in normalized_transcript for term in REFERENTIAL_TERMS)
-
-
-def _is_alternative_followup(normalized_transcript: str) -> bool:
-    return any(term in normalized_transcript for term in ALTERNATIVE_TERMS)
-
-
-def _normalized_follow_up_tokens(transcript: str) -> set[str]:
-    return set(FOLLOW_UP_TOKEN_RE.findall(normalize_text(transcript)))
-
-
-def _is_same_place_followup(normalized_transcript: str, tokens: set[str]) -> bool:
-    if _is_referential_followup(normalized_transcript):
-        return True
-    if not tokens:
-        return False
-    if tokens <= ATTRIBUTE_FOLLOWUP_TOKENS:
-        return True
-    if len(tokens) <= 4 and tokens & ATTRIBUTE_FOLLOWUP_TOKENS and not tokens & TOPIC_TOKENS:
-        return True
-    return False
-
-
-def _is_topic_shift_followup(normalized_transcript: str, tokens: set[str]) -> bool:
-    trimmed = normalized_transcript.strip()
-    if any(trimmed.startswith(prefix) for prefix in TOPIC_SHIFT_PREFIXES):
-        return True
-    if tokens and tokens <= TARGET_GROUP_FOLLOWUP_TOKENS:
-        return True
-    if len(tokens) <= 4 and tokens & TARGET_GROUP_FOLLOWUP_TOKENS:
-        return True
-    return False
-
-
-def _find_anchor_event(recent_events: list[TranscriptEvent]) -> TranscriptEvent:
-    for event in reversed(recent_events):
-        if getattr(event, "follow_up_mode", "none") != "none":
-            continue
-        normalized = f" {normalize_text(event.transcript)} "
-        tokens = _normalized_follow_up_tokens(event.transcript)
-        if (
-            not _is_referential_followup(normalized)
-            and not _is_alternative_followup(normalized)
-            and not _is_same_place_followup(normalized, tokens)
-            and not _is_topic_shift_followup(normalized, tokens)
-        ):
-            return event
-    return recent_events[-1]
-
-
-def _family_related_page_ids(page_ids: list[str], kb: KnowledgeBase) -> list[str]:
-    if not page_ids:
-        return []
-    try:
-        top_page = kb.get_page(page_ids[0])
-    except KeyError:
-        return page_ids[:1]
-    family = top_page.title.split(" - ", 1)[0].strip()
-    related: list[str] = []
-    for candidate_id in page_ids:
-        try:
-            candidate = kb.get_page(candidate_id)
-        except KeyError:
-            continue
-        if candidate.title.split(" - ", 1)[0].strip() == family and candidate_id not in related:
-            related.append(candidate_id)
-    return related or page_ids[:1]

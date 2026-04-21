@@ -19,6 +19,7 @@ class Settings:
     scraper_reports_root: Path
     runtime_root: Path
     transcripts_path: Path
+    sessions_path: Path
     audio_root: Path
     source_registry: Path
     stt_provider: str
@@ -32,6 +33,7 @@ class Settings:
     minimum_match_threshold: float
     weak_match_threshold: float
     clarification_gap_threshold: float
+    session_timeout_seconds: int
     bootstrap_runtime_from_scraper: bool
 
 
@@ -50,6 +52,7 @@ def load_settings() -> Settings:
     scraper_reports_root = scraper_workspace_root / "reports"
     runtime_root = data_root / "runtime"
     transcripts_path = runtime_root / "transcripts.jsonl"
+    sessions_path = runtime_root / "sessions.json"
     audio_root = runtime_root / "audio"
     source_registry = data_root / "scraper_sources" / "sources.json"
 
@@ -73,6 +76,7 @@ def load_settings() -> Settings:
         scraper_reports_root=scraper_reports_root,
         runtime_root=runtime_root,
         transcripts_path=transcripts_path,
+        sessions_path=sessions_path,
         audio_root=audio_root,
         source_registry=source_registry,
         stt_provider=os.getenv("LENA_STT_PROVIDER", "faster_whisper"),
@@ -86,6 +90,7 @@ def load_settings() -> Settings:
         minimum_match_threshold=float(os.getenv("LENA_MINIMUM_MATCH_THRESHOLD", "0.08")),
         weak_match_threshold=float(os.getenv("LENA_WEAK_MATCH_THRESHOLD", "0.18")),
         clarification_gap_threshold=float(os.getenv("LENA_CLARIFICATION_GAP_THRESHOLD", "0.03")),
+        session_timeout_seconds=int(os.getenv("LENA_SESSION_TIMEOUT_SECONDS", "300")),
         bootstrap_runtime_from_scraper=os.getenv("LENA_BOOTSTRAP_RUNTIME_FROM_SCRAPER", "true").lower() in {"1", "true", "yes", "on"},
     )
 

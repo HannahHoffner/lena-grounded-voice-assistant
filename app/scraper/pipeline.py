@@ -1184,38 +1184,6 @@ def _slugify(text: str) -> str:
     return normalized.strip("-") or "item"
 
 
-def _build_page_chunks(records: list[dict], pages: dict[str, str]) -> list[dict]:
-    page_chunks: list[dict] = []
-    for record in records:
-        markdown = pages[record["page_id"]]
-        if markdown.startswith("---\n") and "\n---\n" in markdown:
-            markdown = markdown.split("\n---\n", 1)[1]
-        chunk_lines = [line.strip() for line in markdown.splitlines() if line.strip()]
-        chunk_text = []
-        chunk_index = 0
-        for line in chunk_lines:
-            chunk_text.append(line)
-            if len(" ".join(chunk_text)) >= 280:
-                page_chunks.append(
-                    {
-                        "chunk_id": f'{record["page_id"]}-{chunk_index}',
-                        "page_id": record["page_id"],
-                        "text": " ".join(chunk_text)[:400],
-                    }
-                )
-                chunk_index += 1
-                chunk_text = []
-        if chunk_text:
-            page_chunks.append(
-                {
-                    "chunk_id": f'{record["page_id"]}-{chunk_index}',
-                    "page_id": record["page_id"],
-                    "text": " ".join(chunk_text)[:400],
-                }
-            )
-    return page_chunks
-
-
 def publish_dataset(records: list[dict], pages: dict[str, str], output_root: Path) -> Manifest:
     generated_at = datetime.now(UTC)
     with TemporaryDirectory() as temp_dir:
@@ -1237,7 +1205,6 @@ def publish_dataset(records: list[dict], pages: dict[str, str], output_root: Pat
             page_count=len(records),
         )
         aliases = {}
-        page_chunks = _build_page_chunks(records, pages)
         for record in records:
             for alias in sorted(alias_terms(record)):
                 aliases.setdefault(alias, []).append(record["page_id"])
@@ -1248,7 +1215,6 @@ def publish_dataset(records: list[dict], pages: dict[str, str], output_root: Pat
         (index_root / "manifest.json").write_text(manifest.model_dump_json(indent=2), encoding="utf-8")
         (index_root / "pages.json").write_text(json.dumps(records, ensure_ascii=False, indent=2), encoding="utf-8")
         (index_root / "aliases.json").write_text(json.dumps(aliases, ensure_ascii=False, indent=2), encoding="utf-8")
-        (index_root / "page_chunks.json").write_text(json.dumps(page_chunks, ensure_ascii=False, indent=2), encoding="utf-8")
 
         output_root.mkdir(parents=True, exist_ok=True)
         _sync_tree(pages_root, output_root / "pages")
