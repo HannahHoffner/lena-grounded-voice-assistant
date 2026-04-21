@@ -1,34 +1,63 @@
 <!doctype html>
-<html lang="en">
+<html lang="de">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>LENA Prototype</title>
+    <title>LENA</title>
     <link rel="stylesheet" href="/static/styles.css">
   </head>
   <body>
     <main class="app-shell">
-      <header class="header">
-        <h1>LENA</h1>
-        <p>Local referral assistant prototype</p>
-      </header>
-
-      <section class="controls">
-        <label for="language">Language</label>
-        <select id="language">
-          <option value="de">Deutsch</option>
-          <option value="en">English</option>
-          <option value="pl">Polski</option>
-          <option value="ro">Română</option>
-          <option value="ru">Русский</option>
-        </select>
+      <section class="hero">
+        <p id="brandEyebrow" class="eyebrow">Local grounded voice assistant</p>
+        <h1 id="appTitle" class="app-title">LENA</h1>
+        <p id="appSubtitle" class="hero-text">Find support services in Leipzig by voice.</p>
       </section>
 
-      <section class="voice-panel">
-        <button id="recordButton" class="record-button" type="button">Speak</button>
-        <p id="status" class="status">Idle</p>
+      <section class="panel panel-language" aria-labelledby="languageLabel">
+        <div class="section-head">
+          <p id="languageLabel" class="section-label">Language</p>
+          <p id="languageHint" class="section-hint">This controls the interface, speech input, and speech output.</p>
+        </div>
+        <div id="languageSwitcher" class="language-switcher" role="group" aria-label="Language selection">
+          <button class="flag-button" type="button" data-lang="de" aria-pressed="false">
+            <span class="flag-icon" aria-hidden="true">🇩🇪</span>
+            <span class="flag-caption">DE</span>
+          </button>
+          <button class="flag-button" type="button" data-lang="en" aria-pressed="false">
+            <span class="flag-icon" aria-hidden="true">🇬🇧</span>
+            <span class="flag-caption">EN</span>
+          </button>
+          <button class="flag-button" type="button" data-lang="pl" aria-pressed="false">
+            <span class="flag-icon" aria-hidden="true">🇵🇱</span>
+            <span class="flag-caption">PL</span>
+          </button>
+          <button class="flag-button" type="button" data-lang="ro" aria-pressed="false">
+            <span class="flag-icon" aria-hidden="true">🇷🇴</span>
+            <span class="flag-caption">RO</span>
+          </button>
+          <button class="flag-button" type="button" data-lang="ru" aria-pressed="false">
+            <span class="flag-icon" aria-hidden="true">🇷🇺</span>
+            <span class="flag-caption">RU</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="panel panel-interaction" aria-labelledby="interactionLabel">
+        <div class="section-head">
+          <p id="interactionLabel" class="section-label">Ask a question</p>
+          <p id="interactionHint" class="section-hint">Speak first, or type a short question below for testing.</p>
+        </div>
+
+        <button id="recordButton" class="record-button" type="button">
+          <span class="record-button__signal" aria-hidden="true"></span>
+          <span id="recordButtonText">Speak</span>
+        </button>
+
+        <p id="status" class="status-pill" aria-live="polite">Ready</p>
+
         <form id="manualQuestionForm" class="manual-form">
-          <label for="manualQuestion">Typed test question</label>
+          <label id="manualQuestionLabel" class="manual-label" for="manualQuestion">Type instead</label>
           <div class="manual-input-row">
             <input
               id="manualQuestion"
@@ -43,9 +72,12 @@
         </form>
       </section>
 
-      <section class="answer-panel">
-        <h2>Answer</h2>
-        <p id="answerText" class="answer-text">Your answer will appear here.</p>
+      <section class="panel panel-answer" aria-labelledby="answerLabel">
+        <div class="section-head">
+          <p id="answerLabel" class="section-label">Answer</p>
+          <p id="answerHint" class="section-hint">Answers are limited to the local knowledge base.</p>
+        </div>
+        <p id="answerText" class="answer-text" data-state="placeholder">Your answer will appear here.</p>
       </section>
     </main>
 

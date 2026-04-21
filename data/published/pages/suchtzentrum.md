@@ -1,26 +1,34 @@
 ---
 title: "Suchtzentrum Leipzig"
 category: "addiction"
+service_type: "counseling"
 language: "de"
 publisher: "Suchtzentrum gGmbH"
 description: "Unsere Suchtberatungsstellen sind ein Angebot an Menschen, deren Leben zunehmend durch Alkohol, illegalisierte Drogen oder Glücksspielen beeinträchtigt wird."
+target_groups:
+  - "addiction"
 tags:
   - "suchtzentrum"
   - "beratung"
   - "hilfe"
 aliases:
-  - "beratung"
-  - "hilfe"
   - "leipzig"
   - "suchtzentrum"
-  - "suchtzentrum leipzig"
+  - "Suchtzentrum Leipzig"
+review_status: "published"
+validation_issues:
+  - "missing_address"
+  - "missing_opening_hours"
 source_url: "https://www.suchtzentrum.de/"
-last_updated: "2026-04-20"
+source_snapshot_path: "raw/suchtzentrum-20260421054229.html"
+source_content_hash: "bba0191d13fae221751e65a7ed3f669bfc5616eceff10654eac18826fe9912c6"
+source_last_seen: "2026-04-21T05:42:29.964284+00:00"
+last_updated: "2026-04-21"
 ---
 # Suchtzentrum Leipzig
 
 - Source: https://www.suchtzentrum.de/
-- Generated: 2026-04-20T13:19:28.217523+00:00
+- Generated: 2026-04-21T05:42:29.964284+00:00
 
 Unsere Suchtberatungsstellen sind ein Angebot an Menschen, deren Leben zunehmend durch Alkohol, illegalisierte Drogen oder Glücksspielen beeinträchtigt wird.
 Beratungsstellen finden Sie in [Leipzig](/impuls), [Dresden](/horizont) und [Stollberg](/sprungbrett) bzw. [Oelsnitz](/beratung-in-der-außenstelle-oelsnitz). Ebenso bieten wir Suchtberatung in der Haftanstalt [JVA Waldheim](/externe-suchtberatung-jva-waldheim) an.

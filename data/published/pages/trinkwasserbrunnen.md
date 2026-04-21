@@ -1,9 +1,12 @@
 ---
 title: "Leipziger Trinkwasserbrunnen"
 category: "water"
+service_type: "food_distribution"
 language: "de"
 publisher: "L-Gruppe"
 description: "["
+languages:
+  - "de"
 tags:
   - "wasser"
   - "trinkwasser"
@@ -11,17 +14,24 @@ tags:
 aliases:
   - "brunnen"
   - "leipziger"
-  - "leipziger trinkwasserbrunnen"
+  - "Leipziger Trinkwasserbrunnen"
   - "trinkwasser"
   - "trinkwasserbrunnen"
   - "wasser"
+review_status: "published"
+validation_issues:
+  - "missing_address"
+  - "missing_opening_hours"
 source_url: "https://www.l.de/wasserwerke/leipziger-wasser/trinkwasserbrunnen/"
-last_updated: "2026-04-20"
+source_snapshot_path: "raw/trinkwasserbrunnen-20260421054229.html"
+source_content_hash: "82cc2a4c0c22f012a7e7885363f579750da19a6e266ee6872f219b6ab7bd6194"
+source_last_seen: "2026-04-21T05:42:29.964284+00:00"
+last_updated: "2026-04-21"
 ---
 # Leipziger Trinkwasserbrunnen
 
 - Source: https://www.l.de/wasserwerke/leipziger-wasser/trinkwasserbrunnen/
-- Generated: 2026-04-20T13:19:28.217523+00:00
+- Generated: 2026-04-21T05:42:29.964284+00:00
 
 [
 ](/blog/nahrungsmittel-nr-1-woher-kommt-das-trinkwasser-in-leipzig/)

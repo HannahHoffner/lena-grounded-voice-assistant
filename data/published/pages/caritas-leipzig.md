@@ -1,26 +1,34 @@
 ---
 title: "Caritas Leipzig"
 category: "social"
+service_type: "counseling"
 language: "de"
 publisher: "Caritas Leipzig"
 description: "Im Bistum Dresden-Meißen werden vom 11. bis 20. April 2026 rund 50 Sammlerinnen und Sammler auf den Straßen unterwegs sein und um Geldspenden bitten. Die Bürgerinnen und Bürger sind aufgerufen, soziale Projekte zu unterstützen. Mehr zum Thema mit Link zur Seite: 'Soziale Projekte"
+target_groups:
+  - "families"
 tags:
   - "caritas"
   - "hilfe"
   - "beratung"
 aliases:
-  - "beratung"
   - "caritas"
-  - "caritas leipzig"
-  - "hilfe"
+  - "Caritas Leipzig"
   - "leipzig"
+review_status: "published"
+validation_issues:
+  - "missing_address"
+  - "missing_opening_hours"
 source_url: "https://www.caritas-leipzig.de/"
-last_updated: "2026-04-20"
+source_snapshot_path: "raw/caritas-leipzig-20260421054229.html"
+source_content_hash: "5b31d7cad9dd9096343480e1cc32bd91d03325ba4e11c20587b8f89285eef8e6"
+source_last_seen: "2026-04-21T05:42:29.964284+00:00"
+last_updated: "2026-04-21"
 ---
 # Caritas Leipzig
 
 - Source: https://www.caritas-leipzig.de/
-- Generated: 2026-04-20T13:19:28.217523+00:00
+- Generated: 2026-04-21T05:42:29.964284+00:00
 
 Im Bistum Dresden-Meißen werden vom 11. bis 20. April 2026 rund 50 Sammlerinnen und Sammler auf den Straßen unterwegs sein und um Geldspenden bitten. Die Bürgerinnen und Bürger sind aufgerufen, soziale Projekte zu unterstützen. Mehr zum Thema mit Link zur Seite: 'Soziale Projekte unterstützen: Caritas-Frühjahrssammlung'
 Aktuelle Umfrage der Caritas: Hohe Zustimmung zu erneuerbaren Energien als Antwort auf den Ölpreisschock. Mehr zum Thema mit Link zur Seite: 'Krise als Chance nutzen: Politik muss Umstieg auf erneuerbare Energien fördern'

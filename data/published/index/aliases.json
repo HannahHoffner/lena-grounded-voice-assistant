@@ -1,21 +1,16 @@
 {
-  "beratung": [
+  "consultation": [
     "leipzig-suchthilfe",
-    "suchtzentrum",
-    "caritas-leipzig",
-    "caritas-soziale-notlagen",
-    "drk-soziale-beratung",
-    "diakonie-streetwork",
-    "caritas-allgemeine-soziale-beratung",
-    "caritas-schuldnerberatung",
-    "caritas-abw-wohnungslosigkeit",
-    "suchtzentrum-team-konsum",
-    "diakonie-suchtberatung-blaues-kreuz",
-    "telefonseelsorge-leipzig"
+    "leichte-sprache-suchthilfe",
+    "notfallkontakte",
+    "gesundheitsamt",
+    "cabl-uvo"
   ],
   "gesundheit": [
     "leipzig-suchthilfe",
     "leipzig-schadensminimierung",
+    "leipzig-schadensminimierung-lindenauer-markt",
+    "leipzig-schadensminimierung-schwanenteich",
     "gesundheitsamt",
     "cabl-uvo"
   ],
@@ -23,24 +18,12 @@
     "leipzig-suchthilfe",
     "gesundheitsamt"
   ],
-  "hilfe": [
-    "leipzig-suchthilfe",
-    "hilfe-bei-obdachlosigkeit",
-    "leichte-sprache-suchthilfe",
-    "suchtzentrum",
-    "kippe-leipzig",
-    "bahnhofsmission-bund",
-    "bahnhofsmission-caritas",
-    "caritas-leipzig",
-    "caritas-soziale-notlagen",
-    "caritas-wohnungslosigkeit",
-    "diakonie-streetwork",
-    "caritas-allgemeine-soziale-beratung",
-    "suchtzentrum-safe-streetwork"
-  ],
   "leipzig": [
     "leipzig-suchthilfe",
     "leipzig-schadensminimierung",
+    "leipzig-schadensminimierung-lindenauer-markt",
+    "leipzig-schadensminimierung-schwanenteich",
+    "wohnungsnotfallhilfe-pdf-bahnhofsmission-leipzig-katalog",
     "hilfe-bei-obdachlosigkeit",
     "gesundheitsamt",
     "suchtzentrum",
@@ -50,11 +33,19 @@
     "bahnhofsmission-caritas",
     "caritas-leipzig",
     "tafel-leipzig",
+    "tafel-leipzig-zentrale-lindenau-west",
+    "tafel-leipzig-ost-volkmarsdorf",
+    "tafel-leipzig-ost-paunsdorf",
+    "tafel-leipzig-markranstaedt",
+    "tafel-leipzig-markkleeberg",
+    "tafel-leipzig-borna",
     "telefonseelsorge-leipzig"
   ],
   "sucht": [
     "leipzig-suchthilfe",
     "leipzig-schadensminimierung",
+    "leipzig-schadensminimierung-lindenauer-markt",
+    "leipzig-schadensminimierung-schwanenteich",
     "leichte-sprache-suchthilfe",
     "suchtzentrum-safe-streetwork",
     "suchtzentrum-team-konsum"
@@ -66,28 +57,103 @@
   "suchthilfe gesundheitsamt": [
     "leipzig-suchthilfe"
   ],
-  "schadensminimierung": [
-    "leipzig-schadensminimierung"
+  "catalog": [
+    "leipzig-schadensminimierung",
+    "wohnungsnotfallhilfe-pdf",
+    "tafel-leipzig"
   ],
-  "angebote": [
-    "wohnungsnotfallhilfe-pdf"
+  "schadensminimierung": [
+    "leipzig-schadensminimierung",
+    "leipzig-schadensminimierung-lindenauer-markt",
+    "leipzig-schadensminimierung-schwanenteich"
+  ],
+  "lindenauer": [
+    "leipzig-schadensminimierung-lindenauer-markt"
+  ],
+  "lindenauer markt": [
+    "leipzig-schadensminimierung-lindenauer-markt"
+  ],
+  "markt": [
+    "leipzig-schadensminimierung-lindenauer-markt"
+  ],
+  "outreach": [
+    "leipzig-schadensminimierung-lindenauer-markt",
+    "leipzig-schadensminimierung-schwanenteich"
+  ],
+  "snacks": [
+    "leipzig-schadensminimierung-lindenauer-markt"
+  ],
+  "streetwork": [
+    "leipzig-schadensminimierung-lindenauer-markt",
+    "leipzig-schadensminimierung-schwanenteich",
+    "safe-jahresbericht",
+    "team-wohnen",
+    "diakonie-streetwork",
+    "suchtzentrum-safe-streetwork",
+    "suchtzentrum-team-konsum"
+  ],
+  "streetwork lindenauer markt": [
+    "leipzig-schadensminimierung-lindenauer-markt"
+  ],
+  "warme getraenke": [
+    "leipzig-schadensminimierung-lindenauer-markt"
+  ],
+  "essen schwanenteich": [
+    "leipzig-schadensminimierung-schwanenteich"
+  ],
+  "goethestrasse": [
+    "leipzig-schadensminimierung-schwanenteich"
+  ],
+  "schwanenteich": [
+    "leipzig-schadensminimierung-schwanenteich"
+  ],
+  "streetwork schwanenteich": [
+    "leipzig-schadensminimierung-schwanenteich"
+  ],
+  "warme mahlzeit": [
+    "leipzig-schadensminimierung-schwanenteich",
+    "wohnungsnotfallhilfe-pdf-insel"
   ],
   "angebote der wohnungsnotfallhilfe und notunterbringung": [
     "wohnungsnotfallhilfe-pdf"
   ],
   "notunterbringung": [
-    "wohnungsnotfallhilfe-pdf"
-  ],
-  "pdf": [
     "wohnungsnotfallhilfe-pdf",
-    "mietrechtsbroschuere-pdf"
-  ],
-  "unterkunft": [
-    "wohnungsnotfallhilfe-pdf",
-    "hilfe-bei-obdachlosigkeit"
+    "wohnungsnotfallhilfe-pdf-uebernachtungshaus-maenner",
+    "wohnungsnotfallhilfe-pdf-sozialdienst",
+    "wohnungsnotfallhilfe-pdf-wirtschaftliche-wohnhilfen",
+    "wohnungsnotfallhilfe-pdf-unterbringungsmanagement",
+    "wohnungsnotfallhilfe-pdf-uebernachtungshaus-frauen-katalog",
+    "wohnungsnotfallhilfe-pdf-alternative-i",
+    "wohnungsnotfallhilfe-pdf-notunterbringung-psychisch-krank",
+    "wohnungsnotfallhilfe-pdf-kindernotdienst",
+    "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog",
+    "wohnungsnotfallhilfe-pdf-eigene-wohnung",
+    "wohnungsnotfallhilfe-pdf-alternative-iii",
+    "wohnungsnotfallhilfe-pdf-jugendnotdienst",
+    "wohnungsnotfallhilfe-pdf-bahnhofsmission-leipzig-katalog",
+    "wohnungsnotfallhilfe-pdf-teekeller-quelle",
+    "wohnungsnotfallhilfe-pdf-blaues-cafe",
+    "wohnungsnotfallhilfe-pdf-insel"
   ],
   "wohnungslosigkeit": [
     "wohnungsnotfallhilfe-pdf",
+    "wohnungsnotfallhilfe-pdf-uebernachtungshaus-maenner",
+    "wohnungsnotfallhilfe-pdf-sozialdienst",
+    "wohnungsnotfallhilfe-pdf-wirtschaftliche-wohnhilfen",
+    "wohnungsnotfallhilfe-pdf-unterbringungsmanagement",
+    "wohnungsnotfallhilfe-pdf-uebernachtungshaus-frauen-katalog",
+    "wohnungsnotfallhilfe-pdf-alternative-i",
+    "wohnungsnotfallhilfe-pdf-notunterbringung-psychisch-krank",
+    "wohnungsnotfallhilfe-pdf-kindernotdienst",
+    "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog",
+    "wohnungsnotfallhilfe-pdf-eigene-wohnung",
+    "wohnungsnotfallhilfe-pdf-alternative-iii",
+    "wohnungsnotfallhilfe-pdf-jugendnotdienst",
+    "wohnungsnotfallhilfe-pdf-bahnhofsmission-leipzig-katalog",
+    "wohnungsnotfallhilfe-pdf-teekeller-quelle",
+    "wohnungsnotfallhilfe-pdf-blaues-cafe",
+    "wohnungsnotfallhilfe-pdf-insel",
     "uebernachtungshaus-ruecke",
     "caritas-wohnungslosigkeit",
     "diakonie-streetwork",
@@ -98,7 +164,336 @@
     "suchtzentrum-safe-streetwork"
   ],
   "wohnungsnotfallhilfe": [
-    "wohnungsnotfallhilfe-pdf"
+    "wohnungsnotfallhilfe-pdf",
+    "wohnungsnotfallhilfe-pdf-uebernachtungshaus-maenner",
+    "wohnungsnotfallhilfe-pdf-sozialdienst",
+    "wohnungsnotfallhilfe-pdf-wirtschaftliche-wohnhilfen",
+    "wohnungsnotfallhilfe-pdf-unterbringungsmanagement",
+    "wohnungsnotfallhilfe-pdf-uebernachtungshaus-frauen-katalog",
+    "wohnungsnotfallhilfe-pdf-alternative-i",
+    "wohnungsnotfallhilfe-pdf-notunterbringung-psychisch-krank",
+    "wohnungsnotfallhilfe-pdf-kindernotdienst",
+    "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog",
+    "wohnungsnotfallhilfe-pdf-eigene-wohnung",
+    "wohnungsnotfallhilfe-pdf-alternative-iii",
+    "wohnungsnotfallhilfe-pdf-jugendnotdienst",
+    "wohnungsnotfallhilfe-pdf-bahnhofsmission-leipzig-katalog",
+    "wohnungsnotfallhilfe-pdf-teekeller-quelle",
+    "wohnungsnotfallhilfe-pdf-blaues-cafe",
+    "wohnungsnotfallhilfe-pdf-insel"
+  ],
+  "maenner": [
+    "wohnungsnotfallhilfe-pdf-uebernachtungshaus-maenner"
+  ],
+  "männer": [
+    "wohnungsnotfallhilfe-pdf-uebernachtungshaus-maenner"
+  ],
+  "notunterkunft männer": [
+    "wohnungsnotfallhilfe-pdf-uebernachtungshaus-maenner"
+  ],
+  "overnight": [
+    "wohnungsnotfallhilfe-pdf-uebernachtungshaus-maenner",
+    "wohnungsnotfallhilfe-pdf-uebernachtungshaus-frauen-katalog",
+    "wohnungsnotfallhilfe-pdf-alternative-i",
+    "wohnungsnotfallhilfe-pdf-alternative-iii",
+    "mietrechtsbroschuere-pdf",
+    "hilfe-bei-obdachlosigkeit",
+    "aww-frauen-uebernachtungshaus"
+  ],
+  "shelter": [
+    "wohnungsnotfallhilfe-pdf-uebernachtungshaus-maenner",
+    "wohnungsnotfallhilfe-pdf-uebernachtungshaus-frauen-katalog",
+    "wohnungsnotfallhilfe-pdf-alternative-i",
+    "wohnungsnotfallhilfe-pdf-alternative-iii",
+    "mietrechtsbroschuere-pdf",
+    "hilfe-bei-obdachlosigkeit",
+    "aww-frauen-uebernachtungshaus"
+  ],
+  "uebernachtungshaus": [
+    "wohnungsnotfallhilfe-pdf-uebernachtungshaus-maenner",
+    "wohnungsnotfallhilfe-pdf-uebernachtungshaus-frauen-katalog",
+    "uebernachtungshaus-ruecke",
+    "aww-frauen-uebernachtungshaus"
+  ],
+  "wohnungslose": [
+    "wohnungsnotfallhilfe-pdf-uebernachtungshaus-maenner",
+    "wohnungsnotfallhilfe-pdf-uebernachtungshaus-frauen-katalog",
+    "cabl-uvo",
+    "aww-frauen-uebernachtungshaus"
+  ],
+  "übernachtungshaus für wohnungslose männer": [
+    "wohnungsnotfallhilfe-pdf-uebernachtungshaus-maenner"
+  ],
+  "übernachtungshaus männer": [
+    "wohnungsnotfallhilfe-pdf-uebernachtungshaus-maenner"
+  ],
+  "beratung wohnungslosigkeit": [
+    "wohnungsnotfallhilfe-pdf-sozialdienst"
+  ],
+  "counseling": [
+    "wohnungsnotfallhilfe-pdf-sozialdienst",
+    "suchtzentrum",
+    "caritas-leipzig",
+    "caritas-soziale-notlagen",
+    "caritas-wohnungslosigkeit",
+    "drk-soziale-beratung",
+    "caritas-allgemeine-soziale-beratung",
+    "caritas-schuldnerberatung",
+    "caritas-abw-wohnungslosigkeit",
+    "diakonie-suchtberatung-blaues-kreuz",
+    "telefonseelsorge-leipzig"
+  ],
+  "sozialdienst": [
+    "wohnungsnotfallhilfe-pdf-sozialdienst"
+  ],
+  "sozialdienst wohnungsnotfallhilfe": [
+    "wohnungsnotfallhilfe-pdf-sozialdienst"
+  ],
+  "energieschulden": [
+    "wohnungsnotfallhilfe-pdf-wirtschaftliche-wohnhilfen"
+  ],
+  "financial": [
+    "wohnungsnotfallhilfe-pdf-wirtschaftliche-wohnhilfen"
+  ],
+  "mietschulden": [
+    "wohnungsnotfallhilfe-pdf-wirtschaftliche-wohnhilfen"
+  ],
+  "wirtschaftliche": [
+    "wohnungsnotfallhilfe-pdf-wirtschaftliche-wohnhilfen"
+  ],
+  "wirtschaftliche wohnhilfen": [
+    "wohnungsnotfallhilfe-pdf-wirtschaftliche-wohnhilfen"
+  ],
+  "wohnhilfen": [
+    "wohnungsnotfallhilfe-pdf-wirtschaftliche-wohnhilfen"
+  ],
+  "notunterkünfte": [
+    "wohnungsnotfallhilfe-pdf-unterbringungsmanagement"
+  ],
+  "placement": [
+    "wohnungsnotfallhilfe-pdf-unterbringungsmanagement"
+  ],
+  "unterbringungsmanagement": [
+    "wohnungsnotfallhilfe-pdf-unterbringungsmanagement"
+  ],
+  "frauen": [
+    "wohnungsnotfallhilfe-pdf-uebernachtungshaus-frauen-katalog",
+    "aww-frauen-uebernachtungshaus"
+  ],
+  "notunterkunft frauen": [
+    "wohnungsnotfallhilfe-pdf-uebernachtungshaus-frauen-katalog"
+  ],
+  "übernachtungshaus frauen": [
+    "wohnungsnotfallhilfe-pdf-uebernachtungshaus-frauen-katalog"
+  ],
+  "übernachtungshaus für wohnungslose frauen": [
+    "wohnungsnotfallhilfe-pdf-uebernachtungshaus-frauen-katalog"
+  ],
+  "alternative": [
+    "wohnungsnotfallhilfe-pdf-alternative-i",
+    "wohnungsnotfallhilfe-pdf-alternative-iii"
+  ],
+  "alternative i": [
+    "wohnungsnotfallhilfe-pdf-alternative-i"
+  ],
+  "drogenabhängig": [
+    "wohnungsnotfallhilfe-pdf-alternative-i",
+    "wohnungsnotfallhilfe-pdf-alternative-iii"
+  ],
+  "notschlafstelle": [
+    "wohnungsnotfallhilfe-pdf-alternative-i",
+    "wohnungsnotfallhilfe-pdf-alternative-iii"
+  ],
+  "notschlafstelle alternative i": [
+    "wohnungsnotfallhilfe-pdf-alternative-i"
+  ],
+  "sankt georg": [
+    "wohnungsnotfallhilfe-pdf-alternative-i"
+  ],
+  "das boot": [
+    "wohnungsnotfallhilfe-pdf-notunterbringung-psychisch-krank"
+  ],
+  "krank": [
+    "wohnungsnotfallhilfe-pdf-notunterbringung-psychisch-krank"
+  ],
+  "kranker": [
+    "wohnungsnotfallhilfe-pdf-notunterbringung-psychisch-krank"
+  ],
+  "menschen": [
+    "wohnungsnotfallhilfe-pdf-notunterbringung-psychisch-krank"
+  ],
+  "notunterbringung psychisch krank": [
+    "wohnungsnotfallhilfe-pdf-notunterbringung-psychisch-krank"
+  ],
+  "notunterbringung psychisch kranker wohnungsloser menschen": [
+    "wohnungsnotfallhilfe-pdf-notunterbringung-psychisch-krank"
+  ],
+  "protected": [
+    "wohnungsnotfallhilfe-pdf-notunterbringung-psychisch-krank"
+  ],
+  "psychisch": [
+    "wohnungsnotfallhilfe-pdf-notunterbringung-psychisch-krank"
+  ],
+  "psychisch krank": [
+    "wohnungsnotfallhilfe-pdf-notunterbringung-psychisch-krank"
+  ],
+  "wohnungsloser": [
+    "wohnungsnotfallhilfe-pdf-notunterbringung-psychisch-krank"
+  ],
+  "child": [
+    "wohnungsnotfallhilfe-pdf-kindernotdienst"
+  ],
+  "emergency": [
+    "wohnungsnotfallhilfe-pdf-kindernotdienst",
+    "wohnungsnotfallhilfe-pdf-jugendnotdienst"
+  ],
+  "inobhutnahme": [
+    "wohnungsnotfallhilfe-pdf-kindernotdienst",
+    "wohnungsnotfallhilfe-pdf-jugendnotdienst"
+  ],
+  "kinder": [
+    "wohnungsnotfallhilfe-pdf-kindernotdienst"
+  ],
+  "kindernotdienst": [
+    "wohnungsnotfallhilfe-pdf-kindernotdienst"
+  ],
+  "center": [
+    "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog",
+    "wohnungsnotfallhilfe-pdf-teekeller-quelle",
+    "wohnungsnotfallhilfe-pdf-blaues-cafe",
+    "wohnungsnotfallhilfe-pdf-insel",
+    "leipziger-oase"
+  ],
+  "day": [
+    "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog",
+    "wohnungsnotfallhilfe-pdf-teekeller-quelle",
+    "wohnungsnotfallhilfe-pdf-blaues-cafe",
+    "wohnungsnotfallhilfe-pdf-insel",
+    "leipziger-oase"
+  ],
+  "imbiss": [
+    "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog",
+    "wohnungsnotfallhilfe-pdf-insel"
+  ],
+  "kontaktstube": [
+    "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog",
+    "leipziger-oase"
+  ],
+  "leipziger": [
+    "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog",
+    "trinkwasserbrunnen",
+    "leipziger-oase"
+  ],
+  "leipziger oase": [
+    "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog",
+    "leipziger-oase"
+  ],
+  "oase": [
+    "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog",
+    "leipziger-oase"
+  ],
+  "tagesaufenthalt": [
+    "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog"
+  ],
+  "wäschepflege": [
+    "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog"
+  ],
+  "eigene": [
+    "wohnungsnotfallhilfe-pdf-eigene-wohnung"
+  ],
+  "eigene wohnung": [
+    "wohnungsnotfallhilfe-pdf-eigene-wohnung"
+  ],
+  "first": [
+    "wohnungsnotfallhilfe-pdf-eigene-wohnung"
+  ],
+  "housing first": [
+    "wohnungsnotfallhilfe-pdf-eigene-wohnung"
+  ],
+  "modellprojekt": [
+    "wohnungsnotfallhilfe-pdf-eigene-wohnung"
+  ],
+  "modellprojekt eigene wohnung": [
+    "wohnungsnotfallhilfe-pdf-eigene-wohnung"
+  ],
+  "wohnung": [
+    "wohnungsnotfallhilfe-pdf-eigene-wohnung"
+  ],
+  "alternative iii": [
+    "wohnungsnotfallhilfe-pdf-alternative-iii"
+  ],
+  "braunstraße": [
+    "wohnungsnotfallhilfe-pdf-alternative-iii"
+  ],
+  "iii": [
+    "wohnungsnotfallhilfe-pdf-alternative-iii"
+  ],
+  "notschlafstelle alternative iii": [
+    "wohnungsnotfallhilfe-pdf-alternative-iii"
+  ],
+  "jugendliche": [
+    "wohnungsnotfallhilfe-pdf-jugendnotdienst"
+  ],
+  "jugendnotdienst": [
+    "wohnungsnotfallhilfe-pdf-jugendnotdienst"
+  ],
+  "youth": [
+    "wohnungsnotfallhilfe-pdf-jugendnotdienst"
+  ],
+  "bahnhofsmission": [
+    "wohnungsnotfallhilfe-pdf-bahnhofsmission-leipzig-katalog",
+    "bahnhofsmission-bund",
+    "bahnhofsmission-caritas"
+  ],
+  "bahnhofsmission leipzig": [
+    "wohnungsnotfallhilfe-pdf-bahnhofsmission-leipzig-katalog"
+  ],
+  "hauptbahnhof": [
+    "wohnungsnotfallhilfe-pdf-bahnhofsmission-leipzig-katalog"
+  ],
+  "hilfe am bahnhof": [
+    "wohnungsnotfallhilfe-pdf-bahnhofsmission-leipzig-katalog"
+  ],
+  "station": [
+    "wohnungsnotfallhilfe-pdf-bahnhofsmission-leipzig-katalog"
+  ],
+  "nordplatz": [
+    "wohnungsnotfallhilfe-pdf-teekeller-quelle"
+  ],
+  "quelle": [
+    "wohnungsnotfallhilfe-pdf-teekeller-quelle"
+  ],
+  "teekeller": [
+    "wohnungsnotfallhilfe-pdf-teekeller-quelle"
+  ],
+  "teekeller quelle": [
+    "wohnungsnotfallhilfe-pdf-teekeller-quelle"
+  ],
+  "begegnungsstätte": [
+    "wohnungsnotfallhilfe-pdf-blaues-cafe"
+  ],
+  "blaues": [
+    "wohnungsnotfallhilfe-pdf-blaues-cafe",
+    "diakonie-suchtberatung-blaues-kreuz"
+  ],
+  "blaues café": [
+    "wohnungsnotfallhilfe-pdf-blaues-cafe"
+  ],
+  "blaues kreuz": [
+    "wohnungsnotfallhilfe-pdf-blaues-cafe",
+    "diakonie-suchtberatung-blaues-kreuz"
+  ],
+  "cafe": [
+    "wohnungsnotfallhilfe-pdf-blaues-cafe"
+  ],
+  "insel": [
+    "wohnungsnotfallhilfe-pdf-insel"
+  ],
+  "tagestreff": [
+    "wohnungsnotfallhilfe-pdf-insel"
+  ],
+  "tagestreff insel": [
+    "wohnungsnotfallhilfe-pdf-insel"
   ],
   "dokumente": [
     "mietrechtsbroschuere-pdf"
@@ -115,6 +510,18 @@
     "caritas-schuldnerberatung",
     "caritas-abw-wohnungslosigkeit"
   ],
+  "distribution": [
+    "uebernachtungshaus-ruecke",
+    "trinkwasserbrunnen",
+    "safe-jahresbericht",
+    "tafel-leipzig-zentrale-lindenau-west",
+    "tafel-leipzig-ost-volkmarsdorf",
+    "tafel-leipzig-ost-paunsdorf",
+    "tafel-leipzig-markranstaedt",
+    "tafel-leipzig-markkleeberg",
+    "tafel-leipzig-borna",
+    "heilsarmee-begegnungszentrum"
+  ],
   "flyer": [
     "uebernachtungshaus-ruecke"
   ],
@@ -129,10 +536,6 @@
     "uebernachtungshaus-ruecke"
   ],
   "uebernachtung": [
-    "uebernachtungshaus-ruecke",
-    "aww-frauen-uebernachtungshaus"
-  ],
-  "uebernachtungshaus": [
     "uebernachtungshaus-ruecke",
     "aww-frauen-uebernachtungshaus"
   ],
@@ -160,10 +563,6 @@
   "brunnen": [
     "trinkwasserbrunnen"
   ],
-  "leipziger": [
-    "trinkwasserbrunnen",
-    "leipziger-oase"
-  ],
   "leipziger trinkwasserbrunnen": [
     "trinkwasserbrunnen"
   ],
@@ -190,11 +589,6 @@
   ],
   "toiletten": [
     "oeffentliche-toiletten"
-  ],
-  "fuer": [
-    "notfallkontakte",
-    "cabl-uvo",
-    "aww-frauen-uebernachtungshaus"
   ],
   "gewalt": [
     "notfallkontakte"
@@ -246,17 +640,13 @@
     "suchtzentrum-safe-streetwork",
     "suchtzentrum-team-konsum"
   ],
-  "streetwork": [
-    "safe-jahresbericht",
-    "team-wohnen",
-    "diakonie-streetwork",
-    "suchtzentrum-safe-streetwork",
-    "suchtzentrum-team-konsum"
-  ],
   "betterplace": [
     "szl-betterplace"
   ],
   "organisation": [
+    "szl-betterplace"
+  ],
+  "reference": [
     "szl-betterplace"
   ],
   "szl": [
@@ -271,12 +661,6 @@
   "team": [
     "team-wohnen",
     "suchtzentrum-team-konsum"
-  ],
-  "leipziger oase": [
-    "leipziger-oase"
-  ],
-  "oase": [
-    "leipziger-oase"
   ],
   "tageseinrichtung": [
     "leipziger-oase"
@@ -296,15 +680,17 @@
   "bahnhof": [
     "bahnhofsmission-bund"
   ],
-  "bahnhofsmission": [
-    "bahnhofsmission-bund",
-    "bahnhofsmission-caritas"
-  ],
   "bahnhofsmission leipzig (bund)": [
     "bahnhofsmission-bund"
   ],
   "bund": [
     "bahnhofsmission-bund"
+  ],
+  "clothing": [
+    "bahnhofsmission-bund",
+    "bahnhofsmission-caritas",
+    "diakonie-streetwork",
+    "diakonie-kleiderkammern"
   ],
   "bahnhofsmission leipzig (caritas)": [
     "bahnhofsmission-caritas"
@@ -399,10 +785,10 @@
   "cabl": [
     "cabl-uvo"
   ],
-  "cabl medizinische sprechstunden fuer wohnungslose": [
+  "medizinische": [
     "cabl-uvo"
   ],
-  "medizinische": [
+  "medizinische sprechstunden": [
     "cabl-uvo"
   ],
   "sprechstunde": [
@@ -414,33 +800,96 @@
   "uvo": [
     "cabl-uvo"
   ],
-  "wohnungslose": [
-    "cabl-uvo",
-    "aww-frauen-uebernachtungshaus"
-  ],
   "aww": [
     "aww-frauen-uebernachtungshaus"
   ],
   "aww uebernachtungshaus fuer wohnungslose frauen": [
     "aww-frauen-uebernachtungshaus"
   ],
-  "frauen": [
-    "aww-frauen-uebernachtungshaus"
-  ],
   "ausgabestellen": [
-    "tafel-leipzig"
+    "tafel-leipzig",
+    "tafel-leipzig-zentrale-lindenau-west",
+    "tafel-leipzig-ost-volkmarsdorf",
+    "tafel-leipzig-ost-paunsdorf",
+    "tafel-leipzig-markranstaedt",
+    "tafel-leipzig-markkleeberg",
+    "tafel-leipzig-borna"
   ],
   "essen": [
-    "tafel-leipzig"
+    "tafel-leipzig",
+    "tafel-leipzig-zentrale-lindenau-west",
+    "tafel-leipzig-ost-volkmarsdorf",
+    "tafel-leipzig-ost-paunsdorf",
+    "tafel-leipzig-markranstaedt",
+    "tafel-leipzig-markkleeberg",
+    "tafel-leipzig-borna"
   ],
   "lebensmittel": [
-    "tafel-leipzig"
+    "tafel-leipzig",
+    "tafel-leipzig-zentrale-lindenau-west",
+    "tafel-leipzig-ost-volkmarsdorf",
+    "tafel-leipzig-ost-paunsdorf",
+    "tafel-leipzig-markranstaedt",
+    "tafel-leipzig-markkleeberg",
+    "tafel-leipzig-borna"
   ],
   "tafel": [
-    "tafel-leipzig"
+    "tafel-leipzig",
+    "tafel-leipzig-zentrale-lindenau-west",
+    "tafel-leipzig-ost-volkmarsdorf",
+    "tafel-leipzig-ost-paunsdorf",
+    "tafel-leipzig-markranstaedt",
+    "tafel-leipzig-markkleeberg",
+    "tafel-leipzig-borna"
   ],
   "tafel leipzig": [
     "tafel-leipzig"
+  ],
+  "lindenau": [
+    "tafel-leipzig-zentrale-lindenau-west"
+  ],
+  "tafel leipzig zentrale - lindenau/ west": [
+    "tafel-leipzig-zentrale-lindenau-west"
+  ],
+  "west": [
+    "tafel-leipzig-zentrale-lindenau-west"
+  ],
+  "zentrale": [
+    "tafel-leipzig-zentrale-lindenau-west"
+  ],
+  "ost": [
+    "tafel-leipzig-ost-volkmarsdorf",
+    "tafel-leipzig-ost-paunsdorf"
+  ],
+  "tafel leipzig ost/ volkmarsdorf": [
+    "tafel-leipzig-ost-volkmarsdorf"
+  ],
+  "volkmarsdorf": [
+    "tafel-leipzig-ost-volkmarsdorf"
+  ],
+  "paunsdorf": [
+    "tafel-leipzig-ost-paunsdorf"
+  ],
+  "tafel leipzig ost/ paunsdorf": [
+    "tafel-leipzig-ost-paunsdorf"
+  ],
+  "markranstaedt": [
+    "tafel-leipzig-markranstaedt"
+  ],
+  "tafel leipzig markranstädt": [
+    "tafel-leipzig-markranstaedt"
+  ],
+  "markkleeberg": [
+    "tafel-leipzig-markkleeberg"
+  ],
+  "tafel leipzig markkleeberg": [
+    "tafel-leipzig-markkleeberg"
+  ],
+  "borna": [
+    "tafel-leipzig-borna"
+  ],
+  "tafel leipzig borna": [
+    "tafel-leipzig-borna"
   ],
   "begegnungszentrum": [
     "heilsarmee-begegnungszentrum"
@@ -506,12 +955,6 @@
     "suchtzentrum-team-konsum"
   ],
   "abhaengigkeit": [
-    "diakonie-suchtberatung-blaues-kreuz"
-  ],
-  "blaues": [
-    "diakonie-suchtberatung-blaues-kreuz"
-  ],
-  "blaues kreuz": [
     "diakonie-suchtberatung-blaues-kreuz"
   ],
   "diakonie suchtberatung blaues kreuz": [

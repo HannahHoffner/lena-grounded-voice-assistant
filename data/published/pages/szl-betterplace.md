@@ -1,9 +1,13 @@
 ---
 title: "SZL bei betterplace"
 category: "reference"
+service_type: "reference"
 language: "de"
 publisher: "betterplace"
 description: "SZL Suchtzentrum gGmbH"
+target_groups:
+  - "addiction"
+  - "homeless"
 tags:
   - "szl"
   - "suchtzentrum"
@@ -12,15 +16,22 @@ aliases:
   - "betterplace"
   - "organisation"
   - "suchtzentrum"
-  - "szl"
-  - "szl bei betterplace"
+  - "SZL bei betterplace"
+review_status: "published"
+validation_issues:
+  - "missing_address"
+  - "missing_opening_hours"
+  - "non_service_document"
 source_url: "https://www.betterplace.org/de/organisations/38535-szl-suchtzentrum-ggmbh"
-last_updated: "2026-04-20"
+source_snapshot_path: "raw/szl-betterplace-20260421054229.html"
+source_content_hash: "4c1feb1b7d57315162fd4a80924543dc9d05937f591dcce7ec7d3c4387b7570d"
+source_last_seen: "2026-04-21T05:42:29.964284+00:00"
+last_updated: "2026-04-21"
 ---
 # SZL bei betterplace
 
 - Source: https://www.betterplace.org/de/organisations/38535-szl-suchtzentrum-ggmbh
-- Generated: 2026-04-20T13:19:28.217523+00:00
+- Generated: 2026-04-21T05:42:29.964284+00:00
 
 SZL Suchtzentrum gGmbH
 wird verwaltet von Tino

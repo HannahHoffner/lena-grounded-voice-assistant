@@ -1,12 +1,21 @@
 ---
 title: "Bahnhofsmission Leipzig (bund)"
 category: "social"
+service_type: "clothing_support"
 language: "de"
 publisher: "Bahnhofsmission Deutschland"
 opening_hours:
   - "Sonntags: 13:30 Uhr - 17:30 Uhr"
   - "Sonntags: 13:30 - 17:30 Uhr"
 description: "Willy-Brandt-Platz 2a"
+target_groups:
+  - "addiction"
+  - "homeless"
+  - "women"
+gender_access: "women"
+requires_registration: true
+phone: "0341/9 68 32 54"
+email: "leipzig@bahnhofsmission.de"
 tags:
   - "bahnhofsmission"
   - "bahnhof"
@@ -14,17 +23,22 @@ tags:
 aliases:
   - "bahnhof"
   - "bahnhofsmission"
-  - "bahnhofsmission leipzig (bund)"
+  - "Bahnhofsmission Leipzig (bund)"
   - "bund"
-  - "hilfe"
   - "leipzig"
+review_status: "published"
+validation_issues:
+  - "missing_address"
 source_url: "https://www.bahnhofsmission.de/index.php?bm=41&id=99"
-last_updated: "2026-04-20"
+source_snapshot_path: "raw/bahnhofsmission-bund-20260421054229.html"
+source_content_hash: "bd41a063e27c3cec6dcb2728b2b7f349ff7fe1d1d948b9fa823552614cff8de9"
+source_last_seen: "2026-04-21T05:42:29.964284+00:00"
+last_updated: "2026-04-21"
 ---
 # Bahnhofsmission Leipzig (bund)
 
 - Source: https://www.bahnhofsmission.de/index.php?bm=41&id=99
-- Generated: 2026-04-20T13:19:28.217523+00:00
+- Generated: 2026-04-21T05:42:29.964284+00:00
 
 Willy-Brandt-Platz 2a
 Hauptbahnhof Preußenseite, gegenüber Eingang Parkhaus West

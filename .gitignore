@@ -16,10 +16,13 @@ build/
 # Local environment
 .env
 .env.*
+!.env.example
 
 # Runtime and generated workspace data
 data/runtime/
 data/scraper_workspace/
+data/voices/piper/
+tools/piper/
 
 # Local test artifacts
 test-stt.wav

@@ -19,6 +19,7 @@ class PageMetadata(BaseModel):
     page_id: str
     title: str
     category: str = "general"
+    service_type: str = "general"
     language: str
     source_url: str
     last_updated: str
@@ -26,8 +27,21 @@ class PageMetadata(BaseModel):
     address: str | None = None
     opening_hours: list[str] = Field(default_factory=list)
     description: str = ""
+    target_groups: list[str] = Field(default_factory=list)
+    gender_access: str | None = None
+    walk_in: bool | None = None
+    requires_registration: bool | None = None
+    languages: list[str] = Field(default_factory=list)
+    phone: str | None = None
+    email: str | None = None
     tags: list[str] = Field(default_factory=list)
     aliases: list[str] = Field(default_factory=list)
+    review_status: Literal["published", "needs_review"] = "published"
+    validation_issues: list[str] = Field(default_factory=list)
+    source_snapshot_path: str | None = None
+    source_content_hash: str | None = None
+    source_last_seen: str | None = None
+    source_updated_at: str | None = None
     summary: str
     file_path: str
 
@@ -115,7 +129,12 @@ class SourceDefinition(BaseModel):
     language: str
     tags: list[str] = Field(default_factory=list)
     category: str = "general"
+    service_type: str = "general"
     publisher: str | None = None
+    target_groups: list[str] = Field(default_factory=list)
+    gender_access: str | None = None
+    languages: list[str] = Field(default_factory=list)
+    entity_mode: Literal["single", "location_list", "service_catalog"] = "single"
     format: Literal["auto", "html", "pdf"] = "auto"
 
 

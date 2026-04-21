@@ -1,25 +1,35 @@
 ---
 title: "Caritas Wohnungslosigkeit"
 category: "housing"
+service_type: "counseling"
 language: "de"
 publisher: "Caritas Leipzig"
 description: "Wohnungslosigkeit"
+target_groups:
+  - "homeless"
+email: "wnh@caritas-leipzig.de"
 tags:
   - "wohnungslosigkeit"
   - "caritas"
   - "hilfe"
 aliases:
   - "caritas"
-  - "caritas wohnungslosigkeit"
-  - "hilfe"
+  - "Caritas Wohnungslosigkeit"
   - "wohnungslosigkeit"
+review_status: "published"
+validation_issues:
+  - "missing_address"
+  - "missing_opening_hours"
 source_url: "https://www.caritas-leipzig.de/hilfeundberatung/sozialenotlagen/wohnungslosigkeit/wohnungslosigkeit"
-last_updated: "2026-04-20"
+source_snapshot_path: "raw/caritas-wohnungslosigkeit-20260421054229.html"
+source_content_hash: "5a85736a3282a23f3e955fc00d0a1af365369f37096e13d32e9e651a579f04a9"
+source_last_seen: "2026-04-21T05:42:29.964284+00:00"
+last_updated: "2026-04-21"
 ---
 # Caritas Wohnungslosigkeit
 
 - Source: https://www.caritas-leipzig.de/hilfeundberatung/sozialenotlagen/wohnungslosigkeit/wohnungslosigkeit
-- Generated: 2026-04-20T13:19:28.217523+00:00
+- Generated: 2026-04-21T05:42:29.964284+00:00
 
 Wohnungslosigkeit
 Je nach Ihrer persönlichen Situation können Sie durch eines oder mehrere der folgenden Angebote Unterstützung erhalten. Als erste Anlaufstelle empfehlen wir die Allgemeine Soziale Beratung.

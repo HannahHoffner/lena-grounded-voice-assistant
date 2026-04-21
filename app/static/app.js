@@ -1,67 +1,448 @@
-const recordButton = document.getElementById("recordButton");
-const languageSelect = document.getElementById("language");
-const statusText = document.getElementById("status");
-const answerText = document.getElementById("answerText");
-const manualQuestionForm = document.getElementById("manualQuestionForm");
-const manualQuestionInput = document.getElementById("manualQuestion");
-const manualSubmitButton = document.getElementById("manualSubmitButton");
+const STORAGE_KEY = "lena.selectedLanguage";
+const SUPPORTED_LANGUAGES = ["de", "en", "pl", "ro", "ru"];
 
-let mediaRecorder = null;
-let chunks = [];
-let recording = false;
-let runtimeHealth = null;
-let browserRecognition = null;
-let submitting = false;
-let sessionId = null;
+const elements = {
+  brandEyebrow: document.getElementById("brandEyebrow"),
+  appTitle: document.getElementById("appTitle"),
+  appSubtitle: document.getElementById("appSubtitle"),
+  languageLabel: document.getElementById("languageLabel"),
+  languageHint: document.getElementById("languageHint"),
+  languageButtons: [...document.querySelectorAll(".flag-button")],
+  interactionLabel: document.getElementById("interactionLabel"),
+  interactionHint: document.getElementById("interactionHint"),
+  recordButton: document.getElementById("recordButton"),
+  recordButtonText: document.getElementById("recordButtonText"),
+  statusText: document.getElementById("status"),
+  manualQuestionForm: document.getElementById("manualQuestionForm"),
+  manualQuestionInput: document.getElementById("manualQuestion"),
+  manualQuestionLabel: document.getElementById("manualQuestionLabel"),
+  manualSubmitButton: document.getElementById("manualSubmitButton"),
+  answerLabel: document.getElementById("answerLabel"),
+  answerHint: document.getElementById("answerHint"),
+  answerText: document.getElementById("answerText"),
+};
 
 const languageMap = {
   de: "de-DE",
-  en: "en-US",
+  en: "en-GB",
   pl: "pl-PL",
   ro: "ro-RO",
   ru: "ru-RU",
 };
 
-function setStatus(value) {
-  statusText.textContent = value;
+const translations = {
+  de: {
+    title: "LENA",
+    brandEyebrow: "Lokaler sprachbasierter Wegweiser",
+    subtitle: "Finden Sie Hilfeangebote in Leipzig per Sprache oder kurzer Texteingabe.",
+    languageLabel: "Sprache",
+    languageHint: "Die Auswahl steuert Oberfläche, Spracheingabe, Sprachausgabe und Backend-Anfragen.",
+    interactionLabel: "Frage stellen",
+    interactionHint: "Sprechen Sie zuerst, oder tippen Sie unten eine kurze Testfrage ein.",
+    recordSpeak: "Sprechen",
+    recordStop: "Stopp",
+    manualLabel: "Oder tippen",
+    manualPlaceholder: "Frage zum Testen eingeben",
+    manualSubmit: "Senden",
+    answerLabel: "Antwort",
+    answerHint: "Die Antwort bleibt auf die lokale Wissensbasis beschränkt.",
+    answerPlaceholder: "Die Antwort erscheint hier.",
+    status: {
+      idle: "Bereit",
+      browserFallback: "Browser-Spracherkennung aktiv",
+      browserTtsFallback: "Browser-Sprachausgabe aktiv",
+      typedFallback: "Spracheingabe ist hier nicht verfügbar. Bitte unten tippen.",
+      listening: "Ich höre zu",
+      processing: "Ich suche in der Wissensbasis",
+      clarifying: "Ich präzisiere die Antwort",
+      speaking: "Ich spreche die Antwort aus",
+      error: "Fehler",
+    },
+    errors: {
+      generic: "Es gab ein Problem. Bitte versuchen Sie es noch einmal.",
+      speechUnavailable: "Spracherkennung ist gerade nicht verfügbar.",
+      backendSpeechFallback: "Die Backend-Spracherkennung ist gerade nicht verfügbar. Beim nächsten Versuch nutze ich die Browser-Spracherkennung.",
+      backendSpeechUnavailable: "Die Backend-Spracherkennung ist gerade nicht verfügbar.",
+      backendTtsFallback: "Die Backend-Sprachausgabe ist gerade nicht verfügbar. Ich nutze die Browser-Stimme.",
+    },
+  },
+  en: {
+    title: "LENA",
+    brandEyebrow: "Local grounded voice assistant",
+    subtitle: "Find support services in Leipzig by voice or a short typed question.",
+    languageLabel: "Language",
+    languageHint: "This controls the interface, speech input, speech output, and backend queries.",
+    interactionLabel: "Ask a question",
+    interactionHint: "Speak first, or type a short test question below.",
+    recordSpeak: "Speak",
+    recordStop: "Stop",
+    manualLabel: "Or type instead",
+    manualPlaceholder: "Type a question for quick testing",
+    manualSubmit: "Send",
+    answerLabel: "Answer",
+    answerHint: "Answers stay grounded in the local knowledge base.",
+    answerPlaceholder: "Your answer will appear here.",
+    status: {
+      idle: "Ready",
+      browserFallback: "Browser speech fallback active",
+      browserTtsFallback: "Browser speech output active",
+      typedFallback: "Speech input is unavailable here. Please type a question below.",
+      listening: "Listening",
+      processing: "Searching the knowledge base",
+      clarifying: "Clarifying the answer",
+      speaking: "Speaking the answer",
+      error: "Error",
+    },
+    errors: {
+      generic: "Something went wrong. Please try again.",
+      speechUnavailable: "Speech recognition is unavailable right now.",
+      backendSpeechFallback: "Backend speech recognition is unavailable right now. I will use browser speech recognition on the next try.",
+      backendSpeechUnavailable: "Backend speech recognition is unavailable right now.",
+      backendTtsFallback: "Backend speech output is unavailable right now. I am using the browser voice instead.",
+    },
+  },
+  pl: {
+    title: "LENA",
+    brandEyebrow: "Lokalny asystent glosowy",
+    subtitle: "Znajdz pomoc w Lipsku glosem albo krotkim pytaniem wpisanym recznie.",
+    languageLabel: "Jezyk",
+    languageHint: "Wybor steruje interfejsem, rozpoznawaniem mowy, synteza mowy i zapytaniami do backendu.",
+    interactionLabel: "Zadaj pytanie",
+    interactionHint: "Najpierw mow, a ponizej mozesz tez wpisac krotkie pytanie testowe.",
+    recordSpeak: "Mow",
+    recordStop: "Stop",
+    manualLabel: "Lub wpisz",
+    manualPlaceholder: "Wpisz pytanie testowe",
+    manualSubmit: "Wyslij",
+    answerLabel: "Odpowiedz",
+    answerHint: "Odpowiedz pozostaje oparta na lokalnej bazie wiedzy.",
+    answerPlaceholder: "Odpowiedz pojawi sie tutaj.",
+    status: {
+      idle: "Gotowe",
+      browserFallback: "Aktywne rozpoznawanie mowy w przegladarce",
+      browserTtsFallback: "Aktywna synteza mowy w przegladarce",
+      typedFallback: "Wprowadzanie glosowe jest tutaj niedostepne. Wpisz pytanie ponizej.",
+      listening: "Slucham",
+      processing: "Przeszukuje baze wiedzy",
+      clarifying: "Doprecyzowuje odpowiedz",
+      speaking: "Odczytuje odpowiedz",
+      error: "Blad",
+    },
+    errors: {
+      generic: "Wystapil problem. Sprobuj ponownie.",
+      speechUnavailable: "Rozpoznawanie mowy jest teraz niedostepne.",
+      backendSpeechFallback: "Rozpoznawanie mowy w backendzie jest teraz niedostepne. Przy kolejnej probie uzyje przegladarki.",
+      backendSpeechUnavailable: "Rozpoznawanie mowy w backendzie jest teraz niedostepne.",
+      backendTtsFallback: "Synteza mowy w backendzie jest teraz niedostepna. Uzywam glosu przegladarki.",
+    },
+  },
+  ro: {
+    title: "LENA",
+    brandEyebrow: "Asistent vocal local",
+    subtitle: "Gaseste servicii de sprijin din Leipzig prin voce sau printr-o intrebare scurta scrisa.",
+    languageLabel: "Limba",
+    languageHint: "Selectia controleaza interfata, recunoasterea vorbirii, redarea vocala si cererile catre backend.",
+    interactionLabel: "Pune o intrebare",
+    interactionHint: "Vorbeste mai intai sau scrie mai jos o intrebare scurta pentru test.",
+    recordSpeak: "Vorbeste",
+    recordStop: "Stop",
+    manualLabel: "Sau scrie",
+    manualPlaceholder: "Scrie o intrebare pentru test",
+    manualSubmit: "Trimite",
+    answerLabel: "Raspuns",
+    answerHint: "Raspunsul ramane limitat la baza locala de cunostinte.",
+    answerPlaceholder: "Raspunsul va aparea aici.",
+    status: {
+      idle: "Pregatit",
+      browserFallback: "Recunoasterea vocala din browser este activa",
+      browserTtsFallback: "Redarea vocala din browser este activa",
+      typedFallback: "Intrarea vocala nu este disponibila aici. Te rugam sa scrii mai jos.",
+      listening: "Ascult",
+      processing: "Caut in baza de cunostinte",
+      clarifying: "Clarific raspunsul",
+      speaking: "Redau raspunsul",
+      error: "Eroare",
+    },
+    errors: {
+      generic: "A aparut o problema. Incearca din nou.",
+      speechUnavailable: "Recunoasterea vorbirii nu este disponibila acum.",
+      backendSpeechFallback: "Recunoasterea vorbirii din backend nu este disponibila acum. La urmatoarea incercare voi folosi browserul.",
+      backendSpeechUnavailable: "Recunoasterea vorbirii din backend nu este disponibila acum.",
+      backendTtsFallback: "Redarea vocala din backend nu este disponibila acum. Folosesc vocea browserului.",
+    },
+  },
+  ru: {
+    title: "LENA",
+    brandEyebrow: "Lokalnyi golosovoi pomoshchnik",
+    subtitle: "Naydite pomoshch v Leiptsige golosom ili korotkim vvedennym voprosom.",
+    languageLabel: "Yazyk",
+    languageHint: "Vybor upravlyaet interfeisom, raspoznavaniem rechi, ozvuchivaniem i zaprosami k backendu.",
+    interactionLabel: "Zadayte vopros",
+    interactionHint: "Snachala skazhite vopros, ili vvedite korotkii testovyi zapros nizhe.",
+    recordSpeak: "Govorit",
+    recordStop: "Stop",
+    manualLabel: "Ili vvedite tekst",
+    manualPlaceholder: "Vvedite testovyi vopros",
+    manualSubmit: "Otpravit",
+    answerLabel: "Otvet",
+    answerHint: "Otvet ogranichen lokalnoi bazoi znanii.",
+    answerPlaceholder: "Otvet poyavitsya zdes.",
+    status: {
+      idle: "Gotovo",
+      browserFallback: "Aktivno raspoznavanie rechi v brauzere",
+      browserTtsFallback: "Aktivno ozvuchivanie v brauzere",
+      typedFallback: "Golosovoi vvod zdes nedostupen. Pozhaluista, vvedite vopros nizhe.",
+      listening: "Slushayu",
+      processing: "Ishchu v baze znanii",
+      clarifying: "Utochnyayu otvet",
+      speaking: "Ozvuchivayu otvet",
+      error: "Oshibka",
+    },
+    errors: {
+      generic: "Proizoshla oshibka. Pozhaluista, povtorite popytku.",
+      speechUnavailable: "Raspoznavanie rechi seichas nedostupno.",
+      backendSpeechFallback: "Backend raspoznavaniya rechi seichas nedostupen. Pri sleduyushchei popytke ya ispolzuyu brauzer.",
+      backendSpeechUnavailable: "Backend raspoznavaniya rechi seichas nedostupen.",
+      backendTtsFallback: "Backend ozvuchivaniya seichas nedostupen. Ya ispolzuyu golos brauzera.",
+    },
+  },
+};
+
+const state = {
+  mediaRecorder: null,
+  chunks: [],
+  recording: false,
+  runtimeHealth: null,
+  browserRecognition: null,
+  submitting: false,
+  sessionId: null,
+  currentAudio: null,
+  statusKey: "idle",
+  forceBrowserSttFallback: false,
+  language: loadInitialLanguage(),
+};
+
+function loadInitialLanguage() {
+  try {
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    if (stored && SUPPORTED_LANGUAGES.includes(stored)) {
+      return stored;
+    }
+  } catch {}
+  return "de";
 }
 
-function canUseBrowserSpeechFallback() {
+function persistLanguage(language) {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, language);
+  } catch {}
+}
+
+function getCopy() {
+  return translations[state.language] || translations.de;
+}
+
+function showPlaceholder() {
+  elements.answerText.dataset.state = "placeholder";
+  elements.answerText.textContent = getCopy().answerPlaceholder;
+}
+
+function showAnswer(text) {
+  elements.answerText.dataset.state = "answer";
+  elements.answerText.textContent = text;
+}
+
+function setStatus(statusKey) {
+  state.statusKey = statusKey;
+  renderStatus();
+}
+
+function renderStatus() {
+  elements.statusText.textContent = getCopy().status[state.statusKey] || "";
+}
+
+function canUseBrowserSpeechRecognition() {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   return Boolean(SpeechRecognition);
 }
 
+function getRecorderSupport() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    return { supported: false, detail: "getUserMedia_unavailable", mimeType: null };
+  }
+  if (!window.MediaRecorder) {
+    return { supported: false, detail: "mediaRecorder_unavailable", mimeType: null };
+  }
+  const candidateTypes = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"];
+  if (typeof MediaRecorder.isTypeSupported !== "function") {
+    return { supported: true, detail: null, mimeType: "audio/webm" };
+  }
+  for (const mimeType of candidateTypes) {
+    if (MediaRecorder.isTypeSupported(mimeType)) {
+      return { supported: true, detail: null, mimeType };
+    }
+  }
+  return { supported: false, detail: "no_supported_recorder_mime_type", mimeType: null };
+}
+
+function canUseBackendStt() {
+  const stt = state.runtimeHealth?.speech?.stt;
+  if (!stt) {
+    return true;
+  }
+  return stt.active_provider !== "mock" && stt.ready === true && !state.forceBrowserSttFallback;
+}
+
 function shouldUseBrowserSpeechFallback() {
-  return runtimeHealth && runtimeHealth.stt_provider === "mock" && canUseBrowserSpeechFallback();
+  if (!canUseBrowserSpeechRecognition()) {
+    return false;
+  }
+  if (state.forceBrowserSttFallback) {
+    return true;
+  }
+  return Boolean(state.runtimeHealth) && !canUseBackendStt();
 }
 
 function shouldUseTypedFallback() {
-  return runtimeHealth && runtimeHealth.stt_provider === "mock" && !canUseBrowserSpeechFallback();
+  const recorderSupport = getRecorderSupport();
+  if (!recorderSupport.supported && !canUseBrowserSpeechRecognition()) {
+    return true;
+  }
+  return Boolean(state.runtimeHealth) && !canUseBackendStt() && !canUseBrowserSpeechRecognition();
 }
 
 function setReadyStatus() {
   if (shouldUseTypedFallback()) {
-    setStatus("Speech input unavailable in this browser. Type a question below.");
+    setStatus("typedFallback");
     return;
   }
   if (shouldUseBrowserSpeechFallback()) {
-    setStatus("Browser speech fallback active");
+    setStatus("browserFallback");
     return;
   }
-  setStatus("Idle");
+  setStatus("idle");
 }
 
 function focusManualQuestion() {
-  manualQuestionInput.focus();
-  manualQuestionInput.select();
+  elements.manualQuestionInput.focus();
+  elements.manualQuestionInput.select();
+}
+
+function updateLanguageButtons() {
+  const disabled = state.submitting || state.recording;
+  for (const button of elements.languageButtons) {
+    const isSelected = button.dataset.lang === state.language;
+    button.setAttribute("aria-pressed", String(isSelected));
+    button.disabled = disabled;
+  }
 }
 
 function updateInputModeUi() {
-  recordButton.textContent = recording ? "Stop" : "Speak";
-  const speechUnavailable = Boolean(runtimeHealth) && shouldUseTypedFallback();
-  recordButton.disabled = submitting || speechUnavailable;
-  manualQuestionInput.disabled = submitting || recording;
-  manualSubmitButton.disabled = submitting || recording;
+  const copy = getCopy();
+  const speechUnavailable = shouldUseTypedFallback();
+  elements.recordButtonText.textContent = state.recording ? copy.recordStop : copy.recordSpeak;
+  elements.recordButton.disabled = state.submitting || speechUnavailable;
+  elements.recordButton.classList.toggle("is-recording", state.recording);
+  elements.manualQuestionInput.disabled = state.submitting || state.recording;
+  elements.manualSubmitButton.disabled = state.submitting || state.recording;
+  elements.manualSubmitButton.textContent = copy.manualSubmit;
+  updateLanguageButtons();
+}
+
+function renderCopy() {
+  const copy = getCopy();
+  document.documentElement.lang = state.language;
+  document.title = copy.title;
+  elements.brandEyebrow.textContent = copy.brandEyebrow;
+  elements.appTitle.textContent = copy.title;
+  elements.appSubtitle.textContent = copy.subtitle;
+  elements.languageLabel.textContent = copy.languageLabel;
+  elements.languageHint.textContent = copy.languageHint;
+  elements.interactionLabel.textContent = copy.interactionLabel;
+  elements.interactionHint.textContent = copy.interactionHint;
+  elements.manualQuestionLabel.textContent = copy.manualLabel;
+  elements.manualQuestionInput.placeholder = copy.manualPlaceholder;
+  elements.answerLabel.textContent = copy.answerLabel;
+  elements.answerHint.textContent = copy.answerHint;
+  if (elements.answerText.dataset.state !== "answer") {
+    showPlaceholder();
+  }
+  renderStatus();
+  updateInputModeUi();
+}
+
+function cancelCurrentSpeech() {
+  if (state.currentAudio) {
+    try {
+      state.currentAudio.pause();
+      state.currentAudio.currentTime = 0;
+    } catch {}
+    state.currentAudio = null;
+  }
+  if ("speechSynthesis" in window) {
+    window.speechSynthesis.cancel();
+  }
+}
+
+function normalizeSpeechText(text, language) {
+  let normalized = (text || "").replace(/\s+/g, " ").trim();
+  if (!normalized) {
+    return normalized;
+  }
+
+  const replacements = [
+    [/\bAWW\b/g, language === "de" ? "Advent Wohlfahrtswerk" : "Advent Welfare Association"],
+    [/\bDRK\b/g, language === "de" ? "Deutsches Rotes Kreuz" : "German Red Cross"],
+    [/\bSZL\b/g, language === "de" ? "Suchtzentrum Leipzig" : "Leipzig addiction support center"],
+    [/e\.V\./g, language === "de" ? "eingetragener Verein" : "registered association"],
+    [/gGmbH/g, language === "de" ? "gemeinnuetzige Gesellschaft mit beschraenkter Haftung" : "non profit limited company"],
+    [/z\.\s?B\./g, language === "de" ? "zum Beispiel" : "for example"],
+    [/u\.\s?a\./g, language === "de" ? "unter anderem" : "among other things"],
+    [/Mo-Fr/g, language === "de" ? "Montag bis Freitag" : "Monday to Friday"],
+    [/Mo – Fr/g, language === "de" ? "Montag bis Freitag" : "Monday to Friday"],
+    [/Sa, So, Feiertag(e)?/g, language === "de" ? "Samstag, Sonntag und Feiertage" : "Saturday, Sunday and public holidays"],
+    [/Str\./g, language === "de" ? "Strasse" : "Street"],
+    [/Nr\./g, language === "de" ? "Nummer" : "number"],
+    [/;/g, "."],
+  ];
+  for (const [pattern, value] of replacements) {
+    normalized = normalized.replace(pattern, value);
+  }
+  normalized = normalized.replace(/(\d{1,2}(?::\d{2})?)\s*[–-]\s*(\d{1,2}(?::\d{2})?)\s*Uhr/g, "$1 bis $2 Uhr");
+  normalized = normalized.replace(/[&]/g, language === "de" ? " und " : " and ");
+  normalized = normalized.replace(/[\\/]/g, language === "de" ? " oder " : " or ");
+  return normalized.replace(/\s+/g, " ").trim();
+}
+
+function chooseBrowserVoice(language) {
+  if (!("speechSynthesis" in window)) {
+    return null;
+  }
+  const target = languageMap[language] || "en-GB";
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) {
+    return null;
+  }
+  const targetPrefix = target.split("-")[0];
+  const ranked = voices
+    .map((voice) => {
+      let score = 0;
+      if (voice.lang === target) {
+        score += 6;
+      }
+      if (voice.lang.startsWith(targetPrefix)) {
+        score += 4;
+      }
+      if (/microsoft|google|natural|neural/i.test(voice.name)) {
+        score += 2;
+      }
+      if (voice.default) {
+        score += 1;
+      }
+      return { voice, score };
+    })
+    .sort((a, b) => b.score - a.score);
+  return ranked[0]?.voice || null;
 }
 
 async function loadHealth() {
@@ -70,12 +451,15 @@ async function loadHealth() {
     if (!response.ok) {
       return null;
     }
-    runtimeHealth = await response.json();
+    state.runtimeHealth = await response.json();
+    if (state.runtimeHealth?.speech?.stt?.active_provider !== "mock" && state.runtimeHealth?.speech?.stt?.ready) {
+      state.forceBrowserSttFallback = false;
+    }
     updateInputModeUi();
-    if (!recording && !submitting) {
+    if (!state.recording && !state.submitting) {
       setReadyStatus();
     }
-    return runtimeHealth;
+    return state.runtimeHealth;
   } catch {
     return null;
   }
@@ -93,7 +477,7 @@ async function transcribeAudio(blob, language, debugTranscript = null) {
     body: form,
   });
   if (!response.ok) {
-    throw new Error("Transcription failed");
+    throw new Error("transcription_failed");
   }
   return response.json();
 }
@@ -102,101 +486,156 @@ async function answerQuery(transcript, language) {
   const response = await fetch("/api/query/answer", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ transcript, language, session_id: sessionId }),
+    body: JSON.stringify({ transcript, language, session_id: state.sessionId }),
   });
   if (!response.ok) {
-    throw new Error("Answer generation failed");
+    throw new Error("answer_generation_failed");
   }
   return response.json();
 }
 
 async function synthesizeAnswer(text, language) {
+  const speechText = normalizeSpeechText(text, language);
   const response = await fetch("/api/speech/synthesize", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ text, language }),
+    body: JSON.stringify({ text: speechText, language }),
   });
   if (!response.ok) {
     return null;
   }
-  const body = await response.json();
-  return body.audio_url || null;
+  return response.json();
 }
 
-async function playAudio(url) {
-  const audio = new Audio(url);
-  await audio.play();
+function playAudio(url) {
+  cancelCurrentSpeech();
+  return new Promise((resolve) => {
+    const audio = new Audio(url);
+    state.currentAudio = audio;
+    const finish = () => {
+      if (state.currentAudio === audio) {
+        state.currentAudio = null;
+      }
+      resolve();
+    };
+    audio.addEventListener("ended", finish, { once: true });
+    audio.addEventListener("error", finish, { once: true });
+    audio.play().catch(finish);
+  });
+}
+
+function speakWithBrowser(text, language) {
+  cancelCurrentSpeech();
+  return new Promise((resolve) => {
+    if (!("speechSynthesis" in window)) {
+      resolve();
+      return;
+    }
+    const utterance = new SpeechSynthesisUtterance(normalizeSpeechText(text, language));
+    utterance.lang = languageMap[language] || "en-GB";
+    utterance.rate = 0.98;
+    utterance.pitch = 1.0;
+    utterance.voice = chooseBrowserVoice(language);
+    utterance.addEventListener("end", () => resolve(), { once: true });
+    utterance.addEventListener("error", () => resolve(), { once: true });
+    window.speechSynthesis.speak(utterance);
+  });
+}
+
+async function speakAnswer(text) {
+  const synthesis = await synthesizeAnswer(text, state.language);
+  if (synthesis?.status === "ok" && synthesis.audio_url) {
+    await playAudio(synthesis.audio_url);
+    return;
+  }
+  if (synthesis?.status !== "ok") {
+    setStatus("browserTtsFallback");
+  }
+  await speakWithBrowser(text, state.language);
 }
 
 function handleUiError(error) {
-  answerText.textContent = error.message || "Something went wrong.";
-  setStatus("Error");
+  console.error(error);
+  showAnswer(error?.userMessage || getCopy().errors.generic);
+  setStatus("error");
 }
 
-async function submitTranscript(transcript, language) {
-  submitting = true;
+async function submitTranscript(transcript) {
+  state.submitting = true;
   updateInputModeUi();
+  setStatus("processing");
 
   try {
-    const answer = await answerQuery(transcript, language);
-    sessionId = answer.session_id || sessionId;
-    answerText.textContent = answer.answer_text;
-    setStatus(answer.status === "clarification_needed" ? "Clarifying" : "Speaking");
-
-    const audioUrl = await synthesizeAnswer(answer.answer_text, language);
-    if (audioUrl) {
-      await playAudio(audioUrl);
-    } else if ("speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(answer.answer_text);
-      utterance.lang = languageMap[language] || "en-US";
-      window.speechSynthesis.speak(utterance);
-    }
+    const answer = await answerQuery(transcript, state.language);
+    state.sessionId = answer.session_id || state.sessionId;
+    showAnswer(answer.answer_text);
+    setStatus(answer.status === "clarification_needed" ? "clarifying" : "speaking");
+    await speakAnswer(answer.answer_text);
   } finally {
-    submitting = false;
-    recording = false;
+    state.submitting = false;
+    state.recording = false;
     updateInputModeUi();
-    if (statusText.textContent !== "Error") {
+    if (state.statusKey !== "error") {
       setReadyStatus();
     }
   }
 }
 
 async function processAudio(blob) {
-  const language = languageSelect.value;
-  setStatus("Processing");
-  const transcription = await transcribeAudio(blob, language);
+  setStatus("processing");
+  const transcription = await transcribeAudio(blob, state.language);
   if (transcription.status !== "ok") {
-    answerText.textContent = transcription.detail || "Speech recognition is unavailable.";
-    setStatus("Error");
+    const detail = transcription.detail ? ` ${transcription.detail}` : "";
+    if (canUseBrowserSpeechRecognition()) {
+      state.forceBrowserSttFallback = true;
+      showAnswer(`${getCopy().errors.backendSpeechFallback}${detail}`.trim());
+      setStatus("browserFallback");
+      return;
+    }
+    showAnswer(`${getCopy().errors.backendSpeechUnavailable}${detail}`.trim());
+    setStatus("typedFallback");
     return;
   }
 
-  await submitTranscript(transcription.transcript, language);
+  const transcript = (transcription.transcript || "").trim();
+  if (!transcript) {
+    showAnswer(getCopy().errors.speechUnavailable);
+    setStatus("error");
+    return;
+  }
+
+  await submitTranscript(transcript);
 }
 
 async function ensureRecorder() {
-  if (mediaRecorder) {
-    return mediaRecorder;
+  if (state.mediaRecorder) {
+    return state.mediaRecorder;
+  }
+  const recorderSupport = getRecorderSupport();
+  if (!recorderSupport.supported) {
+    const error = new Error(recorderSupport.detail || "recorder_unavailable");
+    error.userMessage = getCopy().errors.speechUnavailable;
+    throw error;
   }
   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-  mediaRecorder = new MediaRecorder(stream);
+  const mediaRecorder = recorderSupport.mimeType ? new MediaRecorder(stream, { mimeType: recorderSupport.mimeType }) : new MediaRecorder(stream);
   mediaRecorder.addEventListener("dataavailable", (event) => {
     if (event.data.size > 0) {
-      chunks.push(event.data);
+      state.chunks.push(event.data);
     }
   });
   mediaRecorder.addEventListener("stop", async () => {
-    const blob = new Blob(chunks, { type: "audio/webm" });
-    chunks = [];
+    const blob = new Blob(state.chunks, { type: recorderSupport.mimeType || "audio/webm" });
+    state.chunks = [];
     try {
       await processAudio(blob);
     } catch (error) {
       handleUiError(error);
-      recording = false;
+      state.recording = false;
       updateInputModeUi();
     }
   });
+  state.mediaRecorder = mediaRecorder;
   return mediaRecorder;
 }
 
@@ -209,116 +648,144 @@ function createBrowserRecognition() {
   recognition.continuous = false;
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
+
   recognition.addEventListener("result", async (event) => {
     try {
-      const transcript = event.results[0][0].transcript;
-      setStatus("Processing");
-      await submitTranscript(transcript, languageSelect.value);
+      const transcript = (event.results[0][0].transcript || "").trim();
+      if (!transcript) {
+        showAnswer(getCopy().errors.speechUnavailable);
+        setStatus("error");
+        return;
+      }
+      await submitTranscript(transcript);
     } catch (error) {
       handleUiError(error);
-      recording = false;
+      state.recording = false;
       updateInputModeUi();
     }
   });
+
   recognition.addEventListener("error", () => {
-    recording = false;
+    state.recording = false;
     updateInputModeUi();
-    setStatus("Speech recognition could not start. Type a question below.");
+    setStatus("typedFallback");
     focusManualQuestion();
   });
+
   recognition.addEventListener("end", () => {
-    if (recording) {
-      recording = false;
+    if (state.recording) {
+      state.recording = false;
       updateInputModeUi();
-      if (!submitting) {
+      if (!state.submitting) {
         setReadyStatus();
       }
     }
   });
+
   return recognition;
 }
 
-recordButton.addEventListener("click", async () => {
+async function handleRecordClick() {
   try {
-    if (!runtimeHealth) {
+    if (!state.runtimeHealth) {
       await loadHealth();
     }
 
     if (shouldUseTypedFallback()) {
-      setStatus("Speech input unavailable in this browser. Type a question below.");
+      setStatus("typedFallback");
       focusManualQuestion();
       return;
     }
 
     if (shouldUseBrowserSpeechFallback()) {
-      if (!browserRecognition) {
-        browserRecognition = createBrowserRecognition();
+      if (!state.browserRecognition) {
+        state.browserRecognition = createBrowserRecognition();
       }
-      if (!browserRecognition) {
-        setStatus("Browser speech recognition is unavailable. Type a question below.");
+      if (!state.browserRecognition) {
+        setStatus("typedFallback");
         focusManualQuestion();
         return;
       }
 
-      if (!recording) {
-        browserRecognition.lang = languageMap[languageSelect.value] || "en-US";
-        browserRecognition.start();
-        recording = true;
+      if (!state.recording) {
+        state.browserRecognition.lang = languageMap[state.language] || "en-GB";
+        state.browserRecognition.start();
+        state.recording = true;
         updateInputModeUi();
-        setStatus("Listening");
+        setStatus("listening");
         return;
       }
 
-      browserRecognition.stop();
-      recording = false;
+      state.browserRecognition.stop();
+      state.recording = false;
       updateInputModeUi();
       return;
     }
 
     const recorder = await ensureRecorder();
-    if (!recording) {
-      chunks = [];
+    if (!state.recording) {
+      state.chunks = [];
       recorder.start();
-      recording = true;
+      state.recording = true;
       updateInputModeUi();
-      setStatus("Listening");
+      setStatus("listening");
       return;
     }
 
     recorder.stop();
-    recording = false;
+    state.recording = false;
     updateInputModeUi();
   } catch (error) {
-    recording = false;
+    state.recording = false;
     updateInputModeUi();
     handleUiError(error);
     focusManualQuestion();
   }
+}
+
+function setLanguage(language) {
+  if (!SUPPORTED_LANGUAGES.includes(language) || language === state.language) {
+    return;
+  }
+  cancelCurrentSpeech();
+  state.language = language;
+  state.sessionId = null;
+  persistLanguage(language);
+  showPlaceholder();
+  renderCopy();
+  setReadyStatus();
+}
+
+elements.recordButton.addEventListener("click", () => {
+  void handleRecordClick();
 });
 
-manualQuestionForm.addEventListener("submit", async (event) => {
+elements.manualQuestionForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-  const transcript = manualQuestionInput.value.trim();
-  if (!transcript || submitting || recording) {
+  const transcript = elements.manualQuestionInput.value.trim();
+  if (!transcript || state.submitting || state.recording) {
     return;
   }
 
-  setStatus("Processing");
   try {
-    await submitTranscript(transcript, languageSelect.value);
-    manualQuestionInput.value = "";
+    await submitTranscript(transcript);
+    elements.manualQuestionInput.value = "";
   } catch (error) {
     handleUiError(error);
   }
 });
 
-loadHealth().then(() => {
+for (const button of elements.languageButtons) {
+  button.addEventListener("click", () => {
+    setLanguage(button.dataset.lang);
+  });
+}
+
+showPlaceholder();
+renderCopy();
+void loadHealth().then(() => {
   updateInputModeUi();
-  if (!runtimeHealth) {
+  if (!state.runtimeHealth) {
     setReadyStatus();
   }
-});
-
-languageSelect.addEventListener("change", () => {
-  sessionId = null;
 });

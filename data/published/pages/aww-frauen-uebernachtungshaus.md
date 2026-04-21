@@ -1,31 +1,43 @@
 ---
 title: "AWW Uebernachtungshaus fuer wohnungslose Frauen"
 category: "housing"
+service_type: "overnight_shelter"
 language: "de"
 publisher: "AWW Leipzig"
 description: "Übernachtungshaus"
+target_groups:
+  - "addiction"
+  - "homeless"
+  - "women"
+gender_access: "women"
+phone: "06 0190 1570 5291 25"
 tags:
   - "frauen"
   - "notunterkunft"
   - "uebernachtung"
   - "wohnungslosigkeit"
 aliases:
-  - "aww"
-  - "aww uebernachtungshaus fuer wohnungslose frauen"
+  - "AWW Uebernachtungshaus fuer wohnungslose Frauen"
   - "frauen"
-  - "fuer"
   - "notunterkunft"
   - "uebernachtung"
   - "uebernachtungshaus"
   - "wohnungslose"
   - "wohnungslosigkeit"
+review_status: "published"
+validation_issues:
+  - "missing_address"
+  - "missing_opening_hours"
 source_url: "https://obdachlosenhaus.de/"
-last_updated: "2026-04-20"
+source_snapshot_path: "raw/aww-frauen-uebernachtungshaus-20260421054229.html"
+source_content_hash: "842270b5f7ab09739fac41a3db92472719ed36e479f85b6861ff73a41d157ee5"
+source_last_seen: "2026-04-21T05:42:29.964284+00:00"
+last_updated: "2026-04-21"
 ---
 # AWW Uebernachtungshaus fuer wohnungslose Frauen
 
 - Source: https://obdachlosenhaus.de/
-- Generated: 2026-04-20T13:19:28.217523+00:00
+- Generated: 2026-04-21T05:42:29.964284+00:00
 
 Übernachtungshaus
 für wohnungslose Frauen in Leipzig

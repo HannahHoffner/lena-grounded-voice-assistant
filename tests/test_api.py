@@ -22,9 +22,16 @@ def test_health_endpoint_reports_providers(monkeypatch, tmp_path) -> None:
     body = response.json()
     assert body["status"] == "ok"
     assert body["stt_provider"] == "mock"
+    assert body["stt_configured_provider"] == "mock"
+    assert body["stt_ready"] is True
     assert body["rewrite_provider"] == "template"
     assert body["rewrite_model"] is None
     assert body["llm_active"] is False
+    assert body["tts_provider"] == "mock"
+    assert body["tts_configured_provider"] == "mock"
+    assert body["tts_ready"] is True
+    assert body["speech"]["stt"]["active_provider"] == "mock"
+    assert body["speech"]["tts"]["active_provider"] == "mock"
 
 
 def test_answer_endpoint_returns_weak_match_or_ok(monkeypatch) -> None:
@@ -76,6 +83,33 @@ def test_answer_endpoint_surfaces_relevant_page_passage(monkeypatch) -> None:
     assert body["model"] is None
 
 
+def test_shower_answer_includes_concrete_place_details(monkeypatch) -> None:
+    monkeypatch.setenv("LENA_BOOTSTRAP_RUNTIME_FROM_SCRAPER", "false")
+    monkeypatch.setenv("LENA_REWRITE_PROVIDER", "template")
+    app = create_app()
+    client = TestClient(app)
+    response = client.post("/api/query/answer", json={"transcript": "Wo kann ich duschen?", "language": "de"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "ok"
+    assert "Leipziger Oase" in body["answer_text"]
+    assert "08:00" in body["answer_text"]
+    assert "Nuernberger Strasse 31" in body["answer_text"] or "Nürnberger Straße 31" in body["answer_text"]
+
+
+def test_location_answer_includes_address_for_specific_place(monkeypatch) -> None:
+    monkeypatch.setenv("LENA_BOOTSTRAP_RUNTIME_FROM_SCRAPER", "false")
+    monkeypatch.setenv("LENA_REWRITE_PROVIDER", "template")
+    app = create_app()
+    client = TestClient(app)
+    response = client.post("/api/query/answer", json={"transcript": "wo ist leipziger oase", "language": "de"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "ok"
+    assert "Leipziger Oase" in body["answer_text"]
+    assert "Nuernberger Strasse 31" in body["answer_text"] or "Nürnberger Straße 31" in body["answer_text"]
+
+
 def test_answer_endpoint_supports_cross_language_food_lookup(monkeypatch) -> None:
     monkeypatch.setenv("LENA_BOOTSTRAP_RUNTIME_FROM_SCRAPER", "false")
     monkeypatch.setenv("LENA_REWRITE_PROVIDER", "template")
@@ -85,8 +119,9 @@ def test_answer_endpoint_supports_cross_language_food_lookup(monkeypatch) -> Non
     assert response.status_code == 200
     body = response.json()
     assert body["status"] == "ok"
-    assert body["retrieved_page_ids"][0] == "tafel-leipzig"
+    assert body["retrieved_page_ids"][0].startswith("tafel-leipzig")
     assert "Tafel Leipzig" in body["answer_text"]
+    assert body["answer_text"].count("You can go to") <= 1
 
 
 def test_answer_endpoint_prefers_debt_counseling_page(monkeypatch) -> None:
@@ -117,8 +152,8 @@ def test_session_follow_up_prefers_previous_place(monkeypatch) -> None:
         json={"transcript": "is it open today?", "language": "en", "session_id": "session-1"},
     ).json()
 
-    assert first["retrieved_page_ids"][0] == "tafel-leipzig"
-    assert second["retrieved_page_ids"][0] == "tafel-leipzig"
+    assert first["retrieved_page_ids"][0].startswith("tafel-leipzig")
+    assert second["retrieved_page_ids"][0] == first["retrieved_page_ids"][0]
     assert second["session_id"] == "session-1"
 
 
@@ -137,7 +172,7 @@ def test_session_alternative_request_prefers_different_place(monkeypatch) -> Non
         json={"transcript": "is there another place?", "language": "en", "session_id": "session-2"},
     ).json()
 
-    assert first["retrieved_page_ids"][0] == "tafel-leipzig"
+    assert first["retrieved_page_ids"][0].startswith("tafel-leipzig")
     assert second["retrieved_page_ids"][0] != first["retrieved_page_ids"][0]
 
 

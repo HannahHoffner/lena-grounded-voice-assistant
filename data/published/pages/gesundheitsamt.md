@@ -1,9 +1,20 @@
 ---
 title: "Gesundheitsamt Leipzig"
 category: "medical"
+service_type: "medical_consultation"
 language: "de"
 publisher: "Stadt Leipzig"
 description: "Gesundheit"
+target_groups:
+  - "addiction"
+  - "families"
+requires_registration: true
+languages:
+  - "de"
+  - "en"
+  - "pl"
+  - "ru"
+phone: "05.05.2026"
 tags:
   - "gesundheitsamt"
   - "gesundheit"
@@ -11,16 +22,23 @@ tags:
 aliases:
   - "gesundheit"
   - "gesundheitsamt"
-  - "gesundheitsamt leipzig"
+  - "Gesundheitsamt Leipzig"
   - "leipzig"
   - "medizin"
+review_status: "published"
+validation_issues:
+  - "missing_address"
+  - "missing_opening_hours"
 source_url: "https://www.leipzig.de/leben-in-leipzig/gesundheit#c102834"
-last_updated: "2026-04-20"
+source_snapshot_path: "raw/gesundheitsamt-20260421054229.html"
+source_content_hash: "bf337c0ee0ac93b96388a6a96a06a3c70bbbbd83dadce37cc47f36507a30b969"
+source_last_seen: "2026-04-21T05:42:29.964284+00:00"
+last_updated: "2026-04-21"
 ---
 # Gesundheitsamt Leipzig
 
 - Source: https://www.leipzig.de/leben-in-leipzig/gesundheit#c102834
-- Generated: 2026-04-20T13:19:28.217523+00:00
+- Generated: 2026-04-21T05:42:29.964284+00:00
 
 Gesundheit
 Materialien zu Migration und Gesundheit
@@ -36,8 +54,6 @@ Themen
 Weitere Informationen
 Veranstaltungen
 -
-Patienteninfoveranstaltung: Eine runde Sache: Moderne Perinatalmedizin im Klinikum St. Georg
-20.04.2026 · 17:00 – 18:30 Uhr Stadtbibliothek -
 Qualität von Trink- und Brunnenwasser (mit Anmeldung)
 21.04.2026 · 15:00 Uhr Umweltinformationszentrum Beratung -
 Technik leicht gemacht - den (digitalen) Alltag im Ruhestand meistern
@@ -45,7 +61,9 @@ Technik leicht gemacht - den (digitalen) Alltag im Ruhestand meistern
 Patienteninfoveranstaltung: Von konservativ bis operativ - Individuelle Therapien für Ihre Wirbelsäule im überregionalen Zentrum des Klinikum St. Georg
 27.04.2026 · 17:00 – 18:30 Uhr Stadtbibliothek -
 KiK: Komm-in-Kontakt-Café - Selbsthilfe-Treff für junge Menschen von 18 bis 35 Jahre
-29.04.2026 · 16:00 Uhr Volkshaus Leipzig Selbsthilfe · Gesprächsrunde
+29.04.2026 · 16:00 Uhr Volkshaus Leipzig Selbsthilfe · Gesprächsrunde -
+Schimmel und Luftschadstoffe in Wohnräumen (mit Anmeldung)
+05.05.2026 · 15:00 Uhr Umweltinformationszentrum Beratung
 Leistungen des Gesundheitsamtes
 -
 [Amtsärztliche Gutachten](/service-portal/dienststelle/gutachten-und-zeugnisse-5321) -

@@ -1,30 +1,41 @@
 ---
 title: "Suchtzentrum SAFE Strassensozialarbeit"
 category: "addiction"
+service_type: "streetwork"
 language: "de"
 publisher: "Suchtzentrum gGmbH"
 description: "Wo arbeiten wir?"
+target_groups:
+  - "addiction"
+  - "homeless"
+phone: "0175 675 80 41"
 tags:
   - "streetwork"
   - "sucht"
   - "wohnungslosigkeit"
   - "hilfe"
 aliases:
-  - "hilfe"
   - "safe"
   - "strassensozialarbeit"
   - "streetwork"
   - "sucht"
   - "suchtzentrum"
-  - "suchtzentrum safe strassensozialarbeit"
+  - "Suchtzentrum SAFE Strassensozialarbeit"
   - "wohnungslosigkeit"
+review_status: "published"
+validation_issues:
+  - "missing_address"
+  - "missing_opening_hours"
 source_url: "https://www.suchtzentrum.de/unsere-angebote/streetwork/safe"
-last_updated: "2026-04-20"
+source_snapshot_path: "raw/suchtzentrum-safe-streetwork-20260421054229.html"
+source_content_hash: "cf770a1a5f2d8d897bc40c9a9a6188c342f43c2843fd7cde24d7c8f62221a386"
+source_last_seen: "2026-04-21T05:42:29.964284+00:00"
+last_updated: "2026-04-21"
 ---
 # Suchtzentrum SAFE Strassensozialarbeit
 
 - Source: https://www.suchtzentrum.de/unsere-angebote/streetwork/safe
-- Generated: 2026-04-20T13:19:28.217523+00:00
+- Generated: 2026-04-21T05:42:29.964284+00:00
 
 Wo arbeiten wir?
 Safe - Straßensozialarbeit für Erwachsene sucht öffentliche Plätze im Leipziger Westen und Norden auf, um dort mit den Menschen in Kontakt zu kommen, die sich hier regelmäßig aufhalten.

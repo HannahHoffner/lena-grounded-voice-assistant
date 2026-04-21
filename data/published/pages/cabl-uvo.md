@@ -1,39 +1,37 @@
 ---
 title: "CABL Medizinische Sprechstunden fuer Wohnungslose"
 category: "medical"
+service_type: "medical_consultation"
 language: "de"
 publisher: "CABL e.V."
-address: "Nürnberger Straße 31, 04103 Leipzig"
-opening_hours:
-  - "Das Projekt UVO wurde Anfang 2024 um die aufsuchende Versorgung mit dem Medibus erweitert. Der Medibus ist ein umgerüsteter Rettungswagen, bereitgestellt durch die Stadt Leipzig..."
-  - "montags 15:00-16:00 Uhr – pflegerische Sprechstunde"
-  - "dienstags 13:00-15:00 Uhr – ärztliche Sprechstunde"
-  - "donnerstag 19:30-21:00 Uhr"
-description: "Im November 2020 wurde die Förderung des Projekts „Umfeldnahe Versorgung von Menschen ohne festen Wohnsitz“ im Leipziger Stadtrat beschlossen und der Verein CABL e.V. mit der Umsetzung beauftragt (-> [Beschlussvorlage](https://ratsinfo.leipzig.de/bi/vo020.asp?VOLFDNR=1016991)). K"
+description: "Medizinische Sprechstunden und mobile Versorgung fuer wohnungslose Menschen an mehreren Standorten in Leipzig."
+target_groups:
+  - "homeless"
+languages:
+  - "de"
+phone: "0341 246 766 55"
 tags:
   - "medizin"
   - "sprechstunde"
   - "wohnungslosigkeit"
   - "gesundheit"
 aliases:
-  - "cabl"
-  - "cabl medizinische sprechstunden fuer wohnungslose"
-  - "fuer"
-  - "gesundheit"
-  - "medizin"
-  - "medizinische"
-  - "sprechstunde"
-  - "sprechstunden"
-  - "uvo"
-  - "wohnungslose"
-  - "wohnungslosigkeit"
+  - "CABL"
+  - "Medizinische Sprechstunden"
+  - "UVO"
+review_status: "needs_review"
+validation_issues:
+  - "multi_location_service"
 source_url: "https://cab-leipzig.de/wp/startseite/uvo/"
-last_updated: "2026-04-20"
+source_snapshot_path: "raw/cabl-uvo-20260421054229.html"
+source_content_hash: "3d10c34af89e4099ab2b54783232b070af48c780c0235fb433cb16a57337a3ba"
+source_last_seen: "2026-04-21T05:42:29.964284+00:00"
+last_updated: "2026-04-21"
 ---
 # CABL Medizinische Sprechstunden fuer Wohnungslose
 
 - Source: https://cab-leipzig.de/wp/startseite/uvo/
-- Generated: 2026-04-20T13:19:28.217523+00:00
+- Generated: 2026-04-21T05:42:29.964284+00:00
 
 Im November 2020 wurde die Förderung des Projekts „Umfeldnahe Versorgung von Menschen ohne festen Wohnsitz“ im Leipziger Stadtrat beschlossen und der Verein CABL e.V. mit der Umsetzung beauftragt (-> [Beschlussvorlage](https://ratsinfo.leipzig.de/bi/vo020.asp?VOLFDNR=1016991)). Kernpunkt des Projekts ist, in den Leipziger Übernachtungshäusern und Tagestreffs regelmäßige Sprechstunden zu etablieren, in denen eine medizinische Versorgung durch ehrenamtlich tätige Ärzt:innen in Anspruch genommen werden kann. Ziel des Projektes soll insbesondere sein, nicht nur niedrigschwellige Zugänge zu medizinischer Versorgung für die Betroffenen zu ermöglichen, sondern auch langfristige Lösungen für eine verbesserte gesundheitliche Versorgung wohnungsloser Menschen im Raum Leipzig zu finden – zum Beispiel durch die Weitervermittlung in die Regelversorgung.
 Aufsuchende medizinische Versorgung:

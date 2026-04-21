@@ -1,31 +1,40 @@
 ---
 title: "Caritas Ambulant Betreutes Wohnen Wohnungslosigkeit"
 category: "housing"
+service_type: "counseling"
 language: "de"
 publisher: "Caritas Leipzig"
 description: "Wohnungslosigkeit"
+target_groups:
+  - "homeless"
+email: "wnh@caritas-leipzig.de"
 tags:
   - "ambulant betreutes wohnen"
   - "wohnungslosigkeit"
   - "beratung"
   - "wohnen"
 aliases:
-  - "abw"
   - "ambulant"
   - "ambulant betreutes wohnen"
-  - "beratung"
   - "betreutes"
   - "caritas"
-  - "caritas ambulant betreutes wohnen wohnungslosigkeit"
+  - "Caritas Ambulant Betreutes Wohnen Wohnungslosigkeit"
   - "wohnen"
   - "wohnungslosigkeit"
+review_status: "published"
+validation_issues:
+  - "missing_address"
+  - "missing_opening_hours"
 source_url: "https://www.caritas-leipzig.de/hilfeundberatung/sozialenotlagen/ambulantbetreuteswohnen/ambulant-betreutes-wohnen"
-last_updated: "2026-04-20"
+source_snapshot_path: "raw/caritas-abw-wohnungslosigkeit-20260421054229.html"
+source_content_hash: "18f1466b16ebf486316c4da73b688bd07e4807d1bec42fd4cdba5732362efee9"
+source_last_seen: "2026-04-21T05:42:29.964284+00:00"
+last_updated: "2026-04-21"
 ---
 # Caritas Ambulant Betreutes Wohnen Wohnungslosigkeit
 
 - Source: https://www.caritas-leipzig.de/hilfeundberatung/sozialenotlagen/ambulantbetreuteswohnen/ambulant-betreutes-wohnen
-- Generated: 2026-04-20T13:19:28.217523+00:00
+- Generated: 2026-04-21T05:42:29.964284+00:00
 
 Wohnungslosigkeit
 Je nach Ihrer persönlichen Situation können Sie durch eines oder mehrere der folgenden Angebote Unterstützung erhalten. Als erste Anlaufstelle empfehlen wir die Allgemeine Soziale Beratung.

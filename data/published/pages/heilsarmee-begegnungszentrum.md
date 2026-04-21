@@ -1,9 +1,12 @@
 ---
 title: "Heilsarmee Begegnungszentrum Die Bruecke"
 category: "social"
+service_type: "food_distribution"
 language: "de"
 publisher: "Heilsarmee Leipzig"
 description: "Begegnungszentrum \"Die Brücke\""
+target_groups:
+  - "addiction"
 tags:
   - "begegnungszentrum"
   - "kleiderkammer"
@@ -13,17 +16,24 @@ aliases:
   - "begegnungszentrum"
   - "bruecke"
   - "heilsarmee"
-  - "heilsarmee begegnungszentrum die bruecke"
+  - "Heilsarmee Begegnungszentrum Die Bruecke"
   - "jobcenter"
   - "kleiderkammer"
   - "mittagstisch"
+review_status: "published"
+validation_issues:
+  - "missing_address"
+  - "missing_opening_hours"
 source_url: "https://www.heilsarmee.de/leipzig/begegnungszentrum.html"
-last_updated: "2026-04-20"
+source_snapshot_path: "raw/heilsarmee-begegnungszentrum-20260421054229.html"
+source_content_hash: "9667ba78f659a73b2333440fe88aea6a97c36d3f107a5d28e0a4a2c34ab712f7"
+source_last_seen: "2026-04-21T05:42:29.964284+00:00"
+last_updated: "2026-04-21"
 ---
 # Heilsarmee Begegnungszentrum Die Bruecke
 
 - Source: https://www.heilsarmee.de/leipzig/begegnungszentrum.html
-- Generated: 2026-04-20T13:19:28.217523+00:00
+- Generated: 2026-04-21T05:42:29.964284+00:00
 
 Begegnungszentrum "Die Brücke"
 Das Begegnungszentrum "Die Brücke" ist ein städtisch gefördertes Projekt. Seit Beginn der Tätigkeit in L-Paunsdorf stehen die Türen für alle Interessierten offen. Religion, Geschlecht, Alter und politische Ansichten sind für den Besuch und die Teilnahme an Veranstaltungen nicht von Bedeutung. Das Angebot ist insbesondere auf die Bewohner des Stadtteils ausgerichtet, steht aber selbstverständlich allen Leipziger Bürgerinnen und Bürgern offen.

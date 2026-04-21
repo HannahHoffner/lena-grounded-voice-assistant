@@ -27,3 +27,25 @@ def test_exact_page_id_query_beats_partial_title_match() -> None:
     results = engine.retrieve("gesundheitsamt", Language.DE)
     assert results
     assert results[0].page_id == "gesundheitsamt"
+
+
+def test_specific_schwanenteich_query_hits_atomic_streetwork_page() -> None:
+    engine = _engine()
+    results = engine.retrieve("schwanenteich essen", Language.DE)
+    assert results
+    assert results[0].page_id == "leipzig-schadensminimierung-schwanenteich"
+
+
+def test_exact_address_query_prefers_matching_house_number() -> None:
+    engine = _engine()
+    results = engine.retrieve("nuernberger strasse 31", Language.DE)
+    assert results
+    assert results[0].page_id in {"leipziger-oase", "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog"}
+    assert results[0].page_id != "diakonie-kleiderkammern"
+
+
+def test_specific_location_query_prefers_atomic_tafel_page() -> None:
+    engine = _engine()
+    results = engine.retrieve("tafel lindenau", Language.DE)
+    assert results
+    assert results[0].page_id == "tafel-leipzig-zentrale-lindenau-west"

@@ -15,9 +15,11 @@
     "url": "https://www.leipzig.de/leben-in-leipzig/gesundheit/suchthilfe/schadensminimierung",
     "language": "de",
     "category": "addiction",
+    "service_type": "service_catalog",
     "publisher": "Stadt Leipzig",
     "format": "html",
-    "tags": ["sucht", "schadensminimierung", "gesundheit"]
+    "tags": ["sucht", "schadensminimierung", "gesundheit"],
+    "entity_mode": "service_catalog"
   },
   {
     "source_id": "wohnungsnotfallhilfe-pdf",
@@ -25,9 +27,12 @@
     "url": "https://static.leipzig.de/fileadmin/mediendatenbank/leipzig-de/Stadt/02.5_Dez5_Jugend_Soziales_Gesundheit_Schule/50_Sozialamt/Wohnungsnotfallhilfe_und_Notunterbringung/Angebote-der-Wohnungsnotfallhilfe-und-Notunterbringung-in-der-Stadt-Leipzig.pdf",
     "language": "de",
     "category": "housing",
+    "service_type": "service_catalog",
     "publisher": "Stadt Leipzig",
     "format": "pdf",
-    "tags": ["wohnungslosigkeit", "notunterbringung", "unterkunft"]
+    "tags": ["wohnungslosigkeit", "notunterbringung", "unterkunft"],
+    "target_groups": ["homeless"],
+    "entity_mode": "service_catalog"
   },
   {
     "source_id": "mietrechtsbroschuere-pdf",
@@ -285,9 +290,12 @@
     "url": "https://tafel-leipzig.de/",
     "language": "de",
     "category": "food",
+    "service_type": "food_distribution",
     "publisher": "Tafel Leipzig e.V.",
     "format": "html",
-    "tags": ["tafel", "lebensmittel", "essen", "ausgabestellen"]
+    "tags": ["tafel", "lebensmittel", "essen", "ausgabestellen"],
+    "target_groups": ["food"],
+    "entity_mode": "location_list"
   },
   {
     "source_id": "heilsarmee-begegnungszentrum",

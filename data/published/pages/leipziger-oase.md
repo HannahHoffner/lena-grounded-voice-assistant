@@ -1,32 +1,37 @@
 ---
 title: "Leipziger Oase"
 category: "housing"
+service_type: "day_center"
 language: "de"
 publisher: "Diakonie Leipzig"
-address: "Kleiderkammer in der Nürnberger Straße 37"
+address: "Nuernberger Strasse 31, 04103 Leipzig"
 opening_hours:
-  - "Montag bis Freitag: 08:00 bis 16:00 Uhr, Samstag (inkl. Feiertage) 09:00 bis 14:00 Uhr"
-  - "Die Sozialberatung der Oase ist gegenwärtig montags bis freitags zwischen 09:00 und 15:00 Uhr zu erreichen, das Postbüro zwischen 12:30 und 14:30 Uhr."
-  - "- Wäscheservice (Mo. und Do. 09:00 bis 12:00 Uhr)"
-  - "- Postadressendienst (Mo. bis Fr. 12:30 bis 14:30 Uhr)"
-description: "Täglich kommen ca. 100 Menschen in die “Oase” – jeder mit seiner eigenen Geschichte, seinen Sorgen und Fragen. Oftmals verschärft sich die persönliche Notsituation noch durch gesundheitliche Einschränkungen, Arbeitslosigkeit etc. In der „Oase“ werden Wohnungslose so angenommen un"
+  - "Montag bis Freitag 08:00 bis 16:00 Uhr"
+  - "Samstag und Feiertage 09:00 bis 14:00 Uhr"
+description: "Tageseinrichtung fuer wohnungslose Menschen mit Beratung, Dusch- und Waeschemoeglichkeiten sowie Imbiss."
+target_groups:
+  - "homeless"
+phone: "0341 2682670"
 tags:
   - "oase"
   - "tageseinrichtung"
   - "wohnungslos"
 aliases:
-  - "leipziger"
-  - "leipziger oase"
-  - "oase"
-  - "tageseinrichtung"
-  - "wohnungslos"
+  - "Kontaktstube"
+  - "Leipziger Oase"
+  - "Oase"
+  - "Tageseinrichtung"
+review_status: "published"
 source_url: "https://www.diakonie-leipzig.de/hilfe-angebote/beratung-nothilfe/wohnungslosenhilfe-leipziger-oase-tageseinrichtung-fur-wohnungslose-menschen/"
-last_updated: "2026-04-20"
+source_snapshot_path: "raw/leipziger-oase-20260421054229.html"
+source_content_hash: "ce66cdbceac199a4651a05ae976750e76077dcb0d68fa142d05cfd8f89ab189f"
+source_last_seen: "2026-04-21T05:42:29.964284+00:00"
+last_updated: "2026-04-21"
 ---
 # Leipziger Oase
 
 - Source: https://www.diakonie-leipzig.de/hilfe-angebote/beratung-nothilfe/wohnungslosenhilfe-leipziger-oase-tageseinrichtung-fur-wohnungslose-menschen/
-- Generated: 2026-04-20T13:19:28.217523+00:00
+- Generated: 2026-04-21T05:42:29.964284+00:00
 
 Wohnungslosenhilfe – Leipziger Oase
 Unsere Angebote der Leipziger Oase

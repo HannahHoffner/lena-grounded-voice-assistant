@@ -13,14 +13,33 @@ from ..models import Language
 
 class BaseSttProvider(ABC):
     name = "base"
+    configured_name = "base"
+    ready = True
+    detail: str | None = None
+    fallback_from: str | None = None
 
     @abstractmethod
     async def transcribe(self, audio: UploadFile, language: Language | str, debug_transcript: str | None = None) -> str:
         raise NotImplementedError
 
+    def health(self) -> dict[str, object]:
+        return {
+            "configured_provider": self.configured_name,
+            "active_provider": self.name,
+            "ready": self.ready,
+            "detail": self.detail,
+            "fallback_from": self.fallback_from,
+        }
+
 
 class MockSttProvider(BaseSttProvider):
     name = "mock"
+
+    def __init__(self, *, configured_name: str = "mock", detail: str | None = None, fallback_from: str | None = None) -> None:
+        self.configured_name = configured_name
+        self.detail = detail
+        self.fallback_from = fallback_from
+        self.ready = fallback_from is None
 
     async def transcribe(self, audio: UploadFile, language: Language | str, debug_transcript: str | None = None) -> str:
         if debug_transcript:
@@ -46,6 +65,8 @@ class FasterWhisperProvider(BaseSttProvider):
         self._model_factory = WhisperModel
         self._model_name = model_name
         self._model = None
+        self.configured_name = self.name
+        self.detail = f"Model {model_name}"
 
     def _get_model(self):
         if self._model is None:
@@ -79,11 +100,18 @@ def _normalize_language(language: Language | str) -> Language:
 def create_stt_provider(name: str) -> BaseSttProvider:
     if name == "faster_whisper":
         try:
-            return FasterWhisperProvider()
-        except RuntimeError as exc:
+            provider = FasterWhisperProvider()
+            provider._get_model()
+            return provider
+        except Exception as exc:
             warnings.warn(
                 f"Falling back to mock STT because faster-whisper could not be initialized: {exc}",
                 RuntimeWarning,
                 stacklevel=2,
             )
-    return MockSttProvider()
+            return MockSttProvider(
+                configured_name=name,
+                detail=f"faster-whisper initialization failed: {exc}",
+                fallback_from=name,
+            )
+    return MockSttProvider(configured_name=name)

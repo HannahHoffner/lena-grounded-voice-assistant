@@ -1,6 +1,7 @@
 ---
 title: "Kippe Leipzig"
 category: "social"
+service_type: "social"
 language: "de"
 publisher: "Kippe Leipzig"
 description: "Lieblingsthema Wetter – Was Leipzig meteorologisch zu bieten hat"
@@ -10,17 +11,23 @@ tags:
   - "hilfe"
 aliases:
   - "begegnung"
-  - "hilfe"
   - "kippe"
-  - "kippe leipzig"
+  - "Kippe Leipzig"
   - "leipzig"
+review_status: "published"
+validation_issues:
+  - "missing_address"
+  - "missing_opening_hours"
 source_url: "https://kippe-leipzig.de/"
-last_updated: "2026-04-20"
+source_snapshot_path: "raw/kippe-leipzig-20260421054229.html"
+source_content_hash: "acf92c86119d3f9eb0b552488cfa82d15524b9c9cbb7ec8a638dfc9c99cd2b19"
+source_last_seen: "2026-04-21T05:42:29.964284+00:00"
+last_updated: "2026-04-21"
 ---
 # Kippe Leipzig
 
 - Source: https://kippe-leipzig.de/
-- Generated: 2026-04-20T13:19:28.217523+00:00
+- Generated: 2026-04-21T05:42:29.964284+00:00
 
 Lieblingsthema Wetter – Was Leipzig meteorologisch zu bieten hat
 In eigener Sache: Hausverbote und nun? [mehr](/15-news/themen/787-kippe-hausverbot)

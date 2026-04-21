@@ -1,6 +1,7 @@
 ---
 title: "Diakonie Suchtberatung Blaues Kreuz"
 category: "addiction"
+service_type: "counseling"
 language: "de"
 publisher: "Diakonie Leipzig"
 opening_hours:
@@ -9,6 +10,10 @@ opening_hours:
   - "Mittwoch | 09:00 – 16:30 Uhr |"
   - "Donnerstag | 09:00 – 14:00 Uhr |"
 description: "Suchtberatung | Blaues Kreuz"
+target_groups:
+  - "addiction"
+phone: "02 0500 0003 4650 50"
+email: "suchtberatung@diakonie-leipzig.de"
 tags:
   - "suchtberatung"
   - "blaues kreuz"
@@ -16,20 +21,25 @@ tags:
   - "abhaengigkeit"
 aliases:
   - "abhaengigkeit"
-  - "beratung"
   - "blaues"
   - "blaues kreuz"
   - "diakonie"
-  - "diakonie suchtberatung blaues kreuz"
+  - "Diakonie Suchtberatung Blaues Kreuz"
   - "kreuz"
   - "suchtberatung"
+review_status: "published"
+validation_issues:
+  - "missing_address"
 source_url: "https://www.diakonie-leipzig.de/hilfe-angebote/beratung-nothilfe/suchtberatung-blaues-kreuz/"
-last_updated: "2026-04-20"
+source_snapshot_path: "raw/diakonie-suchtberatung-blaues-kreuz-20260421054229.html"
+source_content_hash: "136d1e426e8b3d41b91feee13fd34db5c5bdbb8ca035f237ca8b07a7b4996a65"
+source_last_seen: "2026-04-21T05:42:29.964284+00:00"
+last_updated: "2026-04-21"
 ---
 # Diakonie Suchtberatung Blaues Kreuz
 
 - Source: https://www.diakonie-leipzig.de/hilfe-angebote/beratung-nothilfe/suchtberatung-blaues-kreuz/
-- Generated: 2026-04-20T13:19:28.217523+00:00
+- Generated: 2026-04-21T05:42:29.964284+00:00
 
 Suchtberatung | Blaues Kreuz
 Die Suchtberatungsstelle bietet Beratung, Behandlung, Prävention sowie Vermittlung und Nachsorge

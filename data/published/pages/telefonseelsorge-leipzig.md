@@ -1,28 +1,37 @@
 ---
 title: "TelefonSeelsorge Leipzig"
 category: "crisis"
+service_type: "counseling"
 language: "de"
 publisher: "Diakonie Leipzig"
 description: "Beratungsnummer:"
+phone: "0800 1110 111"
+email: "telefonseelsorge@diakonie-leipzig.de"
 tags:
   - "krise"
   - "telefonseelsorge"
   - "notlage"
   - "beratung"
 aliases:
-  - "beratung"
   - "krise"
   - "leipzig"
   - "notlage"
   - "telefonseelsorge"
-  - "telefonseelsorge leipzig"
+  - "TelefonSeelsorge Leipzig"
+review_status: "published"
+validation_issues:
+  - "missing_address"
+  - "missing_opening_hours"
 source_url: "https://www.diakonie-leipzig.de/hilfe-angebote/beratung-nothilfe/telefonseelsorge/"
-last_updated: "2026-04-20"
+source_snapshot_path: "raw/telefonseelsorge-leipzig-20260421054229.html"
+source_content_hash: "6589ca72ecbc33b3b20fa98474e0c225129fec705b791300836f6a47d2d515e9"
+source_last_seen: "2026-04-21T05:42:29.964284+00:00"
+last_updated: "2026-04-21"
 ---
 # TelefonSeelsorge Leipzig
 
 - Source: https://www.diakonie-leipzig.de/hilfe-angebote/beratung-nothilfe/telefonseelsorge/
-- Generated: 2026-04-20T13:19:28.217523+00:00
+- Generated: 2026-04-21T05:42:29.964284+00:00
 
 TelefonSeelsorge Leipzig
 Beratungsnummer:

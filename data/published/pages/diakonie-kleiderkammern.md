@@ -1,6 +1,7 @@
 ---
 title: "Diakonie Kleiderkammern"
 category: "clothing"
+service_type: "clothing_support"
 language: "de"
 publisher: "Diakonie Leipzig"
 address: "Nürnberger Straße 37"
@@ -10,6 +11,9 @@ opening_hours:
   - "Donnerstag: 09:30 – 15:00 Uhr"
   - "Freitag: 12:30 – 18:00 Uhr"
 description: "Kleiderspenden"
+target_groups:
+  - "families"
+  - "homeless"
 tags:
   - "kleiderkammer"
   - "kleidung"
@@ -18,18 +22,22 @@ tags:
 aliases:
   - "beduerftige"
   - "diakonie"
-  - "diakonie kleiderkammern"
+  - "Diakonie Kleiderkammern"
   - "kleiderkammer"
   - "kleiderkammern"
   - "kleidung"
   - "spenden"
+review_status: "published"
 source_url: "https://www.diakonie-leipzig.de/kleiderspenden/"
-last_updated: "2026-04-20"
+source_snapshot_path: "raw/diakonie-kleiderkammern-20260421054229.html"
+source_content_hash: "6eb6654ff5d3a3dae332166d252c209a50b67b011feae13c7c3d0b04d0c4c5f7"
+source_last_seen: "2026-04-21T05:42:29.964284+00:00"
+last_updated: "2026-04-21"
 ---
 # Diakonie Kleiderkammern
 
 - Source: https://www.diakonie-leipzig.de/kleiderspenden/
-- Generated: 2026-04-20T13:19:28.217523+00:00
+- Generated: 2026-04-21T05:42:29.964284+00:00
 
 Kleiderspenden
 Die Kleiderkammer Passgenau und die Kleiderkammer in der Nürnberger Straße sind Angebote der ökumenischen Kontaktstube für wohnungslose Menschen Leipziger Oase. In den Kleiderkammern können bedürftige Menschen Kleidung für einen symbolischen Betrag von 1 € bis 3 € erwerben.

@@ -50,7 +50,7 @@ def create_app() -> FastAPI:
         clarification_gap_threshold=settings.clarification_gap_threshold,
         system_prompt_path=settings.system_prompt_path,
     )
-    tts_provider = create_tts_provider(settings.tts_provider, binary=settings.piper_binary)
+    tts_provider = create_tts_provider(settings.tts_provider, binary=settings.piper_binary, voice_models=settings.piper_voice_models)
 
     app.state.settings = settings
     app.state.kb = kb
@@ -65,14 +65,26 @@ def create_app() -> FastAPI:
 
     @app.get("/api/health")
     async def health() -> dict:
+        stt_health = app.state.stt_provider.health()
+        tts_health = app.state.tts_provider.health()
         return {
             "status": "ok",
             "kb_version": app.state.kb.dataset.manifest.kb_version,
             "stt_provider": app.state.stt_provider.name,
+            "stt_configured_provider": stt_health["configured_provider"],
+            "stt_ready": stt_health["ready"],
+            "stt_detail": stt_health["detail"],
             "rewrite_provider": app.state.rewrite_provider.name,
             "rewrite_model": app.state.rewrite_provider.model_name,
             "llm_active": app.state.rewrite_provider.uses_llm,
             "tts_provider": app.state.tts_provider.name,
+            "tts_configured_provider": tts_health["configured_provider"],
+            "tts_ready": tts_health["ready"],
+            "tts_detail": tts_health["detail"],
+            "speech": {
+                "stt": stt_health,
+                "tts": tts_health,
+            },
         }
 
     @app.post("/api/speech/transcribe", response_model=TranscribeResponse)

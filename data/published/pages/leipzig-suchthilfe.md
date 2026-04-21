@@ -1,30 +1,41 @@
 ---
 title: "Suchthilfe Gesundheitsamt"
 category: "addiction"
+service_type: "medical_consultation"
 language: "de"
 publisher: "Stadt Leipzig"
 description: "[ 28.04.2026 · 16:00 – 18:00 Uhr Gesundheitsamt Stadt Leipzig ](/kultur-und-freizeit/veranstaltungen/eventsingle/event/depressiv-sprich-darueber-20260428-10)"
+target_groups:
+  - "addiction"
+  - "families"
+  - "homeless"
+phone: "0260428-10"
 tags:
   - "sucht"
   - "gesundheit"
   - "beratung"
   - "hilfe"
 aliases:
-  - "beratung"
   - "gesundheit"
   - "gesundheitsamt"
-  - "hilfe"
-  - "leipzig"
   - "sucht"
   - "suchthilfe"
-  - "suchthilfe gesundheitsamt"
+  - "Suchthilfe Gesundheitsamt"
+review_status: "needs_review"
+validation_issues:
+  - "missing_address"
+  - "missing_opening_hours"
+  - "low_signal_description"
 source_url: "https://www.leipzig.de/leben-in-leipzig/gesundheit/suchthilfe"
-last_updated: "2026-04-20"
+source_snapshot_path: "raw/leipzig-suchthilfe-20260421054229.html"
+source_content_hash: "f899a794a3125ad3d49763bf0e1db543748d42f915941ce6d4c81340fb60ab3b"
+source_last_seen: "2026-04-21T05:42:29.964284+00:00"
+last_updated: "2026-04-21"
 ---
 # Suchthilfe Gesundheitsamt
 
 - Source: https://www.leipzig.de/leben-in-leipzig/gesundheit/suchthilfe
-- Generated: 2026-04-20T13:19:28.217523+00:00
+- Generated: 2026-04-21T05:42:29.964284+00:00
 
 [ 28.04.2026 · 16:00 – 18:00 Uhr Gesundheitsamt Stadt Leipzig ](/kultur-und-freizeit/veranstaltungen/eventsingle/event/depressiv-sprich-darueber-20260428-10)
 Suchthilfe und Suchtprävention in Leipzig

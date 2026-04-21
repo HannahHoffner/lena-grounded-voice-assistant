@@ -1,15 +1,14 @@
 ---
 title: "Tafel Leipzig"
 category: "food"
+service_type: "service_catalog"
 language: "de"
 publisher: "Tafel Leipzig e.V."
-address: "Neue Straße 2, 04416 Markkleeberg"
-opening_hours:
-  - "An- oder Ummeldung: Mo-Fr 9:30 – 10:30 Uhr"
-  - "Lebensmittelausgabe: Mo-Fr 10:30 – 15:30 Uhr"
-  - "An- oder Ummeldung: Mo – Fr 9:30 – 10:30 Uhr"
-  - "Lebensmittelausgabe: Mo – Fr 12:00 – 15:30 Uhr"
-description: "Unsere Ausgabestellen"
+description: "Uebersichtsseite mit Ausgabestellen der Tafel Leipzig."
+target_groups:
+  - "food"
+requires_registration: true
+phone: "0163 88 68 226"
 tags:
   - "tafel"
   - "lebensmittel"
@@ -21,14 +20,18 @@ aliases:
   - "lebensmittel"
   - "leipzig"
   - "tafel"
-  - "tafel leipzig"
+  - "Tafel Leipzig"
+review_status: "published"
 source_url: "https://tafel-leipzig.de/"
-last_updated: "2026-04-20"
+source_snapshot_path: "raw/tafel-leipzig-20260421054229.html"
+source_content_hash: "d3acb737f5611ce6cd3820bd203e41c9178015dc3a1c783779fc8db8f8362c86"
+source_last_seen: "2026-04-21T05:42:29.964284+00:00"
+last_updated: "2026-04-21"
 ---
 # Tafel Leipzig
 
 - Source: https://tafel-leipzig.de/
-- Generated: 2026-04-20T13:19:28.217523+00:00
+- Generated: 2026-04-21T05:42:29.964284+00:00
 
 [Clients]
 Unsere Ausgabestellen

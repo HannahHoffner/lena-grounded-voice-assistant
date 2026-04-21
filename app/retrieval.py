@@ -10,6 +10,7 @@ from .models import Language, PageMetadata, RetrievedPage
 
 
 TOKEN_RE = re.compile(r"[^\W\d_]+", re.UNICODE)
+DETAIL_TOKEN_RE = re.compile(r"\b\d{1,5}[a-z]?\b", re.UNICODE)
 STOPWORDS = {
     "a",
     "about",
@@ -88,6 +89,7 @@ GENERIC_QUERY_TOKENS = {
     "beratung",
     "brauch",
     "brauche",
+    "help",
     "hilfe",
     "information",
     "informationen",
@@ -139,6 +141,35 @@ RELATED_CATEGORIES = {
     "addiction": {"addiction", "social", "housing"},
     "clothing": {"clothing", "social", "housing"},
 }
+EXTRA_QUERY_EXPANSION_RULES: tuple[tuple[set[str], tuple[str, ...]], ...] = (
+    (
+        {"dusche", "duschen", "duschgelegenheit", "shower", "wash", "washing", "laundry", "waesche", "waescheservice", "waschen"},
+        ("dusche", "duschgelegenheit", "koerperpflege", "waeschepflege", "tageseinrichtung"),
+    ),
+    ({"frau", "frauen", "woman", "women", "kobieta", "femeie"}, ("frauen", "frau", "uebernachtung", "notunterkunft")),
+    ({"mann", "maenner", "manner", "men", "man", "barbat"}, ("maenner", "mann", "uebernachtung", "notunterkunft")),
+    ({"naloxone", "naloxon", "overdose", "ueberdosis"}, ("naloxon", "schadensminimierung", "safe", "konsum")),
+)
+EXTRA_CATEGORY_QUERY_HINTS = {
+    "hygiene": {
+        "dusche",
+        "duschen",
+        "duschgelegenheit",
+        "shower",
+        "wash",
+        "washing",
+        "waesche",
+        "waeschepflege",
+        "waescheservice",
+        "waschen",
+        "toilette",
+        "toiletten",
+        "koerperpflege",
+    },
+}
+EXTRA_RELATED_CATEGORIES = {
+    "hygiene": {"hygiene", "social", "housing", "clothing"},
+}
 
 
 def normalize_text(text: str) -> str:
@@ -152,6 +183,11 @@ def tokenize(text: str) -> list[str]:
     return [token for token in TOKEN_RE.findall(normalized) if token not in STOPWORDS and len(token) > 1]
 
 
+def detail_tokens(text: str) -> list[str]:
+    normalized = normalize_text(text)
+    return _unique(DETAIL_TOKEN_RE.findall(normalized))
+
+
 def query_tokens_for_search(text: str, language: Language | None = None) -> list[str]:
     del language
     normalized = normalize_text(text)
@@ -159,7 +195,7 @@ def query_tokens_for_search(text: str, language: Language | None = None) -> list
     expanded = list(tokens)
     token_set = set(tokens)
 
-    for triggers, additions in QUERY_EXPANSION_RULES:
+    for triggers, additions in QUERY_EXPANSION_RULES + EXTRA_QUERY_EXPANSION_RULES:
         if token_set & triggers:
             for addition in additions:
                 if addition not in token_set:
@@ -268,6 +304,8 @@ class RetrievalEngine:
 
         query_counts = Counter(tokens)
         query_token_set = set(tokens)
+        detail_query_tokens = detail_tokens(transcript)
+        detail_query_counts = Counter(detail_query_tokens)
         normalized_query = normalize_text(transcript).strip()
         alias_hits = self._alias_hits(transcript, tokens)
         preferred_page_ids = preferred_page_ids or []
@@ -276,6 +314,7 @@ class RetrievalEngine:
         location_query = bool(query_token_set & LOCATION_QUERY_TOKENS)
         hours_query = bool(query_token_set & HOURS_QUERY_TOKENS)
         query_category = _detect_query_category(query_token_set)
+        specific_place_query = _is_specific_place_query(query_token_set, detail_query_tokens, query_category)
 
         for page in self.kb.dataset.pages:
             if page.page_id in excluded_page_ids:
@@ -285,13 +324,21 @@ class RetrievalEngine:
             score += self._field_score(query_counts, page.title, weight=3.2)
             score += self._field_score(query_counts, page.page_id.replace("-", " "), weight=2.8)
             score += self._field_score(query_counts, page.category, weight=0.9)
+            score += self._field_score(query_counts, page.service_type, weight=1.35)
             score += self._field_score(query_counts, page.description, weight=1.4)
             score += self._field_score(query_counts, " ".join(page.tags), weight=2.2)
             score += self._field_score(query_counts, " ".join(page.aliases), weight=2.4)
+            score += self._field_score(query_counts, " ".join(page.target_groups), weight=1.7)
+            score += self._field_score(query_counts, page.gender_access or "", weight=1.1)
+            score += self._field_score(query_counts, " ".join(page.languages), weight=0.35)
             score += self._field_score(query_counts, page.address or "", weight=2.1)
             score += self._field_score(query_counts, " ".join(page.opening_hours), weight=1.8)
+            score += self._field_score(query_counts, page.phone or "", weight=0.2)
+            score += self._field_score(query_counts, page.email or "", weight=0.2)
             score += self._field_score(query_counts, page.publisher or "", weight=0.35)
             score += self._field_score(query_counts, page.summary, weight=0.55)
+            score += self._detail_field_score(detail_query_counts, page.address or "", weight=2.6)
+            score += self._detail_field_score(detail_query_counts, " ".join(page.opening_hours), weight=1.7)
             score += self._best_passage_score(query_counts, markdown) * 2.4
             score += alias_hits.get(page.page_id, 0.0)
             if page.language == language.value:
@@ -303,8 +350,19 @@ class RetrievalEngine:
             if page.page_id in preferred_page_ids:
                 score += 0.28
             score += self._category_score(query_category, page)
-            score += self._exact_match_boost(normalized_query, query_token_set, page)
+            score += self._exact_match_boost(normalized_query, query_token_set, query_category, page)
+            score += self._detail_match_boost(detail_query_tokens, page)
+            has_match_signal = score > 0.01
+            score += self._concrete_page_score(
+                page,
+                location_query=location_query,
+                hours_query=hours_query,
+                specific_place_query=specific_place_query,
+                detail_query_tokens=detail_query_tokens,
+                has_match_signal=has_match_signal,
+            )
             score -= self._document_penalty(page)
+            score -= self._review_penalty(page)
             if score > 0.04:
                 ranked.append((score, page))
 
@@ -313,6 +371,9 @@ class RetrievalEngine:
 
     def _field_score(self, query_counts: Counter[str], text: str, weight: float) -> float:
         return _score_tokens(query_counts, tokenize(text)) * weight
+
+    def _detail_field_score(self, query_counts: Counter[str], text: str, weight: float) -> float:
+        return _score_tokens(query_counts, detail_tokens(text)) * weight
 
     def _best_passage_score(self, query_counts: Counter[str], markdown: str) -> float:
         best = 0.0
@@ -325,11 +386,25 @@ class RetrievalEngine:
             best = max(best, score)
         return best
 
-    def _exact_match_boost(self, normalized_query: str, query_token_set: set[str], page: PageMetadata) -> float:
+    def _exact_match_boost(
+        self,
+        normalized_query: str,
+        query_token_set: set[str],
+        query_category: str | None,
+        page: PageMetadata,
+    ) -> float:
         normalized_title = normalize_text(page.title)
         normalized_page_id = normalize_text(page.page_id.replace("-", " "))
         title_tokens = set(tokenize(page.title))
         page_id_tokens = set(tokenize(page.page_id.replace("-", " ")))
+        page_match_tokens = set(tokenize(" ".join([page.title, page.page_id.replace("-", " "), " ".join(page.aliases), page.address or ""])))
+        category_hints = CATEGORY_QUERY_HINTS.get(query_category, set()) | EXTRA_CATEGORY_QUERY_HINTS.get(query_category, set())
+        raw_query_tokens = set(tokenize(normalized_query))
+        specific_query_tokens = {
+            token
+            for token in raw_query_tokens
+            if token not in GENERIC_QUERY_TOKENS and token not in category_hints
+        }
 
         boost = 0.0
         if normalized_query and normalized_query == normalized_title:
@@ -340,12 +415,71 @@ class RetrievalEngine:
             boost += 0.18
         if query_token_set and query_token_set <= page_id_tokens:
             boost += 0.22
+        if specific_query_tokens and specific_query_tokens <= page_match_tokens:
+            boost += 1.35
+        normalized_address = normalize_text(page.address or "")
+        normalized_hours = normalize_text(" ".join(page.opening_hours))
+        normalized_aliases = [normalize_text(alias) for alias in page.aliases]
+        if normalized_query and normalized_address and normalized_query in normalized_address:
+            boost += 1.25
+        if normalized_query and normalized_hours and normalized_query in normalized_hours:
+            boost += 0.9
+        if normalized_query and any(normalized_query == alias for alias in normalized_aliases):
+            boost += 0.55
         return boost
+
+    def _detail_match_boost(self, detail_query_tokens: list[str], page: PageMetadata) -> float:
+        if not detail_query_tokens:
+            return 0.0
+        page_detail_tokens = set(detail_tokens(" ".join([page.address or "", " ".join(page.opening_hours)])))
+        if not page_detail_tokens:
+            return -0.08
+        overlap = set(detail_query_tokens) & page_detail_tokens
+        if not overlap:
+            return -0.18
+        if set(detail_query_tokens) <= page_detail_tokens:
+            return 0.95
+        return 0.22 * len(overlap)
+
+    def _concrete_page_score(
+        self,
+        page: PageMetadata,
+        *,
+        location_query: bool,
+        hours_query: bool,
+        specific_place_query: bool,
+        detail_query_tokens: list[str],
+        has_match_signal: bool,
+    ) -> float:
+        score = 0.0
+        is_catalog = page.service_type == "service_catalog"
+        if is_catalog:
+            if has_match_signal and (specific_place_query or location_query or hours_query or detail_query_tokens):
+                score -= 1.2
+            else:
+                score += 0.04
+        else:
+            if has_match_signal and specific_place_query:
+                score += 0.22
+            if has_match_signal and location_query and page.address:
+                score += 0.2
+            if has_match_signal and hours_query and page.opening_hours:
+                score += 0.2
+        if has_match_signal and location_query and not page.address:
+            score -= 0.22
+        if has_match_signal and hours_query and not page.opening_hours:
+            score -= 0.18
+        return score
 
     def _document_penalty(self, page: PageMetadata) -> float:
         normalized = normalize_text(f"{page.page_id} {page.title}")
         if any(hint in normalized for hint in DOCUMENT_HINTS):
             return 0.08
+        return 0.0
+
+    def _review_penalty(self, page: PageMetadata) -> float:
+        if page.review_status == "needs_review":
+            return 0.06 + min(len(page.validation_issues), 4) * 0.01
         return 0.0
 
     def _category_score(self, query_category: str | None, page: PageMetadata) -> float:
@@ -359,16 +493,21 @@ class RetrievalEngine:
                         page.description,
                         page.summary,
                         page.category,
+                        page.service_type,
                         " ".join(page.tags),
                         " ".join(page.aliases),
+                        " ".join(page.target_groups),
+                        page.gender_access or "",
                     ]
                 )
             )
         )
         if page.category == query_category:
             return 0.65
-        if page.category in RELATED_CATEGORIES.get(query_category, set()):
-            if page_tokens & CATEGORY_QUERY_HINTS.get(query_category, set()):
+        related_categories = RELATED_CATEGORIES.get(query_category, set()) | EXTRA_RELATED_CATEGORIES.get(query_category, set())
+        category_hints = CATEGORY_QUERY_HINTS.get(query_category, set()) | EXTRA_CATEGORY_QUERY_HINTS.get(query_category, set())
+        if page.category in related_categories:
+            if page_tokens & category_hints:
                 return 0.35
             return -0.55
         return -0.8
@@ -402,6 +541,8 @@ class RetrievalEngine:
         generic_query = _is_generic_query(query_tokens)
         top_score = results[0].score
 
+        if generic_query and len(query_tokens) <= 1:
+            return True
         if generic_query and len(results) >= 2:
             return abs(results[0].score - results[1].score) < max(threshold_gap, 0.08) or top_score < 0.45
         if generic_query:
@@ -437,14 +578,33 @@ def _is_generic_query(tokens: list[str]) -> bool:
     if not tokens:
         return False
     informative_tokens = [token for token in tokens if token not in GENERIC_QUERY_TOKENS]
-    return not informative_tokens or len(informative_tokens) == 1 and len(tokens) <= 2
+    return not informative_tokens
 
 
 def _detect_query_category(query_token_set: set[str]) -> str | None:
-    for category, hints in CATEGORY_QUERY_HINTS.items():
+    for category, hints in {**CATEGORY_QUERY_HINTS, **EXTRA_CATEGORY_QUERY_HINTS}.items():
         if query_token_set & hints:
             return category
     return None
+
+
+def _is_specific_place_query(
+    query_token_set: set[str],
+    detail_query_tokens: list[str],
+    query_category: str | None,
+) -> bool:
+    if detail_query_tokens:
+        return True
+    category_hints = CATEGORY_QUERY_HINTS.get(query_category, set()) | EXTRA_CATEGORY_QUERY_HINTS.get(query_category, set())
+    specific_tokens = {
+        token
+        for token in query_token_set
+        if token not in GENERIC_QUERY_TOKENS
+        and token not in LOCATION_QUERY_TOKENS
+        and token not in HOURS_QUERY_TOKENS
+        and token not in category_hints
+    }
+    return bool(specific_tokens)
 
 
 def _is_low_signal_line(text: str) -> bool:

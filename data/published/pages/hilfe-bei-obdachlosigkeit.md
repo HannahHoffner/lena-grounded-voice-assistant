@@ -1,6 +1,7 @@
 ---
 title: "Hilfe bei Obdachlosigkeit in Leipzig"
 category: "housing"
+service_type: "overnight_shelter"
 language: "de"
 publisher: "Stadt Leipzig"
 opening_hours:
@@ -8,23 +9,34 @@ opening_hours:
   - "Montag bis Freitag: ab 18:00 Uhr geöffnet"
   - "Montag bis Freitag: von 18:00 Uhr bis 10:00 Uhr geöffnet"
 description: "Übernachtungshaus für wohnungslose Männer \"Rücke\""
+target_groups:
+  - "addiction"
+  - "homeless"
+  - "men"
+  - "women"
+phone: "0341 123-4504"
+email: "notunterbringung@leipzig.de"
 tags:
   - "obdachlosigkeit"
   - "hilfe"
   - "unterkunft"
 aliases:
-  - "hilfe"
-  - "hilfe bei obdachlosigkeit in leipzig"
+  - "Hilfe bei Obdachlosigkeit in Leipzig"
   - "leipzig"
   - "obdachlosigkeit"
-  - "unterkunft"
+review_status: "published"
+validation_issues:
+  - "missing_address"
 source_url: "https://www.leipzig.de/leben-in-leipzig/soziales/soziale-hilfen/hilfe-bei-obdachlosigkeit-in-leipzig"
-last_updated: "2026-04-20"
+source_snapshot_path: "raw/hilfe-bei-obdachlosigkeit-20260421054229.html"
+source_content_hash: "fa10fc20ba48c2ff93a195b8477292ded6a661d0ebb3792f440bb95aef55f7ec"
+source_last_seen: "2026-04-21T05:42:29.964284+00:00"
+last_updated: "2026-04-21"
 ---
 # Hilfe bei Obdachlosigkeit in Leipzig
 
 - Source: https://www.leipzig.de/leben-in-leipzig/soziales/soziale-hilfen/hilfe-bei-obdachlosigkeit-in-leipzig
-- Generated: 2026-04-20T13:19:28.217523+00:00
+- Generated: 2026-04-21T05:42:29.964284+00:00
 
 Übernachtungshaus für wohnungslose Männer "Rücke"
 Rückmarsdorfer Straße. 5-7
