@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from datetime import datetime
 from enum import StrEnum
-from typing import Literal
+from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import AliasChoices, BaseModel, Field, model_validator
 
 
 class Language(StrEnum):
@@ -16,26 +16,53 @@ class Language(StrEnum):
 
 
 class PageMetadata(BaseModel):
+    entity_id: str | None = None
     page_id: str
+    entity_kind: str = "service_location"
+    status: Literal["active", "temporarily_changed", "deprecated", "removed", "merged", "stale"] = "active"
+    parent_entity_id: str | None = None
+    organization: str | None = None
     title: str
+    canonical_title: str | None = None
     category: str = "general"
     service_type: str = "general"
     language: str
     source_url: str
+    source_urls: list[str] = Field(default_factory=list)
+    source_document_refs: list[str] = Field(default_factory=list)
     last_updated: str
+    last_verified: str | None = None
     publisher: str | None = None
     address: str | None = None
+    normalized_address: str | None = None
+    latitude: float | None = None
+    longitude: float | None = None
+    geo_status: Literal["ready", "approximate", "missing_address", "failed", "filtered_out"] | None = None
+    geo_source: Literal["manual", "build_geocoder", "source_embedded"] | None = None
+    geo_confidence: float | None = None
+    geo_precision: Literal["exact", "approximate"] | None = None
+    district: str | None = None
     opening_hours: list[str] = Field(default_factory=list)
+    opening_hours_normalized: list[dict[str, Any]] = Field(default_factory=list)
     description: str = ""
     target_groups: list[str] = Field(default_factory=list)
+    eligibility: str | None = None
     gender_access: str | None = None
     walk_in: bool | None = None
     requires_registration: bool | None = None
+    appointment_required: bool | None = None
     languages: list[str] = Field(default_factory=list)
     phone: str | None = None
     email: str | None = None
     tags: list[str] = Field(default_factory=list)
     aliases: list[str] = Field(default_factory=list)
+    confidence: float | None = None
+    source_trust_tier: int | None = None
+    conflict_fields: list[str] = Field(default_factory=list)
+    stale: bool = False
+    superseded_by: str | None = None
+    merged_into: str | None = None
+    entity_signature: str | None = None
     review_status: Literal["published", "needs_review"] = "published"
     validation_issues: list[str] = Field(default_factory=list)
     source_snapshot_path: str | None = None
@@ -45,12 +72,37 @@ class PageMetadata(BaseModel):
     summary: str
     file_path: str
 
+    @model_validator(mode="after")
+    def _apply_defaults(self) -> PageMetadata:
+        if self.entity_id is None:
+            self.entity_id = self.page_id
+        if self.canonical_title is None:
+            self.canonical_title = self.title
+        if self.organization is None:
+            self.organization = self.publisher
+        if not self.source_urls:
+            self.source_urls = [self.source_url]
+        if self.last_verified is None:
+            self.last_verified = self.source_last_seen or self.last_updated
+        if self.appointment_required is None:
+            self.appointment_required = self.requires_registration
+        if self.stale and self.status == "active":
+            self.status = "stale"
+        if self.normalized_address is None and self.address:
+            normalized = str(self.address).casefold().strip()
+            self.normalized_address = " ".join(normalized.split()) or None
+        return self
+
 
 class Manifest(BaseModel):
     kb_version: str
     generated_at: datetime
     source_count: int
     page_count: int
+    document_count: int = 0
+    entity_count: int = 0
+    canonical_db: str | None = None
+    index_artifacts: list[str] = Field(default_factory=list)
 
 
 class TranscribeResponse(BaseModel):
@@ -88,13 +140,48 @@ class RetrievedPage(BaseModel):
     score: float
 
 
+AnswerStatus = Literal["ok", "weak_match", "unknown", "clarification_needed", "self_description", "out_of_scope", "crisis"]
+
+
+class MapOrigin(BaseModel):
+    id: str
+    label: str
+    address: str
+    latitude: float
+    longitude: float
+
+
+class MapDestination(BaseModel):
+    id: str
+    page_id: str
+    label: str
+    organization_label: str | None = None
+    service_type: str
+    address: str
+    latitude: float
+    longitude: float
+    distance_meters: int | None = None
+    description: str | None = None
+    opening_hours: list[str] = Field(default_factory=list)
+
+
+class MapData(BaseModel):
+    origin: MapOrigin
+    destinations: list[MapDestination] = Field(default_factory=list)
+    selected_destination_id: str | None = None
+
+
 class QueryAnswerResponse(BaseModel):
     answer_text: str
-    status: Literal["ok", "weak_match", "unknown", "clarification_needed"]
+    status: AnswerStatus
     weak_match: bool = False
     clarification_needed: bool = False
     clarification_question: str | None = None
+    out_of_scope: bool = False
+    self_description: bool = False
+    crisis_mode: bool = False
     retrieved_page_ids: list[str] = Field(default_factory=list)
+    map_data: MapData | None = None
     provider: str
     model: str | None = None
     session_id: str
@@ -105,10 +192,26 @@ class QueryAnswerResponse(BaseModel):
 
 class KnowledgeAnswer(BaseModel):
     answer_text: str
-    status: Literal["ok", "weak_match", "unknown", "clarification_needed"]
+    status: AnswerStatus
     weak_match: bool = False
     clarification_needed: bool = False
     clarification_question: str | None = None
+    out_of_scope: bool = False
+    self_description: bool = False
+    crisis_mode: bool = False
+    retrieved_page_ids: list[str] = Field(default_factory=list)
+    map_data: MapData | None = None
+
+
+class LLMKnowledgeAnswer(BaseModel):
+    answer_text: str
+    status: AnswerStatus
+    weak_match: bool = False
+    clarification_needed: bool = False
+    clarification_question: str | None = None
+    out_of_scope: bool = False
+    self_description: bool = False
+    crisis_mode: bool = False
     retrieved_page_ids: list[str] = Field(default_factory=list)
 
 
@@ -132,8 +235,11 @@ class TranscriptEvent(BaseModel):
     resolved_transcript: str | None = None
     retrieved_page_ids: list[str] = Field(default_factory=list)
     answer_text: str
-    status: str
+    status: AnswerStatus
     weak_match: bool = False
+    out_of_scope: bool = False
+    self_description: bool = False
+    crisis_mode: bool = False
     kb_version: str | None = None
     rewrite_provider: str | None = None
     rewrite_model: str | None = None
@@ -147,8 +253,19 @@ class TranscriptEvent(BaseModel):
 class SourceDefinition(BaseModel):
     source_id: str
     title: str
-    url: str
+    url: str = Field(validation_alias=AliasChoices("url", "seed_url"))
     language: str
+    source_type: Literal["html", "pdf", "mixed", "manual"] = "html"
+    trust_tier: int = 2
+    allowed_domains: list[str] = Field(default_factory=list)
+    include_patterns: list[str] = Field(default_factory=list)
+    exclude_patterns: list[str] = Field(default_factory=list)
+    crawl_depth: int = 0
+    follow_pdf_links: bool = False
+    entity_expectation: str | None = None
+    schedule_class: Literal["daily", "weekly", "monthly", "manual"] = "weekly"
+    priority: int = 100
+    manual_files: list[str] = Field(default_factory=list)
     tags: list[str] = Field(default_factory=list)
     category: str = "general"
     service_type: str = "general"
@@ -164,6 +281,7 @@ class PublishedDataset(BaseModel):
     manifest: Manifest
     pages: list[PageMetadata]
     aliases: dict[str, list[str]]
+    field_indexes: dict[str, dict[str, list[str]]] = Field(default_factory=dict)
 
 
 class ConversationContext(BaseModel):

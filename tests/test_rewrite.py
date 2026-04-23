@@ -155,3 +155,23 @@ def test_ollama_provider_normalizes_inconsistent_model_status(monkeypatch) -> No
     assert answer.status == "ok"
     assert answer.clarification_needed is False
     assert "Tafel Leipzig" in answer.answer_text
+
+
+def test_ollama_provider_bypasses_llm_for_crisis_queries(monkeypatch) -> None:
+    class _FailingAsyncClient:
+        def __init__(self, *args, **kwargs) -> None:
+            raise AssertionError("Ollama client should not be created for crisis queries")
+
+    monkeypatch.setattr(httpx, "AsyncClient", _FailingAsyncClient)
+
+    kb = KnowledgeBase(Path(__file__).resolve().parents[1] / "data" / "published")
+    provider = OllamaRewriteProvider(
+        base_url="http://127.0.0.1:11434",
+        model="translategemma:4b",
+    )
+
+    answer = asyncio.run(provider.answer("I want to kill myself", Language.EN, kb))
+
+    assert answer.status == "crisis"
+    assert answer.crisis_mode is True
+    assert "112" in answer.answer_text

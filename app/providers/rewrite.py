@@ -1,4 +1,4 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import json
@@ -9,7 +9,7 @@ import re
 import httpx
 
 from ..kb import KnowledgeBase
-from ..models import ConversationContext, KnowledgeAnswer, Language, PageMetadata, RetrievedPage
+from ..models import ConversationContext, KnowledgeAnswer, LLMKnowledgeAnswer, Language, PageMetadata, RetrievedPage
 from ..retrieval import (
     HOURS_QUERY_TOKENS,
     LOCATION_QUERY_TOKENS,
@@ -22,11 +22,11 @@ from ..retrieval import (
 
 
 UNKNOWN_TEXT = {
-    Language.DE: "Dazu habe ich in der Wissensbasis keine verlaessliche Information gefunden.",
-    Language.EN: "I could not find reliable information about that in the knowledge base.",
-    Language.PL: "Nie znalazlem wiarygodnej informacji na ten temat w bazie wiedzy.",
-    Language.RO: "Nu am gasit informatii sigure despre asta in baza de cunostinte.",
-    Language.RU: "Я не нашёл надёжной информации об этом в базе знаний.",
+    Language.DE: "Dazu finde ich in meiner Wissensbasis keine verlaessliche Information. Ich kann bei Hilfsangeboten in Leipzig helfen, zum Beispiel mit Orten, Adressen und Oeffnungszeiten.",
+    Language.EN: "I could not find reliable information about that in my knowledge base. I can help with support services in Leipzig, for example places, addresses, and opening hours.",
+    Language.PL: "Nie znalazlem wiarygodnej informacji na ten temat w mojej bazie wiedzy. Moge pomagac przy uslugach wsparcia w Lipsku, na przyklad z miejscami, adresami i godzinami otwarcia.",
+    Language.RO: "Nu am gasit informatii sigure despre asta in baza mea de cunostinte. Pot ajuta cu servicii de sprijin din Leipzig, de exemplu cu locuri, adrese si program.",
+    Language.RU: "Ð¯ Ð½Ðµ Ð½Ð°ÑˆÑ‘Ð» Ð½Ð°Ð´Ñ‘Ð¶Ð½Ð¾Ð¹ Ð¸Ð½Ñ„Ð¾Ñ€Ð¼Ð°Ñ†Ð¸Ð¸ Ð¾Ð± ÑÑ‚Ð¾Ð¼ Ð² Ð±Ð°Ð·Ðµ Ð·Ð½Ð°Ð½Ð¸Ð¹.",
 }
 OVERVIEW_DETAIL_OFFER = {
     Language.DE: "Wenn Sie moechten, nenne ich Ihnen die genauen Standorte und Uhrzeiten.",
@@ -51,19 +51,201 @@ OVERVIEW_REGISTRATION = {
 }
 
 CLARIFY_TEXT = {
-    Language.DE: "Koennen Sie kurz sagen, welche Art von Hilfe Sie brauchen?",
-    Language.EN: "Can you briefly say what kind of help you need?",
-    Language.PL: "Czy mozesz krotko powiedziec, jakiej pomocy potrzebujesz?",
-    Language.RO: "Poti spune pe scurt de ce tip de ajutor ai nevoie?",
-    Language.RU: "Можете коротко сказать, какая помощь вам нужна?",
+    Language.DE: "Welche Hilfe brauchen Sie genau?",
+    Language.EN: "What kind of help do you need?",
+    Language.PL: "Jakiej pomocy dokladnie potrzebujesz?",
+    Language.RO: "De ce tip de ajutor ai nevoie exact?",
+    Language.RU: "ÐœÐ¾Ð¶ÐµÑ‚Ðµ ÐºÐ¾Ñ€Ð¾Ñ‚ÐºÐ¾ ÑÐºÐ°Ð·Ð°Ñ‚ÑŒ, ÐºÐ°ÐºÐ°Ñ Ð¿Ð¾Ð¼Ð¾Ñ‰ÑŒ Ð²Ð°Ð¼ Ð½ÑƒÐ¶Ð½Ð°?",
 }
 
 WEAK_PREFIX = {
     Language.DE: "Ich habe nur einen aehnlichen Treffer gefunden: ",
-    Language.EN: "I only found a close match in the knowledge base: ",
-    Language.PL: "Znalazlem tylko podobny wpis w bazie wiedzy: ",
-    Language.RO: "Am gasit doar o potrivire apropiata in baza de cunostinte: ",
-    Language.RU: "Я нашёл только близкое совпадение в базе знаний: ",
+    Language.EN: "I only found a close match: ",
+    Language.PL: "Znalazlem tylko podobny wpis: ",
+    Language.RO: "Am gasit doar un rezultat apropiat: ",
+    Language.RU: "Ð¯ Ð½Ð°ÑˆÑ‘Ð» Ñ‚Ð¾Ð»ÑŒÐºÐ¾ Ð±Ð»Ð¸Ð·ÐºÐ¾Ðµ ÑÐ¾Ð²Ð¿Ð°Ð´ÐµÐ½Ð¸Ðµ Ð² Ð±Ð°Ð·Ðµ Ð·Ð½Ð°Ð½Ð¸Ð¹: ",
+}
+
+OUT_OF_SCOPE_TEXT = {
+    Language.DE: "Dabei kann ich nicht helfen. Ich bin fuer Hilfsangebote und praktische Informationen in Leipzig da, zum Beispiel Essen, Unterkunft, Duschen, Beratung, Adressen und Oeffnungszeiten.",
+    Language.EN: "I cannot help with that. I am here for support services and practical information in Leipzig, for example food, shelter, showers, advice, addresses, and opening hours.",
+    Language.PL: "Nie moge w tym pomoc. Jestem tutaj do spraw uslug wsparcia i praktycznych informacji w Lipsku, na przyklad jedzenia, noclegu, prysznicow, porad, adresow i godzin otwarcia.",
+    Language.RO: "Nu pot ajuta cu asta. Sunt aici pentru servicii de sprijin si informatii practice din Leipzig, de exemplu mancare, adapost, dusuri, consiliere, adrese si program.",
+    Language.RU: "Ya ne mogu pomoch s etim. Ya zdes dlya uslug podderzhki i prakticheskoy informatsii v Leyptsige, naprimer pro edu, nochleg, dush, konsultatsii, adresy i chasy raboty.",
+}
+SELF_DESCRIPTION_TEXT = {
+    Language.DE: "Ich bin LENA, der Leipzig Empowerment and Navigation Assistant. Ich helfe mit lokalen Informationen zu Hilfsangeboten in Leipzig, zum Beispiel zu Orten, Adressen, Oeffnungszeiten und passenden Anlaufstellen.",
+    Language.EN: "I am LENA, the Leipzig Empowerment and Navigation Assistant. I help with local information about support services in Leipzig, for example places, addresses, opening hours, and suitable services.",
+    Language.PL: "Jestem LENA, Leipzig Empowerment and Navigation Assistant. Pomagam lokalnymi informacjami o uslugach wsparcia w Lipsku, na przyklad o miejscach, adresach, godzinach otwarcia i odpowiednich punktach pomocy.",
+    Language.RO: "Sunt LENA, Leipzig Empowerment and Navigation Assistant. Ajut cu informatii locale despre servicii de sprijin din Leipzig, de exemplu despre locuri, adrese, program si puncte potrivite de ajutor.",
+    Language.RU: "Ya LENA, Leipzig Empowerment and Navigation Assistant. Ya pomogayu s mestnoy informatsiyey o sluzhbakh podderzhki v Leyptsige, naprimer o mestakh, adresakh, chasakh raboty i podkhodyashchikh punktakh pomoshchi.",
+}
+CRISIS_TEXT = {
+    Language.DE: "Ich kann keine medizinische oder seelische Notfallberatung geben. Wenn Sie jetzt in Gefahr sind oder dringend Hilfe brauchen, rufen Sie bitte 112. Bei akuter Bedrohung oder Gewalt rufen Sie 110. Wenn Sie mit jemandem sprechen muessen, erreichen Sie die TelefonSeelsorge unter 0800 1110 111.",
+    Language.EN: "I cannot provide medical or mental health emergency advice. If you are in danger now or need urgent help, please call 112 in Germany. If there is immediate threat or violence, call 110. If you need to talk to someone, you can reach TelefonSeelsorge at 0800 1110 111.",
+    Language.PL: "Nie moge udzielac porad medycznych ani psychologicznych w naglym wypadku. Jesli jestes teraz w niebezpieczenstwie albo pilnie potrzebujesz pomocy, zadzwon w Niemczech pod 112. Przy bezposrednim zagrozeniu lub przemocy zadzwon pod 110. Jesli chcesz z kims porozmawiac, mozesz zadzwonic do TelefonSeelsorge pod 0800 1110 111.",
+    Language.RO: "Nu pot oferi sfaturi medicale sau psihologice pentru urgente. Daca esti acum in pericol sau ai nevoie urgenta de ajutor, suna in Germania la 112. Daca exista amenintare imediata sau violenta, suna la 110. Daca ai nevoie sa vorbesti cu cineva, poti suna la TelefonSeelsorge la 0800 1110 111.",
+    Language.RU: "Ya ne mogu davat meditsinskie ili psikhologicheskie sovety dlya ekstrennykh sluchaev. Esli vy seychas v opasnosti ili vam nuzhna srochnaya pomoshch v Germanii, pozhaluysta, zvonite 112. Pri neposredstvennoy ugroze ili nasilii zvonite 110. Esli vam nuzhno s kem-to pogovorit, mozhno pozvonit v TelefonSeelsorge po nomeru 0800 1110 111.",
+}
+SELF_DESCRIPTION_PATTERNS = (
+    "wer bist du",
+    "was bist du",
+    "was ist lena",
+    "wofuer bist du da",
+    "wofur bist du da",
+    "was kannst du",
+    "wie kannst du helfen",
+    "who are you",
+    "what are you for",
+    "what is lena",
+    "what can you help with",
+    "what can you do",
+    "how can you help me",
+    "kim jestes",
+    "co to jest lena",
+    "w czym mozesz pomoc",
+    "cine esti",
+    "ce este lena",
+    "cum ma poti ajuta",
+    "ÐºÑ‚Ð¾ Ñ‚Ñ‹",
+    "Ñ‡Ñ‚Ð¾ Ñ‚Ð°ÐºÐ¾Ðµ lena",
+    "Ñ‡ÐµÐ¼ Ñ‚Ñ‹ Ð¼Ð¾Ð¶ÐµÑˆÑŒ Ð¿Ð¾Ð¼Ð¾Ñ‡ÑŒ",
+)
+DOMAIN_TERMS = {
+    "adresse",
+    "address",
+    "anlaufstelle",
+    "bahnhof",
+    "beratung",
+    "dusche",
+    "duschen",
+    "essen",
+    "food",
+    "hauptbahnhof",
+    "hilfe",
+    "hours",
+    "housing",
+    "leipzig",
+    "location",
+    "medical",
+    "medizin",
+    "obdach",
+    "oeffnungszeiten",
+    "open",
+    "place",
+    "service",
+    "services",
+    "shower",
+    "shelter",
+    "support",
+    "unterkunft",
+    "wohnungslos",
+}
+OUT_OF_SCOPE_TOKENS = {
+    "astronomy",
+    "bitcoin",
+    "capital",
+    "code",
+    "computer",
+    "film",
+    "football",
+    "game",
+    "javascript",
+    "joke",
+    "linux",
+    "math",
+    "movie",
+    "opinion",
+    "orbit",
+    "politik",
+    "politics",
+    "president",
+    "programming",
+    "python",
+    "recipe",
+    "science",
+    "sport",
+    "stocks",
+    "telescope",
+    "translate",
+    "translation",
+    "weather",
+    "wetter",
+    "witz",
+}
+OUT_OF_SCOPE_PATTERNS = (
+    "what do you think",
+    "was denkst du",
+    "was haeltst du von",
+    "was haltst du von",
+    "deine meinung",
+    "your opinion",
+    "capital of",
+    "how do telescopes work",
+    "wie funktionieren teleskope",
+    "write code",
+    "schreib code",
+    "write a poem",
+    "tell me a joke",
+    "erzaehl mir einen witz",
+)
+CRISIS_SERVICE_QUERY_HINTS = ("telefonseelsorge", "seelsorge", "notfallkontakte", "notdienste", "notdienst")
+CRISIS_DIRECT_PATTERNS = (
+    "ich will sterben",
+    "ich moechte sterben",
+    "ich mochte sterben",
+    "ich will mich umbringen",
+    "ich will mich toeten",
+    "ich will mich toten",
+    "ich tue mir etwas an",
+    "ich verletze mich",
+    "ich habe eine ueberdosis",
+    "ich habe eine uberdosis",
+    "ich kann nicht atmen",
+    "ich habe starke brustschmerzen",
+    "ich blute stark",
+    "i want to die",
+    "i want to kill myself",
+    "i want to hurt myself",
+    "i took an overdose",
+    "i overdosed",
+    "i can't breathe",
+    "i cant breathe",
+    "i have chest pain",
+    "i am bleeding badly",
+    "i am being attacked",
+    "i am in danger",
+    "kill myself",
+    "hurt myself",
+    "emergency number",
+    "notfallnummer",
+    "chce umrzec",
+    "zabije sie",
+    "mam przedawkowanie",
+    "vreau sa mor",
+    "nu pot sa respir",
+    "am luat o supradoza",
+    "Ñ Ñ…Ð¾Ñ‡Ñƒ ÑƒÐ¼ÐµÑ€ÐµÑ‚ÑŒ",
+    "Ñ Ñ…Ð¾Ñ‡Ñƒ ÑƒÐ±Ð¸Ñ‚ÑŒ ÑÐµÐ±Ñ",
+    "Ñ Ð½Ðµ Ð¼Ð¾Ð³Ñƒ Ð´Ñ‹ÑˆÐ°Ñ‚ÑŒ",
+    "Ñƒ Ð¼ÐµÐ½Ñ Ð¿ÐµÑ€ÐµÐ´Ð¾Ð·Ð¸Ñ€Ð¾Ð²ÐºÐ°",
+)
+CRISIS_DIRECT_TOKENS = {
+    "110",
+    "112",
+    "attack",
+    "attacke",
+    "bedroht",
+    "bleeding",
+    "brustschmerzen",
+    "emergency",
+    "gewalt",
+    "overdose",
+    "selbstmord",
+    "suicide",
+    "suizid",
+    "ueberdosis",
+    "uberdosis",
 }
 
 TOPIC_LABELS = {
@@ -72,49 +254,49 @@ TOPIC_LABELS = {
         Language.EN: "food",
         Language.PL: "jedzenie",
         Language.RO: "mancare",
-        Language.RU: "еда",
+        Language.RU: "ÐµÐ´Ð°",
     },
     "shelter": {
         Language.DE: "Unterkunft",
         Language.EN: "shelter",
         Language.PL: "nocleg",
         Language.RO: "adapost",
-        Language.RU: "ночлег",
+        Language.RU: "Ð½Ð¾Ñ‡Ð»ÐµÐ³",
     },
     "clothing": {
         Language.DE: "Kleidung",
         Language.EN: "clothing",
         Language.PL: "ubrania",
         Language.RO: "haine",
-        Language.RU: "одежда",
+        Language.RU: "Ð¾Ð´ÐµÐ¶Ð´Ð°",
     },
     "medical": {
         Language.DE: "medizinische Hilfe",
         Language.EN: "medical help",
         Language.PL: "pomoc medyczna",
         Language.RO: "ajutor medical",
-        Language.RU: "медицинская помощь",
+        Language.RU: "Ð¼ÐµÐ´Ð¸Ñ†Ð¸Ð½ÑÐºÐ°Ñ Ð¿Ð¾Ð¼Ð¾Ñ‰ÑŒ",
     },
     "addiction": {
         Language.DE: "Sucht",
         Language.EN: "addiction support",
         Language.PL: "pomoc przy uzaleznieniu",
         Language.RO: "sprijin pentru dependenta",
-        Language.RU: "помощь при зависимости",
+        Language.RU: "Ð¿Ð¾Ð¼Ð¾Ñ‰ÑŒ Ð¿Ñ€Ð¸ Ð·Ð°Ð²Ð¸ÑÐ¸Ð¼Ð¾ÑÑ‚Ð¸",
     },
     "debt": {
         Language.DE: "Schulden",
         Language.EN: "debt advice",
         Language.PL: "dlugi",
         Language.RO: "datorii",
-        Language.RU: "долги",
+        Language.RU: "Ð´Ð¾Ð»Ð³Ð¸",
     },
     "counseling": {
         Language.DE: "Beratung",
         Language.EN: "counseling",
         Language.PL: "poradnictwo",
         Language.RO: "consiliere",
-        Language.RU: "консультация",
+        Language.RU: "ÐºÐ¾Ð½ÑÑƒÐ»ÑŒÑ‚Ð°Ñ†Ð¸Ñ",
     },
 }
 TOPIC_KEYWORDS = {
@@ -188,14 +370,86 @@ class BaseRewriteProvider(ABC):
         raise NotImplementedError
 
 
+def _known_response_page_ids(kb: KnowledgeBase, *page_ids: str) -> list[str]:
+    available = {page.page_id for page in kb.dataset.pages}
+    return [page_id for page_id in page_ids if page_id in available]
+
+
+def _self_description_answer(language: Language) -> KnowledgeAnswer:
+    return KnowledgeAnswer(
+        answer_text=SELF_DESCRIPTION_TEXT[language],
+        status="self_description",
+        self_description=True,
+    )
+
+
+def _crisis_answer(language: Language, kb: KnowledgeBase) -> KnowledgeAnswer:
+    return KnowledgeAnswer(
+        answer_text=CRISIS_TEXT[language],
+        status="crisis",
+        crisis_mode=True,
+        retrieved_page_ids=_known_response_page_ids(kb, "notfallkontakte", "telefonseelsorge-leipzig"),
+    )
+
+
+def _out_of_scope_answer(language: Language) -> KnowledgeAnswer:
+    return KnowledgeAnswer(
+        answer_text=OUT_OF_SCOPE_TEXT[language],
+        status="out_of_scope",
+        out_of_scope=True,
+    )
+
+
+def _has_domain_signal(transcript: str) -> bool:
+    normalized = normalize_text(transcript)
+    tokens = set(tokenize(transcript))
+    return "leipzig" in normalized or "hauptbahnhof" in normalized or bool(tokens & DOMAIN_TERMS)
+
+
+def _is_self_description_query(transcript: str) -> bool:
+    normalized = normalize_text(transcript)
+    return any(pattern in normalized for pattern in SELF_DESCRIPTION_PATTERNS)
+
+
+def _is_crisis_query(transcript: str) -> bool:
+    normalized = normalize_text(transcript)
+    tokens = set(tokenize(transcript))
+    service_lookup = any(hint in normalized for hint in CRISIS_SERVICE_QUERY_HINTS)
+    direct_pattern = any(pattern in normalized for pattern in CRISIS_DIRECT_PATTERNS)
+    direct_tokens = bool(tokens & CRISIS_DIRECT_TOKENS)
+    if service_lookup and not (direct_pattern or direct_tokens):
+        return False
+    return direct_pattern or direct_tokens
+
+
+def _is_out_of_scope_query(transcript: str) -> bool:
+    normalized = normalize_text(transcript)
+    tokens = set(tokenize(transcript))
+    if _has_domain_signal(transcript):
+        return False
+    return any(pattern in normalized for pattern in OUT_OF_SCOPE_PATTERNS) or bool(tokens & OUT_OF_SCOPE_TOKENS)
+
+
+def _guarded_response(transcript: str, language: Language, kb: KnowledgeBase) -> KnowledgeAnswer | None:
+    if _is_crisis_query(transcript):
+        return _crisis_answer(language, kb)
+    if _is_self_description_query(transcript):
+        return _self_description_answer(language)
+    return None
+
+
 def _ground_query(
     transcript: str,
     language: Language,
     kb: KnowledgeBase,
     minimum_match_threshold: float,
     clarification_gap_threshold: float,
+    weak_match_threshold: float,
     conversation_context: ConversationContext | None = None,
 ) -> tuple[list[RetrievedPage], KnowledgeAnswer | None]:
+    guarded = _guarded_response(transcript, language, kb)
+    if guarded:
+        return [], guarded
     retrieval = RetrievalEngine(kb)
     resolved_transcript = conversation_context.resolved_transcript if conversation_context else transcript
     retrieved = retrieval.retrieve(
@@ -206,6 +460,8 @@ def _ground_query(
         excluded_page_ids=conversation_context.excluded_page_ids if conversation_context else None,
     )
     if not retrieved:
+        if _is_out_of_scope_query(transcript):
+            return [], _out_of_scope_answer(language)
         return [], KnowledgeAnswer(answer_text=UNKNOWN_TEXT[language], status="unknown")
 
     anchored_follow_up = bool(
@@ -224,6 +480,9 @@ def _ground_query(
             clarification_question=question,
             retrieved_page_ids=[item.page_id for item in retrieved],
         )
+
+    if _is_out_of_scope_query(transcript) and retrieved[0].score < weak_match_threshold:
+        return retrieved, _out_of_scope_answer(language)
 
     if retrieved[0].score < minimum_match_threshold:
         return retrieved, KnowledgeAnswer(
@@ -733,23 +992,23 @@ def _place_intro(page: PageMetadata, transcript: str, language: Language) -> str
     need_label = _query_need_label(query_tokens, language)
     if language == Language.DE:
         if location_query and page.address:
-            return f"{page.title} finden Sie in {page.address}"
+            return f"{page.title} ist in {page.address}"
         if hours_query:
-            return f"Bei {page.title} sind folgende Zeiten genannt"
+            return f"Bei {page.title} stehen diese Oeffnungszeiten"
         if appointment_query:
-            return f"Zu {page.title} steht in der Wissensbasis Folgendes"
+            return f"Zu {page.title} steht in der Wissensbasis"
         if need_label:
-            return f"Fuer {need_label} ist {page.title} eine gute Anlaufstelle"
-        return f"{page.title} ist eine gute Anlaufstelle"
+            return f"Fuer {need_label} koennen Sie zu {page.title} gehen"
+        return f"{page.title} kann hier helfen"
     if location_query and page.address:
-        return f"You can find {page.title} at {page.address}"
+        return f"{page.title} is at {page.address}"
     if hours_query:
-        return f"For {page.title}, the knowledge base lists these hours"
+        return f"These are the listed hours for {page.title}"
     if appointment_query:
-        return f"For {page.title}, the knowledge base says this"
+        return f"This is what the knowledge base says about appointments for {page.title}"
     if need_label:
-        return f"For {need_label}, {page.title} is a good option"
-    return f"{page.title} is a good option"
+        return f"For {need_label}, you can go to {page.title}"
+    return f"{page.title} can help here"
 
 
 def _address_sentence(page: PageMetadata, include: bool, language: Language) -> str:
@@ -760,8 +1019,8 @@ def _address_sentence(page: PageMetadata, include: bool, language: Language) -> 
             return f"Die Adresse ist {page.address}"
         return f"The address is {page.address}"
     if language == Language.DE:
-        return "Eine genaue Adresse ist in der Wissensbasis nicht klar angegeben"
-    return "The knowledge base does not clearly list an exact address"
+        return "Ich sehe in der Wissensbasis keine genaue Adresse"
+    return "I do not see an exact address in the knowledge base"
 
 
 def _hours_sentence(
@@ -779,19 +1038,19 @@ def _hours_sentence(
             normalized_hours = normalize_text(" ".join(page.opening_hours))
             if not any(day_token in normalized_hours for day_token in day_specific_tokens):
                 if language == Language.DE:
-                    return "Fuer diesen Wochentag sind in der Wissensbasis keine eigenen Oeffnungszeiten genannt"
-                return "The knowledge base does not list separate opening hours for that day"
+                    return "Fuer diesen Wochentag sehe ich in der Wissensbasis keine eigenen Oeffnungszeiten"
+                return "I do not see separate opening hours for that day in the knowledge base"
         if any(hint in normalized_transcript for hint in TODAY_QUERY_HINTS):
             today = datetime.now(UTC).date().isoformat()
             if language == Language.DE:
-                return f"Fuer heute ({today}) sind folgende Oeffnungszeiten genannt: {'; '.join(page.opening_hours)}"
-            return f"For today ({today}) the listed opening hours are: {'; '.join(page.opening_hours)}"
+                return f"Fuer heute ({today}) stehen diese Oeffnungszeiten dort: {'; '.join(page.opening_hours)}"
+            return f"For today ({today}), these opening hours are listed: {'; '.join(page.opening_hours)}"
         if language == Language.DE:
             return f"Die Oeffnungszeiten sind: {'; '.join(page.opening_hours)}"
         return f"The opening hours are: {'; '.join(page.opening_hours)}"
     if language == Language.DE:
-        return "Konkrete Oeffnungszeiten sind in der Wissensbasis nicht klar angegeben"
-    return "The knowledge base does not clearly list opening hours"
+        return "Ich sehe in der Wissensbasis keine klaren Oeffnungszeiten"
+    return "I do not see clear opening hours in the knowledge base"
 
 
 def _appointment_sentence(page: PageMetadata, appointment_query: bool, language: Language) -> str:
@@ -803,11 +1062,11 @@ def _appointment_sentence(page: PageMetadata, appointment_query: bool, language:
         return "Registration is needed in advance"
     if page.requires_registration is False:
         if language == Language.DE:
-            return "Eine Anmeldung ist nicht erwaehnt"
-        return "The knowledge base does not mention that an appointment is needed"
+            return "Eine Anmeldung ist dort nicht genannt"
+        return "The knowledge base does not say that an appointment is needed"
     if language == Language.DE:
-        return "Ob ein Termin noetig ist, steht in der Wissensbasis nicht klar"
-    return "The knowledge base does not clearly say whether an appointment is needed"
+        return "Ob ein Termin noetig ist, sehe ich dort nicht klar"
+    return "I cannot clearly tell from the knowledge base whether an appointment is needed"
 
 
 def _description_redundant(page: PageMetadata) -> bool:
@@ -843,7 +1102,7 @@ def _query_need_label(query_tokens: set[str], language: Language) -> str | None:
 
 def _clean_answer_text(text: str) -> str:
     cleaned = LINK_RE.sub(r"\1", text or "")
-    cleaned = cleaned.replace("•", " ").replace("·", " ").replace("\uf0b7", " ")
+    cleaned = cleaned.replace("â€¢", " ").replace("Â·", " ").replace("\uf0b7", " ")
     cleaned = SPACE_RE.sub(" ", cleaned).strip(" -")
     if not cleaned or cleaned.startswith("[") and cleaned.endswith("]"):
         return ""
@@ -856,42 +1115,6 @@ def _clean_answer_text(text: str) -> str:
     if cleaned and cleaned[-1] not in ".!?":
         cleaned = f"{cleaned}."
     return cleaned
-
-
-def _looks_like_notice(text: str) -> bool:
-    lowered = text.casefold()
-    if any(hint in lowered for hint in NOTICE_HINTS):
-        return True
-    return text.count("(") >= 2 and sum(char.isdigit() for char in text) > 4
-
-
-def _looks_too_detailed(text: str) -> bool:
-    digit_ratio = sum(char.isdigit() for char in text) / max(len(text), 1)
-    return digit_ratio > 0.12 or len(text) > 320
-
-
-def _title_only_answer(page_title: str, language: Language) -> str:
-    if language == Language.DE:
-        return f"In der Wissensbasis gibt es Informationen zu {page_title}."
-    if language == Language.EN:
-        return f"The knowledge base has information about {page_title}."
-    if language == Language.PL:
-        return f"W bazie wiedzy sa informacje o {page_title}."
-    if language == Language.RO:
-        return f"In baza de cunostinte exista informatii despre {page_title}."
-    return f"В базе знаний есть информация о {page_title}."
-
-
-def _distribution_points_answer(page_title: str, language: Language) -> str:
-    if language == Language.DE:
-        return f"{page_title} hat mehrere Ausgabestellen."
-    if language == Language.EN:
-        return f"{page_title} has several distribution points."
-    if language == Language.PL:
-        return f"{page_title} ma kilka punktow wydawania."
-    if language == Language.RO:
-        return f"{page_title} are mai multe puncte de distribuire."
-    return f"У {page_title} есть несколько пунктов выдачи."
 
 
 def _build_clarification_question(language: Language, kb: KnowledgeBase, retrieved: list[RetrievedPage]) -> str:
@@ -908,9 +1131,11 @@ def _build_clarification_question(language: Language, kb: KnowledgeBase, retriev
 
     labels = [TOPIC_LABELS[topic][language] for topic in topics[:4]]
     if language == Language.DE:
-        return f"Koennen Sie kurz sagen, ob es um {', '.join(labels[:-1]) + ' oder ' + labels[-1] if len(labels) > 1 else labels[0]} geht?"
+        joined = ", ".join(labels[:-1]) + " oder " + labels[-1] if len(labels) > 1 else labels[0]
+        return f"Geht es um {joined}?"
     if language == Language.EN:
-        return f"Can you briefly say whether you need {', '.join(labels[:-1]) + ' or ' + labels[-1] if len(labels) > 1 else labels[0]}?"
+        joined = ", ".join(labels[:-1]) + " or " + labels[-1] if len(labels) > 1 else labels[0]
+        return f"Do you need {joined}?"
     return CLARIFY_TEXT[language]
 
 
@@ -940,6 +1165,7 @@ class TemplateRewriteProvider(BaseRewriteProvider):
             kb,
             minimum_match_threshold=self.minimum_match_threshold,
             clarification_gap_threshold=self.clarification_gap_threshold,
+            weak_match_threshold=self.weak_match_threshold,
             conversation_context=conversation_context,
         )
         if early_answer:
@@ -992,7 +1218,10 @@ class OllamaRewriteProvider(BaseRewriteProvider):
                 "If the KB does not clearly support the answer, return status unknown.",
                 "If several pages may fit and the request is too vague, return status clarification_needed.",
                 "If there is a closest match but support is weak, return status weak_match.",
+                "Use plain language.",
                 "Write short, natural sentences that sound clear when spoken aloud.",
+                "Avoid jargon. If a hard term is necessary, explain it briefly.",
+                "Keep important facts such as place name, address, opening hours, service type, and target group when they are supported by the KB.",
                 "Prefer the highest-scoring retrieved page. Only use lower-scoring pages if they add clearly relevant detail.",
                 "Answer in one or two short sentences unless the question clearly needs more.",
                 f"Respond in language: {language.value}.",
@@ -1009,7 +1238,10 @@ class OllamaRewriteProvider(BaseRewriteProvider):
             return fallback
         return (
             f"{content}\n"
+            "- Use plain language.\n"
             "- Write short, natural sentences that sound clear when spoken aloud.\n"
+            "- Avoid jargon. If a hard term is necessary, explain it briefly.\n"
+            "- Keep important facts such as place name, address, opening hours, service type, and target group when they are supported by the KB.\n"
             "- Prefer the highest-scoring retrieved page. Only use lower-scoring pages if they add clearly relevant detail.\n"
             "- Answer in one or two short sentences unless the question clearly needs more.\n\n"
             f"Respond in language: {language.value}.\nReturn JSON only."
@@ -1028,6 +1260,7 @@ class OllamaRewriteProvider(BaseRewriteProvider):
             kb,
             minimum_match_threshold=self.minimum_match_threshold,
             clarification_gap_threshold=self.clarification_gap_threshold,
+            weak_match_threshold=self.weak_match_threshold,
             conversation_context=conversation_context,
         )
         if early_answer:
@@ -1068,7 +1301,7 @@ class OllamaRewriteProvider(BaseRewriteProvider):
             follow_up_hint = "This is a request for an alternative option. Do not repeat the same place if another retrieved page fits."
         elif conversation_context and conversation_context.follow_up_mode == "topic_shift":
             follow_up_hint = "This continues the same conversation with a related topic shift. Use only the currently retrieved pages for the new subtopic."
-        schema = KnowledgeAnswer.model_json_schema()
+        schema = LLMKnowledgeAnswer.model_json_schema()
         system_prompt = self._load_system_prompt(language)
         user_prompt = "\n".join(
             [
@@ -1086,6 +1319,9 @@ class OllamaRewriteProvider(BaseRewriteProvider):
                 "Answer only from the retrieved pages above.",
                 "Always include the place name.",
                 "Include the address and opening hours whenever they are available and directly useful.",
+                "Use plain language and short sentences.",
+                "Avoid jargon. If you need a hard term, explain it briefly.",
+                "Make the answer easy to understand for a stressed user and easy to speak aloud.",
                 "If the user asks where a place is, answer with the place name and address. Do not add opening hours unless the user asked for them." if is_location_query else "",
                 "If the user asks about opening hours, focus on the hours answer and do not add unrelated service details." if is_hours_query or is_day_specific_query else "",
                 "If the user asks about appointments, answer only whether an appointment is required, not required, or not clearly stated in the knowledge base." if is_appointment_query else "",
@@ -1135,6 +1371,18 @@ class OllamaRewriteProvider(BaseRewriteProvider):
         answer.retrieved_page_ids = retrieved_page_ids
         answer.answer_text = _clean_answer_text(answer.answer_text)
         weak = retrieved[0].score < self.weak_match_threshold
+
+        if answer.status == "self_description":
+            answer.self_description = True
+            return answer
+        if answer.status == "out_of_scope":
+            answer.out_of_scope = True
+            return answer
+        if answer.status == "crisis":
+            answer.crisis_mode = True
+            if not answer.retrieved_page_ids:
+                answer.retrieved_page_ids = _known_response_page_ids(kb, "notfallkontakte", "telefonseelsorge-leipzig")
+            return answer
 
         if answer.status == "clarification_needed":
             if answer.clarification_question or answer.answer_text.endswith("?"):

@@ -20,6 +20,14 @@ The runtime only reads published KB artifacts from `data/published/`:
 - `index/manifest.json`
 - `index/aliases.json`
 
+The scraper now also maintains a canonical SQLite KB and richer runtime exports:
+
+- canonical build DB: `data/canonical/kb.sqlite3`
+- `index/entities.jsonl`
+- `index/alias_index.json`
+- `index/field_indexes/*.json`
+- `index/runtime_snapshot.sqlite`
+
 The scraper track generates its own artifacts under `data/scraper_workspace/published/`.
 Those artifacts are promoted into the runtime KB only when explicitly requested.
 
@@ -96,9 +104,18 @@ Each scraper run writes:
 - raw snapshots to `data/scraper_workspace/raw/`
 - published candidate artifacts to `data/scraper_workspace/published/`
 - a run report to `data/scraper_workspace/reports/`
+- canonical entity/document history to `data/canonical/kb.sqlite3`
 
 Promote the latest scraper output into the runtime KB:
 
 ```powershell
 curl -X POST http://127.0.0.1:8000/api/admin/published/promote
+```
+
+Run the scheduled maintenance entrypoint:
+
+```powershell
+cd Code
+python scripts/run_kb_maintenance.py --mode incremental
+python scripts/run_kb_maintenance.py --mode full
 ```

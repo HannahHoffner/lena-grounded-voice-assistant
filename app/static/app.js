@@ -22,7 +22,17 @@ const elements = {
   manualSubmitButton: document.getElementById("manualSubmitButton"),
   answerLabel: document.getElementById("answerLabel"),
   answerHint: document.getElementById("answerHint"),
+  answerState: document.getElementById("answerState"),
   answerText: document.getElementById("answerText"),
+  mapPanel: document.getElementById("mapPanel"),
+  mapLabel: document.getElementById("mapLabel"),
+  mapHint: document.getElementById("mapHint"),
+  mapCanvasWrap: document.getElementById("mapCanvasWrap"),
+  mapCanvas: document.getElementById("answerMap"),
+  mapFallback: document.getElementById("mapFallback"),
+  mapListLabel: document.getElementById("mapListLabel"),
+  mapDestinationList: document.getElementById("mapDestinationList"),
+  mapDetailCard: document.getElementById("mapDetailCard"),
 };
 
 const languageMap = {
@@ -51,6 +61,13 @@ const translations = {
     answerLabel: "Antwort",
     answerHint: "Die Antwort bleibt auf die lokale Wissensbasis beschränkt.",
     answerPlaceholder: "Die Antwort erscheint hier.",
+    answerState: {
+      clarification_needed: { label: "Kurze Rueckfrage", tone: "neutral" },
+      weak_match: { label: "Aehnlicher Treffer", tone: "warning" },
+      out_of_scope: { label: "Thema ausserhalb von LENA", tone: "warning" },
+      self_description: { label: "Ueber LENA", tone: "neutral" },
+      crisis: { label: "Soforthilfe", tone: "critical" },
+    },
     session: {
       inactive: "Kein aktives Gespräch",
       active: "Gespräch aktiv",
@@ -96,6 +113,13 @@ const translations = {
     answerLabel: "Answer",
     answerHint: "Answers stay grounded in the local knowledge base.",
     answerPlaceholder: "Your answer will appear here.",
+    answerState: {
+      clarification_needed: { label: "Quick follow-up", tone: "neutral" },
+      weak_match: { label: "Close match", tone: "warning" },
+      out_of_scope: { label: "Outside LENA's scope", tone: "warning" },
+      self_description: { label: "About LENA", tone: "neutral" },
+      crisis: { label: "Urgent help", tone: "critical" },
+    },
     session: {
       inactive: "No active conversation",
       active: "Conversation active",
@@ -141,6 +165,13 @@ const translations = {
     answerLabel: "Odpowiedz",
     answerHint: "Odpowiedz pozostaje oparta na lokalnej bazie wiedzy.",
     answerPlaceholder: "Odpowiedz pojawi sie tutaj.",
+    answerState: {
+      clarification_needed: { label: "Krotkie doprecyzowanie", tone: "neutral" },
+      weak_match: { label: "Podobny wynik", tone: "warning" },
+      out_of_scope: { label: "Poza zakresem LENA", tone: "warning" },
+      self_description: { label: "O LENIE", tone: "neutral" },
+      crisis: { label: "Pilna pomoc", tone: "critical" },
+    },
     session: {
       inactive: "Brak aktywnej rozmowy",
       active: "Rozmowa aktywna",
@@ -186,6 +217,13 @@ const translations = {
     answerLabel: "Raspuns",
     answerHint: "Raspunsul ramane limitat la baza locala de cunostinte.",
     answerPlaceholder: "Raspunsul va aparea aici.",
+    answerState: {
+      clarification_needed: { label: "Scurta clarificare", tone: "neutral" },
+      weak_match: { label: "Rezultat apropiat", tone: "warning" },
+      out_of_scope: { label: "In afara scopului LENA", tone: "warning" },
+      self_description: { label: "Despre LENA", tone: "neutral" },
+      crisis: { label: "Ajutor urgent", tone: "critical" },
+    },
     session: {
       inactive: "Nicio conversatie activa",
       active: "Conversatie activa",
@@ -231,6 +269,13 @@ const translations = {
     answerLabel: "Otvet",
     answerHint: "Otvet ogranichen lokalnoi bazoi znanii.",
     answerPlaceholder: "Otvet poyavitsya zdes.",
+    answerState: {
+      clarification_needed: { label: "Korotkiy vopros", tone: "neutral" },
+      weak_match: { label: "Pokhozhiy rezultat", tone: "warning" },
+      out_of_scope: { label: "Vne vozmozhnostey LENA", tone: "warning" },
+      self_description: { label: "O LENA", tone: "neutral" },
+      crisis: { label: "Srochnaya pomoshch", tone: "critical" },
+    },
     session: {
       inactive: "Net aktivnogo razgovora",
       active: "Razgovor aktiven",
@@ -261,6 +306,85 @@ const translations = {
   },
 };
 
+const mapTranslations = {
+  de: {
+    label: "Karte",
+    hint: "Relevante Orte ab Leipzig Hauptbahnhof.",
+    listLabel: "Orte",
+    tileFallback: "Die Karte konnte gerade nicht geladen werden. Die passenden Orte bleiben unten sichtbar.",
+    detailEmpty: "Waehlen Sie einen Ort aus, um mehr Details zu sehen.",
+    origin: "Start",
+    address: "Adresse",
+    serviceType: "Angebot",
+    distance: "Entfernung",
+    hours: "Oeffnungszeiten",
+    noHours: "Keine klaren Oeffnungszeiten in der Wissensbasis.",
+    approx: "ca.",
+  },
+  en: {
+    label: "Map",
+    hint: "Relevant places from Leipzig Hauptbahnhof.",
+    listLabel: "Places",
+    tileFallback: "The map could not be loaded right now. The relevant places remain visible below.",
+    detailEmpty: "Select a place to see more details.",
+    origin: "Start",
+    address: "Address",
+    serviceType: "Service",
+    distance: "Distance",
+    hours: "Opening hours",
+    noHours: "No clear opening hours in the knowledge base.",
+    approx: "approx.",
+  },
+  pl: {
+    label: "Mapa",
+    hint: "Wazne miejsca od dworca glownego w Lipsku.",
+    listLabel: "Miejsca",
+    tileFallback: "Mapa nie mogla zostac teraz zaladowana. Pasujace miejsca pozostaja widoczne ponizej.",
+    detailEmpty: "Wybierz miejsce, aby zobaczyc wiecej szczegolow.",
+    origin: "Start",
+    address: "Adres",
+    serviceType: "Usluga",
+    distance: "Odleglosc",
+    hours: "Godziny otwarcia",
+    noHours: "Brak jasnych godzin otwarcia w bazie wiedzy.",
+    approx: "ok.",
+  },
+  ro: {
+    label: "Harta",
+    hint: "Locuri relevante de la Leipzig Hauptbahnhof.",
+    listLabel: "Locuri",
+    tileFallback: "Harta nu a putut fi incarcata acum. Locurile relevante raman vizibile mai jos.",
+    detailEmpty: "Selecteaza un loc pentru mai multe detalii.",
+    origin: "Pornire",
+    address: "Adresa",
+    serviceType: "Serviciu",
+    distance: "Distanta",
+    hours: "Program",
+    noHours: "Nu exista un program clar in baza de cunostinte.",
+    approx: "cca.",
+  },
+  ru: {
+    label: "Karta",
+    hint: "Podkhodyashchie mesta ot Leipzig Hauptbahnhof.",
+    listLabel: "Mesta",
+    tileFallback: "Kartu seychas ne udalos zagruzit. Podkhodyashchie mesta ostayutsya vidimy nizhe.",
+    detailEmpty: "Vyberite mesto, chtoby uvidet bolshe detaley.",
+    origin: "Start",
+    address: "Adres",
+    serviceType: "Usluga",
+    distance: "Rasstoyanie",
+    hours: "Chasy raboty",
+    noHours: "V baze znaniy net ponyatnykh chasov raboty.",
+    approx: "okolo",
+  },
+};
+
+const defaultMapConfig = {
+  tile_url_template: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  tile_attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  tile_max_zoom: 16,
+};
+
 const state = {
   mediaRecorder: null,
   chunks: [],
@@ -275,6 +399,11 @@ const state = {
   currentAudio: null,
   statusKey: "idle",
   forceBrowserSttFallback: false,
+  answerStatus: null,
+  currentMapData: null,
+  selectedMapDestinationId: null,
+  mapInstance: null,
+  mapMarkers: [],
   language: loadInitialLanguage(),
 };
 
@@ -298,14 +427,334 @@ function getCopy() {
   return translations[state.language] || translations.de;
 }
 
+function getMapCopy() {
+  return mapTranslations[state.language] || mapTranslations.de;
+}
+
+function getMapConfig() {
+  return state.runtimeHealth?.map || defaultMapConfig;
+}
+
 function showPlaceholder() {
   elements.answerText.dataset.state = "placeholder";
   elements.answerText.textContent = getCopy().answerPlaceholder;
+  hideAnswerState();
+  clearMapPanel();
 }
 
 function showAnswer(text) {
   elements.answerText.dataset.state = "answer";
   elements.answerText.textContent = text;
+}
+
+function clearMapPanel() {
+  state.currentMapData = null;
+  state.selectedMapDestinationId = null;
+  state.mapMarkers = [];
+  if (state.mapInstance) {
+    state.mapInstance.remove();
+    state.mapInstance = null;
+  }
+  elements.mapPanel.hidden = true;
+  elements.mapCanvas.hidden = false;
+  elements.mapFallback.hidden = true;
+  elements.mapFallback.textContent = "";
+  elements.mapDestinationList.replaceChildren();
+  elements.mapDetailCard.replaceChildren();
+}
+
+function hideAnswerState() {
+  state.answerStatus = null;
+  elements.answerState.hidden = true;
+  elements.answerState.textContent = "";
+  delete elements.answerState.dataset.tone;
+}
+
+function formatDistance(distanceMeters) {
+  const mapCopy = getMapCopy();
+  if (!Number.isFinite(distanceMeters)) {
+    return "";
+  }
+  if (distanceMeters < 1000) {
+    return `${mapCopy.approx} ${Math.round(distanceMeters)} m`;
+  }
+  const kmValue = distanceMeters < 2000 ? (distanceMeters / 1000).toFixed(1) : Math.round(distanceMeters / 1000);
+  return `${mapCopy.approx} ${kmValue} km`;
+}
+
+function activeDestination() {
+  if (!state.currentMapData?.destinations?.length) {
+    return null;
+  }
+  return (
+    state.currentMapData.destinations.find((item) => item.id === state.selectedMapDestinationId) ||
+    state.currentMapData.destinations[0] ||
+    null
+  );
+}
+
+function renderMapDetail(destination) {
+  elements.mapDetailCard.replaceChildren();
+  const mapCopy = getMapCopy();
+  if (!destination) {
+    const empty = document.createElement("p");
+    empty.className = "map-detail-card__empty";
+    empty.textContent = mapCopy.detailEmpty;
+    elements.mapDetailCard.append(empty);
+    return;
+  }
+
+  const title = document.createElement("h3");
+  title.className = "map-detail-card__title";
+  title.textContent = destination.label;
+  elements.mapDetailCard.append(title);
+
+  if (destination.organization_label) {
+    const org = document.createElement("p");
+    org.className = "map-detail-card__org";
+    org.textContent = destination.organization_label;
+    elements.mapDetailCard.append(org);
+  }
+
+  const info = document.createElement("div");
+  info.className = "map-detail-card__info";
+
+  const address = document.createElement("p");
+  address.className = "map-detail-card__line";
+  address.textContent = `${mapCopy.address}: ${destination.address}`;
+  info.append(address);
+
+  const serviceType = document.createElement("p");
+  serviceType.className = "map-detail-card__line";
+  serviceType.textContent = `${mapCopy.serviceType}: ${destination.service_type}`;
+  info.append(serviceType);
+
+  if (Number.isFinite(destination.distance_meters)) {
+    const distance = document.createElement("p");
+    distance.className = "map-detail-card__line";
+    distance.textContent = `${mapCopy.distance}: ${formatDistance(destination.distance_meters)}`;
+    info.append(distance);
+  }
+
+  if (destination.description) {
+    const description = document.createElement("p");
+    description.className = "map-detail-card__line";
+    description.textContent = destination.description;
+    info.append(description);
+  }
+
+  const hoursLabel = document.createElement("p");
+  hoursLabel.className = "map-detail-card__line";
+  hoursLabel.textContent = `${mapCopy.hours}:`;
+  info.append(hoursLabel);
+
+  if (destination.opening_hours?.length) {
+    const list = document.createElement("ul");
+    list.className = "map-detail-card__hours";
+    for (const hours of destination.opening_hours) {
+      const item = document.createElement("li");
+      item.textContent = hours;
+      list.append(item);
+    }
+    info.append(list);
+  } else {
+    const noHours = document.createElement("p");
+    noHours.className = "map-detail-card__line";
+    noHours.textContent = mapCopy.noHours;
+    info.append(noHours);
+  }
+
+  elements.mapDetailCard.append(info);
+}
+
+function popupMarkup(destination) {
+  const distance = formatDistance(destination.distance_meters);
+  const lines = [
+    `<div class="map-popup__title">${destination.label}</div>`,
+    `<div class="map-popup__meta">${destination.address}</div>`,
+  ];
+  if (distance) {
+    lines.push(`<div class="map-popup__meta">${distance}</div>`);
+  }
+  return lines.join("");
+}
+
+function selectMapDestination(destinationId, options = {}) {
+  if (!state.currentMapData?.destinations?.length) {
+    return;
+  }
+  state.selectedMapDestinationId = destinationId;
+  const destination = activeDestination();
+
+  for (const button of elements.mapDestinationList.querySelectorAll(".map-destination-button")) {
+    button.classList.toggle("is-selected", button.dataset.destinationId === destinationId);
+    button.setAttribute("aria-pressed", String(button.dataset.destinationId === destinationId));
+  }
+
+  renderMapDetail(destination);
+
+  if (state.mapInstance && options.panTo !== false && destination) {
+    const targetMarker = state.mapMarkers.find((item) => item.id === destination.id)?.marker;
+    if (targetMarker) {
+      state.mapInstance.panTo(targetMarker.getLatLng(), { animate: true });
+      targetMarker.openPopup();
+    }
+  }
+}
+
+function renderMapDestinationList(mapData) {
+  elements.mapDestinationList.replaceChildren();
+  for (const destination of mapData.destinations) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "map-destination-button";
+    button.dataset.destinationId = destination.id;
+    button.setAttribute("aria-pressed", String(destination.id === state.selectedMapDestinationId));
+
+    const title = document.createElement("span");
+    title.className = "map-destination-button__title";
+    title.textContent = destination.label;
+    button.append(title);
+
+    const meta = document.createElement("span");
+    meta.className = "map-destination-button__meta";
+    meta.textContent = [formatDistance(destination.distance_meters), destination.address].filter(Boolean).join(" · ");
+    button.append(meta);
+
+    button.addEventListener("click", () => selectMapDestination(destination.id));
+    elements.mapDestinationList.append(button);
+  }
+}
+
+function renderLeafletMap(mapData) {
+  if (!window.L) {
+    elements.mapCanvas.hidden = true;
+    elements.mapFallback.hidden = false;
+    elements.mapFallback.textContent = getMapCopy().tileFallback;
+    return;
+  }
+
+  if (state.mapInstance) {
+    state.mapInstance.remove();
+    state.mapInstance = null;
+  }
+  state.mapMarkers = [];
+  elements.mapCanvas.hidden = false;
+  elements.mapFallback.hidden = true;
+  elements.mapFallback.textContent = "";
+
+  const mapConfig = getMapConfig();
+  const map = window.L.map(elements.mapCanvas, { zoomControl: true });
+  state.mapInstance = map;
+
+  let tileLoadSucceeded = false;
+  let tileFallbackShown = false;
+  let tileFallbackTimer = null;
+
+  const showTileFallback = () => {
+    if (tileFallbackShown || state.mapInstance !== map) {
+      return;
+    }
+    tileFallbackShown = true;
+    elements.mapFallback.hidden = false;
+    elements.mapFallback.textContent = getMapCopy().tileFallback;
+  };
+
+  const hideTileFallback = () => {
+    if (state.mapInstance !== map) {
+      return;
+    }
+    tileFallbackShown = false;
+    elements.mapFallback.hidden = true;
+    elements.mapFallback.textContent = "";
+  };
+
+  const tiles = window.L.tileLayer(mapConfig.tile_url_template, {
+    attribution: mapConfig.tile_attribution,
+    maxZoom: mapConfig.tile_max_zoom || defaultMapConfig.tile_max_zoom,
+    subdomains: "abc",
+  });
+  tiles.on("tileload", () => {
+    tileLoadSucceeded = true;
+    if (tileFallbackTimer) {
+      window.clearTimeout(tileFallbackTimer);
+      tileFallbackTimer = null;
+    }
+    hideTileFallback();
+  });
+  tiles.on("tileerror", () => {
+    if (!tileLoadSucceeded) {
+      showTileFallback();
+    }
+  });
+  tiles.addTo(map);
+
+  tileFallbackTimer = window.setTimeout(() => {
+    if (!tileLoadSucceeded) {
+      showTileFallback();
+    }
+  }, 2500);
+
+  const bounds = [];
+  const originMarker = window.L.circleMarker([mapData.origin.latitude, mapData.origin.longitude], {
+    radius: 7,
+    color: "#111111",
+    weight: 2,
+    fillColor: "#ffffff",
+    fillOpacity: 1,
+  }).addTo(map);
+  originMarker.bindPopup(
+    `<div class="map-popup__title">${mapData.origin.label}</div><div class="map-popup__meta">${mapData.origin.address}</div>`
+  );
+  bounds.push([mapData.origin.latitude, mapData.origin.longitude]);
+
+  for (const destination of mapData.destinations) {
+    const marker = window.L.marker([destination.latitude, destination.longitude]).addTo(map);
+    marker.bindPopup(popupMarkup(destination));
+    marker.on("click", () => selectMapDestination(destination.id, { panTo: false }));
+    state.mapMarkers.push({ id: destination.id, marker });
+    bounds.push([destination.latitude, destination.longitude]);
+  }
+
+  if (bounds.length === 1) {
+    map.setView(bounds[0], Math.min(mapConfig.tile_max_zoom || defaultMapConfig.tile_max_zoom, 15));
+  } else {
+    map.fitBounds(bounds, { padding: [36, 36], maxZoom: mapConfig.tile_max_zoom || defaultMapConfig.tile_max_zoom });
+  }
+  window.setTimeout(() => {
+    if (state.mapInstance === map) {
+      map.invalidateSize();
+    }
+  }, 0);
+}
+
+function renderMap(answer) {
+  const mapData = answer?.map_data;
+  if (!mapData?.destinations?.length) {
+    clearMapPanel();
+    return;
+  }
+
+  state.currentMapData = mapData;
+  state.selectedMapDestinationId = mapData.selected_destination_id || mapData.destinations[0].id;
+  elements.mapPanel.hidden = false;
+  renderMapDestinationList(mapData);
+  renderMapDetail(activeDestination());
+  renderLeafletMap(mapData);
+  selectMapDestination(state.selectedMapDestinationId, { panTo: false });
+}
+
+function showAnswerState(answer) {
+  const status = answer?.status;
+  const config = getCopy().answerState?.[status];
+  if (!config) {
+    hideAnswerState();
+    return;
+  }
+  state.answerStatus = status;
+  elements.answerState.hidden = false;
+  elements.answerState.textContent = config.label;
+  elements.answerState.dataset.tone = config.tone;
 }
 
 function setStatus(statusKey) {
@@ -476,6 +925,7 @@ function updateInputModeUi() {
 
 function renderCopy() {
   const copy = getCopy();
+  const mapCopy = getMapCopy();
   document.documentElement.lang = state.language;
   document.title = copy.title;
   elements.brandEyebrow.textContent = copy.brandEyebrow;
@@ -490,8 +940,19 @@ function renderCopy() {
   elements.manualQuestionInput.placeholder = copy.manualPlaceholder;
   elements.answerLabel.textContent = copy.answerLabel;
   elements.answerHint.textContent = copy.answerHint;
+  elements.mapLabel.textContent = mapCopy.label;
+  elements.mapHint.textContent = mapCopy.hint;
+  elements.mapListLabel.textContent = mapCopy.listLabel;
+  if (!elements.mapFallback.hidden) {
+    elements.mapFallback.textContent = mapCopy.tileFallback;
+  }
   if (elements.answerText.dataset.state !== "answer") {
     showPlaceholder();
+  } else if (state.answerStatus) {
+    showAnswerState({ status: state.answerStatus });
+  }
+  if (state.currentMapData?.destinations?.length) {
+    renderMap({ map_data: state.currentMapData });
   }
   renderStatus();
   renderSessionState();
@@ -686,6 +1147,8 @@ async function speakAnswer(text) {
 
 function handleUiError(error) {
   console.error(error);
+  hideAnswerState();
+  clearMapPanel();
   showAnswer(error?.userMessage || getCopy().errors.generic);
   setStatus("error");
 }
@@ -698,7 +1161,9 @@ async function submitTranscript(transcript) {
   try {
     const answer = await answerQuery(transcript, state.language);
     applySessionResponse(answer);
+    showAnswerState(answer);
     showAnswer(answer.answer_text);
+    renderMap(answer);
     setStatus(answer.status === "clarification_needed" ? "clarifying" : "speaking");
     await speakAnswer(answer.answer_text);
   } finally {
@@ -718,10 +1183,12 @@ async function processAudio(blob) {
     const detail = transcription.detail ? ` ${transcription.detail}` : "";
     if (canUseBrowserSpeechRecognition()) {
       state.forceBrowserSttFallback = true;
+      clearMapPanel();
       showAnswer(`${getCopy().errors.backendSpeechFallback}${detail}`.trim());
       setStatus("browserFallback");
       return;
     }
+    clearMapPanel();
     showAnswer(`${getCopy().errors.backendSpeechUnavailable}${detail}`.trim());
     setStatus("typedFallback");
     return;
@@ -729,6 +1196,7 @@ async function processAudio(blob) {
 
   const transcript = (transcription.transcript || "").trim();
   if (!transcript) {
+    clearMapPanel();
     showAnswer(getCopy().errors.speechUnavailable);
     setStatus("error");
     return;

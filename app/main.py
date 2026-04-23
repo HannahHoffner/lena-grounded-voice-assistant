@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .config import load_settings
 from .kb import KnowledgeBase
+from .maps import MapBuilder
 from .models import (
     QueryAnswerResponse,
     QueryRequest,
@@ -34,6 +35,7 @@ def create_app() -> FastAPI:
     app = FastAPI(title="LENA Prototype", version="0.1.0")
 
     kb = KnowledgeBase(settings.published_root)
+    map_builder = MapBuilder(settings)
     transcript_store = TranscriptStore(settings.transcripts_path)
     session_store = SessionStore(settings.sessions_path)
     session_manager = SessionManager(session_store, kb, timeout_seconds=settings.session_timeout_seconds)
@@ -55,6 +57,7 @@ def create_app() -> FastAPI:
     app.state.transcript_store = transcript_store
     app.state.session_store = session_store
     app.state.session_manager = session_manager
+    app.state.map_builder = map_builder
     app.state.stt_provider = stt_provider
     app.state.rewrite_provider = rewrite_provider
     app.state.tts_provider = tts_provider
@@ -86,6 +89,11 @@ def create_app() -> FastAPI:
                 "stt": stt_health,
                 "tts": tts_health,
             },
+            "map": {
+                "tile_url_template": app.state.settings.map_tile_url_template,
+                "tile_attribution": app.state.settings.map_tile_attribution,
+                "tile_max_zoom": app.state.settings.map_tile_max_zoom,
+            },
         }
 
     @app.post("/api/speech/transcribe", response_model=TranscribeResponse)
@@ -116,7 +124,11 @@ def create_app() -> FastAPI:
             weak_match=answer.weak_match,
             clarification_needed=answer.clarification_needed,
             clarification_question=answer.clarification_question,
+            out_of_scope=answer.out_of_scope,
+            self_description=answer.self_description,
+            crisis_mode=answer.crisis_mode,
             retrieved_page_ids=answer.retrieved_page_ids,
+            map_data=app.state.map_builder.build_for_answer(answer, app.state.kb),
             provider=app.state.rewrite_provider.name,
             model=app.state.rewrite_provider.model_name,
             session_id=session_resolution.session.session_id,
@@ -168,6 +180,16 @@ def create_app() -> FastAPI:
             output_root=settings.scraper_published_root,
             raw_root=settings.scraper_raw_root,
             reports_root=settings.scraper_reports_root,
+            canonical_db_path=settings.canonical_kb_path,
+            intake_root=settings.scraper_intake_root,
+            build_qc_enabled=settings.build_qc_enabled,
+            build_qc_provider=settings.build_qc_provider,
+            build_qc_model=settings.build_qc_model,
+            build_qc_base_url=settings.build_qc_base_url,
+            build_qc_api_key=settings.build_qc_api_key,
+            geo_overrides_path=settings.geo_overrides_path,
+            build_geocoding_enabled=settings.build_geocoding_enabled,
+            build_geocoder_url=settings.build_geocoder_url,
         )
         return {
             "status": "ok",
@@ -239,6 +261,9 @@ def _store_event(
             answer_text=response.answer_text,
             status=response.status,
             weak_match=response.weak_match,
+            out_of_scope=response.out_of_scope,
+            self_description=response.self_description,
+            crisis_mode=response.crisis_mode,
             kb_version=kb_version,
             rewrite_provider=rewrite_provider,
             rewrite_model=rewrite_model,

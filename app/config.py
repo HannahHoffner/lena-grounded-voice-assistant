@@ -13,10 +13,13 @@ class Settings:
     prompt_root: Path
     system_prompt_path: Path
     published_root: Path
+    canonical_kb_path: Path
     scraper_workspace_root: Path
     scraper_published_root: Path
     scraper_raw_root: Path
     scraper_reports_root: Path
+    scraper_intake_root: Path
+    geo_overrides_path: Path
     runtime_root: Path
     transcripts_path: Path
     sessions_path: Path
@@ -35,6 +38,21 @@ class Settings:
     clarification_gap_threshold: float
     session_timeout_seconds: int
     bootstrap_runtime_from_scraper: bool
+    build_qc_provider: str
+    build_qc_model: str | None
+    build_qc_base_url: str | None
+    build_qc_api_key: str | None
+    build_qc_enabled: bool
+    build_geocoding_enabled: bool
+    build_geocoder_url: str
+    map_tile_url_template: str
+    map_tile_attribution: str
+    map_tile_max_zoom: int
+    map_origin_id: str
+    map_origin_label: str
+    map_origin_address: str
+    map_origin_latitude: float
+    map_origin_longitude: float
 
 
 def load_settings() -> Settings:
@@ -46,10 +64,13 @@ def load_settings() -> Settings:
     raw_system_prompt_path = Path(os.getenv("LENA_SYSTEM_PROMPT_PATH", prompt_root / "system_prompt.md"))
     system_prompt_path = raw_system_prompt_path if raw_system_prompt_path.is_absolute() else app_root / raw_system_prompt_path
     published_root = data_root / "published"
+    canonical_kb_path = data_root / "canonical" / "kb.sqlite3"
     scraper_workspace_root = data_root / "scraper_workspace"
     scraper_published_root = scraper_workspace_root / "published"
     scraper_raw_root = scraper_workspace_root / "raw"
     scraper_reports_root = scraper_workspace_root / "reports"
+    scraper_intake_root = scraper_workspace_root / "intake"
+    geo_overrides_path = data_root / "scraper_sources" / "geo_overrides.json"
     runtime_root = data_root / "runtime"
     transcripts_path = runtime_root / "transcripts.jsonl"
     sessions_path = runtime_root / "sessions.json"
@@ -63,6 +84,8 @@ def load_settings() -> Settings:
     scraper_published_root.mkdir(parents=True, exist_ok=True)
     scraper_raw_root.mkdir(parents=True, exist_ok=True)
     scraper_reports_root.mkdir(parents=True, exist_ok=True)
+    scraper_intake_root.mkdir(parents=True, exist_ok=True)
+    canonical_kb_path.parent.mkdir(parents=True, exist_ok=True)
 
     return Settings(
         app_root=app_root,
@@ -70,10 +93,13 @@ def load_settings() -> Settings:
         prompt_root=prompt_root,
         system_prompt_path=system_prompt_path,
         published_root=published_root,
+        canonical_kb_path=canonical_kb_path,
         scraper_workspace_root=scraper_workspace_root,
         scraper_published_root=scraper_published_root,
         scraper_raw_root=scraper_raw_root,
         scraper_reports_root=scraper_reports_root,
+        scraper_intake_root=scraper_intake_root,
+        geo_overrides_path=geo_overrides_path,
         runtime_root=runtime_root,
         transcripts_path=transcripts_path,
         sessions_path=sessions_path,
@@ -92,6 +118,24 @@ def load_settings() -> Settings:
         clarification_gap_threshold=float(os.getenv("LENA_CLARIFICATION_GAP_THRESHOLD", "0.03")),
         session_timeout_seconds=int(os.getenv("LENA_SESSION_TIMEOUT_SECONDS", "300")),
         bootstrap_runtime_from_scraper=os.getenv("LENA_BOOTSTRAP_RUNTIME_FROM_SCRAPER", "true").lower() in {"1", "true", "yes", "on"},
+        build_qc_provider=os.getenv("LENA_BUILD_QC_PROVIDER", "disabled"),
+        build_qc_model=os.getenv("LENA_BUILD_QC_MODEL") or None,
+        build_qc_base_url=os.getenv("LENA_BUILD_QC_BASE_URL") or None,
+        build_qc_api_key=os.getenv("LENA_BUILD_QC_API_KEY") or None,
+        build_qc_enabled=os.getenv("LENA_BUILD_QC_ENABLED", "false").lower() in {"1", "true", "yes", "on"},
+        build_geocoding_enabled=os.getenv("LENA_BUILD_GEOCODING_ENABLED", "false").lower() in {"1", "true", "yes", "on"},
+        build_geocoder_url=os.getenv("LENA_BUILD_GEOCODER_URL", "https://nominatim.openstreetmap.org/search"),
+        map_tile_url_template=os.getenv("LENA_MAP_TILE_URL_TEMPLATE", "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"),
+        map_tile_attribution=os.getenv(
+            "LENA_MAP_TILE_ATTRIBUTION",
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        ),
+        map_tile_max_zoom=int(os.getenv("LENA_MAP_TILE_MAX_ZOOM", "16")),
+        map_origin_id=os.getenv("LENA_MAP_ORIGIN_ID", "leipzig_hbf"),
+        map_origin_label=os.getenv("LENA_MAP_ORIGIN_LABEL", "Leipzig Hauptbahnhof"),
+        map_origin_address=os.getenv("LENA_MAP_ORIGIN_ADDRESS", "Willy-Brandt-Platz 5, 04109 Leipzig"),
+        map_origin_latitude=float(os.getenv("LENA_MAP_ORIGIN_LATITUDE", "51.3465518")),
+        map_origin_longitude=float(os.getenv("LENA_MAP_ORIGIN_LONGITUDE", "12.3830858")),
     )
 
 

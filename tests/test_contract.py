@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 from app.kb import KnowledgeBase
-from app.models import PageMetadata
+from app.models import MapData, QueryAnswerResponse, PageMetadata
 
 
 def test_published_contract_is_loadable() -> None:
@@ -24,6 +24,55 @@ def test_pages_json_matches_minimum_shape() -> None:
         assert page.description
         assert page.aliases
         assert page.file_path.endswith(".md")
+
+
+def test_query_answer_response_accepts_nullable_map_data() -> None:
+    response = QueryAnswerResponse.model_validate(
+        {
+            "answer_text": "Test",
+            "status": "ok",
+            "provider": "template",
+            "session_id": "session-1",
+            "map_data": None,
+        }
+    )
+    assert response.map_data is None
+
+    mapped = QueryAnswerResponse.model_validate(
+        {
+            "answer_text": "Test",
+            "status": "ok",
+            "provider": "template",
+            "session_id": "session-2",
+            "map_data": {
+                "origin": {
+                    "id": "leipzig_hbf",
+                    "label": "Leipzig Hauptbahnhof",
+                    "address": "Willy-Brandt-Platz 5, 04109 Leipzig",
+                    "latitude": 51.3465518,
+                    "longitude": 12.3830858,
+                },
+                "destinations": [
+                    {
+                        "id": "leipziger-oase",
+                        "page_id": "leipziger-oase",
+                        "label": "Leipziger Oase",
+                        "organization_label": "Diakonie Leipzig",
+                        "service_type": "day_center",
+                        "address": "Nuernberger Strasse 31, 04103 Leipzig",
+                        "latitude": 51.3349456,
+                        "longitude": 12.3840015,
+                        "distance_meters": 1300,
+                        "description": "Tageseinrichtung fuer wohnungslose Menschen.",
+                        "opening_hours": ["Montag bis Freitag 08:00 bis 16:00 Uhr"],
+                    }
+                ],
+                "selected_destination_id": "leipziger-oase",
+            },
+        }
+    )
+    assert isinstance(mapped.map_data, MapData)
+    assert mapped.map_data.destinations[0].page_id == "leipziger-oase"
 
 
 def test_published_dataset_contains_atomic_service_pages() -> None:

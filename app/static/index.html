@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>LENA</title>
+    <link rel="stylesheet" href="/static/vendor/leaflet/leaflet.css">
     <link rel="stylesheet" href="/static/styles.css">
   </head>
   <body>
@@ -82,10 +83,29 @@
           <p id="answerLabel" class="section-label">Answer</p>
           <p id="answerHint" class="section-hint">Answers are limited to the local knowledge base.</p>
         </div>
+        <p id="answerState" class="answer-state" hidden></p>
         <p id="answerText" class="answer-text" data-state="placeholder">Your answer will appear here.</p>
+        <section id="mapPanel" class="map-panel" hidden aria-labelledby="mapLabel">
+          <div class="map-panel__head">
+            <p id="mapLabel" class="section-label">Map</p>
+            <p id="mapHint" class="section-hint">Relevant places from Leipzig Hauptbahnhof.</p>
+          </div>
+          <div id="mapCanvasWrap" class="map-canvas-wrap">
+            <div id="answerMap" class="answer-map" role="img" aria-label="Map with relevant places"></div>
+            <p id="mapFallback" class="map-fallback" hidden></p>
+          </div>
+          <div class="map-meta">
+            <div class="map-meta__column">
+              <p id="mapListLabel" class="map-meta__label">Places</p>
+              <div id="mapDestinationList" class="map-destination-list" role="list"></div>
+            </div>
+            <article id="mapDetailCard" class="map-detail-card" aria-live="polite"></article>
+          </div>
+        </section>
       </section>
     </main>
 
+    <script src="/static/vendor/leaflet/leaflet.js"></script>
     <script src="/static/app.js" type="module"></script>
   </body>
 </html>

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 import wave
 from pathlib import Path
 
@@ -53,9 +52,54 @@ def test_unknown_query_returns_unknown(monkeypatch) -> None:
     monkeypatch.setenv("LENA_REWRITE_PROVIDER", "template")
     app = create_app()
     client = TestClient(app)
-    response = client.post("/api/query/answer", json={"transcript": "astronomy telescope orbit", "language": "en"})
+    response = client.post("/api/query/answer", json={"transcript": "qwertz asdf yxv", "language": "en"})
     assert response.status_code == 200
     assert response.json()["status"] == "unknown"
+
+
+def test_self_description_query_returns_deterministic_answer(monkeypatch) -> None:
+    monkeypatch.setenv("LENA_BOOTSTRAP_RUNTIME_FROM_SCRAPER", "false")
+    monkeypatch.setenv("LENA_REWRITE_PROVIDER", "template")
+    app = create_app()
+    client = TestClient(app)
+    response = client.post("/api/query/answer", json={"transcript": "Who are you?", "language": "en"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "self_description"
+    assert body["self_description"] is True
+    assert "LENA" in body["answer_text"]
+    assert "Leipzig" in body["answer_text"]
+    assert body["retrieved_page_ids"] == []
+
+
+def test_out_of_scope_query_redirects_to_supported_topics(monkeypatch) -> None:
+    monkeypatch.setenv("LENA_BOOTSTRAP_RUNTIME_FROM_SCRAPER", "false")
+    monkeypatch.setenv("LENA_REWRITE_PROVIDER", "template")
+    app = create_app()
+    client = TestClient(app)
+    response = client.post("/api/query/answer", json={"transcript": "How do telescopes work?", "language": "en"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "out_of_scope"
+    assert body["out_of_scope"] is True
+    assert "Leipzig" in body["answer_text"]
+    assert "support services" in body["answer_text"]
+
+
+def test_crisis_query_bypasses_normal_answering(monkeypatch) -> None:
+    monkeypatch.setenv("LENA_BOOTSTRAP_RUNTIME_FROM_SCRAPER", "false")
+    monkeypatch.setenv("LENA_REWRITE_PROVIDER", "template")
+    app = create_app()
+    client = TestClient(app)
+    response = client.post("/api/query/answer", json={"transcript": "I want to kill myself", "language": "en"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "crisis"
+    assert body["crisis_mode"] is True
+    assert "112" in body["answer_text"]
+    assert "110" in body["answer_text"]
+    assert "TelefonSeelsorge" in body["answer_text"]
+    assert "notfallkontakte" in body["retrieved_page_ids"]
 
 
 def test_answer_endpoint_can_clarify(monkeypatch) -> None:
@@ -108,8 +152,11 @@ def test_location_answer_includes_address_for_specific_place(monkeypatch) -> Non
     body = response.json()
     assert body["status"] == "ok"
     assert "Leipziger Oase" in body["answer_text"]
-    assert "finden Sie" in body["answer_text"] or "Adresse ist" in body["answer_text"]
+    assert "ist in" in body["answer_text"] or "Adresse ist" in body["answer_text"]
     assert "Nuernberger Strasse 31" in body["answer_text"] or "Nürnberger Straße 31" in body["answer_text"]
+    assert body["map_data"]["origin"]["id"] == "leipzig_hbf"
+    assert len(body["map_data"]["destinations"]) == 1
+    assert body["map_data"]["destinations"][0]["page_id"] in {"leipziger-oase", "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog"}
 
 
 def test_answer_endpoint_supports_cross_language_food_lookup(monkeypatch) -> None:
@@ -124,6 +171,50 @@ def test_answer_endpoint_supports_cross_language_food_lookup(monkeypatch) -> Non
     assert body["retrieved_page_ids"][0].startswith("tafel-leipzig")
     assert "Tafel Leipzig" in body["answer_text"]
     assert body["answer_text"].count("You can go to") <= 1
+
+
+def test_food_overview_answer_can_return_multiple_map_markers(monkeypatch) -> None:
+    monkeypatch.setenv("LENA_BOOTSTRAP_RUNTIME_FROM_SCRAPER", "false")
+    monkeypatch.setenv("LENA_REWRITE_PROVIDER", "template")
+    app = create_app()
+    client = TestClient(app)
+    response = client.post("/api/query/answer", json={"transcript": "where can i get food in leipzig", "language": "en"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "ok"
+    assert body["map_data"] is not None
+    assert len(body["map_data"]["destinations"]) >= 2
+    destination_ids = {item["page_id"] for item in body["map_data"]["destinations"]}
+    assert "tafel-leipzig-markkleeberg" not in destination_ids
+
+
+def test_non_map_statuses_return_null_map_data(monkeypatch) -> None:
+    monkeypatch.setenv("LENA_BOOTSTRAP_RUNTIME_FROM_SCRAPER", "false")
+    monkeypatch.setenv("LENA_REWRITE_PROVIDER", "template")
+    app = create_app()
+    client = TestClient(app)
+
+    unknown = client.post("/api/query/answer", json={"transcript": "qwertz asdf yxv", "language": "en"}).json()
+    clarify = client.post("/api/query/answer", json={"transcript": "help", "language": "en"}).json()
+    crisis = client.post("/api/query/answer", json={"transcript": "I want to kill myself", "language": "en"}).json()
+    out_of_scope = client.post("/api/query/answer", json={"transcript": "How do telescopes work?", "language": "en"}).json()
+
+    assert unknown["map_data"] is None
+    assert clarify["map_data"] is None
+    assert crisis["map_data"] is None
+    assert out_of_scope["map_data"] is None
+
+
+def test_out_of_leipzig_place_is_not_rendered_as_map_destination(monkeypatch) -> None:
+    monkeypatch.setenv("LENA_BOOTSTRAP_RUNTIME_FROM_SCRAPER", "false")
+    monkeypatch.setenv("LENA_REWRITE_PROVIDER", "template")
+    app = create_app()
+    client = TestClient(app)
+    response = client.post("/api/query/answer", json={"transcript": "tafel markkleeberg", "language": "de"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["retrieved_page_ids"][0] == "tafel-leipzig-markkleeberg"
+    assert body["map_data"] is None
 
 
 def test_answer_endpoint_prefers_debt_counseling_page(monkeypatch) -> None:
@@ -149,7 +240,7 @@ def test_missing_detail_answer_says_so_naturally(monkeypatch) -> None:
     body = response.json()
     assert body["status"] == "ok"
     assert body["retrieved_page_ids"][0] == "cabl-uvo"
-    assert "nicht klar angegeben" in body["answer_text"]
+    assert "keine genaue Adresse" in body["answer_text"] or "nicht klar" in body["answer_text"]
 
 
 def test_session_follow_up_prefers_previous_place(monkeypatch) -> None:
@@ -297,7 +388,7 @@ def test_appointment_follow_up_stays_grounded_on_cabl(monkeypatch) -> None:
     assert second["status"] == "ok"
 
 
-def test_unrelated_query_resets_and_returns_unknown(monkeypatch) -> None:
+def test_unrelated_query_resets_and_returns_out_of_scope(monkeypatch) -> None:
     monkeypatch.setenv("LENA_BOOTSTRAP_RUNTIME_FROM_SCRAPER", "false")
     monkeypatch.setenv("LENA_REWRITE_PROVIDER", "template")
     app = create_app()
@@ -314,8 +405,23 @@ def test_unrelated_query_resets_and_returns_unknown(monkeypatch) -> None:
 
     assert second["session_event"] == "context_reset"
     assert second["session_id"] != first["session_id"]
-    assert second["status"] == "unknown"
+    assert second["status"] == "out_of_scope"
+    assert second["out_of_scope"] is True
     assert second["retrieved_page_ids"] == []
+
+
+def test_crisis_query_supports_german_response(monkeypatch) -> None:
+    monkeypatch.setenv("LENA_BOOTSTRAP_RUNTIME_FROM_SCRAPER", "false")
+    monkeypatch.setenv("LENA_REWRITE_PROVIDER", "template")
+    app = create_app()
+    client = TestClient(app)
+    response = client.post("/api/query/answer", json={"transcript": "Ich will sterben", "language": "de"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "crisis"
+    assert body["crisis_mode"] is True
+    assert "112" in body["answer_text"]
+    assert "110" in body["answer_text"]
 
 
 def test_transcribe_endpoint_accepts_form_language_string(monkeypatch, tmp_path: Path) -> None:

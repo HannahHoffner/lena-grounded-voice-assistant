@@ -318,6 +318,7 @@ class RetrievalEngine:
         limit: int = 3,
         preferred_page_ids: list[str] | None = None,
         excluded_page_ids: list[str] | None = None,
+        _allow_relaxed_fallback: bool = True,
     ) -> list[RetrievedPage]:
         tokens = query_tokens_for_search(transcript, language)
         if not tokens:
@@ -336,13 +337,35 @@ class RetrievalEngine:
         hours_query = bool(query_token_set & HOURS_QUERY_TOKENS)
         query_category = _detect_query_category(query_token_set)
         specific_place_query = _is_specific_place_query(query_token_set, detail_query_tokens, query_category)
+        ignored_specific_tokens = (
+            self._excluded_anchor_tokens(excluded_page_ids)
+            if excluded_page_ids and not preferred_page_ids
+            else set()
+        )
+        candidate_page_ids = self._candidate_page_ids(
+            query_tokens=query_token_set,
+            detail_query_tokens=detail_query_tokens,
+            normalized_query=normalized_query,
+            alias_hits=alias_hits,
+            preferred_page_ids=preferred_page_ids,
+        )
+        available_page_ids = {page.page_id for page in self.kb.dataset.pages}
+        candidate_pages = (
+            [self.kb.get_page(page_id) for page_id in candidate_page_ids if page_id in available_page_ids]
+            if candidate_page_ids
+            else self.kb.dataset.pages
+        )
+        if excluded_page_ids:
+            candidate_pages = [page for page in candidate_pages if page.page_id not in excluded_page_ids]
+        if not candidate_pages:
+            candidate_pages = [page for page in self.kb.dataset.pages if page.page_id not in excluded_page_ids]
 
-        for page in self.kb.dataset.pages:
-            if page.page_id in excluded_page_ids:
-                continue
+        for page in candidate_pages:
             markdown = self.kb.get_page_markdown(page.page_id)
             lexical_score = 0.0
+            lexical_score += self._field_score(query_counts, page.entity_kind, weight=0.5)
             lexical_score += self._field_score(query_counts, page.title, weight=3.2)
+            lexical_score += self._field_score(query_counts, page.canonical_title or "", weight=2.6)
             lexical_score += self._field_score(query_counts, page.page_id.replace("-", " "), weight=2.8)
             lexical_score += self._field_score(query_counts, page.category, weight=0.9)
             lexical_score += self._field_score(query_counts, page.service_type, weight=1.35)
@@ -350,6 +373,9 @@ class RetrievalEngine:
             lexical_score += self._field_score(query_counts, " ".join(page.tags), weight=2.2)
             lexical_score += self._field_score(query_counts, " ".join(page.aliases), weight=2.4)
             lexical_score += self._field_score(query_counts, " ".join(page.target_groups), weight=1.7)
+            lexical_score += self._field_score(query_counts, page.organization or "", weight=1.2)
+            lexical_score += self._field_score(query_counts, page.district or "", weight=1.15)
+            lexical_score += self._field_score(query_counts, page.eligibility or "", weight=0.85)
             lexical_score += self._field_score(query_counts, page.gender_access or "", weight=1.1)
             lexical_score += self._field_score(query_counts, " ".join(page.languages), weight=0.35)
             lexical_score += self._field_score(query_counts, page.address or "", weight=2.1)
@@ -363,7 +389,8 @@ class RetrievalEngine:
             lexical_score += self._best_passage_score(query_counts, markdown) * 2.4
             lexical_score += alias_hits.get(page.page_id, 0.0)
             lexical_score += self._category_score(query_category, page)
-            lexical_score += self._exact_match_boost(normalized_query, query_token_set, query_category, page)
+            lexical_score += self._exact_match_boost(normalized_query, query_token_set, query_category, page, ignored_specific_tokens)
+            lexical_score += self._specific_query_alignment(query_token_set, query_category, page, ignored_specific_tokens)
             lexical_score += self._detail_match_boost(detail_query_tokens, page)
 
             has_match_signal = lexical_score > 0.02 or page.page_id in preferred_page_ids
@@ -386,8 +413,25 @@ class RetrievalEngine:
             )
             score -= self._document_penalty(page)
             score -= self._review_penalty(page)
+            score -= self._status_penalty(page)
             if score > 0.04:
                 ranked.append((score, page))
+
+        if not ranked and _allow_relaxed_fallback and excluded_page_ids and ignored_specific_tokens:
+            fallback_tokens = [
+                token
+                for token in tokens
+                if token not in ignored_specific_tokens and token not in {"anderen", "anderen", "anderer", "anderes", "another", "other", "ort", "place", "noch"}
+            ]
+            if fallback_tokens and fallback_tokens != tokens:
+                return self.retrieve(
+                    " ".join(fallback_tokens),
+                    language,
+                    limit=limit,
+                    preferred_page_ids=preferred_page_ids,
+                    excluded_page_ids=list(excluded_page_ids),
+                    _allow_relaxed_fallback=False,
+                )
 
         ranked.sort(key=lambda item: (-item[0], item[1].page_id))
         return [RetrievedPage(page_id=page.page_id, title=page.title, score=round(score, 4)) for score, page in ranked[:limit]]
@@ -415,6 +459,7 @@ class RetrievalEngine:
         query_token_set: set[str],
         query_category: str | None,
         page: PageMetadata,
+        ignored_specific_tokens: set[str] | None = None,
     ) -> float:
         normalized_title = normalize_text(page.title)
         normalized_page_id = normalize_text(page.page_id.replace("-", " "))
@@ -428,6 +473,8 @@ class RetrievalEngine:
             for token in raw_query_tokens
             if token not in GENERIC_QUERY_TOKENS and token not in category_hints
         }
+        if ignored_specific_tokens:
+            specific_query_tokens -= ignored_specific_tokens
 
         boost = 0.0
         if normalized_query and normalized_query == normalized_title:
@@ -463,6 +510,64 @@ class RetrievalEngine:
         if set(detail_query_tokens) <= page_detail_tokens:
             return 0.95
         return 0.22 * len(overlap)
+
+    def _specific_query_alignment(
+        self,
+        query_token_set: set[str],
+        query_category: str | None,
+        page: PageMetadata,
+        ignored_specific_tokens: set[str] | None = None,
+    ) -> float:
+        category_hints = CATEGORY_QUERY_HINTS.get(query_category, set()) | EXTRA_CATEGORY_QUERY_HINTS.get(query_category, set())
+        specific_tokens = {
+            token
+            for token in query_token_set
+            if token not in GENERIC_QUERY_TOKENS
+            and token not in LOCATION_QUERY_TOKENS
+            and token not in HOURS_QUERY_TOKENS
+            and token not in category_hints
+        }
+        if ignored_specific_tokens:
+            specific_tokens -= ignored_specific_tokens
+        if not specific_tokens:
+            return 0.0
+        page_tokens = set(
+            tokenize(
+                " ".join(
+                    [
+                        page.title,
+                        page.canonical_title or "",
+                        page.page_id.replace("-", " "),
+                        " ".join(page.aliases),
+                        page.description,
+                        page.summary,
+                        " ".join(page.tags),
+                        " ".join(page.target_groups),
+                        page.address or "",
+                        page.organization or "",
+                    ]
+                )
+            )
+        )
+        overlap = specific_tokens & page_tokens
+        if not overlap:
+            return -0.95
+        if overlap == specific_tokens:
+            return 0.8
+        return -0.35 * (len(specific_tokens) - len(overlap))
+
+    def _excluded_anchor_tokens(self, excluded_page_ids: set[str]) -> set[str]:
+        tokens: set[str] = set()
+        for page_id in excluded_page_ids:
+            try:
+                page = self.kb.get_page(page_id)
+            except KeyError:
+                continue
+            tokens.update(tokenize(page.title))
+            tokens.update(tokenize(page.canonical_title or ""))
+            tokens.update(tokenize(page.address or ""))
+            tokens.update(tokenize(" ".join(page.aliases)))
+        return tokens
 
     def _concrete_page_score(
         self,
@@ -504,6 +609,16 @@ class RetrievalEngine:
         if page.review_status == "needs_review":
             return 0.06 + min(len(page.validation_issues), 4) * 0.01
         return 0.0
+
+    def _status_penalty(self, page: PageMetadata) -> float:
+        penalty = 0.0
+        if page.stale or page.status == "stale":
+            penalty += 0.05
+        if page.status in {"deprecated", "removed", "merged"}:
+            penalty += 0.4
+        if page.conflict_fields:
+            penalty += min(len(page.conflict_fields), 3) * 0.03
+        return penalty
 
     def _category_score(self, query_category: str | None, page: PageMetadata) -> float:
         if not query_category:
@@ -549,12 +664,39 @@ class RetrievalEngine:
             if not matched:
                 continue
             page_count = max(len(page_ids), 1)
-            bonus = (0.18 if " " in normalized_alias else 0.08) / page_count
+            if " " in normalized_alias:
+                bonus = 0.22 / page_count
+            elif len(normalized_alias) >= 8:
+                bonus = 0.34 / page_count
+            else:
+                bonus = 0.1 / page_count
             if normalized_alias == normalized_transcript:
-                bonus += 0.08 / page_count
+                bonus += 0.12 / page_count
             for page_id in page_ids:
                 scores[page_id] = scores.get(page_id, 0.0) + bonus
         return scores
+
+    def _candidate_page_ids(
+        self,
+        *,
+        query_tokens: set[str],
+        detail_query_tokens: list[str],
+        normalized_query: str,
+        alias_hits: dict[str, float],
+        preferred_page_ids: list[str],
+    ) -> set[str]:
+        candidate_page_ids: set[str] = set(alias_hits)
+        if normalized_query:
+            candidate_page_ids.update(self.kb.dataset.aliases.get(normalized_query, []))
+        searchable_indexes = ("aliases", "address_terms", "service_types", "target_groups", "organizations", "districts", "hours", "families")
+        for token in query_tokens:
+            for index_name in searchable_indexes:
+                candidate_page_ids.update(self.kb.get_index_hits(index_name, token))
+        for token in detail_query_tokens:
+            candidate_page_ids.update(self.kb.get_index_hits("address_terms", token))
+            candidate_page_ids.update(self.kb.get_index_hits("hours", token))
+        candidate_page_ids.update(preferred_page_ids)
+        return candidate_page_ids
 
     def should_clarify(self, results: list[RetrievedPage], transcript: str, threshold_gap: float) -> bool:
         if not results:

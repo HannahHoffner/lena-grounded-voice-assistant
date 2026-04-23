@@ -1,0 +1,275 @@
+{
+  "by_entity_id": {
+    "leipziger-oase": {
+      "latitude": 51.3349456,
+      "longitude": 12.3840015,
+      "geo_status": "ready",
+      "geo_source": "manual",
+      "geo_confidence": 1.0,
+      "geo_precision": "exact",
+      "geo_matched_label": "Leipziger Oase",
+      "geo_matched_address": "Nuernberger Strasse 31, 04103 Leipzig"
+    },
+    "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog": {
+      "latitude": 51.3349456,
+      "longitude": 12.3840015,
+      "geo_status": "ready",
+      "geo_source": "manual",
+      "geo_confidence": 1.0,
+      "geo_precision": "exact",
+      "geo_matched_label": "Leipziger Oase",
+      "geo_matched_address": "Nürnberger Straße 31, 04103 Leipzig"
+    },
+    "wohnungsnotfallhilfe-pdf-bahnhofsmission-leipzig-katalog": {
+      "latitude": 51.3465987,
+      "longitude": 12.3805611,
+      "geo_status": "ready",
+      "geo_source": "manual",
+      "geo_confidence": 1.0,
+      "geo_precision": "exact",
+      "geo_matched_label": "Ökumenische Bahnhofsmission Leipzig",
+      "geo_matched_address": "Willy-Brandt-Platz 2a, 04109 Leipzig"
+    },
+    "wohnungsnotfallhilfe-pdf-insel": {
+      "latitude": 51.3325874,
+      "longitude": 12.3075784,
+      "geo_status": "ready",
+      "geo_source": "manual",
+      "geo_confidence": 1.0,
+      "geo_precision": "exact",
+      "geo_matched_label": "Tagestreff INSEL",
+      "geo_matched_address": "Plautstraße 18, 04179 Leipzig"
+    },
+    "tafel-leipzig-zentrale-lindenau-west": {
+      "latitude": 51.3323084,
+      "longitude": 12.3233127,
+      "geo_status": "ready",
+      "geo_source": "manual",
+      "geo_confidence": 1.0,
+      "geo_precision": "exact",
+      "geo_matched_label": "Leipziger Tafel",
+      "geo_matched_address": "Jordanstraße 5a, 04177 Leipzig"
+    },
+    "tafel-leipzig-ost-volkmarsdorf": {
+      "latitude": 51.3462253,
+      "longitude": 12.414264,
+      "geo_status": "ready",
+      "geo_source": "manual",
+      "geo_confidence": 1.0,
+      "geo_precision": "exact",
+      "geo_matched_label": "Leipziger Tafel (Ausgabestelle Ost)",
+      "geo_matched_address": "Bennigsenstraße 14, 04315 Leipzig"
+    },
+    "tafel-leipzig-ost-paunsdorf": {
+      "latitude": 51.3512051,
+      "longitude": 12.4550933,
+      "geo_status": "ready",
+      "geo_source": "manual",
+      "geo_confidence": 1.0,
+      "geo_precision": "exact",
+      "geo_matched_label": "Tafel Leipzig Ost Paunsdorf",
+      "geo_matched_address": "Südblick 5a, 04329 Leipzig"
+    },
+    "wohnungsnotfallhilfe-pdf-uebernachtungshaus-maenner": {
+      "latitude": 51.3476211,
+      "longitude": 12.3123814,
+      "geo_status": "ready",
+      "geo_source": "manual",
+      "geo_confidence": 0.95,
+      "geo_precision": "exact",
+      "geo_matched_label": "Übernachtungshaus für wohnungslose Männer",
+      "geo_matched_address": "Rückmarsdorfer Straße 7, 04179 Leipzig"
+    },
+    "uebernachtungshaus-ruecke": {
+      "latitude": 51.3476211,
+      "longitude": 12.3123814,
+      "geo_status": "ready",
+      "geo_source": "manual",
+      "geo_confidence": 0.95,
+      "geo_precision": "exact",
+      "geo_matched_label": "Übernachtungshaus für wohnungslose Männer",
+      "geo_matched_address": "Rückmarsdorfer Straße 7, 04179 Leipzig"
+    },
+    "wohnungsnotfallhilfe-pdf-unterbringungsmanagement": {
+      "latitude": 51.3476211,
+      "longitude": 12.3123814,
+      "geo_status": "ready",
+      "geo_source": "manual",
+      "geo_confidence": 0.95,
+      "geo_precision": "exact",
+      "geo_matched_label": "Unterbringungsmanagement",
+      "geo_matched_address": "Rückmarsdorfer Straße 7, 04179 Leipzig"
+    },
+    "wohnungsnotfallhilfe-pdf-sozialdienst": {
+      "latitude": 51.333442,
+      "longitude": 12.3938769,
+      "geo_status": "ready",
+      "geo_source": "manual",
+      "geo_confidence": 1.0,
+      "geo_precision": "exact",
+      "geo_matched_label": "Sozialdienst Wohnungsnotfallhilfe",
+      "geo_matched_address": "Prager Straße 21, 04103 Leipzig"
+    },
+    "wohnungsnotfallhilfe-pdf-wirtschaftliche-wohnhilfen": {
+      "latitude": 51.333442,
+      "longitude": 12.3938769,
+      "geo_status": "ready",
+      "geo_source": "manual",
+      "geo_confidence": 1.0,
+      "geo_precision": "exact",
+      "geo_matched_label": "Wirtschaftliche Wohnhilfen",
+      "geo_matched_address": "Prager Straße 21, 04103 Leipzig"
+    },
+    "wohnungsnotfallhilfe-pdf-eigene-wohnung": {
+      "latitude": 51.333442,
+      "longitude": 12.3938769,
+      "geo_status": "ready",
+      "geo_source": "manual",
+      "geo_confidence": 1.0,
+      "geo_precision": "exact",
+      "geo_matched_label": "Modellprojekt Eigene Wohnung",
+      "geo_matched_address": "Prager Straße 21, 04103 Leipzig"
+    },
+    "wohnungsnotfallhilfe-pdf-uebernachtungshaus-frauen-katalog": {
+      "latitude": 51.3200121,
+      "longitude": 12.3750352,
+      "geo_status": "ready",
+      "geo_source": "manual",
+      "geo_confidence": 1.0,
+      "geo_precision": "exact",
+      "geo_matched_label": "Übernachtungshaus für wohnungslose Frauen",
+      "geo_matched_address": "Scharnhorststraße 27, 04275 Leipzig"
+    },
+    "wohnungsnotfallhilfe-pdf-notunterbringung-psychisch-krank": {
+      "latitude": 51.3159359,
+      "longitude": 12.3260992,
+      "geo_status": "ready",
+      "geo_source": "manual",
+      "geo_confidence": 1.0,
+      "geo_precision": "exact",
+      "geo_matched_label": "Notunterbringung psychisch kranker wohnungsloser Menschen",
+      "geo_matched_address": "Dieskaustraße 54, 04229 Leipzig"
+    },
+    "wohnungsnotfallhilfe-pdf-kindernotdienst": {
+      "latitude": 51.317699,
+      "longitude": 12.299758,
+      "geo_status": "ready",
+      "geo_source": "manual",
+      "geo_confidence": 1.0,
+      "geo_precision": "exact",
+      "geo_matched_label": "Kindernotdienst",
+      "geo_matched_address": "Schönauer Straße 230, 04207 Leipzig"
+    },
+    "wohnungsnotfallhilfe-pdf-jugendnotdienst": {
+      "latitude": 51.3142543,
+      "longitude": 12.2944228,
+      "geo_status": "ready",
+      "geo_source": "manual",
+      "geo_confidence": 1.0,
+      "geo_precision": "exact",
+      "geo_matched_label": "Jugendnotdienst",
+      "geo_matched_address": "Ringstraße 4, 04209 Leipzig"
+    },
+    "wohnungsnotfallhilfe-pdf-alternative-iii": {
+      "latitude": 51.3709459,
+      "longitude": 12.4302933,
+      "geo_status": "approximate",
+      "geo_source": "manual",
+      "geo_confidence": 0.75,
+      "geo_precision": "approximate",
+      "geo_matched_label": "Notschlafstelle Alternative III",
+      "geo_matched_address": "Braunstraße 28A, 04347 Leipzig"
+    },
+    "wohnungsnotfallhilfe-pdf-teekeller-quelle": {
+      "latitude": 51.3533106,
+      "longitude": 12.3741844,
+      "geo_status": "approximate",
+      "geo_source": "manual",
+      "geo_confidence": 0.78,
+      "geo_precision": "approximate",
+      "geo_matched_label": "Teekeller Quelle",
+      "geo_matched_address": "Nordplatz 10, 04105 Leipzig"
+    },
+    "wohnungsnotfallhilfe-pdf-blaues-cafe": {
+      "latitude": 51.3681675,
+      "longitude": 12.3427792,
+      "geo_status": "ready",
+      "geo_source": "manual",
+      "geo_confidence": 1.0,
+      "geo_precision": "exact",
+      "geo_matched_label": "Blaues Café",
+      "geo_matched_address": "Georg-Schumann-Straße 198, 04159 Leipzig"
+    },
+    "leipzig-schadensminimierung-schwanenteich": {
+      "latitude": 51.3417341,
+      "longitude": 12.3818237,
+      "geo_status": "approximate",
+      "geo_source": "manual",
+      "geo_confidence": 0.8,
+      "geo_precision": "approximate",
+      "geo_matched_label": "Schwanenteich",
+      "geo_matched_address": "Schwanenteich, Leipzig"
+    },
+    "leipzig-schadensminimierung-lindenauer-markt": {
+      "latitude": 51.3366538,
+      "longitude": 12.3358421,
+      "geo_status": "approximate",
+      "geo_source": "manual",
+      "geo_confidence": 0.82,
+      "geo_precision": "approximate",
+      "geo_matched_label": "Lindenauer Markt",
+      "geo_matched_address": "Lindenauer Markt, Leipzig"
+    },
+    "caritas-allgemeine-soziale-beratung": {
+      "latitude": 51.3348971,
+      "longitude": 12.3726054,
+      "geo_status": "ready",
+      "geo_source": "manual",
+      "geo_confidence": 1.0,
+      "geo_precision": "exact",
+      "geo_matched_label": "Caritas-Beratungszentrum an der Probstei",
+      "geo_matched_address": "Ruth-Pfau-Straße 2, 04107 Leipzig"
+    },
+    "wohnungsnotfallhilfe-pdf-wohnprojekt-domizil": {
+      "latitude": 51.338071,
+      "longitude": 12.3241856,
+      "geo_status": "ready",
+      "geo_source": "manual",
+      "geo_confidence": 1.0,
+      "geo_precision": "exact",
+      "geo_matched_label": "Wohnprojekt Domizil",
+      "geo_matched_address": "Queckstraße 2, 04177 Leipzig"
+    },
+    "wohnungsnotfallhilfe-pdf-leipziger-obdach-plus": {
+      "latitude": 51.3752113,
+      "longitude": 12.4162213,
+      "geo_status": "ready",
+      "geo_source": "manual",
+      "geo_confidence": 1.0,
+      "geo_precision": "exact",
+      "geo_matched_label": "Leipziger Obdach Plus",
+      "geo_matched_address": "Kieler Straße 61, 04357 Leipzig"
+    },
+    "wohnungsnotfallhilfe-pdf-haus-alt-schoenefeld": {
+      "latitude": 51.3615302,
+      "longitude": 12.4197041,
+      "geo_status": "ready",
+      "geo_source": "manual",
+      "geo_confidence": 1.0,
+      "geo_precision": "exact",
+      "geo_matched_label": "Haus Alt-Schönefeld",
+      "geo_matched_address": "Theklaer Straße 11, 04347 Leipzig"
+    },
+    "wohnungsnotfallhilfe-pdf-johanniter-wohngruppe": {
+      "latitude": 51.3300943,
+      "longitude": 12.40468,
+      "geo_status": "ready",
+      "geo_source": "manual",
+      "geo_confidence": 1.0,
+      "geo_precision": "exact",
+      "geo_matched_label": "Johanniter-Wohngruppe",
+      "geo_matched_address": "Riebeckstraße 20, 04317 Leipzig"
+    }
+  },
+  "by_normalized_address": {}
+}
