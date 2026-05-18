@@ -89,7 +89,23 @@ cd Code
 python scripts/evaluate_models.py
 ```
 
+Useful variants:
+
+```powershell
+python scripts/evaluate_models.py --provider template
+python scripts/evaluate_models.py --provider ollama --models translategemma:4b qwen3:4b
+python scripts/evaluate_models.py --provider ollama --models qwen3:8b gemma3:12b
+```
+
+The evaluation runner records the resolved query, retrieved page IDs, evidence context hash, prompt hashes for LLM runs, answer source, validation errors, and latency statistics. This makes model comparisons reproducible under the same local KB, prompts, and test cases. The template provider is useful as a deterministic baseline; Ollama model runs should start with installed small models before trying larger local models.
+
 Timestamped reports are written to `data/evals/results/` and are treated as generated artifacts rather than tracked source files.
+
+## Grounding and Session Safety
+
+LENA keeps conversation context as compact structured state rather than passing the full chat history to the model. Sessions track the selected language, recent turns, last intent/topic/place, last retrieved pages, a short answer summary, clarification state, timeout, and explicit end/reset events.
+
+For local LLM answers, deterministic retrieval and guardrails run before model generation. Detail-sensitive follow-ups such as addresses, opening hours, appointment requirements, and missing details use the grounded template path when needed. LLM output is post-validated for sensitive facts such as numbers, times, phone-like strings, and email addresses; unsupported details fall back to the deterministic answer.
 
 ## Separate Scraper Track
 

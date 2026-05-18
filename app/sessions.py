@@ -17,17 +17,22 @@ from .models import (
     SessionStatus,
     SessionTurn,
 )
-from .retrieval import RetrievalEngine, normalize_text, query_tokens_for_search, tokenize
+from .retrieval import HOURS_QUERY_TOKENS, LOCATION_QUERY_TOKENS, RetrievalEngine, normalize_text, query_tokens_for_search, tokenize
 
 
 REFERENTIAL_TERMS = (
     " it ",
     " there ",
+    " dahin",
+    "for that",
+    "that?",
     " that place",
     " this place",
     " es ",
     " dort",
     " da ",
+    " dafuer",
+    " dafür",
     "diese stelle",
     "dieser ort",
     "diesen ort",
@@ -42,14 +47,20 @@ ATTRIBUTE_FOLLOWUP_TOKENS = {
     "anmeldung",
     "email",
     "kontakt",
+    "dahin",
+    "dafuer",
+    "dafür",
+    "directions",
     "oeffnungszeiten",
     "offen",
     "open",
+    "route",
     "sonntag",
     "sonntags",
     "sunday",
     "termin",
     "uhrzeit",
+    "weg",
     "wann",
     "where",
     "wie",
@@ -262,6 +273,9 @@ class SessionManager:
         timestamp = now or utc_now()
         pages = [_get_page(self.kb, page_id) for page_id in response.retrieved_page_ids[:3]]
         pages = [page for page in pages if page is not None]
+        primary_page_ids = _primary_page_ids(response.retrieved_page_ids[:5], self.kb)
+        topic_categories = sorted({page.category for page in pages if page.category})
+        topic_service_types = sorted({page.service_type for page in pages if page.service_type})
         turn = SessionTurn(
             timestamp=timestamp,
             language=payload.language,
@@ -270,9 +284,9 @@ class SessionManager:
             answer_text=response.answer_text,
             answer_status=response.status,
             retrieved_page_ids=response.retrieved_page_ids[:5],
-            primary_page_ids=_primary_page_ids(response.retrieved_page_ids[:5], self.kb),
-            topic_categories=sorted({page.category for page in pages if page.category}),
-            topic_service_types=sorted({page.service_type for page in pages if page.service_type}),
+            primary_page_ids=primary_page_ids,
+            topic_categories=topic_categories,
+            topic_service_types=topic_service_types,
             follow_up_mode=context.follow_up_mode,
         )
         updated = session.model_copy(
@@ -280,6 +294,13 @@ class SessionManager:
                 "status": SessionStatus.ACTIVE,
                 "last_activity_at": timestamp,
                 "selected_language": payload.language,
+                "last_intent": _infer_turn_intent(payload.transcript, response.status, context.follow_up_mode),
+                "last_topic": _first_or_none(topic_categories) or _first_or_none(topic_service_types),
+                "last_place_page_id": _first_or_none(primary_page_ids),
+                "last_service_category": _first_or_none(topic_categories),
+                "last_retrieved_page_ids": response.retrieved_page_ids[:5],
+                "last_answer_summary": _summarize_answer(response.answer_text),
+                "clarification_state": "pending" if response.clarification_needed else None,
                 "recent_turns": [*session.recent_turns, turn][-self.store.max_turns :],
             }
         )
@@ -287,7 +308,14 @@ class SessionManager:
 
     def _build_context(self, session: ConversationSession, payload: QueryRequest) -> tuple[ConversationContext, SessionEvent]:
         query = payload.transcript.strip()
-        context = ConversationContext(session_id=session.session_id, resolved_transcript=query)
+        context = ConversationContext(
+            session_id=session.session_id,
+            resolved_transcript=query,
+            last_intent=session.last_intent,
+            last_topic=session.last_topic,
+            last_place_page_id=session.last_place_page_id,
+            clarification_state=session.clarification_state,
+        )
         if not session.recent_turns:
             return context, SessionEvent.CONTINUED
 
@@ -443,6 +471,40 @@ def _page_titles(page_ids: list[str], kb: KnowledgeBase) -> str:
         if page:
             titles.append(page.title)
     return ", ".join(titles)
+
+
+def _first_or_none(values: list[str]) -> str | None:
+    return values[0] if values else None
+
+
+def _summarize_answer(answer_text: str, limit: int = 220) -> str:
+    summary = " ".join((answer_text or "").split())
+    if len(summary) <= limit:
+        return summary
+    return summary[: limit - 3].rstrip() + "..."
+
+
+def _infer_turn_intent(transcript: str, answer_status: str, follow_up_mode: str) -> str:
+    if answer_status in {"crisis", "self_description", "out_of_scope", "clarification_needed", "unknown"}:
+        return answer_status
+    if follow_up_mode == "alternative":
+        return "alternative"
+    tokens = set(query_tokens_for_search(transcript))
+    raw_tokens = set(tokenize(transcript))
+    combined = tokens | raw_tokens
+    if combined & HOURS_QUERY_TOKENS:
+        return "opening_hours"
+    if combined & LOCATION_QUERY_TOKENS or combined & {"adresse", "address", "where", "wo", "dahin", "route", "directions", "weg"}:
+        return "location"
+    if combined & {"termin", "appointment", "anmeldung", "registration"}:
+        return "appointment"
+    if combined & {"telefon", "phone", "email", "kontakt", "mail"}:
+        return "contact"
+    if follow_up_mode == "referential":
+        return "referential_follow_up"
+    if follow_up_mode == "topic_shift":
+        return "topic_shift"
+    return "service_lookup"
 
 
 def _family_related_page_ids(page_ids: list[str], kb: KnowledgeBase) -> list[str]:

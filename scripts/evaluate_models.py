@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
 import json
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime, timedelta
@@ -48,6 +49,10 @@ def _contains_all(answer_text: str, values: list[str]) -> bool:
     return all(_normalize(value) in normalized_answer for value in values)
 
 
+def _hash_text(value: str) -> str:
+    return hashlib.sha256((value or "").encode("utf-8")).hexdigest()
+
+
 def _top_family(page_id: str | None, kb: KnowledgeBase) -> str | None:
     if not page_id:
         return None
@@ -56,6 +61,36 @@ def _top_family(page_id: str | None, kb: KnowledgeBase) -> str | None:
     except KeyError:
         return None
     return page.title.split(" - ", 1)[0].strip()
+
+
+def _page_field_values(page_id: str | None, field: str, kb: KnowledgeBase) -> list[str]:
+    if not page_id:
+        return []
+    try:
+        page = kb.get_page(page_id)
+    except KeyError:
+        return []
+    if field == "title":
+        return [page.title]
+    if field == "address":
+        return [page.address] if page.address else []
+    if field == "phone":
+        return [page.phone] if page.phone else []
+    if field == "email":
+        return [page.email] if page.email else []
+    if field == "opening_hours":
+        return list(page.opening_hours)
+    if field == "eligibility":
+        return [page.eligibility] if page.eligibility else []
+    return []
+
+
+def _percentile(values: list[float], percentile: float) -> float | None:
+    if not values:
+        return None
+    ordered = sorted(values)
+    index = min(len(ordered) - 1, max(0, round((len(ordered) - 1) * percentile)))
+    return round(ordered[index], 1)
 
 
 def _evaluate_turn(
@@ -165,6 +200,24 @@ def _evaluate_turn(
                 detail=f"forbidden any of {expect['answer_not_contains']}",
             )
         )
+    if "must_ground_fields" in expect:
+        for field in expect["must_ground_fields"]:
+            values = _page_field_values(actual["top_page_id"], field, kb)
+            checks.append(
+                TurnCheck(
+                    name=f"must_ground_{field}",
+                    passed=bool(values) and _contains_any(actual["answer_text"], values),
+                    detail=f"expected supported {field} from {actual['top_page_id']}",
+                )
+            )
+    if "must_not_invent" in expect:
+        checks.append(
+            TurnCheck(
+                name="must_not_invent_sensitive_facts",
+                passed=actual.get("validation_error") in {None, ""},
+                detail=f"validation_error={actual.get('validation_error')}",
+            )
+        )
     if "different_family_from_previous" in expect and previous_turn:
         checks.append(
             TurnCheck(
@@ -179,12 +232,13 @@ def _evaluate_turn(
 async def _run_case(
     *,
     case: dict[str, Any],
+    provider_name: str,
     model_name: str,
     kb: KnowledgeBase,
     settings,
 ) -> dict[str, Any]:
     provider = create_rewrite_provider(
-        "ollama",
+        provider_name,
         ollama_url=settings.ollama_url,
         ollama_model=model_name,
         ollama_timeout_seconds=settings.ollama_timeout_seconds,
@@ -242,6 +296,7 @@ async def _run_case(
                 "turn_index": turn_index,
                 "transcript": turn["transcript"],
                 "language": turn["language"],
+                "resolved_transcript": getattr(provider, "last_resolved_transcript", None),
                 "status": response.status,
                 "session_id": response.session_id,
                 "session_event": response.session_event.value,
@@ -250,6 +305,12 @@ async def _run_case(
                 "top_page_id": response.retrieved_page_ids[0] if response.retrieved_page_ids else None,
                 "answer_text": response.answer_text,
                 "answer_source": getattr(provider, "last_answer_source", "unknown"),
+                "evidence_hash": _hash_text(getattr(provider, "last_evidence_context", "")),
+                "evidence_context": getattr(provider, "last_evidence_context", ""),
+                "prompt_hash": getattr(provider, "last_prompt_hash", None),
+                "system_prompt_hash": getattr(provider, "last_system_prompt_hash", None),
+                "user_prompt_hash": getattr(provider, "last_user_prompt_hash", None),
+                "validation_error": getattr(provider, "last_validation_error", None),
                 "latency_ms": latency_ms,
             }
             previous_turn = results[-1]["actual"] if results else None
@@ -283,7 +344,7 @@ async def _run_case(
     }
 
 
-async def _evaluate_models(models: list[str], dataset_path: Path) -> dict[str, Any]:
+async def _evaluate_models(models: list[str], dataset_path: Path, provider_name: str) -> dict[str, Any]:
     settings = load_settings()
     kb = KnowledgeBase(settings.published_root)
     dataset = _load_cases(dataset_path)
@@ -293,27 +354,55 @@ async def _evaluate_models(models: list[str], dataset_path: Path) -> dict[str, A
         "dataset": dataset_path.as_posix(),
         "kb_version": kb.dataset.manifest.kb_version,
         "system_prompt_path": settings.system_prompt_path.as_posix(),
+        "provider": provider_name,
+        "scoring_rubric": {
+            "automated": [
+                "status/session/retrieval expectations",
+                "required grounded fields",
+                "sensitive-fact validation errors",
+            ],
+            "manual": [
+                "output language correctness",
+                "plain-language clarity",
+                "unsupported elaboration",
+                "sensitive-question behavior",
+            ],
+        },
         "models": {},
     }
     for model_name in models:
         case_results: list[dict[str, Any]] = []
         for case in cases:
-            case_results.append(await _run_case(case=case, model_name=model_name, kb=kb, settings=settings))
+            case_results.append(await _run_case(case=case, provider_name=provider_name, model_name=model_name, kb=kb, settings=settings))
         auto_checks_passed = sum(case["auto_checks_passed"] for case in case_results)
         auto_checks_total = sum(case["auto_checks_total"] for case in case_results)
         answer_sources: dict[str, int] = {}
+        validation_errors: dict[str, int] = {}
         latencies: list[float] = []
+        prompt_hashes: set[str] = set()
+        evidence_hashes: set[str] = set()
         for case in case_results:
             for turn in case["turns"]:
                 source = turn["actual"]["answer_source"]
                 answer_sources[source] = answer_sources.get(source, 0) + 1
+                validation_error = turn["actual"].get("validation_error")
+                if validation_error:
+                    validation_errors[validation_error] = validation_errors.get(validation_error, 0) + 1
+                prompt_hash = turn["actual"].get("prompt_hash")
+                if prompt_hash:
+                    prompt_hashes.add(prompt_hash)
+                evidence_hashes.add(turn["actual"].get("evidence_hash", ""))
                 latencies.append(turn["actual"]["latency_ms"])
         summary["models"][model_name] = {
             "auto_checks_passed": auto_checks_passed,
             "auto_checks_total": auto_checks_total,
             "auto_score_percent": round((auto_checks_passed / auto_checks_total) * 100, 1) if auto_checks_total else 0.0,
-            "median_latency_ms": round(sorted(latencies)[len(latencies) // 2], 1) if latencies else None,
+            "median_latency_ms": _percentile(latencies, 0.5),
+            "p95_latency_ms": _percentile(latencies, 0.95),
             "answer_sources": answer_sources,
+            "validation_errors": validation_errors,
+            "prompt_hash_count": len(prompt_hashes),
+            "evidence_hash_count": len(evidence_hashes),
             "cases": case_results,
         }
     return summary
@@ -336,10 +425,14 @@ def _render_markdown(summary: dict[str, Any]) -> str:
                 "",
                 f"- Automated score: {result['auto_checks_passed']}/{result['auto_checks_total']} ({result['auto_score_percent']}%)",
                 f"- Median latency: {result['median_latency_ms']} ms",
+                f"- p95 latency: {result['p95_latency_ms']} ms",
                 f"- Answer sources: {json.dumps(result['answer_sources'], ensure_ascii=False)}",
+                f"- Validation errors: {json.dumps(result['validation_errors'], ensure_ascii=False)}",
+                f"- Prompt hashes observed: {result['prompt_hash_count']}",
+                f"- Evidence hashes observed: {result['evidence_hash_count']}",
                 "",
-                "| Case | Auto pass | Key output |",
-                "| --- | --- | --- |",
+                "| Case | Auto pass | Source | Latency | Key output |",
+                "| --- | --- | --- | ---: | --- |",
             ]
         )
         for case in result["cases"]:
@@ -347,7 +440,10 @@ def _render_markdown(summary: dict[str, Any]) -> str:
             key_output = final_turn["answer_text"].replace("\n", " ")
             if len(key_output) > 140:
                 key_output = key_output[:137] + "..."
-            lines.append(f"| `{case['case_id']}` | `{case['pass']}` | {key_output} |")
+            lines.append(
+                f"| `{case['case_id']}` | `{case['pass']}` | `{final_turn['answer_source']}` | "
+                f"{final_turn['latency_ms']} | {key_output} |"
+            )
         lines.append("")
     return "\n".join(lines)
 
@@ -355,6 +451,7 @@ def _render_markdown(summary: dict[str, Any]) -> str:
 async def main() -> int:
     parser = argparse.ArgumentParser(description="Evaluate Ollama models for the grounded LENA answering pipeline.")
     parser.add_argument("--dataset", default="data/evals/assistant_eval_cases.json", help="Path to evaluation dataset JSON.")
+    parser.add_argument("--provider", choices=["ollama", "template"], default="ollama", help="Answer provider to evaluate.")
     parser.add_argument("--models", nargs="+", default=["translategemma:4b", "qwen3:4b"], help="Ollama model names to evaluate.")
     parser.add_argument("--output-dir", default="data/evals/results", help="Directory for JSON and Markdown results.")
     args = parser.parse_args()
@@ -363,7 +460,10 @@ async def main() -> int:
     output_dir = (APP_ROOT / args.output_dir).resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    summary = await _evaluate_models(args.models, dataset_path)
+    models = args.models
+    if args.provider == "template" and args.models == ["translategemma:4b", "qwen3:4b"]:
+        models = ["template"]
+    summary = await _evaluate_models(models, dataset_path, args.provider)
     timestamp = datetime.now(UTC).strftime("%Y%m%d%H%M%S")
     stem = output_dir / f"model-eval-{timestamp}"
     (stem.with_suffix(".json")).write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")

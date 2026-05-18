@@ -291,6 +291,10 @@ class ConversationContext(BaseModel):
     preferred_page_ids: list[str] = Field(default_factory=list)
     excluded_page_ids: list[str] = Field(default_factory=list)
     follow_up_mode: Literal["none", "referential", "alternative", "topic_shift", "fresh_topic"] = "none"
+    last_intent: str | None = None
+    last_topic: str | None = None
+    last_place_page_id: str | None = None
+    clarification_state: str | None = None
 
 
 class SessionTurn(BaseModel):
@@ -313,6 +317,13 @@ class ConversationSession(BaseModel):
     created_at: datetime
     last_activity_at: datetime
     selected_language: Language
+    last_intent: str | None = None
+    last_topic: str | None = None
+    last_place_page_id: str | None = None
+    last_service_category: str | None = None
+    last_retrieved_page_ids: list[str] = Field(default_factory=list)
+    last_answer_summary: str | None = None
+    clarification_state: str | None = None
     recent_turns: list[SessionTurn] = Field(default_factory=list)
     ended_reason: str | None = None
     last_session_event: SessionEvent = SessionEvent.STARTED

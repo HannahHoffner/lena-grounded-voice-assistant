@@ -132,3 +132,69 @@ def test_appointment_follow_up_keeps_same_entity_context(tmp_path) -> None:
     assert second.session.session_id == first.session.session_id
     assert second.context.follow_up_mode == "referential"
     assert second.context.preferred_page_ids == ["cabl-uvo"]
+
+
+def test_session_records_compact_structured_state(tmp_path) -> None:
+    manager, _ = _manager(tmp_path)
+    now = datetime(2026, 4, 21, 10, 0, tzinfo=UTC)
+    payload = QueryRequest(transcript="Wo kann ich duschen?", language=Language.DE)
+    started = manager.prepare_request(payload, now=now)
+    updated = manager.record_turn(
+        started.session,
+        payload,
+        _response(started.session.session_id, ["leipziger-oase"]),
+        started.context,
+        now=now,
+    )
+
+    assert updated.last_intent == "service_lookup"
+    assert updated.last_topic == "housing"
+    assert updated.last_place_page_id == "leipziger-oase"
+    assert updated.last_service_category == "housing"
+    assert updated.last_retrieved_page_ids == ["leipziger-oase"]
+    assert updated.last_answer_summary == "Test answer"
+
+
+def test_colloquial_hours_follow_up_keeps_same_entity_context(tmp_path) -> None:
+    manager, _ = _manager(tmp_path)
+    now = datetime(2026, 4, 21, 10, 0, tzinfo=UTC)
+    first_payload = QueryRequest(transcript="Wo kann ich duschen?", language=Language.DE)
+    first = manager.prepare_request(first_payload, now=now)
+    manager.record_turn(first.session, first_payload, _response(first.session.session_id, ["leipziger-oase"]), first.context, now=now)
+
+    second_payload = QueryRequest(transcript="Und wann hat die offen?", language=Language.DE, session_id=first.session.session_id)
+    second = manager.prepare_request(second_payload, now=now + timedelta(seconds=20))
+
+    assert second.session_event == SessionEvent.CONTINUED
+    assert second.context.follow_up_mode == "referential"
+    assert second.context.preferred_page_ids == ["leipziger-oase"]
+
+
+def test_route_like_follow_up_keeps_same_entity_context(tmp_path) -> None:
+    manager, _ = _manager(tmp_path)
+    now = datetime(2026, 4, 21, 10, 0, tzinfo=UTC)
+    first_payload = QueryRequest(transcript="Wo kann ich duschen?", language=Language.DE)
+    first = manager.prepare_request(first_payload, now=now)
+    manager.record_turn(first.session, first_payload, _response(first.session.session_id, ["leipziger-oase"]), first.context, now=now)
+
+    second_payload = QueryRequest(transcript="Wie komme ich dahin?", language=Language.DE, session_id=first.session.session_id)
+    second = manager.prepare_request(second_payload, now=now + timedelta(seconds=20))
+
+    assert second.session_event == SessionEvent.CONTINUED
+    assert second.context.follow_up_mode == "referential"
+    assert second.context.preferred_page_ids == ["leipziger-oase"]
+
+
+def test_requirement_follow_up_keeps_same_entity_context(tmp_path) -> None:
+    manager, _ = _manager(tmp_path)
+    now = datetime(2026, 4, 21, 10, 0, tzinfo=UTC)
+    first_payload = QueryRequest(transcript="What is CABL?", language=Language.EN)
+    first = manager.prepare_request(first_payload, now=now)
+    manager.record_turn(first.session, first_payload, _response(first.session.session_id, ["cabl-uvo"]), first.context, now=now)
+
+    second_payload = QueryRequest(transcript="What do I need for that?", language=Language.EN, session_id=first.session.session_id)
+    second = manager.prepare_request(second_payload, now=now + timedelta(seconds=20))
+
+    assert second.session_event == SessionEvent.CONTINUED
+    assert second.context.follow_up_mode == "referential"
+    assert second.context.preferred_page_ids == ["cabl-uvo"]

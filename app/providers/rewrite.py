@@ -1,6 +1,7 @@
 ﻿from __future__ import annotations
 
 from abc import ABC, abstractmethod
+import hashlib
 import json
 from datetime import UTC, datetime
 from pathlib import Path
@@ -351,6 +352,9 @@ DAY_QUERY_TOKENS = {
 NOTICE_HINTS = ("ferien", "wartezeiten", "hinweisen", "stand:", "druck:", "impressum")
 LINK_RE = re.compile(r"\[([^\]]+)\]\([^)]+\)")
 SPACE_RE = re.compile(r"\s+")
+EMAIL_RE = re.compile(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.IGNORECASE)
+PHONE_LIKE_RE = re.compile(r"\+?\d[\d\s()./-]{5,}\d")
+TIME_OR_LONG_NUMBER_RE = re.compile(r"\b\d{1,2}:\d{2}\b|\b\d{2,5}\b")
 
 
 class BaseRewriteProvider(ABC):
@@ -358,6 +362,13 @@ class BaseRewriteProvider(ABC):
     model_name: str | None = None
     uses_llm = False
     last_answer_source = "unknown"
+    last_resolved_transcript: str | None = None
+    last_retrieved_page_ids: list[str] = []
+    last_evidence_context: str = ""
+    last_prompt_hash: str | None = None
+    last_system_prompt_hash: str | None = None
+    last_user_prompt_hash: str | None = None
+    last_validation_error: str | None = None
 
     @abstractmethod
     async def answer(
@@ -1117,6 +1128,32 @@ def _clean_answer_text(text: str) -> str:
     return cleaned
 
 
+def _hash_text(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _unsupported_sensitive_fact(answer_text: str, evidence_context: str) -> str | None:
+    normalized_answer = normalize_text(answer_text)
+    normalized_evidence = normalize_text(evidence_context)
+    if not normalized_answer:
+        return "empty_answer"
+
+    for email in EMAIL_RE.findall(answer_text):
+        if normalize_text(email) not in normalized_evidence:
+            return f"unsupported_email:{email}"
+
+    for phone in PHONE_LIKE_RE.findall(answer_text):
+        compact = re.sub(r"\D+", "", phone)
+        if compact and compact not in re.sub(r"\D+", "", evidence_context):
+            return f"unsupported_phone_or_number:{phone.strip()}"
+
+    for number in TIME_OR_LONG_NUMBER_RE.findall(answer_text):
+        if normalize_text(number) not in normalized_evidence:
+            return f"unsupported_number:{number}"
+
+    return None
+
+
 def _build_clarification_question(language: Language, kb: KnowledgeBase, retrieved: list[RetrievedPage]) -> str:
     topics: list[str] = []
     for item in retrieved:
@@ -1168,6 +1205,14 @@ class TemplateRewriteProvider(BaseRewriteProvider):
             weak_match_threshold=self.weak_match_threshold,
             conversation_context=conversation_context,
         )
+        resolved_transcript = conversation_context.resolved_transcript if conversation_context else transcript
+        self.last_resolved_transcript = resolved_transcript
+        self.last_retrieved_page_ids = [item.page_id for item in retrieved]
+        self.last_evidence_context = _build_retrieved_context(resolved_transcript, language, kb, retrieved, conversation_context=conversation_context) if retrieved else ""
+        self.last_prompt_hash = None
+        self.last_system_prompt_hash = None
+        self.last_user_prompt_hash = None
+        self.last_validation_error = None
         if early_answer:
             self.last_answer_source = "guardrail"
             return early_answer
@@ -1263,6 +1308,14 @@ class OllamaRewriteProvider(BaseRewriteProvider):
             weak_match_threshold=self.weak_match_threshold,
             conversation_context=conversation_context,
         )
+        resolved_transcript = conversation_context.resolved_transcript if conversation_context else transcript
+        self.last_resolved_transcript = resolved_transcript
+        self.last_retrieved_page_ids = [item.page_id for item in retrieved]
+        self.last_evidence_context = _build_retrieved_context(resolved_transcript, language, kb, retrieved, conversation_context=conversation_context) if retrieved else ""
+        self.last_prompt_hash = None
+        self.last_system_prompt_hash = None
+        self.last_user_prompt_hash = None
+        self.last_validation_error = None
         if early_answer:
             self.last_answer_source = "guardrail"
             return early_answer
@@ -1286,8 +1339,7 @@ class OllamaRewriteProvider(BaseRewriteProvider):
             )
 
         retrieved_page_ids = [item.page_id for item in retrieved]
-        resolved_transcript = conversation_context.resolved_transcript if conversation_context else transcript
-        context = _build_retrieved_context(resolved_transcript, language, kb, retrieved, conversation_context=conversation_context)
+        context = self.last_evidence_context
         overview_hint = _build_overview_answer(transcript, language, kb, retrieved)
         normalized_transcript = normalize_text(transcript)
         is_location_query = bool(query_tokens & LOCATION_QUERY_TOKENS) or normalized_transcript.startswith(("wo ist ", "where is ", "wo finde ", "gdzie jest ", "unde este "))
@@ -1347,6 +1399,9 @@ class OllamaRewriteProvider(BaseRewriteProvider):
             "stream": False,
             "options": {"temperature": 0.1},
         }
+        self.last_system_prompt_hash = _hash_text(system_prompt)
+        self.last_user_prompt_hash = _hash_text(user_prompt)
+        self.last_prompt_hash = _hash_text(system_prompt + "\n\n" + user_prompt)
         try:
             async with httpx.AsyncClient(timeout=self.ollama_timeout_seconds) as client:
                 response = await client.post(f"{self.base_url}/api/chat", json=payload)
@@ -1371,6 +1426,21 @@ class OllamaRewriteProvider(BaseRewriteProvider):
         answer.retrieved_page_ids = retrieved_page_ids
         answer.answer_text = _clean_answer_text(answer.answer_text)
         weak = retrieved[0].score < self.weak_match_threshold
+
+        if answer.status in {"ok", "weak_match"}:
+            validation_error = _unsupported_sensitive_fact(answer.answer_text, context)
+            if validation_error:
+                self.last_validation_error = validation_error
+                self.last_answer_source = "validator_fallback"
+                return _fallback_answer(
+                    transcript,
+                    language,
+                    kb,
+                    retrieved,
+                    minimum_match_threshold=self.minimum_match_threshold,
+                    weak_match_threshold=self.weak_match_threshold,
+                    conversation_context=conversation_context,
+                )
 
         if answer.status == "self_description":
             answer.self_description = True

@@ -175,3 +175,93 @@ def test_ollama_provider_bypasses_llm_for_crisis_queries(monkeypatch) -> None:
     assert answer.status == "crisis"
     assert answer.crisis_mode is True
     assert "112" in answer.answer_text
+
+
+def test_ollama_provider_falls_back_when_model_invents_sensitive_detail(monkeypatch) -> None:
+    class _FakeAsyncClient:
+        def __init__(self, *args, **kwargs) -> None:
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb) -> None:
+            return None
+
+        async def post(self, url: str, json: dict) -> _FakeResponse:
+            return _FakeResponse(
+                {
+                    "message": {
+                        "content": json_module.dumps(
+                            {
+                                "answer_text": "Leipziger Oase ist in der Marsstrasse 99, 04000 Leipzig.",
+                                "status": "ok",
+                                "retrieved_page_ids": ["leipziger-oase"],
+                            }
+                        )
+                    }
+                }
+            )
+
+    json_module = json
+    monkeypatch.setattr(httpx, "AsyncClient", _FakeAsyncClient)
+
+    kb = KnowledgeBase(Path(__file__).resolve().parents[1] / "data" / "published")
+    provider = OllamaRewriteProvider(
+        base_url="http://127.0.0.1:11434",
+        model="translategemma:4b",
+        system_prompt_path=Path(__file__).resolve().parents[1] / "data" / "prompts" / "system_prompt.md",
+    )
+
+    answer = asyncio.run(provider.answer("wo ist leipziger oase", Language.DE, kb))
+
+    assert provider.last_answer_source == "validator_fallback"
+    assert provider.last_validation_error is not None
+    assert "Marsstrasse" not in answer.answer_text
+    assert "04000" not in answer.answer_text
+    assert "Leipziger Oase" in answer.answer_text
+    assert "Nuernberger Strasse 31" in answer.answer_text or "NÃ¼rnberger StraÃŸe 31" in answer.answer_text
+
+
+def test_ollama_provider_records_prompt_and_evidence_hashes(monkeypatch) -> None:
+    class _FakeAsyncClient:
+        def __init__(self, *args, **kwargs) -> None:
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb) -> None:
+            return None
+
+        async def post(self, url: str, json: dict) -> _FakeResponse:
+            return _FakeResponse(
+                {
+                    "message": {
+                        "content": json_module.dumps(
+                            {
+                                "answer_text": "Leipziger Oase ist in Nuernberger Strasse 31, 04103 Leipzig.",
+                                "status": "ok",
+                                "retrieved_page_ids": ["leipziger-oase"],
+                            }
+                        )
+                    }
+                }
+            )
+
+    json_module = json
+    monkeypatch.setattr(httpx, "AsyncClient", _FakeAsyncClient)
+
+    kb = KnowledgeBase(Path(__file__).resolve().parents[1] / "data" / "published")
+    provider = OllamaRewriteProvider(
+        base_url="http://127.0.0.1:11434",
+        model="translategemma:4b",
+        system_prompt_path=Path(__file__).resolve().parents[1] / "data" / "prompts" / "system_prompt.md",
+    )
+
+    asyncio.run(provider.answer("wo ist leipziger oase", Language.DE, kb))
+
+    assert provider.last_prompt_hash
+    assert provider.last_system_prompt_hash
+    assert provider.last_user_prompt_hash
+    assert "PAGE_ID: leipziger-oase" in provider.last_evidence_context

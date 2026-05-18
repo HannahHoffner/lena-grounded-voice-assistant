@@ -19,10 +19,96 @@
             "status_in": ["ok"],
             "top_page_in": ["leipziger-oase", "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog"],
             "answer_contains_all": ["Leipziger Oase"],
+            "must_ground_fields": ["title", "address"],
             "answer_contains_any": ["Nuernberger Strasse 31", "Nürnberger Straße 31"]
           }
         }
       ]
+    },
+    {
+      "case_id": "opening_hours_followup_de",
+      "case_type": "followup_hours",
+      "description": "Colloquial German opening-hours follow-up should remain anchored to the previous place.",
+      "turns": [
+        {
+          "transcript": "Wo kann ich duschen?",
+          "language": "de",
+          "expect": {
+            "status_in": ["ok"],
+            "top_page_in": ["leipziger-oase", "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog"],
+            "answer_contains_all": ["Leipziger Oase"]
+          }
+        },
+        {
+          "transcript": "Und wann hat die offen?",
+          "language": "de",
+          "expect": {
+            "status_in": ["ok"],
+            "session_event": "continued",
+            "same_session_as_previous": true,
+            "top_page_in": ["leipziger-oase", "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog"],
+            "must_not_invent": ["phone", "eligibility"],
+            "answer_contains_any": ["08:00", "09:00"]
+          }
+        }
+      ],
+      "manual_review_focus": ["simple_language", "naturalness", "no_unsupported_detail"]
+    },
+    {
+      "case_id": "directions_followup_de",
+      "case_type": "followup_location",
+      "description": "Route-like follow-up should resolve to the previous place and expose the address.",
+      "turns": [
+        {
+          "transcript": "Wo kann ich duschen?",
+          "language": "de",
+          "expect": {
+            "status_in": ["ok"],
+            "top_page_in": ["leipziger-oase", "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog"]
+          }
+        },
+        {
+          "transcript": "Wie komme ich dahin?",
+          "language": "de",
+          "expect": {
+            "status_in": ["ok"],
+            "session_event": "continued",
+            "same_session_as_previous": true,
+            "top_page_in": ["leipziger-oase", "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog"],
+            "must_ground_fields": ["title", "address"]
+          }
+        }
+      ],
+      "manual_review_focus": ["does_not_invent_route", "uses_available_address_or_map_context"]
+    },
+    {
+      "case_id": "requirements_followup_en",
+      "case_type": "followup_requirements",
+      "description": "Requirements-style follow-up should stay grounded and admit missing evidence.",
+      "turns": [
+        {
+          "transcript": "What is CABL?",
+          "language": "en",
+          "expect": {
+            "status_in": ["ok"],
+            "top_page_in": ["cabl-uvo"],
+            "answer_contains_all": ["CABL"]
+          }
+        },
+        {
+          "transcript": "What do I need for that?",
+          "language": "en",
+          "expect": {
+            "status_in": ["ok"],
+            "session_event": "continued",
+            "same_session_as_previous": true,
+            "top_page_in": ["cabl-uvo"],
+            "answer_contains_all": ["CABL"],
+            "must_not_invent": ["eligibility", "phone", "opening_hours"]
+          }
+        }
+      ],
+      "manual_review_focus": ["missing_evidence_handling", "no_eligibility_invention"]
     },
     {
       "case_id": "service_lookup_food_en",
