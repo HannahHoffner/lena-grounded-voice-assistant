@@ -6,7 +6,7 @@ import unicodedata
 from collections import Counter
 
 from .kb import KnowledgeBase
-from .models import Language, PageMetadata, RetrievedPage
+from .models import Language, PageMetadata, RetrievedPage, TemporalContext
 
 
 TOKEN_RE = re.compile(r"[^\W\d_]+", re.UNICODE)
@@ -55,12 +55,14 @@ STOPWORDS = {
     "info",
     "informationen",
     "is",
+    "ist",
     "kann",
     "kannst",
     "kde",
     "kurz",
     "mam",
     "mi",
+    "mir",
     "mit",
     "na",
     "need",
@@ -106,6 +108,7 @@ GENERIC_ALIAS_TERMS = {
     "leipziger",
     "service",
 }
+CLOTHING_QUERY_TERMS = {"kleidung", "clothes", "clothing", "ubrania", "haine", "winterkleidung"}
 GERMAN_EQUIVALENTS = str.maketrans(
     {
         "\u00e4": "ae",
@@ -119,8 +122,13 @@ QUERY_EXPANSION_RULES: tuple[tuple[set[str], tuple[str, ...]], ...] = (
     ({"kleidung", "clothes", "clothing", "ubrania", "haine", "одежда"}, ("kleiderkammer", "kleidung", "kleiderspenden")),
     ({"arzt", "doctor", "medical", "medizin", "medic", "lekarz", "doctor", "врач"}, ("gesundheit", "sprechstunde", "arzt", "medizin")),
     ({"schulden", "debt", "debts", "zadluzenie", "datorii", "долг"}, ("schuldnerberatung", "schulden", "beratung")),
-    ({"unterkunft", "shelter", "sleep", "sleeping", "overnight", "nocleg", "adapost", "ночлег"}, ("notunterkunft", "uebernachtung", "notunterbringung", "wohnungslosigkeit")),
+    ({"schlafen", "unterkunft", "shelter", "sleep", "sleeping", "overnight", "nocleg", "adapost", "ночлег"}, ("notunterkunft", "uebernachtung", "notunterbringung", "wohnungslosigkeit")),
     ({"sucht", "drugs", "drug", "methadone", "substitution", "addiction", "uzaleznienie", "dependenta", "наркотики"}, ("sucht", "drogen", "methadon", "substitution", "schadensminimierung", "konsum")),
+    ({"wasser", "water", "trinkwasser", "durst"}, ("trinkwasser", "trinkwasserbrunnen", "brunnen", "getraenke")),
+    (
+        {"blanket", "cold", "decke", "friere", "frieren", "kaelte", "kalte", "kalt", "schlafsack", "waerme", "warm", "warme", "warmen", "warmer", "warmes", "winter", "winterkleidung"},
+        ("notunterkunft", "uebernachtung", "wohnungslosigkeit", "tageseinrichtung", "kleiderkammer"),
+    ),
 )
 PHRASE_EXPANSION_RULES: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("ohne krankenversicherung", ("arzt", "medizin", "sprechstunde", "krankenversicherung")),
@@ -129,13 +137,14 @@ PHRASE_EXPANSION_RULES: tuple[tuple[str, tuple[str, ...]], ...] = (
 )
 DOCUMENT_HINTS = {"broschuere", "jahresbericht", "bericht"}
 LOCATION_QUERY_TOKENS = {"adresse", "ort", "platz", "naehe", "nahe", "closest", "close", "location"}
-HOURS_QUERY_TOKENS = {"offen", "open", "oeffnungszeiten", "hours", "today", "heute", "sonntag", "sunday"}
+HOURS_QUERY_TOKENS = {"offen", "open", "oeffnungszeiten", "hours", "today", "heute", "tonight", "nacht", "sonntag", "sunday"}
 CATEGORY_QUERY_HINTS = {
     "food": {"essen", "food", "tafel", "lebensmittel", "mittagstisch", "mahlzeit", "fruehstueck", "suppe"},
-    "housing": {"unterkunft", "shelter", "uebernachtung", "notunterkunft", "wohnungslosigkeit"},
+    "housing": {"unterkunft", "shelter", "stay", "tonight", "uebernachten", "uebernachtung", "notunterkunft", "wohnungslosigkeit", "cold", "friere", "frieren", "kaelte", "kalte", "kalt", "waerme", "warm", "warme", "warmen", "warmer", "warmes", "winter"},
     "medical": {"arzt", "medical", "medizin", "sprechstunde", "gesundheit"},
     "addiction": {"sucht", "drug", "drugs", "methadon", "substitution", "konsum"},
     "clothing": {"kleidung", "clothing", "kleiderkammer", "kleiderspenden"},
+    "water": {"wasser", "water", "trinkwasser", "trinkbrunnen", "trinkwasserbrunnen", "brunnen", "durst", "drinking", "fountain"},
 }
 RELATED_CATEGORIES = {
     "food": {"food", "social", "housing"},
@@ -143,6 +152,7 @@ RELATED_CATEGORIES = {
     "medical": {"medical", "social"},
     "addiction": {"addiction", "social", "housing"},
     "clothing": {"clothing", "social", "housing"},
+    "water": {"water", "hygiene", "food", "social"},
 }
 EXTRA_QUERY_EXPANSION_RULES: tuple[tuple[set[str], tuple[str, ...]], ...] = (
     (
@@ -167,8 +177,13 @@ EXTRA_QUERY_EXPANSION_RULES: tuple[tuple[set[str], tuple[str, ...]], ...] = (
         {"termin", "appointment", "anmeldung", "registrierung", "registration"},
         ("termin", "anmeldung", "sprechstunde", "walk", "walkin"),
     ),
+    (
+        {"bathroom", "klo", "klos", "restroom", "toilet", "toilets", "toilette", "toiletten", "wc"},
+        ("oeffentliche", "toilette", "toiletten", "hygiene", "city"),
+    ),
+    ({"stay", "tonight", "uebernachten"}, ("shelter", "uebernachtung", "notunterkunft", "notunterbringung", "wohnungslosigkeit")),
     ({"frau", "frauen", "woman", "women", "kobieta", "femeie"}, ("frauen", "frau", "uebernachtung", "notunterkunft")),
-    ({"mann", "maenner", "manner", "men", "man", "barbat"}, ("maenner", "mann", "uebernachtung", "notunterkunft")),
+    ({"mann", "maenner", "manner", "men", "male", "barbat"}, ("maenner", "mann", "uebernachtung", "notunterkunft")),
     ({"naloxone", "naloxon", "overdose", "ueberdosis"}, ("naloxon", "schadensminimierung", "safe", "konsum")),
 )
 EXTRA_CATEGORY_QUERY_HINTS = {
@@ -185,11 +200,103 @@ EXTRA_CATEGORY_QUERY_HINTS = {
         "waschen",
         "toilette",
         "toiletten",
+        "klo",
+        "klos",
+        "wc",
+        "restroom",
+        "bathroom",
         "koerperpflege",
     },
 }
 EXTRA_RELATED_CATEGORIES = {
     "hygiene": {"hygiene", "social", "housing", "clothing"},
+}
+TEMPORAL_QUERY_TERMS = {
+    "aktuell",
+    "current",
+    "dienstag",
+    "donnerstag",
+    "freitag",
+    "friday",
+    "heute",
+    "jetzt",
+    "mittwoch",
+    "montag",
+    "monday",
+    "morgen",
+    "now",
+    "samstag",
+    "saturday",
+    "sonntag",
+    "sunday",
+    "thursday",
+    "today",
+    "tonight",
+    "tuesday",
+    "weekend",
+    "wochenende",
+    "wednesday",
+}
+WINTER_QUERY_TERMS = {
+    "blanket",
+    "cold",
+    "decke",
+    "friere",
+    "frieren",
+    "kaelte",
+    "kalte",
+    "kalt",
+    "schlafsack",
+    "sleeping",
+    "waerme",
+    "warm",
+    "warme",
+    "warmen",
+    "warmer",
+    "warmes",
+    "winter",
+    "winterkleidung",
+}
+SUMMER_QUERY_TERMS = {
+    "brunnen",
+    "drinking",
+    "durst",
+    "fountain",
+    "heat",
+    "heiss",
+    "hitze",
+    "hot",
+    "sommer",
+    "summer",
+    "trinkbrunnen",
+    "trinkwasser",
+    "wasser",
+    "water",
+}
+WINTER_PAGE_TERMS = {
+    "decke",
+    "decken",
+    "hilfebus",
+    "kaelte",
+    "kleiderkammer",
+    "kleidung",
+    "notunterbringung",
+    "schlafsack",
+    "schlafsaecke",
+    "schlafsacke",
+    "uebernachtung",
+    "warme",
+    "winter",
+}
+SUMMER_PAGE_TERMS = {
+    "brunnen",
+    "durst",
+    "getraenke",
+    "tee",
+    "trinkbrunnen",
+    "trinkwasser",
+    "trinkwasserbrunnen",
+    "wasser",
 }
 
 
@@ -216,7 +323,10 @@ def query_tokens_for_search(text: str, language: Language | None = None) -> list
     expanded = list(tokens)
     token_set = set(tokens)
 
+    clothing_query = bool(token_set & CLOTHING_QUERY_TERMS)
     for triggers, additions in QUERY_EXPANSION_RULES + EXTRA_QUERY_EXPANSION_RULES:
+        if clothing_query and "winterkleidung" in triggers:
+            continue
         if token_set & triggers:
             for addition in additions:
                 if addition not in token_set:
@@ -318,6 +428,7 @@ class RetrievalEngine:
         limit: int = 3,
         preferred_page_ids: list[str] | None = None,
         excluded_page_ids: list[str] | None = None,
+        temporal_context: TemporalContext | None = None,
         _allow_relaxed_fallback: bool = True,
     ) -> list[RetrievedPage]:
         tokens = query_tokens_for_search(transcript, language)
@@ -334,7 +445,9 @@ class RetrievalEngine:
         excluded_page_ids = set(excluded_page_ids or [])
         ranked: list[tuple[float, PageMetadata]] = []
         location_query = bool(query_token_set & LOCATION_QUERY_TOKENS)
-        hours_query = bool(query_token_set & HOURS_QUERY_TOKENS)
+        temporal_query = _has_temporal_query(normalized_query, query_token_set)
+        hours_query = bool(query_token_set & HOURS_QUERY_TOKENS) or temporal_query
+        seasonal_signal = _seasonal_signal(normalized_query, query_token_set, temporal_context)
         query_category = _detect_query_category(query_token_set)
         specific_place_query = _is_specific_place_query(query_token_set, detail_query_tokens, query_category)
         ignored_specific_tokens = (
@@ -389,6 +502,8 @@ class RetrievalEngine:
             lexical_score += self._best_passage_score(query_counts, markdown) * 2.4
             lexical_score += alias_hits.get(page.page_id, 0.0)
             lexical_score += self._category_score(query_category, page)
+            lexical_score += self._temporal_score(page, temporal_context=temporal_context, temporal_query=temporal_query)
+            lexical_score += self._seasonal_score(page, seasonal_signal)
             lexical_score += self._exact_match_boost(normalized_query, query_token_set, query_category, page, ignored_specific_tokens)
             lexical_score += self._specific_query_alignment(query_token_set, query_category, page, ignored_specific_tokens)
             lexical_score += self._detail_match_boost(detail_query_tokens, page)
@@ -411,6 +526,7 @@ class RetrievalEngine:
                 detail_query_tokens=detail_query_tokens,
                 has_match_signal=has_match_signal,
             )
+            score += self._manual_override_score(page)
             score -= self._document_penalty(page)
             score -= self._review_penalty(page)
             score -= self._status_penalty(page)
@@ -430,6 +546,7 @@ class RetrievalEngine:
                     limit=limit,
                     preferred_page_ids=preferred_page_ids,
                     excluded_page_ids=list(excluded_page_ids),
+                    temporal_context=temporal_context,
                     _allow_relaxed_fallback=False,
                 )
 
@@ -620,6 +737,32 @@ class RetrievalEngine:
             penalty += min(len(page.conflict_fields), 3) * 0.03
         return penalty
 
+    def _manual_override_score(self, page: PageMetadata) -> float:
+        overrides = getattr(self.kb, "manual_overrides", [])
+        if not overrides:
+            return 0.0
+        score = 0.0
+        for override in overrides:
+            if not _override_targets_page(override, page):
+                continue
+            if override.type in {"ranking", "intake_priority"}:
+                weight = float(getattr(override, "priority_weight", 0.0) or 0.0)
+                if isinstance(override.value, dict) and "priority_weight" in override.value:
+                    try:
+                        weight = float(override.value["priority_weight"])
+                    except (TypeError, ValueError):
+                        pass
+                score += max(min(weight, 1.0), -1.0)
+            elif override.type == "temporary_closure":
+                score -= 2.5
+            elif override.type == "visibility":
+                visible = override.value
+                if isinstance(visible, dict):
+                    visible = visible.get("visible", True)
+                if visible is False:
+                    score -= 2.5
+        return score
+
     def _category_score(self, query_category: str | None, page: PageMetadata) -> float:
         if not query_category:
             return 0.0
@@ -649,6 +792,50 @@ class RetrievalEngine:
                 return 0.35
             return -0.55
         return -0.8
+
+    def _temporal_score(self, page: PageMetadata, *, temporal_context: TemporalContext | None, temporal_query: bool) -> float:
+        if not temporal_query or not temporal_context:
+            return 0.0
+        if not page.opening_hours:
+            return -0.04
+        if _opening_hours_supports_weekday(page.opening_hours, temporal_context):
+            return 0.28
+        return 0.04
+
+    def _seasonal_score(self, page: PageMetadata, seasonal_signal: str | None) -> float:
+        if not seasonal_signal:
+            return 0.0
+        page_tokens = set(
+            tokenize(
+                " ".join(
+                    [
+                        page.title,
+                        page.description,
+                        page.summary,
+                        page.category,
+                        page.service_type,
+                        " ".join(page.tags),
+                        " ".join(page.aliases),
+                    ]
+                )
+            )
+        )
+        if seasonal_signal == "winter":
+            if page.service_type in {"overnight_shelter", "day_center", "protected_housing", "clothing_support"}:
+                return 0.7
+            if page.category == "clothing":
+                return 0.55
+            if page.service_type in {"counseling", "housing_placement", "service_catalog"}:
+                return -0.45
+            if page.category == "housing":
+                return 0.3
+            return 0.2 if page_tokens & WINTER_PAGE_TERMS else 0.0
+        if seasonal_signal == "summer":
+            if page.category == "water":
+                return 0.45
+            if page_tokens & SUMMER_PAGE_TERMS:
+                return 0.22
+        return 0.0
 
     def _alias_hits(self, transcript: str, tokens: list[str]) -> dict[str, float]:
         scores: dict[str, float] = {}
@@ -747,6 +934,8 @@ def _is_generic_query(tokens: list[str]) -> bool:
 
 
 def _detect_query_category(query_token_set: set[str]) -> str | None:
+    if query_token_set & CLOTHING_QUERY_TERMS:
+        return "clothing"
     for category, hints in {**CATEGORY_QUERY_HINTS, **EXTRA_CATEGORY_QUERY_HINTS}.items():
         if query_token_set & hints:
             return category
@@ -772,6 +961,50 @@ def _is_specific_place_query(
     return bool(specific_tokens)
 
 
+WEEKDAY_ALIASES = (
+    ("montag", "mo", "monday"),
+    ("dienstag", "di", "tuesday"),
+    ("mittwoch", "mi", "wednesday"),
+    ("donnerstag", "do", "thursday"),
+    ("freitag", "fr", "friday"),
+    ("samstag", "sa", "saturday"),
+    ("sonntag", "so", "sunday"),
+)
+
+
+def _has_temporal_query(normalized_query: str, query_token_set: set[str]) -> bool:
+    return bool(query_token_set & TEMPORAL_QUERY_TERMS) or any(term in normalized_query for term in TEMPORAL_QUERY_TERMS)
+
+
+def _seasonal_signal(normalized_query: str, query_token_set: set[str], temporal_context: TemporalContext | None) -> str | None:
+    del temporal_context
+    if query_token_set & WINTER_QUERY_TERMS or any(term in normalized_query for term in WINTER_QUERY_TERMS):
+        return "winter"
+    if query_token_set & SUMMER_QUERY_TERMS or any(term in normalized_query for term in SUMMER_QUERY_TERMS):
+        return "summer"
+    return None
+
+
+def _opening_hours_supports_weekday(opening_hours: list[str], temporal_context: TemporalContext) -> bool:
+    if not opening_hours:
+        return False
+    normalized_hours = normalize_text(" | ".join(opening_hours))
+    weekday_index = temporal_context.weekday_index
+    if any(_weekday_alias_present(normalized_hours, alias) for alias in WEEKDAY_ALIASES[weekday_index]):
+        return True
+    if weekday_index <= 4 and any(pattern in normalized_hours for pattern in ("montag bis freitag", "mo bis fr", "mo-fr", "mo - fr", "mo. bis fr")):
+        return True
+    if weekday_index >= 5 and any(pattern in normalized_hours for pattern in ("samstag, sonntag", "sa, so", "sa und so", "sa, so, feiertag")):
+        return True
+    return False
+
+
+def _weekday_alias_present(normalized_hours: str, alias: str) -> bool:
+    if len(alias) <= 2:
+        return bool(re.search(rf"(?<![a-z]){re.escape(alias)}(?![a-z])", normalized_hours))
+    return alias in normalized_hours
+
+
 def _is_low_signal_line(text: str) -> bool:
     stripped = text.strip()
     if not stripped:
@@ -783,6 +1016,16 @@ def _is_low_signal_line(text: str) -> bool:
     if stripped.lower() in {"kontakt", "telefon:", "mail:", "e-mail:"}:
         return True
     return len(stripped) < 3
+
+
+def _override_targets_page(override, page: PageMetadata) -> bool:
+    target_type = getattr(override, "target_type", None)
+    target_id = getattr(override, "target_id", None)
+    if target_type == "service":
+        return target_id in {page.page_id, page.entity_id}
+    if target_type == "category":
+        return target_id == page.category or target_id == page.service_type
+    return False
 
 
 def _unique(tokens: list[str]) -> list[str]:

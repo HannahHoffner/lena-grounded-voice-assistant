@@ -535,6 +535,15 @@
   "ruecke": [
     "uebernachtungshaus-ruecke"
   ],
+  "rücke": [
+    "uebernachtungshaus-ruecke"
+  ],
+  "uebernachtungshaus ruecke": [
+    "uebernachtungshaus-ruecke"
+  ],
+  "übernachtungshaus rücke": [
+    "uebernachtungshaus-ruecke"
+  ],
   "uebernachtung": [
     "uebernachtungshaus-ruecke",
     "aww-frauen-uebernachtungshaus"
@@ -895,6 +904,12 @@
     "heilsarmee-begegnungszentrum"
   ],
   "bruecke": [
+    "heilsarmee-begegnungszentrum"
+  ],
+  "brücke": [
+    "heilsarmee-begegnungszentrum"
+  ],
+  "heilsarmee begegnungszentrum die brücke": [
     "heilsarmee-begegnungszentrum"
   ],
   "heilsarmee": [

@@ -3,14 +3,17 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+from .maintenance import active_manual_overrides
 from .models import Manifest, PageMetadata, PublishedDataset
 
 
 class KnowledgeBase:
-    def __init__(self, published_root: Path) -> None:
+    def __init__(self, published_root: Path, manual_overrides_path: Path | None = None) -> None:
         self.published_root = published_root
         self.index_root = published_root / "index"
         self.pages_root = published_root / "pages"
+        self.manual_overrides_path = manual_overrides_path
+        self.manual_overrides = active_manual_overrides(manual_overrides_path) if manual_overrides_path else []
         self._pages_by_id: dict[str, PageMetadata] = {}
         self.dataset = self._load()
 
@@ -58,6 +61,7 @@ class KnowledgeBase:
 
     def reload(self) -> None:
         self.dataset = self._load()
+        self.manual_overrides = active_manual_overrides(self.manual_overrides_path) if self.manual_overrides_path else []
 
     def get_page(self, page_id: str) -> PageMetadata:
         return self._pages_by_id[page_id]

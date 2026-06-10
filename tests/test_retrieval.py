@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+from datetime import datetime, timezone
 from pathlib import Path
 
 from app.kb import KnowledgeBase
 from app.models import Language
 from app.retrieval import RetrievalEngine
+from app.temporal import build_temporal_context
 
 
 def _engine() -> RetrievalEngine:
@@ -68,3 +70,44 @@ def test_supported_language_shower_queries_retrieve_hygiene_relevant_pages() -> 
         results = engine.retrieve(query, language)
         assert results, query
         assert results[0].page_id in valid_top_ids, (query, results[0].page_id)
+
+
+def test_today_food_query_uses_current_weekday_hint() -> None:
+    engine = _engine()
+    temporal_context = build_temporal_context(datetime(2026, 6, 2, 12, 0, tzinfo=timezone.utc))
+
+    results = engine.retrieve("Wo kann ich heute essen?", Language.DE, temporal_context=temporal_context)
+
+    assert results
+    assert any(page.page_id.startswith("tafel-leipzig") or page.page_id == "leipzig-schadensminimierung-schwanenteich" for page in results)
+
+
+def test_winter_clothing_query_boosts_clothing_support() -> None:
+    engine = _engine()
+    temporal_context = build_temporal_context(datetime(2026, 1, 15, 12, 0, tzinfo=timezone.utc))
+
+    results = engine.retrieve("Wo bekomme ich im Winter warme Kleidung?", Language.DE, temporal_context=temporal_context)
+
+    assert results
+    assert results[0].page_id == "diakonie-kleiderkammern"
+
+
+def test_cold_query_prefers_concrete_warm_help_over_addressless_social_page() -> None:
+    engine = _engine()
+    temporal_context = build_temporal_context(datetime(2026, 1, 15, 12, 0, tzinfo=timezone.utc))
+
+    results = engine.retrieve("Mir ist kalt", Language.DE, temporal_context=temporal_context)
+
+    assert results
+    assert results[0].page_id == "uebernachtungshaus-ruecke"
+    assert "heilsarmee-begegnungszentrum" not in [item.page_id for item in results[:3]]
+
+
+def test_summer_water_query_boosts_drinking_water() -> None:
+    engine = _engine()
+    temporal_context = build_temporal_context(datetime(2026, 7, 15, 12, 0, tzinfo=timezone.utc))
+
+    results = engine.retrieve("Wo finde ich im Sommer Trinkwasser?", Language.DE, temporal_context=temporal_context)
+
+    assert results
+    assert results[0].page_id == "trinkwasserbrunnen"

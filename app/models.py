@@ -118,6 +118,34 @@ class QueryRequest(BaseModel):
     session_id: str | None = None
 
 
+class SymbolSubstep(BaseModel):
+    id: str
+    label: str
+    icon: str
+
+
+class SymbolCategory(BaseModel):
+    id: str
+    label: str
+    icon: str
+    priority: int
+    group: Literal["primary", "secondary"] = "primary"
+    result_mode: Literal["cards-map", "cards", "static"] = "cards-map"
+    substeps: list[SymbolSubstep] = Field(default_factory=list)
+
+
+class SymbolConfigResponse(BaseModel):
+    language: Language
+    categories: list[SymbolCategory]
+
+
+class SymbolActionRequest(BaseModel):
+    category_id: str
+    language: Language
+    substep_id: str | None = None
+    session_id: str | None = None
+
+
 class SessionStatus(StrEnum):
     ACTIVE = "active"
     EXPIRED = "expired"
@@ -138,6 +166,18 @@ class RetrievedPage(BaseModel):
     page_id: str
     title: str
     score: float
+
+
+class TemporalContext(BaseModel):
+    now_iso: str
+    date_iso: str
+    weekday_index: int
+    weekday_en: str
+    weekday_de: str
+    is_weekend: bool
+    month: int
+    season: Literal["winter", "spring", "summer", "autumn"]
+    season_hints: list[str] = Field(default_factory=list)
 
 
 AnswerStatus = Literal["ok", "weak_match", "unknown", "clarification_needed", "self_description", "out_of_scope", "crisis"]
@@ -188,6 +228,40 @@ class QueryAnswerResponse(BaseModel):
     session_status: SessionStatus = SessionStatus.ACTIVE
     session_event: SessionEvent = SessionEvent.STARTED
     session_message: str | None = None
+    temporal_context: TemporalContext | None = None
+
+
+class SymbolResultCard(BaseModel):
+    page_id: str
+    title: str
+    category: str
+    service_type: str
+    address: str | None = None
+    opening_hours: list[str] = Field(default_factory=list)
+    phone: str | None = None
+    description: str | None = None
+    action: str
+    last_updated: str | None = None
+    has_map_location: bool = False
+
+
+class SymbolActionResponse(BaseModel):
+    answer_text: str
+    status: AnswerStatus
+    category_id: str
+    substep_id: str | None = None
+    cards: list[SymbolResultCard] = Field(default_factory=list)
+    retrieved_page_ids: list[str] = Field(default_factory=list)
+    map_data: MapData | None = None
+    static_response: bool = False
+    no_map_reason: str | None = None
+    provider: Literal["symbol"] = "symbol"
+    model: None = None
+    session_id: str
+    session_status: SessionStatus = SessionStatus.ACTIVE
+    session_event: SessionEvent = SessionEvent.STARTED
+    session_message: str | None = None
+    temporal_context: TemporalContext | None = None
 
 
 class KnowledgeAnswer(BaseModel):
@@ -248,6 +322,7 @@ class TranscriptEvent(BaseModel):
     follow_up_mode: Literal["none", "referential", "alternative", "topic_shift", "fresh_topic"] = "none"
     session_status: SessionStatus = SessionStatus.ACTIVE
     session_event: SessionEvent = SessionEvent.CONTINUED
+    temporal_context: TemporalContext | None = None
 
 
 class SourceDefinition(BaseModel):
@@ -275,6 +350,14 @@ class SourceDefinition(BaseModel):
     languages: list[str] = Field(default_factory=list)
     entity_mode: Literal["single", "location_list", "service_catalog"] = "single"
     format: Literal["auto", "html", "pdf"] = "auto"
+    fetch_frequency: Literal["daily", "weekly", "monthly", "manual"] | None = None
+    owner: str | None = None
+    reliability_level: Literal["official", "trusted_partner", "secondary", "manual"] | None = None
+    last_checked_at: str | None = None
+    last_changed_at: str | None = None
+    current_hash: str | None = None
+    source_status: Literal["active", "failed", "stale", "retired", "needs_review"] = "active"
+    notes: str | None = None
 
 
 class PublishedDataset(BaseModel):

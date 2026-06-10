@@ -10,27 +10,39 @@ import re
 import httpx
 
 from ..kb import KnowledgeBase
-from ..models import ConversationContext, KnowledgeAnswer, LLMKnowledgeAnswer, Language, PageMetadata, RetrievedPage
+from ..models import (
+    ConversationContext,
+    KnowledgeAnswer,
+    LLMKnowledgeAnswer,
+    Language,
+    MapData,
+    MapOrigin,
+    PageMetadata,
+    RetrievedPage,
+    TemporalContext,
+)
 from ..retrieval import (
     HOURS_QUERY_TOKENS,
     LOCATION_QUERY_TOKENS,
     RetrievalEngine,
+    WINTER_QUERY_TERMS,
     extract_relevant_passages,
     normalize_text,
     query_tokens_for_search,
     tokenize,
 )
+from ..symbols import toilet_map_destinations
 
 
 UNKNOWN_TEXT = {
-    Language.DE: "Dazu finde ich in meiner Wissensbasis keine verlaessliche Information. Ich kann bei Hilfsangeboten in Leipzig helfen, zum Beispiel mit Orten, Adressen und Oeffnungszeiten.",
-    Language.EN: "I could not find reliable information about that in my knowledge base. I can help with support services in Leipzig, for example places, addresses, and opening hours.",
-    Language.PL: "Nie znalazlem wiarygodnej informacji na ten temat w mojej bazie wiedzy. Moge pomagac przy uslugach wsparcia w Lipsku, na przyklad z miejscami, adresami i godzinami otwarcia.",
-    Language.RO: "Nu am gasit informatii sigure despre asta in baza mea de cunostinte. Pot ajuta cu servicii de sprijin din Leipzig, de exemplu cu locuri, adrese si program.",
-    Language.RU: "Ð¯ Ð½Ðµ Ð½Ð°ÑˆÑ‘Ð» Ð½Ð°Ð´Ñ‘Ð¶Ð½Ð¾Ð¹ Ð¸Ð½Ñ„Ð¾Ñ€Ð¼Ð°Ñ†Ð¸Ð¸ Ð¾Ð± ÑÑ‚Ð¾Ð¼ Ð² Ð±Ð°Ð·Ðµ Ð·Ð½Ð°Ð½Ð¸Ð¹.",
+    Language.DE: "Das weiß ich nicht sicher. Ich habe dazu keine sichere Information. Bitte frage nach Essen, Schlafen, Kleidung, Medizin, Beratung, Hygiene, Dokumenten oder Wasser.",
+    Language.EN: "I do not know that for sure. I do not have safe information about that. You can ask about food, sleeping places, clothing, medical help, counselling, hygiene, documents or water.",
+    Language.PL: "Nie wiem tego na pewno. Nie mam bezpiecznej informacji na ten temat. Mozesz zapytac o jedzenie, nocleg, ubrania, pomoc medyczna, porady, higiene, dokumenty albo wode.",
+    Language.RO: "Nu stiu sigur. Nu am o informatie sigura despre asta. Poti intreba despre mancare, dormit, haine, ajutor medical, consiliere, igiena, documente sau apa.",
+    Language.RU: "Ya ne znayu eto tochno. U menya net nadezhnoy informatsii ob etom. Vy mozhete sprosit pro edu, nochleg, odezhdu, meditsinskuyu pomoshch, konsultatsiyu, gigienu, dokumenty ili vodu.",
 }
 OVERVIEW_DETAIL_OFFER = {
-    Language.DE: "Wenn Sie moechten, nenne ich Ihnen die genauen Standorte und Uhrzeiten.",
+    Language.DE: "Wenn Sie möchten, nenne ich Ihnen die genauen Standorte und Uhrzeiten.",
     Language.EN: "If you want, I can give you the exact locations and opening hours.",
     Language.PL: "Jesli chcesz, moge podac dokladne miejsca i godziny otwarcia.",
     Language.RO: "Daca vrei, pot spune locatiile exacte si programul.",
@@ -44,7 +56,7 @@ OVERVIEW_HOURS_VARY = {
     Language.RU: "Vremya raboty zavisit ot mesta.",
 }
 OVERVIEW_REGISTRATION = {
-    Language.DE: "Eine Anmeldung ist vorher noetig.",
+    Language.DE: "Eine Anmeldung ist vorher nötig.",
     Language.EN: "Registration is needed in advance.",
     Language.PL: "Wczesniejsza rejestracja jest potrzebna.",
     Language.RO: "Este necesara o inregistrare inainte.",
@@ -60,33 +72,33 @@ CLARIFY_TEXT = {
 }
 
 WEAK_PREFIX = {
-    Language.DE: "Ich habe nur einen aehnlichen Treffer gefunden: ",
-    Language.EN: "I only found a close match: ",
-    Language.PL: "Znalazlem tylko podobny wpis: ",
-    Language.RO: "Am gasit doar un rezultat apropiat: ",
-    Language.RU: "Ð¯ Ð½Ð°ÑˆÑ‘Ð» Ñ‚Ð¾Ð»ÑŒÐºÐ¾ Ð±Ð»Ð¸Ð·ÐºÐ¾Ðµ ÑÐ¾Ð²Ð¿Ð°Ð´ÐµÐ½Ð¸Ðµ Ð² Ð±Ð°Ð·Ðµ Ð·Ð½Ð°Ð½Ð¸Ð¹: ",
+    Language.DE: "Das passt vielleicht: ",
+    Language.EN: "This may help: ",
+    Language.PL: "To moze pomoc: ",
+    Language.RO: "Asta poate ajuta: ",
+    Language.RU: "Eto mozhet pomoch: ",
 }
 
 OUT_OF_SCOPE_TEXT = {
-    Language.DE: "Dabei kann ich nicht helfen. Ich bin fuer Hilfsangebote und praktische Informationen in Leipzig da, zum Beispiel Essen, Unterkunft, Duschen, Beratung, Adressen und Oeffnungszeiten.",
-    Language.EN: "I cannot help with that. I am here for support services and practical information in Leipzig, for example food, shelter, showers, advice, addresses, and opening hours.",
-    Language.PL: "Nie moge w tym pomoc. Jestem tutaj do spraw uslug wsparcia i praktycznych informacji w Lipsku, na przyklad jedzenia, noclegu, prysznicow, porad, adresow i godzin otwarcia.",
-    Language.RO: "Nu pot ajuta cu asta. Sunt aici pentru servicii de sprijin si informatii practice din Leipzig, de exemplu mancare, adapost, dusuri, consiliere, adrese si program.",
-    Language.RU: "Ya ne mogu pomoch s etim. Ya zdes dlya uslug podderzhki i prakticheskoy informatsii v Leyptsige, naprimer pro edu, nochleg, dush, konsultatsii, adresy i chasy raboty.",
+    Language.DE: "Dabei kann ich dir nicht helfen. Ich beantworte nur Fragen zu Hilfsangeboten in Leipzig. Bitte frage nach Essen, Schlafen, Kleidung, Medizin, Beratung, Hygiene, Dokumenten oder Wasser.",
+    Language.EN: "I cannot help with that. I only answer questions about local help services in Leipzig. You can ask about food, sleeping places, clothing, medical help, counselling, hygiene, documents or water.",
+    Language.PL: "Nie moge w tym pomoc. Odpowiadam tylko na pytania o pomoc w Lipsku. Mozesz zapytac o jedzenie, nocleg, ubrania, pomoc medyczna, porady, higiene, dokumenty albo wode.",
+    Language.RO: "Nu pot ajuta cu asta. Raspund doar la intrebari despre ajutor local in Leipzig. Poti intreba despre mancare, dormit, haine, ajutor medical, consiliere, igiena, documente sau apa.",
+    Language.RU: "Ya ne mogu s etim pomoch. Ya otvechayu tolko na voprosy o pomoshchi v Leyptsige. Vy mozhete sprosit pro edu, nochleg, odezhdu, meditsinskuyu pomoshch, konsultatsiyu, gigienu, dokumenty ili vodu.",
 }
 SELF_DESCRIPTION_TEXT = {
-    Language.DE: "Ich bin LENA, der Leipzig Empowerment and Navigation Assistant. Ich helfe mit lokalen Informationen zu Hilfsangeboten in Leipzig, zum Beispiel zu Orten, Adressen, Oeffnungszeiten und passenden Anlaufstellen.",
+    Language.DE: "Ich bin LENA, der Leipzig Empowerment and Navigation Assistant. Ich helfe mit lokalen Informationen zu Hilfsangeboten in Leipzig, zum Beispiel zu Orten, Adressen, Öffnungszeiten und passenden Anlaufstellen.",
     Language.EN: "I am LENA, the Leipzig Empowerment and Navigation Assistant. I help with local information about support services in Leipzig, for example places, addresses, opening hours, and suitable services.",
     Language.PL: "Jestem LENA, Leipzig Empowerment and Navigation Assistant. Pomagam lokalnymi informacjami o uslugach wsparcia w Lipsku, na przyklad o miejscach, adresach, godzinach otwarcia i odpowiednich punktach pomocy.",
     Language.RO: "Sunt LENA, Leipzig Empowerment and Navigation Assistant. Ajut cu informatii locale despre servicii de sprijin din Leipzig, de exemplu despre locuri, adrese, program si puncte potrivite de ajutor.",
     Language.RU: "Ya LENA, Leipzig Empowerment and Navigation Assistant. Ya pomogayu s mestnoy informatsiyey o sluzhbakh podderzhki v Leyptsige, naprimer o mestakh, adresakh, chasakh raboty i podkhodyashchikh punktakh pomoshchi.",
 }
 CRISIS_TEXT = {
-    Language.DE: "Ich kann keine medizinische oder seelische Notfallberatung geben. Wenn Sie jetzt in Gefahr sind oder dringend Hilfe brauchen, rufen Sie bitte 112. Bei akuter Bedrohung oder Gewalt rufen Sie 110. Wenn Sie mit jemandem sprechen muessen, erreichen Sie die TelefonSeelsorge unter 0800 1110 111.",
-    Language.EN: "I cannot provide medical or mental health emergency advice. If you are in danger now or need urgent help, please call 112 in Germany. If there is immediate threat or violence, call 110. If you need to talk to someone, you can reach TelefonSeelsorge at 0800 1110 111.",
-    Language.PL: "Nie moge udzielac porad medycznych ani psychologicznych w naglym wypadku. Jesli jestes teraz w niebezpieczenstwie albo pilnie potrzebujesz pomocy, zadzwon w Niemczech pod 112. Przy bezposrednim zagrozeniu lub przemocy zadzwon pod 110. Jesli chcesz z kims porozmawiac, mozesz zadzwonic do TelefonSeelsorge pod 0800 1110 111.",
-    Language.RO: "Nu pot oferi sfaturi medicale sau psihologice pentru urgente. Daca esti acum in pericol sau ai nevoie urgenta de ajutor, suna in Germania la 112. Daca exista amenintare imediata sau violenta, suna la 110. Daca ai nevoie sa vorbesti cu cineva, poti suna la TelefonSeelsorge la 0800 1110 111.",
-    Language.RU: "Ya ne mogu davat meditsinskie ili psikhologicheskie sovety dlya ekstrennykh sluchaev. Esli vy seychas v opasnosti ili vam nuzhna srochnaya pomoshch v Germanii, pozhaluysta, zvonite 112. Pri neposredstvennoy ugroze ili nasilii zvonite 110. Esli vam nuzhno s kem-to pogovorit, mozhno pozvonit v TelefonSeelsorge po nomeru 0800 1110 111.",
+    Language.DE: "Das klingt nach einer akuten Gefahr. Bitte ruf sofort den Notruf 112 an. Wenn Gewalt oder Gefahr durch andere Menschen besteht, ruf die Polizei 110. Wenn du am Bahnhof bist: Geh zu Mitarbeitenden, zur Bahnhofsmission oder zu einem Arzt. Bleib nicht allein.",
+    Language.EN: "This sounds like immediate danger. Please call emergency services now: 112. If there is violence or danger from another person, call the police: 110. If you are at the station, go to staff, Bahnhofsmission or a doctor. Do not stay alone.",
+    Language.PL: "To brzmi jak bezposrednie zagrozenie. Zadzwon teraz pod numer alarmowy 112. Jesli grozi ci przemoc albo inna osoba jest zagrozeniem, zadzwon na policje: 110. Jesli jestes na dworcu, idz do pracownikow, do Bahnhofsmission albo do lekarza. Nie zostawaj sam.",
+    Language.RO: "Pare un pericol imediat. Suna acum la urgenta: 112. Daca exista violenta sau pericol de la alta persoana, suna la politie: 110. Daca esti la gara, mergi la personal, la Bahnhofsmission sau la un medic. Nu ramane singur.",
+    Language.RU: "Eto pokhozhe na neposredstvennuyu opasnost. Pozvonite seychas v sluzhbu pomoshchi: 112. Esli est nasilie ili opasnost ot drugogo cheloveka, pozvonite v politsiyu: 110. Esli vy na vokzale, obratites k sotrudnikam, v Bahnhofsmission ili k vrachu. Ne ostavaytes odni.",
 }
 SELF_DESCRIPTION_PATTERNS = (
     "wer bist du",
@@ -139,7 +151,11 @@ DOMAIN_TERMS = {
     "shower",
     "shelter",
     "support",
+    "toilet",
+    "toilette",
+    "toiletten",
     "unterkunft",
+    "wc",
     "wohnungslos",
 }
 OUT_OF_SCOPE_TOKENS = {
@@ -155,9 +171,11 @@ OUT_OF_SCOPE_TOKENS = {
     "joke",
     "linux",
     "math",
+    "mathe",
     "movie",
     "opinion",
     "orbit",
+    "hauptstadt",
     "politik",
     "politics",
     "president",
@@ -192,34 +210,72 @@ OUT_OF_SCOPE_PATTERNS = (
 )
 CRISIS_SERVICE_QUERY_HINTS = ("telefonseelsorge", "seelsorge", "notfallkontakte", "notdienste", "notdienst")
 CRISIS_DIRECT_PATTERNS = (
+    "ich bringe mich um",
     "ich will sterben",
     "ich moechte sterben",
     "ich mochte sterben",
     "ich will mich umbringen",
     "ich will mich toeten",
     "ich will mich toten",
+    "ich will mir etwas antun",
     "ich tue mir etwas an",
+    "ich will mich verletzen",
     "ich verletze mich",
+    "ich will jemanden verletzen",
+    "ich bringe jemanden um",
+    "ich werde angegriffen",
+    "jemand greift mich",
+    "jemand greift mich an",
+    "ich bin in gefahr",
+    "akute gefahr",
+    "akuter notfall",
+    "medizinischer notfall",
     "ich habe eine ueberdosis",
     "ich habe eine uberdosis",
+    "ich habe eine vergiftung",
+    "jemand ist bewusstlos",
+    "ich bin bewusstlos",
+    "starke blutung",
+    "schwere verletzung",
     "ich kann nicht atmen",
+    "ich bekomme keine luft",
+    "ich habe atemnot",
     "ich habe starke brustschmerzen",
+    "ich habe brustschmerz",
     "ich blute stark",
+    "ich erfriere",
+    "ich bin unterkuehlt",
+    "ich bin unterkuhlt",
     "i want to die",
     "i want to kill myself",
+    "i will kill myself",
     "i want to hurt myself",
+    "i will hurt myself",
+    "i will hurt someone",
+    "i want to hurt someone",
+    "i want to kill someone",
+    "i am being attacked",
+    "someone is attacking me",
+    "i am in danger",
+    "immediate danger",
+    "medical emergency",
     "i took an overdose",
     "i overdosed",
+    "i have an overdose",
+    "i have poisoning",
+    "someone is unconscious",
+    "severe bleeding",
+    "serious injury",
     "i can't breathe",
     "i cant breathe",
+    "i cannot breathe",
+    "i have shortness of breath",
     "i have chest pain",
     "i am bleeding badly",
-    "i am being attacked",
-    "i am in danger",
+    "i am freezing",
+    "i have hypothermia",
     "kill myself",
     "hurt myself",
-    "emergency number",
-    "notfallnummer",
     "chce umrzec",
     "zabije sie",
     "mam przedawkowanie",
@@ -232,15 +288,27 @@ CRISIS_DIRECT_PATTERNS = (
     "Ñƒ Ð¼ÐµÐ½Ñ Ð¿ÐµÑ€ÐµÐ´Ð¾Ð·Ð¸Ñ€Ð¾Ð²ÐºÐ°",
 )
 CRISIS_DIRECT_TOKENS = {
-    "110",
-    "112",
     "attack",
     "attacke",
+    "angegriffen",
+    "angriff",
+    "atemnot",
     "bedroht",
+    "bewusstlos",
     "bleeding",
+    "brustschmerz",
     "brustschmerzen",
     "emergency",
+    "erfriere",
     "gewalt",
+    "greift",
+    "hypothermia",
+    "notfall",
+    "poisoning",
+    "vergiftung",
+    "verletzung",
+    "violence",
+    "unconscious",
     "overdose",
     "selbstmord",
     "suicide",
@@ -301,7 +369,7 @@ TOPIC_LABELS = {
     },
 }
 TOPIC_KEYWORDS = {
-    "food": {"essen", "tafel", "lebensmittel", "mahlzeit"},
+    "food": {"essen", "tafel", "lebensmittel", "mahlzeit", "food"},
     "shelter": {"unterkunft", "uebernachtung", "notunterkunft", "notunterbringung", "wohnungslosigkeit"},
     "clothing": {"kleidung", "kleiderkammer", "kleiderspenden"},
     "medical": {"gesundheit", "arzt", "medizin", "sprechstunde", "krankenversicherung"},
@@ -331,6 +399,146 @@ ATTRIBUTE_QUERY_TOKENS = {
 MULTI_OPTION_QUERY_HINTS = {"essen", "food", "unterkunft", "shelter", "kleidung", "clothing", "another", "andere", "alternative"}
 TODAY_QUERY_HINTS = {"today", "heute"}
 APPOINTMENT_QUERY_TOKENS = {"termin", "appointment", "anmeldung", "registration"}
+LOCATION_REQUIRED_TOKENS = {
+    "adresse",
+    "address",
+    "brunnen",
+    "drinking",
+    "fountain",
+    "location",
+    "naehe",
+    "nahe",
+    "nearest",
+    "naechste",
+    "naechster",
+    "nächste",
+    "nächster",
+    "standort",
+    "toilet",
+    "toilette",
+    "toiletten",
+    "trinkbrunnen",
+    "trinkwasser",
+    "trinkwasserbrunnen",
+    "wasser",
+    "water",
+    "wc",
+}
+NO_CONCRETE_LOCATION_TEXT = {
+    Language.DE: "Dazu habe ich keinen sicheren konkreten Standort. Bitte frage nach einem anderen Hilfsangebot in Leipzig.",
+    Language.EN: "I do not have a safe concrete location for this. I can only name places that are available in my local information.",
+    Language.PL: "Nie mam do tego bezpiecznego konkretnego miejsca. Mogę podać tylko miejsca z moich lokalnych informacji.",
+    Language.RO: "Nu am un loc concret sigur pentru asta. Pot numi doar locuri care apar in informatiile mele locale.",
+    Language.RU: "U menya net nadezhnogo konkretnogo mesta dlya etogo. Ya mogu nazvat tolko mesta iz moey lokalnoy informatsii.",
+}
+NO_CONCRETE_WATER_LOCATION_TEXT = {
+    Language.DE: "Ich habe dazu keinen sicheren konkreten Trinkwasser-Standort. Ich kann nur Orte nennen, die in meinen Informationen mit Standort stehen.",
+    Language.EN: "I do not have a safe concrete drinking-water location for this. I can only name places that are available in my local information.",
+    Language.PL: "Nie mam bezpiecznego konkretnego miejsca z woda pitna. Mogę podać tylko miejsca z moich lokalnych informacji.",
+    Language.RO: "Nu am un loc concret sigur pentru apa potabila. Pot numi doar locuri care apar in informatiile mele locale.",
+    Language.RU: "U menya net nadezhnogo konkretnogo mesta s pityevoy vodoy. Ya mogu nazvat tolko mesta iz moey lokalnoy informatsii.",
+}
+TOILET_QUERY_TOKENS = {
+    "bathroom",
+    "klo",
+    "klos",
+    "public",
+    "restroom",
+    "toilet",
+    "toilets",
+    "toilette",
+    "toiletten",
+    "wc",
+}
+TOILET_QUERY_PATTERNS = (
+    "aufs klo",
+    "auf klo",
+    "auf toilette",
+    "auf die toilette",
+    "city toilette",
+    "city-toilette",
+    "sanitaeranlage",
+    "sanitaranlage",
+    "sanitaere anlage",
+    "sanitare anlage",
+)
+FREE_TOILET_QUERY_TOKENS = {
+    "bezahlen",
+    "free",
+    "gratis",
+    "kostenfrei",
+    "kostenlos",
+    "umsonst",
+}
+FREE_TOILET_QUERY_PATTERNS = (
+    "ohne geld",
+    "nichts bezahlen",
+    "kostet nichts",
+    "kostenfreie toilette",
+    "kostenlose toilette",
+)
+DEFAULT_MAP_ORIGIN = MapOrigin(
+    id="leipzig_hbf",
+    label="Leipzig Hauptbahnhof",
+    address="Willy-Brandt-Platz 5, 04109 Leipzig",
+    latitude=51.3465518,
+    longitude=12.3830858,
+)
+TOILET_RESPONSE_TEXT = {
+    Language.DE: "Ich kenne öffentliche City-Toiletten in Leipzig. Viele sind ganztägig geöffnet und kosten meist 50 Cent. Mit Euroschlüssel sind sie kostenlos. Kostenfrei ist der Standort Lene-Voigt-Park. Die Karte zeigt die Standorte.",
+    Language.EN: "I know public city toilets in Leipzig. Many are open all day and usually cost 50 cents. They are free with a Euro key. Lene-Voigt-Park is free. The map shows the locations.",
+    Language.PL: "Znam publiczne toalety miejskie w Lipsku. Wiele jest otwartych caly dzien i zwykle kosztuje 50 centow. Z kluczem Euro sa bezplatne. Lene-Voigt-Park jest bezplatny. Mapa pokazuje miejsca.",
+    Language.RO: "Cunosc toalete publice in Leipzig. Multe sunt deschise toata ziua si costa de obicei 50 de centi. Sunt gratuite cu cheia Euro. Lene-Voigt-Park este gratuit. Harta arata locurile.",
+    Language.RU: "Ya znayu obshchestvennye gorodskie tualety v Leyptsige. Mnogie otkryty ves den i obychno stoyat 50 tsentov. S Euro key oni besplatnye. Lene-Voigt-Park besplatnyy. Karta pokazyvaet mesta.",
+}
+FREE_TOILET_RESPONSE_TEXT = {
+    Language.DE: "Kostenfrei ist die öffentliche Toilette im Lene-Voigt-Park. Sie ist ganztägig geöffnet. Adresse: Lene-Voigt-Park, Reudnitz-Thonberg, Leipzig. Andere City-Toiletten kosten meist 50 Cent; mit Euroschlüssel sind sie kostenlos.",
+    Language.EN: "The public toilet at Lene-Voigt-Park is free. It is open all day. Address: Lene-Voigt-Park, Reudnitz-Thonberg, Leipzig. Other city toilets usually cost 50 cents; they are free with a Euro key.",
+    Language.PL: "Publiczna toaleta w Lene-Voigt-Park jest bezplatna. Jest otwarta caly dzien. Adres: Lene-Voigt-Park, Reudnitz-Thonberg, Leipzig. Inne toalety miejskie zwykle kosztuja 50 centow; z kluczem Euro sa bezplatne.",
+    Language.RO: "Toaleta publica din Lene-Voigt-Park este gratuita. Este deschisa toata ziua. Adresa: Lene-Voigt-Park, Reudnitz-Thonberg, Leipzig. Alte toalete publice costa de obicei 50 de centi; cu cheia Euro sunt gratuite.",
+    Language.RU: "Obshchestvennyy tualet v Lene-Voigt-Park besplatnyy. On otkryt ves den. Adres: Lene-Voigt-Park, Reudnitz-Thonberg, Leipzig. Drugie gorodskie tualety obychno stoyat 50 tsentov; s Euro key oni besplatnye.",
+}
+LOCATION_REQUIRED_PATTERNS = (
+    "wo ist",
+    "wo finde ich",
+    "wo bekomme ich",
+    "wo kann",
+    "wo kann ich",
+    "in der naehe",
+    "in der nahe",
+    "in der nähe",
+    "where can i",
+    "where is",
+    "near me",
+)
+CONCRETE_HELP_QUERY_TOKENS = {
+    "arzt",
+    "beratung",
+    "clothing",
+    "counselling",
+    "counseling",
+    "documents",
+    "dokumente",
+    "dusche",
+    "duschen",
+    "essen",
+    "food",
+    "hygiene",
+    "kleidung",
+    "klo",
+    "klos",
+    "medical",
+    "medizin",
+    "schlafen",
+    "sleeping",
+    "toilet",
+    "toilette",
+    "toiletten",
+    "unterkunft",
+    "water",
+    "wasser",
+    "wc",
+}
 DAY_QUERY_TOKENS = {
     "montag",
     "dienstag",
@@ -355,6 +563,30 @@ SPACE_RE = re.compile(r"\s+")
 EMAIL_RE = re.compile(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.IGNORECASE)
 PHONE_LIKE_RE = re.compile(r"\+?\d[\d\s()./-]{5,}\d")
 TIME_OR_LONG_NUMBER_RE = re.compile(r"\b\d{1,2}:\d{2}\b|\b\d{2,5}\b")
+FORBIDDEN_REDIRECT_PATTERNS = (
+    "app herunterladen",
+    "laden sie die app herunter",
+    "lade die app herunter",
+    "nutzen sie die app",
+    "nutze die app",
+    "website besuchen",
+    "auf der website nachsehen",
+    "online suchen",
+    "google maps",
+    "im internet suchen",
+    "die app zeigt",
+    "der kuerzeste weg wird angezeigt",
+    "der kurzeste weg wird angezeigt",
+    "finden sie online",
+    "finden sie in der app",
+    "download the app",
+    "use the app",
+    "check the website",
+    "search online",
+    "use google maps",
+    "the app will show",
+    "find it online",
+)
 
 
 class BaseRewriteProvider(ABC):
@@ -369,6 +601,7 @@ class BaseRewriteProvider(ABC):
     last_system_prompt_hash: str | None = None
     last_user_prompt_hash: str | None = None
     last_validation_error: str | None = None
+    last_provider_error: str | None = None
 
     @abstractmethod
     async def answer(
@@ -377,6 +610,7 @@ class BaseRewriteProvider(ABC):
         language: Language,
         kb: KnowledgeBase,
         conversation_context: ConversationContext | None = None,
+        temporal_context: TemporalContext | None = None,
     ) -> KnowledgeAnswer:
         raise NotImplementedError
 
@@ -411,6 +645,14 @@ def _out_of_scope_answer(language: Language) -> KnowledgeAnswer:
     )
 
 
+def _no_concrete_location_answer(language: Language, transcript: str, retrieved: list[RetrievedPage] | None = None) -> KnowledgeAnswer:
+    return KnowledgeAnswer(
+        answer_text=NO_CONCRETE_WATER_LOCATION_TEXT[language] if _is_water_query(transcript) else NO_CONCRETE_LOCATION_TEXT[language],
+        status="unknown",
+        retrieved_page_ids=[item.page_id for item in retrieved or []],
+    )
+
+
 def _has_domain_signal(transcript: str) -> bool:
     normalized = normalize_text(transcript)
     tokens = set(tokenize(transcript))
@@ -428,7 +670,19 @@ def _is_crisis_query(transcript: str) -> bool:
     service_lookup = any(hint in normalized for hint in CRISIS_SERVICE_QUERY_HINTS)
     direct_pattern = any(pattern in normalized for pattern in CRISIS_DIRECT_PATTERNS)
     direct_tokens = bool(tokens & CRISIS_DIRECT_TOKENS)
+    informational = any(
+        phrase in normalized
+        for phrase in (
+            "was ist der notruf",
+            "was ist die notrufnummer",
+            "what is the emergency number",
+            "what is emergency services",
+            "wie lautet der notruf",
+        )
+    )
     if service_lookup and not (direct_pattern or direct_tokens):
+        return False
+    if informational and not direct_pattern:
         return False
     return direct_pattern or direct_tokens
 
@@ -439,6 +693,161 @@ def _is_out_of_scope_query(transcript: str) -> bool:
     if _has_domain_signal(transcript):
         return False
     return any(pattern in normalized for pattern in OUT_OF_SCOPE_PATTERNS) or bool(tokens & OUT_OF_SCOPE_TOKENS)
+
+
+def _is_water_query(transcript: str) -> bool:
+    tokens = set(tokenize(transcript))
+    normalized = normalize_text(transcript)
+    return bool(tokens & {"brunnen", "trinkbrunnen", "trinkwasser", "trinkwasserbrunnen", "wasser", "water", "drinking", "fountain"}) or "drinking water" in normalized or "water fountain" in normalized
+
+
+def _is_toilet_query(transcript: str) -> bool:
+    normalized = normalize_text(transcript)
+    tokens = set(tokenize(transcript))
+    return bool(tokens & TOILET_QUERY_TOKENS) or any(pattern in normalized for pattern in TOILET_QUERY_PATTERNS)
+
+
+def _is_free_toilet_query(transcript: str) -> bool:
+    normalized = normalize_text(transcript)
+    tokens = set(tokenize(transcript))
+    return _is_toilet_query(transcript) and (
+        bool(tokens & FREE_TOILET_QUERY_TOKENS) or any(pattern in normalized for pattern in FREE_TOILET_QUERY_PATTERNS)
+    )
+
+
+def _toilet_answer(language: Language, transcript: str, kb: KnowledgeBase) -> KnowledgeAnswer:
+    free_only = _is_free_toilet_query(transcript)
+    destinations = toilet_map_destinations(free_only=free_only)
+    map_data = MapData(
+        origin=DEFAULT_MAP_ORIGIN,
+        destinations=destinations,
+        selected_destination_id=destinations[0].id if destinations else None,
+    )
+    return KnowledgeAnswer(
+        answer_text=(FREE_TOILET_RESPONSE_TEXT if free_only else TOILET_RESPONSE_TEXT)[language],
+        status="ok",
+        retrieved_page_ids=_known_response_page_ids(kb, "oeffentliche-toiletten"),
+        map_data=map_data if destinations else None,
+    )
+
+
+def _is_sleep_query(transcript: str) -> bool:
+    tokens = set(tokenize(transcript))
+    normalized = normalize_text(transcript)
+    return bool(tokens & {"schlafen", "uebernachten", "ubernachten", "unterkunft", "notunterkunft", "sleep", "sleeping", "shelter", "overnight", "stay"}) or "sleep tonight" in normalized or "stay tonight" in normalized
+
+
+def _sleep_target_group(transcript: str) -> str | None:
+    tokens = set(tokenize(transcript))
+    normalized = normalize_text(transcript)
+    if tokens & {"frau", "frauen", "woman", "women", "kobieta", "femeie"}:
+        return "women"
+    if tokens & {"mann", "maenner", "manner", "men", "male", "barbat"}:
+        return "men"
+    if tokens & {"jugend", "jugendliche", "jugendlicher", "kind", "kinder", "young", "youth", "child", "teenager"}:
+        return "young"
+    if any(term in normalized for term in ("psychisch", "psychiatr", "seelisch")):
+        return "psychiatric"
+    if tokens & {"drogen", "droge", "sucht", "abhaengig", "abhängig", "addiction", "drugs"}:
+        return "addiction"
+    return None
+
+
+def _sleep_clarification_answer(language: Language, kb: KnowledgeBase) -> KnowledgeAnswer:
+    questions = {
+        Language.DE: "Für wen wird ein Schlafplatz gebraucht? Männer, Frauen, junge Person oder Kind? Wenn Sie nicht sicher sind, sagen Sie: nicht sicher.",
+        Language.EN: "Who needs a sleeping place? Men, women, young person or child? If you are not sure, say: not sure.",
+        Language.PL: "Dla kogo jest potrzebny nocleg? Mężczyzna, kobieta, młoda osoba albo dziecko? Jeśli nie wiesz, powiedz: nie wiem.",
+        Language.RO: "Pentru cine este nevoie de un loc de dormit? Bărbat, femeie, tânăr sau copil? Dacă nu ești sigur, spune: nu sunt sigur.",
+        Language.RU: "Кому нужно место для ночлега? Мужчине, женщине, молодому человеку или ребенку? Если не знаете, скажите: не знаю.",
+    }
+    return KnowledgeAnswer(
+        answer_text=questions[language],
+        status="clarification_needed",
+        clarification_needed=True,
+        clarification_question=questions[language],
+        retrieved_page_ids=_known_response_page_ids(
+            kb,
+            "wohnungsnotfallhilfe-pdf-uebernachtungshaus-maenner",
+            "wohnungsnotfallhilfe-pdf-uebernachtungshaus-frauen-katalog",
+            "wohnungsnotfallhilfe-pdf-jugendnotdienst",
+            "wohnungsnotfallhilfe-pdf-kindernotdienst",
+        ),
+    )
+
+
+def _is_location_required_query(transcript: str, language: Language) -> bool:
+    normalized = normalize_text(transcript)
+    tokens = set(query_tokens_for_search(transcript, language)) | set(tokenize(transcript))
+    if any(pattern in normalized for pattern in LOCATION_REQUIRED_PATTERNS):
+        return True
+    if tokens & LOCATION_REQUIRED_TOKENS:
+        return True
+    return bool(tokens & CONCRETE_HELP_QUERY_TOKENS and any(pattern in normalized for pattern in ("wo ", "where ", "near", "naehe", "nähe")))
+
+
+def _is_address_detail_query(transcript: str, language: Language) -> bool:
+    tokens = set(query_tokens_for_search(transcript, language)) | set(tokenize(transcript))
+    return bool(tokens & {"adresse", "address"})
+
+
+def _is_concrete_location_page(page: PageMetadata) -> bool:
+    if page.service_type == "service_catalog" or page.entity_kind == "service_program":
+        return False
+    if page.latitude is not None and page.longitude is not None and _is_leipzig_coordinate(page.latitude, page.longitude):
+        return True
+    if page.address and _looks_like_leipzig_address(page.address):
+        return True
+    return False
+
+
+def _is_leipzig_coordinate(latitude: float, longitude: float) -> bool:
+    return 51.26 <= latitude <= 51.41 and 12.20 <= longitude <= 12.52
+
+
+def _looks_like_leipzig_address(address: str) -> bool:
+    normalized = normalize_text(address)
+    if any(term in normalized for term in ("markkleeberg", "markranstadt", "markranstaedt", "borna")):
+        return False
+    if "leipzig" in normalized or re.search(r"\b04[123]\d{2}\b", normalized):
+        return True
+    street_words = ("strasse", "str", "platz", "ring", "weg", "gasse", "allee")
+    return any(word in normalized for word in street_words) and bool(re.search(r"\d", normalized))
+
+
+def _concrete_location_items(kb: KnowledgeBase, retrieved: list[RetrievedPage]) -> list[RetrievedPage]:
+    concrete = [item for item in retrieved if _is_concrete_location_page(kb.get_page(item.page_id))]
+    concrete.sort(key=lambda item: (-item.score, item.page_id))
+    return concrete
+
+
+def _filter_sleep_items_by_target(kb: KnowledgeBase, items: list[RetrievedPage], target_group: str | None) -> list[RetrievedPage]:
+    if not target_group:
+        return items
+    filtered: list[RetrievedPage] = []
+    for item in items:
+        page = kb.get_page(item.page_id)
+        page_targets = set(page.target_groups)
+        if target_group == "men" and (page.gender_access == "men" or "men" in page_targets):
+            filtered.append(item)
+        elif target_group == "women" and (page.gender_access == "women" or "women" in page_targets):
+            filtered.append(item)
+        elif target_group == "young" and page.service_type in {"youth_emergency_housing", "child_emergency_housing"}:
+            filtered.append(item)
+        elif target_group == "psychiatric" and (page.service_type == "protected_housing" or "psychisch" in normalize_text(page.title)):
+            filtered.append(item)
+        elif target_group == "addiction" and (page.category == "addiction" or "addiction" in page_targets or "sucht" in normalize_text(page.title)):
+            filtered.append(item)
+    if target_group in {"men", "women"}:
+        overnight = [item for item in filtered if kb.get_page(item.page_id).service_type == "overnight_shelter"]
+        if overnight:
+            return overnight
+    return filtered or items
+
+
+def _contains_forbidden_redirect(answer_text: str) -> bool:
+    normalized = normalize_text(answer_text)
+    return any(pattern in normalized for pattern in FORBIDDEN_REDIRECT_PATTERNS)
 
 
 def _guarded_response(transcript: str, language: Language, kb: KnowledgeBase) -> KnowledgeAnswer | None:
@@ -457,10 +866,17 @@ def _ground_query(
     clarification_gap_threshold: float,
     weak_match_threshold: float,
     conversation_context: ConversationContext | None = None,
+    temporal_context: TemporalContext | None = None,
 ) -> tuple[list[RetrievedPage], KnowledgeAnswer | None]:
     guarded = _guarded_response(transcript, language, kb)
     if guarded:
         return [], guarded
+    if _is_toilet_query(transcript):
+        return [], _toilet_answer(language, transcript, kb)
+    if _is_out_of_scope_query(transcript):
+        return [], _out_of_scope_answer(language)
+    if _is_sleep_query(transcript) and _sleep_target_group(transcript) is None:
+        return [], _sleep_clarification_answer(language, kb)
     retrieval = RetrievalEngine(kb)
     resolved_transcript = conversation_context.resolved_transcript if conversation_context else transcript
     retrieved = retrieval.retrieve(
@@ -469,11 +885,19 @@ def _ground_query(
         limit=8,
         preferred_page_ids=conversation_context.preferred_page_ids if conversation_context else None,
         excluded_page_ids=conversation_context.excluded_page_ids if conversation_context else None,
+        temporal_context=temporal_context,
     )
     if not retrieved:
         if _is_out_of_scope_query(transcript):
             return [], _out_of_scope_answer(language)
         return [], KnowledgeAnswer(answer_text=UNKNOWN_TEXT[language], status="unknown")
+
+    if (
+        _is_location_required_query(transcript, language)
+        and not _is_address_detail_query(transcript, language)
+        and not _concrete_location_items(kb, retrieved)
+    ):
+        return retrieved, _no_concrete_location_answer(language, transcript, retrieved)
 
     anchored_follow_up = bool(
         conversation_context
@@ -513,7 +937,24 @@ def _fallback_answer(
     minimum_match_threshold: float,
     weak_match_threshold: float,
     conversation_context: ConversationContext | None = None,
+    temporal_context: TemporalContext | None = None,
 ) -> KnowledgeAnswer:
+    if _is_location_required_query(transcript, language) and not _is_address_detail_query(transcript, language):
+        concrete_items = _concrete_location_items(kb, retrieved)
+        if _is_sleep_query(transcript):
+            concrete_items = _filter_sleep_items_by_target(kb, concrete_items, _sleep_target_group(transcript))
+        if not concrete_items:
+            return _no_concrete_location_answer(language, transcript, retrieved)
+        top_page = kb.get_page(retrieved[0].page_id) if retrieved else None
+        if _is_water_query(transcript) or _is_sleep_query(transcript) or not top_page or not _is_concrete_location_page(top_page):
+            answer_text = _build_concrete_location_answer(transcript, language, kb, concrete_items)
+            return KnowledgeAnswer(
+                answer_text=answer_text,
+                status="weak_match" if concrete_items[0].score < weak_match_threshold else "ok",
+                weak_match=concrete_items[0].score < weak_match_threshold,
+                retrieved_page_ids=[item.page_id for item in concrete_items],
+            )
+
     if not retrieved or retrieved[0].score < minimum_match_threshold:
         return KnowledgeAnswer(
             answer_text=UNKNOWN_TEXT[language],
@@ -521,7 +962,7 @@ def _fallback_answer(
             retrieved_page_ids=[item.page_id for item in retrieved],
         )
 
-    snippet = _build_structured_answer(transcript, language, kb, retrieved, conversation_context=conversation_context)
+    snippet = _build_structured_answer(transcript, language, kb, retrieved, conversation_context=conversation_context, temporal_context=temporal_context)
     if not snippet:
         return KnowledgeAnswer(
             answer_text=UNKNOWN_TEXT[language],
@@ -541,6 +982,55 @@ def _fallback_answer(
         weak_match=weak,
         retrieved_page_ids=[item.page_id for item in retrieved],
     )
+
+
+def _build_concrete_location_answer(transcript: str, language: Language, kb: KnowledgeBase, retrieved: list[RetrievedPage]) -> str:
+    concrete_items = _concrete_location_items(kb, retrieved)[:3]
+    if not concrete_items:
+        return (NO_CONCRETE_WATER_LOCATION_TEXT if _is_water_query(transcript) else NO_CONCRETE_LOCATION_TEXT)[language]
+
+    parts: list[str] = []
+    water_query = _is_water_query(transcript)
+    sleep_query = _is_sleep_query(transcript)
+    if sleep_query:
+        concrete_items = _filter_sleep_items_by_target(kb, concrete_items, _sleep_target_group(transcript))[:3]
+    if language == Language.DE:
+        if water_query:
+            parts.append("Ich kenne diese Trinkwasser-Orte:")
+        elif sleep_query:
+            parts.append("Ich kenne diese Schlaf-Orte:")
+        else:
+            parts.append("Ich kenne diese Orte:")
+        for item in concrete_items:
+            page = kb.get_page(item.page_id)
+            detail = page.title
+            if page.address:
+                detail += f". Adresse: {page.address}"
+            parts.append(detail + ".")
+        return _clean_answer_text(" ".join(parts))
+
+    if language == Language.EN:
+        if water_query:
+            parts.append("I know these drinking-water places:")
+        elif sleep_query:
+            parts.append("I know these shelter places:")
+        else:
+            parts.append("I know these places:")
+        for item in concrete_items:
+            page = kb.get_page(item.page_id)
+            detail = page.title
+            if page.address:
+                detail += f". Address: {page.address}"
+            parts.append(detail + ".")
+        return _clean_answer_text(" ".join(parts))
+
+    for item in concrete_items:
+        page = kb.get_page(item.page_id)
+        detail = page.title
+        if page.address:
+            detail += f". {page.address}"
+        parts.append(detail + ".")
+    return _clean_answer_text(" ".join(parts))
 
 
 def _family_key(title: str) -> str:
@@ -591,6 +1081,8 @@ def _is_overview_query(transcript: str, language: Language, kb: KnowledgeBase, r
     if query_tokens & LOCATION_QUERY_TOKENS:
         return False
     if query_tokens & HOURS_QUERY_TOKENS:
+        return False
+    if query_tokens & WINTER_QUERY_TERMS:
         return False
 
     family_counts: dict[str, list[PageMetadata]] = {}
@@ -646,9 +1138,9 @@ def _food_family_overview(language: Language, grouped: dict[str, list[PageMetada
     )
 
     if language == Language.DE:
-        sentences = ["Es gibt verschiedene Anlaufstellen fuer Essen und Lebensmittel in Leipzig."]
+        sentences = ["Es gibt verschiedene Anlaufstellen für Essen und Lebensmittel in Leipzig."]
         if tafels:
-            sentences.append("Bei der Tafel Leipzig gibt es mehrere Ausgabestellen fuer Lebensmittel.")
+            sentences.append("Bei der Tafel Leipzig gibt es mehrere Ausgabestellen für Lebensmittel.")
             if any(page.requires_registration for page in tafels):
                 sentences.append(OVERVIEW_REGISTRATION[language])
             if tafel_locations:
@@ -678,8 +1170,10 @@ def _food_family_overview(language: Language, grouped: dict[str, list[PageMetada
             detail_parts.append(f"at {secondary_page.address}")
         if secondary_page.opening_hours:
             detail_parts.append(f"with times such as {'; '.join(secondary_page.opening_hours[:2])}")
-        elif secondary_page.description:
-            detail_parts.append(f"offering {secondary_page.description.rstrip('.')}")
+        else:
+            service_label = _service_type_label(secondary_page, language)
+            if service_label:
+                detail_parts.append(f"as {service_label}")
         sentences.append(" ".join(detail_parts).strip() + ".")
     sentences.append(OVERVIEW_DETAIL_OFFER[language])
     return sentences
@@ -880,6 +1374,7 @@ def _build_structured_answer(
     kb: KnowledgeBase,
     retrieved: list[RetrievedPage],
     conversation_context: ConversationContext | None = None,
+    temporal_context: TemporalContext | None = None,
 ) -> str:
     del conversation_context
     if not retrieved:
@@ -893,7 +1388,7 @@ def _build_structured_answer(
     options = []
     for item in pages:
         page = kb.get_page(item.page_id)
-        options.append(_format_page_option(page, transcript, language))
+        options.append(_format_page_option(page, transcript, language, temporal_context=temporal_context))
     return " ".join(option for option in options if option).strip()
 
 
@@ -915,6 +1410,10 @@ def _select_answer_pages(transcript: str, kb: KnowledgeBase, retrieved: list[Ret
     deduped = _dedupe_family_results(transcript, kb, retrieved)
     normalized_transcript = normalize_text(transcript)
     query_tokens = set(query_tokens_for_search(transcript))
+    if query_tokens & WINTER_QUERY_TERMS:
+        concrete = [item for item in deduped if _is_concrete_location_page(kb.get_page(item.page_id))]
+        if concrete:
+            return concrete[:limit]
     if any(hint in normalized_transcript for hint in TODAY_QUERY_HINTS):
         return deduped[:1]
     if _has_specific_page_anchor(transcript, kb.get_page(deduped[0].page_id)):
@@ -933,14 +1432,14 @@ def _select_answer_pages(transcript: str, kb: KnowledgeBase, retrieved: list[Ret
 def _service_type_label(page: PageMetadata, language: Language) -> str:
     labels_de = {
         "day_center": "eine Tageseinrichtung",
-        "food_distribution": "eine Ausgabestelle fuer Essen und Lebensmittel",
-        "overnight_shelter": "ein Uebernachtungshaus",
+        "food_distribution": "eine Ausgabestelle für Essen und Lebensmittel",
+        "overnight_shelter": "ein Übernachtungshaus",
         "medical_consultation": "eine medizinische Sprechstunde",
         "counseling": "eine Beratungsstelle",
         "station_support": "ein Hilfsangebot am Bahnhof",
         "streetwork": "ein Streetwork-Angebot",
         "streetwork_food_outreach": "ein Streetwork-Angebot mit Essen und Beratung",
-        "service_catalog": "eine Uebersichtsseite",
+        "service_catalog": "eine Übersichtsseite",
     }
     labels_en = {
         "day_center": "a day center",
@@ -956,7 +1455,7 @@ def _service_type_label(page: PageMetadata, language: Language) -> str:
     return (labels_de if language == Language.DE else labels_en).get(page.service_type, "")
 
 
-def _format_page_option(page: PageMetadata, transcript: str, language: Language) -> str:
+def _format_page_option(page: PageMetadata, transcript: str, language: Language, temporal_context: TemporalContext | None = None) -> str:
     normalized_transcript = normalize_text(transcript)
     query_tokens = set(query_tokens_for_search(transcript, language))
     attribute_query = bool(query_tokens & ATTRIBUTE_QUERY_TOKENS)
@@ -975,6 +1474,7 @@ def _format_page_option(page: PageMetadata, transcript: str, language: Language)
         query_tokens,
         hours_query or (attribute_query and not appointment_query and not location_query),
         language,
+        temporal_context=temporal_context,
     )
     appointment_sentence = _appointment_sentence(page, appointment_query, language)
     if address_sentence:
@@ -984,12 +1484,12 @@ def _format_page_option(page: PageMetadata, transcript: str, language: Language)
     if appointment_sentence:
         parts.append(appointment_sentence)
     service_label = _service_type_label(page, language)
-    if service_label and not page.description:
+    if service_label and (not page.description or language != Language.DE):
         if language == Language.DE:
             parts.append(f"Das ist {service_label}")
         else:
             parts.append(f"This is {service_label}")
-    if page.description and not _description_redundant(page):
+    if language == Language.DE and page.description and not _description_redundant(page):
         parts.append(page.description.rstrip("."))
     return _clean_answer_text(". ".join(parts))
 
@@ -1005,18 +1505,18 @@ def _place_intro(page: PageMetadata, transcript: str, language: Language) -> str
         if location_query and page.address:
             return f"{page.title} ist in {page.address}"
         if hours_query:
-            return f"Bei {page.title} stehen diese Oeffnungszeiten"
+            return f"Zu {page.title} habe ich diese Information"
         if appointment_query:
-            return f"Zu {page.title} steht in der Wissensbasis"
+            return f"Zu {page.title} habe ich diese Information"
         if need_label:
-            return f"Fuer {need_label} koennen Sie zu {page.title} gehen"
+            return f"Für {need_label} können Sie zu {page.title} gehen"
         return f"{page.title} kann hier helfen"
     if location_query and page.address:
         return f"{page.title} is at {page.address}"
     if hours_query:
-        return f"These are the listed hours for {page.title}"
+        return f"I have this information about {page.title}"
     if appointment_query:
-        return f"This is what the knowledge base says about appointments for {page.title}"
+        return f"I have this information about appointments for {page.title}"
     if need_label:
         return f"For {need_label}, you can go to {page.title}"
     return f"{page.title} can help here"
@@ -1030,8 +1530,8 @@ def _address_sentence(page: PageMetadata, include: bool, language: Language) -> 
             return f"Die Adresse ist {page.address}"
         return f"The address is {page.address}"
     if language == Language.DE:
-        return "Ich sehe in der Wissensbasis keine genaue Adresse"
-    return "I do not see an exact address in the knowledge base"
+        return "Ich habe dazu keine genaue Adresse"
+    return "I do not have an exact address for that"
 
 
 def _hours_sentence(
@@ -1040,6 +1540,7 @@ def _hours_sentence(
     query_tokens: set[str],
     include: bool,
     language: Language,
+    temporal_context: TemporalContext | None = None,
 ) -> str:
     if not include:
         return ""
@@ -1049,19 +1550,25 @@ def _hours_sentence(
             normalized_hours = normalize_text(" ".join(page.opening_hours))
             if not any(day_token in normalized_hours for day_token in day_specific_tokens):
                 if language == Language.DE:
-                    return "Fuer diesen Wochentag sehe ich in der Wissensbasis keine eigenen Oeffnungszeiten"
-                return "I do not see separate opening hours for that day in the knowledge base"
+                    return "Für diesen Wochentag habe ich keine eigenen Öffnungszeiten"
+                return "I do not have separate opening hours for that day"
         if any(hint in normalized_transcript for hint in TODAY_QUERY_HINTS):
-            today = datetime.now(UTC).date().isoformat()
+            if temporal_context and not _opening_hours_supports_weekday(page.opening_hours, temporal_context):
+                if language == Language.DE:
+                    return f"Für heute ({temporal_context.date_iso}, {temporal_context.weekday_de}) habe ich keine sicheren Öffnungszeiten"
+                return f"I do not have reliable opening hours for today ({temporal_context.date_iso}, {temporal_context.weekday_en})"
+            today = temporal_context.date_iso if temporal_context else datetime.now(UTC).date().isoformat()
+            weekday = f", {temporal_context.weekday_de}" if temporal_context and language == Language.DE else ""
+            weekday = f", {temporal_context.weekday_en}" if temporal_context and language != Language.DE else weekday
             if language == Language.DE:
-                return f"Fuer heute ({today}) stehen diese Oeffnungszeiten dort: {'; '.join(page.opening_hours)}"
-            return f"For today ({today}), these opening hours are listed: {'; '.join(page.opening_hours)}"
+                return f"Für heute ({today}{weekday}) stehen diese Öffnungszeiten dort: {'; '.join(page.opening_hours)}"
+            return f"For today ({today}{weekday}), these opening hours are listed: {'; '.join(page.opening_hours)}"
         if language == Language.DE:
-            return f"Die Oeffnungszeiten sind: {'; '.join(page.opening_hours)}"
+            return f"Die Öffnungszeiten sind: {'; '.join(page.opening_hours)}"
         return f"The opening hours are: {'; '.join(page.opening_hours)}"
     if language == Language.DE:
-        return "Ich sehe in der Wissensbasis keine klaren Oeffnungszeiten"
-    return "I do not see clear opening hours in the knowledge base"
+        return "Ich habe keine klaren Öffnungszeiten"
+    return "I do not have clear opening hours"
 
 
 def _appointment_sentence(page: PageMetadata, appointment_query: bool, language: Language) -> str:
@@ -1074,10 +1581,41 @@ def _appointment_sentence(page: PageMetadata, appointment_query: bool, language:
     if page.requires_registration is False:
         if language == Language.DE:
             return "Eine Anmeldung ist dort nicht genannt"
-        return "The knowledge base does not say that an appointment is needed"
+        return "An appointment is not named as needed"
     if language == Language.DE:
         return "Ob ein Termin noetig ist, sehe ich dort nicht klar"
-    return "I cannot clearly tell from the knowledge base whether an appointment is needed"
+    return "I cannot clearly tell whether an appointment is needed"
+
+
+WEEKDAY_ALIASES = (
+    ("montag", "mo", "monday"),
+    ("dienstag", "di", "tuesday"),
+    ("mittwoch", "mi", "wednesday"),
+    ("donnerstag", "do", "thursday"),
+    ("freitag", "fr", "friday"),
+    ("samstag", "sa", "saturday"),
+    ("sonntag", "so", "sunday"),
+)
+
+
+def _opening_hours_supports_weekday(opening_hours: list[str], temporal_context: TemporalContext) -> bool:
+    if not opening_hours:
+        return False
+    normalized_hours = normalize_text(" | ".join(opening_hours))
+    weekday_index = temporal_context.weekday_index
+    if any(_weekday_alias_present(normalized_hours, alias) for alias in WEEKDAY_ALIASES[weekday_index]):
+        return True
+    if weekday_index <= 4 and any(pattern in normalized_hours for pattern in ("montag bis freitag", "mo bis fr", "mo-fr", "mo - fr", "mo. bis fr")):
+        return True
+    if weekday_index >= 5 and any(pattern in normalized_hours for pattern in ("samstag, sonntag", "sa, so", "sa und so", "sa, so, feiertag")):
+        return True
+    return False
+
+
+def _weekday_alias_present(normalized_hours: str, alias: str) -> bool:
+    if len(alias) <= 2:
+        return bool(re.search(rf"(?<![a-z]){re.escape(alias)}(?![a-z])", normalized_hours))
+    return alias in normalized_hours
 
 
 def _description_redundant(page: PageMetadata) -> bool:
@@ -1121,8 +1659,6 @@ def _clean_answer_text(text: str) -> str:
         return ""
     if cleaned.lower() in {"kontakt", "telefon", "telefon:", "mail", "e-mail"}:
         return ""
-    if len(cleaned) > 320:
-        cleaned = cleaned[:317].rstrip() + "..."
     if cleaned and cleaned[-1] not in ".!?":
         cleaned = f"{cleaned}."
     return cleaned
@@ -1130,6 +1666,71 @@ def _clean_answer_text(text: str) -> str:
 
 def _hash_text(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _language_instruction(language: Language) -> str:
+    names = {
+        Language.DE: "German",
+        Language.EN: "English",
+        Language.PL: "Polish",
+        Language.RO: "Romanian",
+        Language.RU: "Russian",
+    }
+    requested = names[language]
+    if language == Language.DE:
+        return (
+            "Answer in German. Use only facts from the retrieved service information. "
+            "Use simple German. Keep names, addresses, organization names, and source titles unchanged."
+        )
+    return (
+        f"Answer fully in {requested}. Translate German service descriptions into {requested}. "
+        "Keep official names, organization names, addresses, street names, and source titles unchanged. "
+        f"Do not copy German descriptive text into the {requested} answer unless it is an official name."
+    )
+
+
+def _simple_language_rules() -> list[str]:
+    return [
+        "Use simple language.",
+        "Use short sentences.",
+        "Put one idea in one sentence.",
+        "Use direct words.",
+        "Avoid technical words.",
+        "Do not write internal system terms in answer_text.",
+        "Forbidden answer_text words include: Wissensbasis, knowledge base, KB, retrieval, context, Kontext, provider, database.",
+        "If information is missing, say it plainly.",
+        "Prefer concrete next steps.",
+    ]
+
+
+def _no_external_redirection_rules() -> list[str]:
+    return [
+        "LENA is for users who may not have a smartphone, internet access, or digital skills.",
+        "Do not answer by telling the user to download an app, use an app, search a website, check online, use Google Maps, or find the place themselves.",
+        "If the user asks for a concrete place, address, water fountain, food place, sleeping place, clothing, hygiene, medical help, or counselling, answer with concrete retrieved locations.",
+        "If no concrete retrieved location exists, say plainly that you do not have a safe concrete location for this.",
+        "If map targets are available, mention the closest or most relevant places and let the frontend show the map.",
+        "Source links may be included only as secondary evidence. They must not replace the answer.",
+        "Never invent exact locations, distances, opening hours, or availability.",
+    ]
+
+
+def _temporal_context_block(temporal_context: TemporalContext | None) -> str:
+    if not temporal_context:
+        return "Temporal context: not available. Do not infer the current date."
+    hints = ", ".join(temporal_context.season_hints) if temporal_context.season_hints else "none"
+    return "\n".join(
+        [
+            "Temporal context computed by backend:",
+            f"- now_iso: {temporal_context.now_iso}",
+            f"- date_iso: {temporal_context.date_iso}",
+            f"- weekday: {temporal_context.weekday_en} / {temporal_context.weekday_de}",
+            f"- weekday_index_monday_0: {temporal_context.weekday_index}",
+            f"- is_weekend: {temporal_context.is_weekend}",
+            f"- season: {temporal_context.season}",
+            f"- season_hints: {hints}",
+        ]
+    )
 
 
 def _unsupported_sensitive_fact(answer_text: str, evidence_context: str) -> str | None:
@@ -1151,6 +1752,48 @@ def _unsupported_sensitive_fact(answer_text: str, evidence_context: str) -> str 
         if normalize_text(number) not in normalized_evidence:
             return f"unsupported_number:{number}"
 
+    return None
+
+
+def _validate_location_answer(
+    answer: KnowledgeAnswer,
+    transcript: str,
+    language: Language,
+    kb: KnowledgeBase,
+    retrieved: list[RetrievedPage],
+) -> KnowledgeAnswer | None:
+    if answer.status not in {"ok", "weak_match"}:
+        return None
+    if not _is_location_required_query(transcript, language):
+        return None
+    concrete_items = _concrete_location_items(kb, retrieved)
+    if _contains_forbidden_redirect(answer.answer_text):
+        if concrete_items:
+            return _fallback_answer(
+                transcript,
+                language,
+                kb,
+                concrete_items,
+                minimum_match_threshold=0.0,
+                weak_match_threshold=0.18,
+            )
+        return _no_concrete_location_answer(language, transcript, retrieved)
+    if not concrete_items:
+        return _no_concrete_location_answer(language, transcript, retrieved)
+    normalized_answer = normalize_text(answer.answer_text)
+    if not any(
+        normalize_text(kb.get_page(item.page_id).title) in normalized_answer
+        or (kb.get_page(item.page_id).address and normalize_text(kb.get_page(item.page_id).address or "") in normalized_answer)
+        for item in concrete_items
+    ):
+        return _fallback_answer(
+            transcript,
+            language,
+            kb,
+            concrete_items,
+            minimum_match_threshold=0.0,
+            weak_match_threshold=0.18,
+        )
     return None
 
 
@@ -1195,6 +1838,7 @@ class TemplateRewriteProvider(BaseRewriteProvider):
         language: Language,
         kb: KnowledgeBase,
         conversation_context: ConversationContext | None = None,
+        temporal_context: TemporalContext | None = None,
     ) -> KnowledgeAnswer:
         retrieved, early_answer = _ground_query(
             transcript,
@@ -1204,6 +1848,7 @@ class TemplateRewriteProvider(BaseRewriteProvider):
             clarification_gap_threshold=self.clarification_gap_threshold,
             weak_match_threshold=self.weak_match_threshold,
             conversation_context=conversation_context,
+            temporal_context=temporal_context,
         )
         resolved_transcript = conversation_context.resolved_transcript if conversation_context else transcript
         self.last_resolved_transcript = resolved_transcript
@@ -1213,6 +1858,7 @@ class TemplateRewriteProvider(BaseRewriteProvider):
         self.last_system_prompt_hash = None
         self.last_user_prompt_hash = None
         self.last_validation_error = None
+        self.last_provider_error = None
         if early_answer:
             self.last_answer_source = "guardrail"
             return early_answer
@@ -1225,6 +1871,7 @@ class TemplateRewriteProvider(BaseRewriteProvider):
             minimum_match_threshold=self.minimum_match_threshold,
             weak_match_threshold=self.weak_match_threshold,
             conversation_context=conversation_context,
+            temporal_context=temporal_context,
         )
 
 
@@ -1255,18 +1902,22 @@ class OllamaRewriteProvider(BaseRewriteProvider):
         fallback = "\n".join(
             [
                 "# Task",
-                "You are a local knowledge-base assistant for Leipzig support services.",
+                "You help users find local support services in Leipzig.",
                 "",
                 "# Rules",
-                "Answer only from the provided local knowledge base.",
+                "Answer only from the retrieved service information.",
                 "Do not invent facts.",
-                "If the KB does not clearly support the answer, return status unknown.",
+                "If the retrieved information does not clearly support the answer, return status unknown.",
                 "If several pages may fit and the request is too vague, return status clarification_needed.",
                 "If there is a closest match but support is weak, return status weak_match.",
-                "Use plain language.",
+                *_simple_language_rules(),
+                *_no_external_redirection_rules(),
+                "Answer entirely in the requested language.",
+                "Translate German service descriptions into the requested language.",
+                "Keep official names, organization names, addresses, street names, and source titles unchanged.",
+                "Do not use German descriptive fragments in non-German answers unless they are official names.",
                 "Write short, natural sentences that sound clear when spoken aloud.",
-                "Avoid jargon. If a hard term is necessary, explain it briefly.",
-                "Keep important facts such as place name, address, opening hours, service type, and target group when they are supported by the KB.",
+                "Keep important facts such as place name, address, opening hours, service type, and target group when they are supported by the retrieved information.",
                 "Prefer the highest-scoring retrieved page. Only use lower-scoring pages if they add clearly relevant detail.",
                 "Answer in one or two short sentences unless the question clearly needs more.",
                 f"Respond in language: {language.value}.",
@@ -1283,10 +1934,16 @@ class OllamaRewriteProvider(BaseRewriteProvider):
             return fallback
         return (
             f"{content}\n"
-            "- Use plain language.\n"
+            + "\n".join(f"- {rule}" for rule in _simple_language_rules())
+            + "\n"
+            + "\n".join(f"- {rule}" for rule in _no_external_redirection_rules())
+            + "\n"
+            "- Answer entirely in the requested language.\n"
+            "- Translate German service descriptions into the requested language.\n"
+            "- Keep official names, organization names, addresses, street names, and source titles unchanged.\n"
+            "- Do not use German descriptive fragments in non-German answers unless they are official names.\n"
             "- Write short, natural sentences that sound clear when spoken aloud.\n"
-            "- Avoid jargon. If a hard term is necessary, explain it briefly.\n"
-            "- Keep important facts such as place name, address, opening hours, service type, and target group when they are supported by the KB.\n"
+            "- Keep important facts such as place name, address, opening hours, service type, and target group when they are supported by the retrieved information.\n"
             "- Prefer the highest-scoring retrieved page. Only use lower-scoring pages if they add clearly relevant detail.\n"
             "- Answer in one or two short sentences unless the question clearly needs more.\n\n"
             f"Respond in language: {language.value}.\nReturn JSON only."
@@ -1298,6 +1955,7 @@ class OllamaRewriteProvider(BaseRewriteProvider):
         language: Language,
         kb: KnowledgeBase,
         conversation_context: ConversationContext | None = None,
+        temporal_context: TemporalContext | None = None,
     ) -> KnowledgeAnswer:
         retrieved, early_answer = _ground_query(
             transcript,
@@ -1307,6 +1965,7 @@ class OllamaRewriteProvider(BaseRewriteProvider):
             clarification_gap_threshold=self.clarification_gap_threshold,
             weak_match_threshold=self.weak_match_threshold,
             conversation_context=conversation_context,
+            temporal_context=temporal_context,
         )
         resolved_transcript = conversation_context.resolved_transcript if conversation_context else transcript
         self.last_resolved_transcript = resolved_transcript
@@ -1316,6 +1975,7 @@ class OllamaRewriteProvider(BaseRewriteProvider):
         self.last_system_prompt_hash = None
         self.last_user_prompt_hash = None
         self.last_validation_error = None
+        self.last_provider_error = None
         if early_answer:
             self.last_answer_source = "guardrail"
             return early_answer
@@ -1336,6 +1996,18 @@ class OllamaRewriteProvider(BaseRewriteProvider):
                 minimum_match_threshold=self.minimum_match_threshold,
                 weak_match_threshold=self.weak_match_threshold,
                 conversation_context=conversation_context,
+            )
+        if _is_sleep_query(transcript) and _is_location_required_query(transcript, language):
+            self.last_answer_source = "template_detail_guard"
+            return _fallback_answer(
+                transcript,
+                language,
+                kb,
+                retrieved,
+                minimum_match_threshold=self.minimum_match_threshold,
+                weak_match_threshold=self.weak_match_threshold,
+                conversation_context=conversation_context,
+                temporal_context=temporal_context,
             )
 
         retrieved_page_ids = [item.page_id for item in retrieved]
@@ -1362,28 +2034,33 @@ class OllamaRewriteProvider(BaseRewriteProvider):
                 "",
                 f"Resolved request for retrieval: {resolved_transcript}",
                 "",
-                "Retrieved knowledge base pages:",
+                _temporal_context_block(temporal_context),
+                "",
+                "Retrieved service information:",
                 context,
                 "",
                 f"Overview hint: {overview_hint}" if overview_hint else "",
                 follow_up_hint,
+                _language_instruction(language),
                 "If several retrieved pages are locations of the same organisation, summarize them together instead of repeating one sentence per location.",
                 "Answer only from the retrieved pages above.",
                 "Always include the place name.",
                 "Include the address and opening hours whenever they are available and directly useful.",
-                "Use plain language and short sentences.",
-                "Avoid jargon. If you need a hard term, explain it briefly.",
+                *_simple_language_rules(),
+                *_no_external_redirection_rules(),
                 "Make the answer easy to understand for a stressed user and easy to speak aloud.",
                 "If the user asks where a place is, answer with the place name and address. Do not add opening hours unless the user asked for them." if is_location_query else "",
                 "If the user asks about opening hours, focus on the hours answer and do not add unrelated service details." if is_hours_query or is_day_specific_query else "",
-                "If the user asks about appointments, answer only whether an appointment is required, not required, or not clearly stated in the knowledge base." if is_appointment_query else "",
+                "If the user asks about appointments, answer only whether an appointment is required, not required, or not clearly stated." if is_appointment_query else "",
                 "If several suitable places are retrieved, give 1 to 3 concrete options.",
                 "Prefer the highest-scoring page unless another retrieved page adds directly relevant detail.",
                 "Do not infer facts that are not explicitly supported by the retrieved pages.",
                 "If a specific weekday is asked for, only say that the place is open on that day if that weekday is explicitly listed in OPENING_HOURS.",
                 "Do not infer Sunday opening from Saturday hours or from public-holiday hours.",
-                "If the knowledge base does not clearly say whether an appointment is needed, say that clearly instead of guessing." if is_appointment_query else "",
-                "If the user asks about opening hours for a specific day and that day is not explicitly listed, say that the knowledge base does not clearly list separate hours for that day." if is_day_specific_query or is_hours_query else "",
+                "If the retrieved information does not clearly say whether an appointment is needed, say that clearly instead of guessing." if is_appointment_query else "",
+                "If today's opening status cannot be determined from retrieved opening hours, say that reliable opening information for today is not available instead of guessing.",
+                "If the user asks about opening hours for a specific day and that day is not explicitly listed, say that no separate hours for that day are available." if is_day_specific_query or is_hours_query else "",
+                "Seasonal advice must only use services or facts present in the retrieved pages.",
                 "If the retrieved pages do not clearly support the answer, return status unknown.",
                 "If support is weak, return status weak_match.",
                 "Keep the answer concise, clear, and easy to speak aloud.",
@@ -1412,6 +2089,7 @@ class OllamaRewriteProvider(BaseRewriteProvider):
             answer = KnowledgeAnswer.model_validate(parsed)
         except Exception:
             self.last_answer_source = "template_fallback"
+            self.last_provider_error = "ollama_error"
             return _fallback_answer(
                 transcript,
                 language,
@@ -1428,6 +2106,11 @@ class OllamaRewriteProvider(BaseRewriteProvider):
         weak = retrieved[0].score < self.weak_match_threshold
 
         if answer.status in {"ok", "weak_match"}:
+            location_replacement = _validate_location_answer(answer, transcript, language, kb, retrieved)
+            if location_replacement:
+                self.last_validation_error = "external_self_service_redirect_or_missing_concrete_location"
+                self.last_answer_source = "validator_fallback"
+                return location_replacement
             validation_error = _unsupported_sensitive_fact(answer.answer_text, context)
             if validation_error:
                 self.last_validation_error = validation_error
@@ -1446,13 +2129,9 @@ class OllamaRewriteProvider(BaseRewriteProvider):
             answer.self_description = True
             return answer
         if answer.status == "out_of_scope":
-            answer.out_of_scope = True
-            return answer
+            return _out_of_scope_answer(language)
         if answer.status == "crisis":
-            answer.crisis_mode = True
-            if not answer.retrieved_page_ids:
-                answer.retrieved_page_ids = _known_response_page_ids(kb, "notfallkontakte", "telefonseelsorge-leipzig")
-            return answer
+            return _crisis_answer(language, kb)
 
         if answer.status == "clarification_needed":
             if answer.clarification_question or answer.answer_text.endswith("?"):
@@ -1466,7 +2145,20 @@ class OllamaRewriteProvider(BaseRewriteProvider):
             answer.clarification_question = None
 
         if answer.status == "unknown":
-            answer.answer_text = answer.answer_text or UNKNOWN_TEXT[language]
+            if _is_location_required_query(transcript, language) and _concrete_location_items(kb, retrieved):
+                self.last_answer_source = "validator_fallback"
+                self.last_validation_error = "location_required_with_concrete_results"
+                return _fallback_answer(
+                    transcript,
+                    language,
+                    kb,
+                    retrieved,
+                    minimum_match_threshold=self.minimum_match_threshold,
+                    weak_match_threshold=self.weak_match_threshold,
+                    conversation_context=conversation_context,
+                    temporal_context=temporal_context,
+                )
+            answer.answer_text = UNKNOWN_TEXT[language]
             if (
                 answer.answer_text != UNKNOWN_TEXT[language]
                 and not weak
@@ -1508,6 +2200,435 @@ class OllamaRewriteProvider(BaseRewriteProvider):
         return answer
 
 
+class OpenAICompatibleRewriteProvider(OllamaRewriteProvider):
+    name = "openai_compatible"
+    uses_llm = True
+
+    def __init__(
+        self,
+        base_url: str | None,
+        api_key: str | None,
+        model: str = "alias-large",
+        provider_name: str = "openai_compatible",
+        system_prompt_path: Path | None = None,
+        timeout_seconds: float = 60.0,
+        max_tokens: int = 800,
+        temperature: float = 0.0,
+        minimum_match_threshold: float = 0.08,
+        weak_match_threshold: float = 0.18,
+        clarification_gap_threshold: float = 0.03,
+    ) -> None:
+        self.name = provider_name
+        self.base_url = base_url.rstrip("/") if base_url else ""
+        self.api_key = api_key
+        self.model = model
+        self.model_name = model
+        self.system_prompt_path = system_prompt_path
+        self.timeout_seconds = timeout_seconds
+        self.max_tokens = max_tokens
+        self.temperature = temperature
+        self.minimum_match_threshold = minimum_match_threshold
+        self.weak_match_threshold = weak_match_threshold
+        self.clarification_gap_threshold = clarification_gap_threshold
+
+    async def answer(
+        self,
+        transcript: str,
+        language: Language,
+        kb: KnowledgeBase,
+        conversation_context: ConversationContext | None = None,
+        temporal_context: TemporalContext | None = None,
+    ) -> KnowledgeAnswer:
+        retrieved, early_answer = _ground_query(
+            transcript,
+            language,
+            kb,
+            minimum_match_threshold=self.minimum_match_threshold,
+            clarification_gap_threshold=self.clarification_gap_threshold,
+            weak_match_threshold=self.weak_match_threshold,
+            conversation_context=conversation_context,
+            temporal_context=temporal_context,
+        )
+        resolved_transcript = conversation_context.resolved_transcript if conversation_context else transcript
+        self.last_resolved_transcript = resolved_transcript
+        self.last_retrieved_page_ids = [item.page_id for item in retrieved]
+        self.last_evidence_context = _build_retrieved_context(resolved_transcript, language, kb, retrieved, conversation_context=conversation_context) if retrieved else ""
+        self.last_prompt_hash = None
+        self.last_system_prompt_hash = None
+        self.last_user_prompt_hash = None
+        self.last_validation_error = None
+        self.last_provider_error = None
+        if early_answer:
+            self.last_answer_source = "guardrail"
+            return early_answer
+
+        if not self.base_url:
+            self.last_answer_source = "template_fallback"
+            self.last_provider_error = "missing_base_url"
+            return _fallback_answer(
+                transcript,
+                language,
+                kb,
+                retrieved,
+                minimum_match_threshold=self.minimum_match_threshold,
+                weak_match_threshold=self.weak_match_threshold,
+                conversation_context=conversation_context,
+                temporal_context=temporal_context,
+            )
+        if not self.api_key:
+            self.last_answer_source = "template_fallback"
+            self.last_provider_error = "missing_api_key"
+            return _fallback_answer(
+                transcript,
+                language,
+                kb,
+                retrieved,
+                minimum_match_threshold=self.minimum_match_threshold,
+                weak_match_threshold=self.weak_match_threshold,
+                conversation_context=conversation_context,
+                temporal_context=temporal_context,
+            )
+
+        query_tokens = set(query_tokens_for_search(transcript, language))
+        detail_sensitive_follow_up = bool(
+            conversation_context
+            and conversation_context.follow_up_mode == "referential"
+            and query_tokens & (LOCATION_QUERY_TOKENS | HOURS_QUERY_TOKENS | APPOINTMENT_QUERY_TOKENS | DAY_QUERY_TOKENS)
+        )
+        if detail_sensitive_follow_up:
+            self.last_answer_source = "template_detail_guard"
+            return _fallback_answer(
+                transcript,
+                language,
+                kb,
+                retrieved,
+                minimum_match_threshold=self.minimum_match_threshold,
+                weak_match_threshold=self.weak_match_threshold,
+                conversation_context=conversation_context,
+                temporal_context=temporal_context,
+            )
+        if _is_sleep_query(transcript) and _is_location_required_query(transcript, language):
+            self.last_answer_source = "template_detail_guard"
+            return _fallback_answer(
+                transcript,
+                language,
+                kb,
+                retrieved,
+                minimum_match_threshold=self.minimum_match_threshold,
+                weak_match_threshold=self.weak_match_threshold,
+                conversation_context=conversation_context,
+                temporal_context=temporal_context,
+            )
+
+        retrieved_page_ids = [item.page_id for item in retrieved]
+        context = self.last_evidence_context
+        overview_hint = _build_overview_answer(transcript, language, kb, retrieved)
+        normalized_transcript = normalize_text(transcript)
+        is_location_query = bool(query_tokens & LOCATION_QUERY_TOKENS) or normalized_transcript.startswith(("wo ist ", "where is ", "wo finde ", "gdzie jest ", "unde este "))
+        is_day_specific_query = bool(query_tokens & DAY_QUERY_TOKENS)
+        is_hours_query = bool(query_tokens & HOURS_QUERY_TOKENS)
+        is_appointment_query = bool(query_tokens & APPOINTMENT_QUERY_TOKENS)
+        follow_up_hint = ""
+        if conversation_context and conversation_context.follow_up_mode == "referential":
+            follow_up_hint = "This is a follow-up about the same place. Keep the answer anchored to the referenced place and avoid drifting to another page."
+        elif conversation_context and conversation_context.follow_up_mode == "alternative":
+            follow_up_hint = "This is a request for an alternative option. Do not repeat the same place if another retrieved page fits."
+        elif conversation_context and conversation_context.follow_up_mode == "topic_shift":
+            follow_up_hint = "This continues the same conversation with a related topic shift. Use only the currently retrieved pages for the new subtopic."
+        schema = LLMKnowledgeAnswer.model_json_schema()
+        system_prompt = self._load_system_prompt(language)
+        user_prompt = "\n".join(
+            [
+                "User request:",
+                transcript,
+                "",
+                f"Resolved request for retrieval: {resolved_transcript}",
+                "",
+                _temporal_context_block(temporal_context),
+                "",
+                "Retrieved service information:",
+                context,
+                "",
+                f"Overview hint: {overview_hint}" if overview_hint else "",
+                follow_up_hint,
+                _language_instruction(language),
+                "If several retrieved pages are locations of the same organisation, summarize them together instead of repeating one sentence per location.",
+                "Answer only from the retrieved pages above.",
+                "Always include the place name.",
+                "Include the address and opening hours whenever they are available and directly useful.",
+                *_simple_language_rules(),
+                *_no_external_redirection_rules(),
+                "Make the answer easy to understand for a stressed user and easy to speak aloud.",
+                "If the user asks where a place is, answer with the place name and address. Do not add opening hours unless the user asked for them." if is_location_query else "",
+                "If the user asks about opening hours, focus on the hours answer and do not add unrelated service details." if is_hours_query or is_day_specific_query else "",
+                "If the user asks about appointments, answer only whether an appointment is required, not required, or not clearly stated." if is_appointment_query else "",
+                "If several suitable places are retrieved, give 1 to 3 concrete options.",
+                "Prefer the highest-scoring page unless another retrieved page adds directly relevant detail.",
+                "Do not infer facts that are not explicitly supported by the retrieved pages.",
+                "If a specific weekday is asked for, only say that the place is open on that day if that weekday is explicitly listed in OPENING_HOURS.",
+                "Do not infer Sunday opening from Saturday hours or from public-holiday hours.",
+                "If the retrieved information does not clearly say whether an appointment is needed, say that clearly instead of guessing." if is_appointment_query else "",
+                "If today's opening status cannot be determined from retrieved opening hours, say that reliable opening information for today is not available instead of guessing.",
+                "If the user asks about opening hours for a specific day and that day is not explicitly listed, say that no separate hours for that day are available." if is_day_specific_query or is_hours_query else "",
+                "Seasonal advice must only use services or facts present in the retrieved pages.",
+                "If the retrieved pages do not clearly support the answer, return status unknown.",
+                "If support is weak, return status weak_match.",
+                "Return exactly one JSON object matching this schema:",
+                json.dumps(schema, ensure_ascii=False),
+                "Keep the answer concise, clear, and easy to speak aloud.",
+            ]
+        )
+        payload = {
+            "model": self.model,
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt},
+            ],
+            "temperature": self.temperature,
+            "max_tokens": self.max_tokens,
+            "response_format": {"type": "json_object"},
+        }
+        self.last_system_prompt_hash = _hash_text(system_prompt)
+        self.last_user_prompt_hash = _hash_text(user_prompt)
+        self.last_prompt_hash = _hash_text(system_prompt + "\n\n" + user_prompt)
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout_seconds) as client:
+                response = await client.post(
+                    f"{self.base_url}/chat/completions",
+                    json=payload,
+                    headers={"Authorization": f"Bearer {self.api_key}"},
+                )
+                response.raise_for_status()
+                body = response.json()
+            content = self._extract_chat_content(body)
+            parsed = json.loads(content)
+            answer = KnowledgeAnswer.model_validate(parsed)
+        except json.JSONDecodeError:
+            self.last_answer_source = "template_fallback"
+            self.last_provider_error = "invalid_json"
+            return _fallback_answer(
+                transcript,
+                language,
+                kb,
+                retrieved,
+                minimum_match_threshold=self.minimum_match_threshold,
+                weak_match_threshold=self.weak_match_threshold,
+                conversation_context=conversation_context,
+                temporal_context=temporal_context,
+            )
+        except httpx.TimeoutException:
+            self.last_answer_source = "template_fallback"
+            self.last_provider_error = "timeout"
+            return _fallback_answer(
+                transcript,
+                language,
+                kb,
+                retrieved,
+                minimum_match_threshold=self.minimum_match_threshold,
+                weak_match_threshold=self.weak_match_threshold,
+                conversation_context=conversation_context,
+                temporal_context=temporal_context,
+            )
+        except httpx.HTTPStatusError as exc:
+            self.last_answer_source = "template_fallback"
+            self.last_provider_error = f"http_{exc.response.status_code}"
+            return _fallback_answer(
+                transcript,
+                language,
+                kb,
+                retrieved,
+                minimum_match_threshold=self.minimum_match_threshold,
+                weak_match_threshold=self.weak_match_threshold,
+                conversation_context=conversation_context,
+                temporal_context=temporal_context,
+            )
+        except (KeyError, IndexError, TypeError):
+            self.last_answer_source = "template_fallback"
+            self.last_provider_error = "invalid_response"
+            return _fallback_answer(
+                transcript,
+                language,
+                kb,
+                retrieved,
+                minimum_match_threshold=self.minimum_match_threshold,
+                weak_match_threshold=self.weak_match_threshold,
+                conversation_context=conversation_context,
+                temporal_context=temporal_context,
+            )
+        except httpx.HTTPError:
+            self.last_answer_source = "template_fallback"
+            self.last_provider_error = "connection_error"
+            return _fallback_answer(
+                transcript,
+                language,
+                kb,
+                retrieved,
+                minimum_match_threshold=self.minimum_match_threshold,
+                weak_match_threshold=self.weak_match_threshold,
+                conversation_context=conversation_context,
+                temporal_context=temporal_context,
+            )
+        except Exception:
+            self.last_answer_source = "template_fallback"
+            self.last_provider_error = "schema_mismatch"
+            return _fallback_answer(
+                transcript,
+                language,
+                kb,
+                retrieved,
+                minimum_match_threshold=self.minimum_match_threshold,
+                weak_match_threshold=self.weak_match_threshold,
+                conversation_context=conversation_context,
+                temporal_context=temporal_context,
+            )
+
+        self.last_answer_source = "llm"
+        answer.retrieved_page_ids = retrieved_page_ids
+        answer.answer_text = _clean_answer_text(answer.answer_text)
+        weak = retrieved[0].score < self.weak_match_threshold
+
+        if answer.status in {"ok", "weak_match"}:
+            location_replacement = _validate_location_answer(answer, transcript, language, kb, retrieved)
+            if location_replacement:
+                self.last_validation_error = "external_self_service_redirect_or_missing_concrete_location"
+                self.last_answer_source = "validator_fallback"
+                return location_replacement
+            validation_error = _unsupported_sensitive_fact(answer.answer_text, context)
+            if validation_error:
+                self.last_validation_error = validation_error
+                self.last_answer_source = "validator_fallback"
+                self.last_provider_error = "unsupported_sensitive_fact"
+                return _fallback_answer(
+                    transcript,
+                    language,
+                    kb,
+                    retrieved,
+                    minimum_match_threshold=self.minimum_match_threshold,
+                    weak_match_threshold=self.weak_match_threshold,
+                    conversation_context=conversation_context,
+                    temporal_context=temporal_context,
+                )
+
+        if answer.status == "self_description":
+            answer.self_description = True
+            return answer
+        if answer.status == "out_of_scope":
+            return _out_of_scope_answer(language)
+        if answer.status == "crisis":
+            return _crisis_answer(language, kb)
+
+        if answer.status == "clarification_needed":
+            if answer.clarification_question or answer.answer_text.endswith("?"):
+                answer.clarification_needed = True
+                if not answer.clarification_question:
+                    answer.clarification_question = answer.answer_text or _build_clarification_question(language, kb, retrieved)
+                answer.answer_text = answer.clarification_question
+                return answer
+            answer.status = "weak_match" if weak else "ok"
+            answer.clarification_needed = False
+            answer.clarification_question = None
+
+        if answer.status == "unknown":
+            if _is_location_required_query(transcript, language) and _concrete_location_items(kb, retrieved):
+                self.last_answer_source = "validator_fallback"
+                self.last_validation_error = "location_required_with_concrete_results"
+                return _fallback_answer(
+                    transcript,
+                    language,
+                    kb,
+                    retrieved,
+                    minimum_match_threshold=self.minimum_match_threshold,
+                    weak_match_threshold=self.weak_match_threshold,
+                    conversation_context=conversation_context,
+                    temporal_context=temporal_context,
+                )
+            answer.answer_text = UNKNOWN_TEXT[language]
+            if (
+                answer.answer_text != UNKNOWN_TEXT[language]
+                and not weak
+                and retrieved
+                and any(
+                    marker in answer.answer_text
+                    for marker in (
+                        kb.get_page(retrieved[0].page_id).title,
+                        kb.get_page(retrieved[0].page_id).address or "",
+                        "08:00",
+                        "09:30",
+                        "10:30",
+                    )
+                )
+            ):
+                answer.status = "ok"
+            return answer
+
+        if not answer.answer_text:
+            self.last_answer_source = "template_fallback"
+            self.last_provider_error = "empty_answer"
+            return _fallback_answer(
+                transcript,
+                language,
+                kb,
+                retrieved,
+                minimum_match_threshold=self.minimum_match_threshold,
+                weak_match_threshold=self.weak_match_threshold,
+                conversation_context=conversation_context,
+                temporal_context=temporal_context,
+            )
+
+        if answer.status == "weak_match" or weak:
+            if weak:
+                answer.status = "weak_match"
+                answer.weak_match = True
+                if not answer.answer_text.startswith(WEAK_PREFIX[language]):
+                    answer.answer_text = f"{WEAK_PREFIX[language]}{answer.answer_text}"
+            else:
+                answer.status = "ok"
+                answer.weak_match = False
+        return answer
+
+    @staticmethod
+    def _extract_chat_content(body: dict) -> str:
+        content = body["choices"][0]["message"]["content"]
+        if isinstance(content, str):
+            return content.strip()
+        if isinstance(content, list):
+            parts = []
+            for item in content:
+                if isinstance(item, dict) and isinstance(item.get("text"), str):
+                    parts.append(item["text"])
+            return "".join(parts).strip()
+        raise TypeError("unexpected OpenAI-compatible response content")
+
+
+class BlabladorRewriteProvider(OpenAICompatibleRewriteProvider):
+    def __init__(
+        self,
+        api_key: str | None,
+        base_url: str | None = None,
+        model: str = "alias-large",
+        system_prompt_path: Path | None = None,
+        timeout_seconds: float = 60.0,
+        max_tokens: int = 800,
+        temperature: float = 0.0,
+        minimum_match_threshold: float = 0.08,
+        weak_match_threshold: float = 0.18,
+        clarification_gap_threshold: float = 0.03,
+    ) -> None:
+        super().__init__(
+            base_url=base_url or "https://api.blablador.fz-juelich.de/v1/",
+            api_key=api_key,
+            model=model,
+            provider_name="blablador",
+            system_prompt_path=system_prompt_path,
+            timeout_seconds=timeout_seconds,
+            max_tokens=max_tokens,
+            temperature=temperature,
+            minimum_match_threshold=minimum_match_threshold,
+            weak_match_threshold=weak_match_threshold,
+            clarification_gap_threshold=clarification_gap_threshold,
+        )
+
+
 def create_rewrite_provider(
     name: str,
     ollama_url: str,
@@ -1517,6 +2638,13 @@ def create_rewrite_provider(
     weak_match_threshold: float,
     clarification_gap_threshold: float,
     system_prompt_path: Path | None = None,
+    llm_base_url: str | None = None,
+    llm_api_key: str | None = None,
+    llm_model: str = "alias-large",
+    llm_timeout_seconds: float = 60.0,
+    llm_max_tokens: int = 800,
+    llm_temperature: float = 0.0,
+    llm_fallback_provider: str = "template",
 ) -> BaseRewriteProvider:
     if name == "ollama":
         return OllamaRewriteProvider(
@@ -1527,6 +2655,51 @@ def create_rewrite_provider(
             minimum_match_threshold=minimum_match_threshold,
             weak_match_threshold=weak_match_threshold,
             clarification_gap_threshold=clarification_gap_threshold,
+        )
+    if name == "blablador":
+        return BlabladorRewriteProvider(
+            base_url=llm_base_url,
+            api_key=llm_api_key,
+            model=llm_model,
+            system_prompt_path=system_prompt_path,
+            timeout_seconds=llm_timeout_seconds,
+            max_tokens=llm_max_tokens,
+            temperature=llm_temperature,
+            minimum_match_threshold=minimum_match_threshold,
+            weak_match_threshold=weak_match_threshold,
+            clarification_gap_threshold=clarification_gap_threshold,
+        )
+    if name == "openai_compatible":
+        return OpenAICompatibleRewriteProvider(
+            base_url=llm_base_url,
+            api_key=llm_api_key,
+            model=llm_model,
+            provider_name="openai_compatible",
+            system_prompt_path=system_prompt_path,
+            timeout_seconds=llm_timeout_seconds,
+            max_tokens=llm_max_tokens,
+            temperature=llm_temperature,
+            minimum_match_threshold=minimum_match_threshold,
+            weak_match_threshold=weak_match_threshold,
+            clarification_gap_threshold=clarification_gap_threshold,
+        )
+    if llm_fallback_provider != "template" and name not in {"template", "ollama", "blablador", "openai_compatible"}:
+        return create_rewrite_provider(
+            llm_fallback_provider,
+            ollama_url=ollama_url,
+            ollama_model=ollama_model,
+            ollama_timeout_seconds=ollama_timeout_seconds,
+            minimum_match_threshold=minimum_match_threshold,
+            weak_match_threshold=weak_match_threshold,
+            clarification_gap_threshold=clarification_gap_threshold,
+            system_prompt_path=system_prompt_path,
+            llm_base_url=llm_base_url,
+            llm_api_key=llm_api_key,
+            llm_model=llm_model,
+            llm_timeout_seconds=llm_timeout_seconds,
+            llm_max_tokens=llm_max_tokens,
+            llm_temperature=llm_temperature,
+            llm_fallback_provider="template",
         )
     return TemplateRewriteProvider(
         minimum_match_threshold=minimum_match_threshold,

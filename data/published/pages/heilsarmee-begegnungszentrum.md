@@ -1,9 +1,11 @@
 ---
-title: "Heilsarmee Begegnungszentrum Die Bruecke"
+title: "Heilsarmee Begegnungszentrum Die Brücke"
 category: "social"
 service_type: "food_distribution"
 language: "de"
 publisher: "Heilsarmee Leipzig"
+address: "Südblick 5A, 04329 Leipzig"
+phone: "0341 2518880"
 description: "Begegnungszentrum \"Die Brücke\""
 target_groups:
   - "addiction"
@@ -14,15 +16,16 @@ tags:
   - "jobcenter"
 aliases:
   - "begegnungszentrum"
+  - "brücke"
   - "bruecke"
   - "heilsarmee"
+  - "Heilsarmee Begegnungszentrum Die Brücke"
   - "Heilsarmee Begegnungszentrum Die Bruecke"
   - "jobcenter"
   - "kleiderkammer"
   - "mittagstisch"
 review_status: "published"
 validation_issues:
-  - "missing_address"
   - "missing_opening_hours"
 source_url: "https://www.heilsarmee.de/leipzig/begegnungszentrum.html"
 source_snapshot_path: "raw/heilsarmee-begegnungszentrum-20260421054229.html"
@@ -30,7 +33,7 @@ source_content_hash: "9667ba78f659a73b2333440fe88aea6a97c36d3f107a5d28e0a4a2c34a
 source_last_seen: "2026-04-21T05:42:29.964284+00:00"
 last_updated: "2026-04-21"
 ---
-# Heilsarmee Begegnungszentrum Die Bruecke
+# Heilsarmee Begegnungszentrum Die Brücke
 
 - Source: https://www.heilsarmee.de/leipzig/begegnungszentrum.html
 - Generated: 2026-04-21T05:42:29.964284+00:00

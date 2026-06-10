@@ -3,6 +3,8 @@
 This repository contains a local grounded voice assistant for Leipzig support services.
 It combines speech input, retrieval over a small `llm-wiki` knowledge base, grounded answer generation, and optional local text-to-speech.
 
+For the full thesis-friendly technical overview, see [`docs/lena_system_overview.md`](docs/lena_system_overview.md).
+
 ## Structure
 
 - `app/`: backend API, providers, scraper pipeline, and static frontend
@@ -34,7 +36,7 @@ Those artifacts are promoted into the runtime KB only when explicitly requested.
 ## Quick Start
 
 ```powershell
-cd Code
+cd code
 pip install -r requirements.txt
 python -m app
 ```
@@ -47,6 +49,7 @@ Optional one-command overrides:
 
 ```powershell
 python -m app --rewrite-provider ollama --ollama-model translategemma:4b
+python -m app --rewrite-provider blablador --llm-model alias-large
 python -m app --stt-provider mock --tts-provider mock
 python -m app --no-reload
 ```
@@ -59,6 +62,7 @@ The app now starts with the local LLM answer path enabled by default:
 - rewrite: `ollama`
 - default Ollama model: `translategemma:4b`
 - TTS: `mock` unless `piper` is configured
+- external rewrite options: `blablador` and `openai_compatible`, both with deterministic template fallback
 
 Environment variables:
 
@@ -72,10 +76,99 @@ $env:LENA_SYSTEM_PROMPT_PATH="data/prompts/system_prompt.md"
 
 The editable Ollama system prompt lives in `data/prompts/system_prompt.md`.
 
+## Answer Style and Safety
+
+User-facing answers should use simple language: short sentences, direct wording, and one idea per sentence where possible. Internal terms such as knowledge base, retrieval, context, provider, or database must not appear in end-user fallback answers.
+
+For unknown or out-of-scope requests, LENA uses short deterministic messages and redirects users to supported local-help topics such as food, sleeping places, clothing, medical help, counselling, hygiene, documents, and water.
+
+For basic help-location questions, LENA must not shift the task to external apps, websites, online search, or Google Maps. External links may stay in source metadata and may be shown only as secondary evidence. The answer itself should name concrete local places from the curated KB when the user asks for water, food, sleeping places, clothing, hygiene, medical help, counselling, or similar help. If the KB does not contain a safe concrete place, LENA says this plainly instead of telling the user to find it somewhere else.
+
+Acute dangerous situations are handled before any external or local LLM call. Self-harm intent, intent to harm others, violence, immediate danger, overdose, poisoning, unconsciousness, severe injury, severe bleeding, breathing problems, chest pain, freezing, and similar emergency wording return `status=crisis` with a deterministic short response. Crisis responses mention 112 for emergency services and 110 for police danger or violence. This is not a replacement for emergency services, medical care, or professional counselling.
+
+## Local Piper TTS Voices
+
+LENA keeps text-to-speech local by using Piper when `LENA_TTS_PROVIDER=piper` is configured. Voice selection is language-specific, so the backend chooses the configured voice for the request/UI language (`de`, `en`, `pl`, `ro`, `ru`). If a language-specific voice is unavailable, LENA falls back to `LENA_PIPER_DEFAULT_VOICE` when configured; otherwise the synthesize endpoint returns unavailable and the existing browser/system TTS fallback can be used by the frontend.
+
+Download Piper voices from the `rhasspy/piper-voices` repository on Hugging Face:
+
+https://huggingface.co/rhasspy/piper-voices
+
+Each voice requires both files:
+
+- `<voice>.onnx`
+- `<voice>.onnx.json`
+
+Place them under a local directory such as `data/voices/piper/` and configure paths in `.env`:
+
+```powershell
+$env:LENA_TTS_PROVIDER="piper"
+$env:LENA_PIPER_BINARY="tools/piper/piper/piper.exe"
+$env:LENA_PIPER_VOICE_DE="data/voices/piper/<german-voice>.onnx"
+$env:LENA_PIPER_VOICE_EN="data/voices/piper/<english-voice>.onnx"
+$env:LENA_PIPER_VOICE_PL="data/voices/piper/<polish-voice>.onnx"
+$env:LENA_PIPER_VOICE_RO="data/voices/piper/<romanian-voice>.onnx"
+$env:LENA_PIPER_VOICE_RU="data/voices/piper/<russian-voice>.onnx"
+$env:LENA_TTS_NORMALIZE_UMLAUTS="false"
+```
+
+Piper normally uses the matching config file at the same path plus `.json`, for example `data/voices/piper/<english-voice>.onnx.json`. If needed, set `LENA_PIPER_VOICE_CONFIG_DE`, `LENA_PIPER_VOICE_CONFIG_EN`, `LENA_PIPER_VOICE_CONFIG_PL`, `LENA_PIPER_VOICE_CONFIG_RO`, or `LENA_PIPER_VOICE_CONFIG_RU` explicitly.
+
+Prefer medium or high quality voices for user-facing evaluation. Voice gender, warmth, intelligibility, and naturalness should be evaluated subjectively per language; do not assume that a voice name or metadata alone is sufficient for LENA's target setting.
+
+Before text is sent to Piper, LENA applies speech-only normalization. The displayed answer text is not changed. German phone numbers such as `112`, `110`, `116 117`, `0341 123456`, and `+49 341 123456` are spoken digit by digit or in small groups. Common German abbreviations such as `z. B.`, `bzw.`, `ca.`, `Dr.`, `Tel.`, and weekday abbreviations are expanded for clearer speech.
+
+German umlauts are preserved by default because many Piper voices handle real UTF-8 text correctly. If a specific voice reads umlauts poorly, set `LENA_TTS_NORMALIZE_UMLAUTS=true` to transliterate umlauts for speech only, for example `ü` to `ue` and `ß` to `ss`.
+
+Generate a quick local sample:
+
+```powershell
+python scripts/test_tts.py --lang en --text "Where can I get help today?"
+```
+
+## Temporal and Seasonal Context
+
+For each answer request, LENA computes local temporal context deterministically in the backend. The default timezone is `Europe/Berlin` and can be changed with `LENA_TIMEZONE`. The context includes date, weekday, weekend flag, month, and a coarse season.
+
+Seasonal context is only a retrieval and formulation hint. It is not a source of new facts: winter or summer advice may only mention services already present in the retrieved KB context. Likewise, "today" answers depend on available KB opening-hours evidence. If today's opening status cannot be determined reliably, LENA should say that instead of guessing.
+
+The runtime KB is primarily German. Answer language is controlled separately: LLM prompts require German KB descriptions to be translated into the requested answer language while keeping official names, organization names, addresses, street names, and source titles unchanged. The deterministic template path avoids copying long German descriptions into non-German answers.
+
+## Blablador and OpenAI-Compatible LLMs
+
+LENA can use Blablador as an experimental academic LLM provider through the same grounded rewrite path used by local models. The LLM is not a knowledge source: retrieval still selects a small KB context first, the prompt instructs the model to answer only from that context, and invalid or ungrounded output falls back to `TemplateRewriteProvider`.
+
+Crisis cases bypass Blablador, OpenAI-compatible providers, and Ollama. The deterministic crisis response is returned before any model client is called.
+
+Blablador configuration:
+
+```powershell
+$env:LENA_REWRITE_PROVIDER="blablador"
+$env:LENA_LLM_BASE_URL="https://api.blablador.fz-juelich.de/v1/"
+$env:LENA_LLM_MODEL="alias-large"
+$env:LENA_LLM_API_KEY="<your token>"
+```
+
+To obtain the API key, register or log in at Helmholtz Codebase, create a GitLab Personal Access Token with `read_user` scope, and store it locally as `LENA_LLM_API_KEY`. Do not commit real tokens; `.env` files are ignored by Git.
+
+Recommended Blablador aliases:
+
+- `alias-fast` for latency-oriented tests
+- `alias-large` for balanced quality and speed
+- `alias-huge` for quality-oriented but slower tests
+
+Concrete model availability can change, so prefer aliases where possible. You can list available model IDs with:
+
+```powershell
+python scripts/list_openai_models.py
+```
+
+For another OpenAI-compatible endpoint, use `LENA_REWRITE_PROVIDER=openai_compatible` plus `LENA_LLM_BASE_URL`, `LENA_LLM_API_KEY`, and `LENA_LLM_MODEL`.
+
 ## Test
 
 ```powershell
-cd Code
+cd code
 python -m pytest
 ```
 
@@ -85,7 +178,7 @@ The reusable model-evaluation baseline lives in `data/evals/assistant_eval_cases
 Run the shared grounded evaluation pipeline with:
 
 ```powershell
-cd Code
+cd code
 python scripts/evaluate_models.py
 ```
 
@@ -95,11 +188,12 @@ Useful variants:
 python scripts/evaluate_models.py --provider template
 python scripts/evaluate_models.py --provider ollama --models translategemma:4b qwen3:4b
 python scripts/evaluate_models.py --provider ollama --models qwen3:8b gemma3:12b
+python scripts/evaluate_models.py --provider blablador --models alias-fast alias-large alias-huge
 ```
 
-The evaluation runner records the resolved query, retrieved page IDs, evidence context hash, prompt hashes for LLM runs, answer source, validation errors, and latency statistics. This makes model comparisons reproducible under the same local KB, prompts, and test cases. The template provider is useful as a deterministic baseline; Ollama model runs should start with installed small models before trying larger local models.
+The evaluation runner records the resolved query, retrieved page IDs, evidence context hash, prompt hashes for LLM runs, answer source, provider errors, validation errors, answer-status distribution, fallback counts, and latency statistics. This makes model comparisons reproducible under the same local KB, prompts, and test cases. The template provider is useful as a deterministic baseline; Ollama model runs should start with installed small models before trying larger local models. Blablador evaluation sends only predefined test questions and retrieved KB context.
 
-Timestamped reports are written to `data/evals/results/` and are treated as generated artifacts rather than tracked source files.
+Timestamped JSON, JSONL, and Markdown reports are written to `data/evals/results/` and are treated as generated artifacts rather than tracked source files.
 
 ## Grounding and Session Safety
 
@@ -112,7 +206,7 @@ For local LLM answers, deterministic retrieval and guardrails run before model g
 Run the scraper without changing the runtime KB:
 
 ```powershell
-cd Code
+cd code
 python -m app.scraper.run
 ```
 
@@ -131,7 +225,7 @@ curl -X POST http://127.0.0.1:8000/api/admin/published/promote
 Run the scheduled maintenance entrypoint:
 
 ```powershell
-cd Code
+cd code
 python scripts/run_kb_maintenance.py --mode incremental
 python scripts/run_kb_maintenance.py --mode full
 ```

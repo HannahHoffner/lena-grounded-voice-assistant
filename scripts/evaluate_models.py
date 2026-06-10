@@ -18,10 +18,12 @@ if str(APP_ROOT) not in sys.path:
 
 from app.config import load_settings
 from app.kb import KnowledgeBase
+from app.maps import MapBuilder
 from app.models import Language, QueryAnswerResponse, QueryRequest
 from app.providers.rewrite import create_rewrite_provider
 from app.retrieval import normalize_text
 from app.sessions import SessionManager, SessionStore
+from app.temporal import build_temporal_context
 
 
 @dataclass(slots=True)
@@ -47,6 +49,70 @@ def _contains_any(answer_text: str, values: list[str]) -> bool:
 def _contains_all(answer_text: str, values: list[str]) -> bool:
     normalized_answer = _normalize(answer_text)
     return all(_normalize(value) in normalized_answer for value in values)
+
+
+REDIRECT_NEEDLES = [
+    "App herunterladen",
+    "laden Sie die App herunter",
+    "nutzen Sie die App",
+    "Website besuchen",
+    "auf der Website nachsehen",
+    "online suchen",
+    "Google Maps",
+    "im Internet suchen",
+    "die App zeigt",
+    "finden Sie online",
+    "finden Sie in der App",
+    "download the app",
+    "use the app",
+    "check the website",
+    "search online",
+    "use Google Maps",
+    "the app will show",
+    "find it online",
+]
+
+
+def _is_concrete_page(page_id: str, kb: KnowledgeBase) -> bool:
+    if not page_id:
+        return False
+    try:
+        page = kb.get_page(page_id)
+    except KeyError:
+        return False
+    if page.service_type == "service_catalog" or page.entity_kind == "service_program":
+        return False
+    return bool(page.address or (page.latitude is not None and page.longitude is not None))
+
+
+def _concrete_page_ids(page_ids: list[str], kb: KnowledgeBase) -> list[str]:
+    return [page_id for page_id in page_ids if _is_concrete_page(page_id, kb)]
+
+
+def _geocoded_page_ids(page_ids: list[str], kb: KnowledgeBase) -> list[str]:
+    geocoded: list[str] = []
+    for page_id in page_ids:
+        try:
+            page = kb.get_page(page_id)
+        except KeyError:
+            continue
+        if page.address and page.latitude is not None and page.longitude is not None:
+            geocoded.append(page_id)
+    return geocoded
+
+
+def _answer_mentions_concrete_page(answer_text: str, page_ids: list[str], kb: KnowledgeBase) -> bool:
+    for page_id in page_ids:
+        try:
+            page = kb.get_page(page_id)
+        except KeyError:
+            continue
+        values = [page.title]
+        if page.address:
+            values.append(page.address)
+        if _contains_any(answer_text, values):
+            return True
+    return False
 
 
 def _hash_text(value: str) -> str:
@@ -200,6 +266,41 @@ def _evaluate_turn(
                 detail=f"forbidden any of {expect['answer_not_contains']}",
             )
         )
+    if expect.get("must_not_redirect_to_app"):
+        checks.append(
+            TurnCheck(
+                name="must_not_redirect_to_app",
+                passed=not _contains_any(actual["answer_text"], REDIRECT_NEEDLES),
+                detail="answer must not redirect to external apps, websites, online search, or maps",
+            )
+        )
+    concrete_ids = _concrete_page_ids(actual["retrieved_page_ids"], kb)
+    if expect.get("requires_concrete_location") and actual["status"] in {"ok", "weak_match"}:
+        checks.append(
+            TurnCheck(
+                name="requires_concrete_location",
+                passed=bool(concrete_ids),
+                detail=f"concrete retrieved pages={concrete_ids}",
+            )
+        )
+    if expect.get("must_include_concrete_location_if_available") and concrete_ids:
+        checks.append(
+            TurnCheck(
+                name="must_include_concrete_location_if_available",
+                passed=_answer_mentions_concrete_page(actual["answer_text"], concrete_ids, kb),
+                detail=f"expected answer to mention one of {concrete_ids}",
+            )
+        )
+    geocoded_ids = _geocoded_page_ids(actual["retrieved_page_ids"], kb)
+    if expect.get("must_include_map_targets_if_geo_available") and geocoded_ids:
+        map_ids = set(actual.get("map_destination_ids") or [])
+        checks.append(
+            TurnCheck(
+                name="must_include_map_targets_if_geo_available",
+                passed=bool(map_ids & set(geocoded_ids)),
+                detail=f"geocoded={geocoded_ids} map_destinations={sorted(map_ids)}",
+            )
+        )
     if "must_ground_fields" in expect:
         for field in expect["must_ground_fields"]:
             values = _page_field_values(actual["top_page_id"], field, kb)
@@ -246,6 +347,13 @@ async def _run_case(
         weak_match_threshold=settings.weak_match_threshold,
         clarification_gap_threshold=settings.clarification_gap_threshold,
         system_prompt_path=settings.system_prompt_path,
+        llm_base_url=settings.llm_base_url,
+        llm_api_key=settings.llm_api_key,
+        llm_model=model_name,
+        llm_timeout_seconds=settings.llm_timeout_seconds,
+        llm_max_tokens=settings.llm_max_tokens,
+        llm_temperature=settings.llm_temperature,
+        llm_fallback_provider=settings.llm_fallback_provider,
     )
 
     results: list[dict[str, Any]] = []
@@ -262,12 +370,14 @@ async def _run_case(
                 session_id=current_session_id,
             )
             resolution = session_manager.prepare_request(payload, now=current_time)
+            temporal_context = build_temporal_context(now=current_time, timezone=settings.timezone)
             started = time.perf_counter()
             answer = await provider.answer(
                 payload.transcript,
                 payload.language,
                 kb,
                 conversation_context=resolution.context,
+                temporal_context=temporal_context,
             )
             latency_ms = round((time.perf_counter() - started) * 1000, 1)
             response = QueryAnswerResponse(
@@ -277,6 +387,7 @@ async def _run_case(
                 clarification_needed=answer.clarification_needed,
                 clarification_question=answer.clarification_question,
                 retrieved_page_ids=answer.retrieved_page_ids,
+                map_data=MapBuilder(settings).build_for_answer(answer, kb),
                 provider=provider.name,
                 model=model_name,
                 session_id=resolution.session.session_id,
@@ -303,14 +414,18 @@ async def _run_case(
                 "session_status": response.session_status.value,
                 "retrieved_page_ids": response.retrieved_page_ids,
                 "top_page_id": response.retrieved_page_ids[0] if response.retrieved_page_ids else None,
+                "map_destination_ids": [destination.page_id for destination in response.map_data.destinations] if response.map_data else [],
                 "answer_text": response.answer_text,
                 "answer_source": getattr(provider, "last_answer_source", "unknown"),
+                "fallback": "fallback" in str(getattr(provider, "last_answer_source", "")),
                 "evidence_hash": _hash_text(getattr(provider, "last_evidence_context", "")),
                 "evidence_context": getattr(provider, "last_evidence_context", ""),
                 "prompt_hash": getattr(provider, "last_prompt_hash", None),
                 "system_prompt_hash": getattr(provider, "last_system_prompt_hash", None),
                 "user_prompt_hash": getattr(provider, "last_user_prompt_hash", None),
                 "validation_error": getattr(provider, "last_validation_error", None),
+                "provider_error": getattr(provider, "last_provider_error", None),
+                "temporal_context": temporal_context.model_dump(),
                 "latency_ms": latency_ms,
             }
             previous_turn = results[-1]["actual"] if results else None
@@ -377,7 +492,9 @@ async def _evaluate_models(models: list[str], dataset_path: Path, provider_name:
         auto_checks_passed = sum(case["auto_checks_passed"] for case in case_results)
         auto_checks_total = sum(case["auto_checks_total"] for case in case_results)
         answer_sources: dict[str, int] = {}
+        status_distribution: dict[str, int] = {}
         validation_errors: dict[str, int] = {}
+        provider_errors: dict[str, int] = {}
         latencies: list[float] = []
         prompt_hashes: set[str] = set()
         evidence_hashes: set[str] = set()
@@ -385,9 +502,14 @@ async def _evaluate_models(models: list[str], dataset_path: Path, provider_name:
             for turn in case["turns"]:
                 source = turn["actual"]["answer_source"]
                 answer_sources[source] = answer_sources.get(source, 0) + 1
+                status = str(turn["actual"]["status"])
+                status_distribution[status] = status_distribution.get(status, 0) + 1
                 validation_error = turn["actual"].get("validation_error")
                 if validation_error:
                     validation_errors[validation_error] = validation_errors.get(validation_error, 0) + 1
+                provider_error = turn["actual"].get("provider_error")
+                if provider_error:
+                    provider_errors[provider_error] = provider_errors.get(provider_error, 0) + 1
                 prompt_hash = turn["actual"].get("prompt_hash")
                 if prompt_hash:
                     prompt_hashes.add(prompt_hash)
@@ -399,8 +521,13 @@ async def _evaluate_models(models: list[str], dataset_path: Path, provider_name:
             "auto_score_percent": round((auto_checks_passed / auto_checks_total) * 100, 1) if auto_checks_total else 0.0,
             "median_latency_ms": _percentile(latencies, 0.5),
             "p95_latency_ms": _percentile(latencies, 0.95),
+            "successful_responses": answer_sources.get("llm", 0) + answer_sources.get("template", 0) + answer_sources.get("guardrail", 0),
+            "fallback_responses": sum(count for source, count in answer_sources.items() if "fallback" in source),
+            "provider_error_count": sum(provider_errors.values()),
+            "status_distribution": status_distribution,
             "answer_sources": answer_sources,
             "validation_errors": validation_errors,
+            "provider_errors": provider_errors,
             "prompt_hash_count": len(prompt_hashes),
             "evidence_hash_count": len(evidence_hashes),
             "cases": case_results,
@@ -426,8 +553,13 @@ def _render_markdown(summary: dict[str, Any]) -> str:
                 f"- Automated score: {result['auto_checks_passed']}/{result['auto_checks_total']} ({result['auto_score_percent']}%)",
                 f"- Median latency: {result['median_latency_ms']} ms",
                 f"- p95 latency: {result['p95_latency_ms']} ms",
+                f"- Successful responses: {result['successful_responses']}",
+                f"- Fallback responses: {result['fallback_responses']}",
+                f"- Provider errors: {result['provider_error_count']}",
+                f"- Status distribution: {json.dumps(result['status_distribution'], ensure_ascii=False)}",
                 f"- Answer sources: {json.dumps(result['answer_sources'], ensure_ascii=False)}",
                 f"- Validation errors: {json.dumps(result['validation_errors'], ensure_ascii=False)}",
+                f"- Provider errors by type: {json.dumps(result['provider_errors'], ensure_ascii=False)}",
                 f"- Prompt hashes observed: {result['prompt_hash_count']}",
                 f"- Evidence hashes observed: {result['evidence_hash_count']}",
                 "",
@@ -449,10 +581,10 @@ def _render_markdown(summary: dict[str, Any]) -> str:
 
 
 async def main() -> int:
-    parser = argparse.ArgumentParser(description="Evaluate Ollama models for the grounded LENA answering pipeline.")
+    parser = argparse.ArgumentParser(description="Evaluate grounded LENA rewrite providers and models.")
     parser.add_argument("--dataset", default="data/evals/assistant_eval_cases.json", help="Path to evaluation dataset JSON.")
-    parser.add_argument("--provider", choices=["ollama", "template"], default="ollama", help="Answer provider to evaluate.")
-    parser.add_argument("--models", nargs="+", default=["translategemma:4b", "qwen3:4b"], help="Ollama model names to evaluate.")
+    parser.add_argument("--provider", choices=["ollama", "template", "openai_compatible", "blablador"], default="ollama", help="Answer provider to evaluate.")
+    parser.add_argument("--models", nargs="+", default=["translategemma:4b", "qwen3:4b"], help="Model names or provider aliases to evaluate.")
     parser.add_argument("--output-dir", default="data/evals/results", help="Directory for JSON and Markdown results.")
     args = parser.parse_args()
 
@@ -463,10 +595,32 @@ async def main() -> int:
     models = args.models
     if args.provider == "template" and args.models == ["translategemma:4b", "qwen3:4b"]:
         models = ["template"]
+    if args.provider == "blablador" and args.models == ["translategemma:4b", "qwen3:4b"]:
+        models = ["alias-fast", "alias-large", "alias-huge"]
     summary = await _evaluate_models(models, dataset_path, args.provider)
     timestamp = datetime.now(UTC).strftime("%Y%m%d%H%M%S")
     stem = output_dir / f"model-eval-{timestamp}"
     (stem.with_suffix(".json")).write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+    jsonl_rows: list[str] = []
+    for model_name, result in summary["models"].items():
+        for case in result["cases"]:
+            for turn in case["turns"]:
+                jsonl_rows.append(
+                    json.dumps(
+                        {
+                            "generated_at": summary["generated_at"],
+                            "provider": summary["provider"],
+                            "model": model_name,
+                            "case_id": case["case_id"],
+                            **turn["actual"],
+                            "checks": turn["checks"],
+                            "pass": turn["pass"],
+                            "manual_review_only": turn["manual_review_only"],
+                        },
+                        ensure_ascii=False,
+                    )
+                )
+    stem.with_suffix(".jsonl").write_text("\n".join(jsonl_rows) + ("\n" if jsonl_rows else ""), encoding="utf-8")
     (stem.with_suffix(".md")).write_text(_render_markdown(summary), encoding="utf-8")
 
     printable_summary = json.dumps(summary, ensure_ascii=False, indent=2)
@@ -476,6 +630,7 @@ async def main() -> int:
         sys.stdout.buffer.write(printable_summary.encode("utf-8", errors="replace"))
         sys.stdout.buffer.write(b"\n")
     print(f"\nSaved results to {stem.with_suffix('.json')}")
+    print(f"Saved JSONL rows to {stem.with_suffix('.jsonl')}")
     print(f"Saved report to {stem.with_suffix('.md')}")
     return 0
 

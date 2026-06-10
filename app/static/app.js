@@ -33,6 +33,38 @@ const elements = {
   mapListLabel: document.getElementById("mapListLabel"),
   mapDestinationList: document.getElementById("mapDestinationList"),
   mapDetailCard: document.getElementById("mapDetailCard"),
+  screens: [...document.querySelectorAll("[data-screen]")],
+  globalNav: document.getElementById("globalNav"),
+  backButton: document.getElementById("backButton"),
+  homeButton: document.getElementById("homeButton"),
+  changeLanguageButton: document.getElementById("changeLanguageButton"),
+  cancelRequestButton: document.getElementById("cancelRequestButton"),
+  helpButton: document.getElementById("helpButton"),
+  emergencyNavButton: document.getElementById("emergencyNavButton"),
+  homeTitle: document.getElementById("homeTitle"),
+  homeHint: document.getElementById("homeHint"),
+  voiceTextModeButton: document.getElementById("voiceTextModeButton"),
+  voiceTextModeLabel: document.getElementById("voiceTextModeLabel"),
+  textModeButton: document.getElementById("textModeButton"),
+  textModeLabel: document.getElementById("textModeLabel"),
+  symbolModeButton: document.getElementById("symbolModeButton"),
+  symbolModeLabel: document.getElementById("symbolModeLabel"),
+  emergencyModeButton: document.getElementById("emergencyModeButton"),
+  emergencyModeLabel: document.getElementById("emergencyModeLabel"),
+  symbolTitle: document.getElementById("symbolTitle"),
+  symbolHint: document.getElementById("symbolHint"),
+  primarySymbolGrid: document.getElementById("primarySymbolGrid"),
+  secondarySymbolGrid: document.getElementById("secondarySymbolGrid"),
+  moreHelpDetails: document.getElementById("moreHelpDetails"),
+  moreHelpSummary: document.getElementById("moreHelpSummary"),
+  symbolSubstepTitle: document.getElementById("symbolSubstepTitle"),
+  symbolSubstepHint: document.getElementById("symbolSubstepHint"),
+  symbolSubstepGrid: document.getElementById("symbolSubstepGrid"),
+  symbolResultsTitle: document.getElementById("symbolResultsTitle"),
+  symbolResultsHint: document.getElementById("symbolResultsHint"),
+  symbolAnswerText: document.getElementById("symbolAnswerText"),
+  symbolNoMapReason: document.getElementById("symbolNoMapReason"),
+  symbolResultList: document.getElementById("symbolResultList"),
 };
 
 const languageMap = {
@@ -59,13 +91,13 @@ const translations = {
     manualPlaceholder: "Frage zum Testen eingeben",
     manualSubmit: "Senden",
     answerLabel: "Antwort",
-    answerHint: "Die Antwort bleibt auf die lokale Wissensbasis beschränkt.",
+    answerHint: "LENA antwortet mit geprüften Informationen aus Leipzig.",
     answerPlaceholder: "Die Antwort erscheint hier.",
     answerState: {
       clarification_needed: { label: "Kurze Rueckfrage", tone: "neutral" },
       weak_match: { label: "Aehnlicher Treffer", tone: "warning" },
       out_of_scope: { label: "Thema ausserhalb von LENA", tone: "warning" },
-      self_description: { label: "Ueber LENA", tone: "neutral" },
+      self_description: { label: "Über LENA", tone: "neutral" },
       crisis: { label: "Soforthilfe", tone: "critical" },
     },
     session: {
@@ -83,7 +115,7 @@ const translations = {
       browserTtsFallback: "Browser-Sprachausgabe aktiv",
       typedFallback: "Spracheingabe ist hier nicht verfügbar. Bitte unten tippen.",
       listening: "Ich höre zu",
-      processing: "Ich suche in der Wissensbasis",
+      processing: "Ich suche passende Informationen",
       clarifying: "Ich präzisiere die Antwort",
       speaking: "Ich spreche die Antwort aus",
       error: "Fehler",
@@ -111,7 +143,7 @@ const translations = {
     manualPlaceholder: "Type a question for quick testing",
     manualSubmit: "Send",
     answerLabel: "Answer",
-    answerHint: "Answers stay grounded in the local knowledge base.",
+    answerHint: "LENA answers with checked local information from Leipzig.",
     answerPlaceholder: "Your answer will appear here.",
     answerState: {
       clarification_needed: { label: "Quick follow-up", tone: "neutral" },
@@ -135,7 +167,7 @@ const translations = {
       browserTtsFallback: "Browser speech output active",
       typedFallback: "Speech input is unavailable here. Please type a question below.",
       listening: "Listening",
-      processing: "Searching the knowledge base",
+      processing: "Looking for matching local information",
       clarifying: "Clarifying the answer",
       speaking: "Speaking the answer",
       error: "Error",
@@ -163,7 +195,7 @@ const translations = {
     manualPlaceholder: "Wpisz pytanie testowe",
     manualSubmit: "Wyslij",
     answerLabel: "Odpowiedz",
-    answerHint: "Odpowiedz pozostaje oparta na lokalnej bazie wiedzy.",
+    answerHint: "LENA odpowiada na podstawie sprawdzonych informacji z Lipska.",
     answerPlaceholder: "Odpowiedz pojawi sie tutaj.",
     answerState: {
       clarification_needed: { label: "Krotkie doprecyzowanie", tone: "neutral" },
@@ -187,7 +219,7 @@ const translations = {
       browserTtsFallback: "Aktywna synteza mowy w przegladarce",
       typedFallback: "Wprowadzanie glosowe jest tutaj niedostepne. Wpisz pytanie ponizej.",
       listening: "Slucham",
-      processing: "Przeszukuje baze wiedzy",
+      processing: "Szukam pasujacych informacji",
       clarifying: "Doprecyzowuje odpowiedz",
       speaking: "Odczytuje odpowiedz",
       error: "Blad",
@@ -215,7 +247,7 @@ const translations = {
     manualPlaceholder: "Scrie o intrebare pentru test",
     manualSubmit: "Trimite",
     answerLabel: "Raspuns",
-    answerHint: "Raspunsul ramane limitat la baza locala de cunostinte.",
+    answerHint: "LENA raspunde cu informatii verificate din Leipzig.",
     answerPlaceholder: "Raspunsul va aparea aici.",
     answerState: {
       clarification_needed: { label: "Scurta clarificare", tone: "neutral" },
@@ -239,7 +271,7 @@ const translations = {
       browserTtsFallback: "Redarea vocala din browser este activa",
       typedFallback: "Intrarea vocala nu este disponibila aici. Te rugam sa scrii mai jos.",
       listening: "Ascult",
-      processing: "Caut in baza de cunostinte",
+      processing: "Caut informatii potrivite",
       clarifying: "Clarific raspunsul",
       speaking: "Redau raspunsul",
       error: "Eroare",
@@ -267,7 +299,7 @@ const translations = {
     manualPlaceholder: "Vvedite testovyi vopros",
     manualSubmit: "Otpravit",
     answerLabel: "Otvet",
-    answerHint: "Otvet ogranichen lokalnoi bazoi znanii.",
+    answerHint: "LENA otvechaet proverennoi informatsiei iz Leyptsiga.",
     answerPlaceholder: "Otvet poyavitsya zdes.",
     answerState: {
       clarification_needed: { label: "Korotkiy vopros", tone: "neutral" },
@@ -291,7 +323,7 @@ const translations = {
       browserTtsFallback: "Aktivno ozvuchivanie v brauzere",
       typedFallback: "Golosovoi vvod zdes nedostupen. Pozhaluista, vvedite vopros nizhe.",
       listening: "Slushayu",
-      processing: "Ishchu v baze znanii",
+      processing: "Ishchu podkhodyashchuyu informatsiyu",
       clarifying: "Utochnyayu otvet",
       speaking: "Ozvuchivayu otvet",
       error: "Oshibka",
@@ -317,8 +349,8 @@ const mapTranslations = {
     address: "Adresse",
     serviceType: "Angebot",
     distance: "Entfernung",
-    hours: "Oeffnungszeiten",
-    noHours: "Keine klaren Oeffnungszeiten in der Wissensbasis.",
+    hours: "Öffnungszeiten",
+    noHours: "Keine klaren Öffnungszeiten vorhanden.",
     approx: "ca.",
   },
   en: {
@@ -332,7 +364,7 @@ const mapTranslations = {
     serviceType: "Service",
     distance: "Distance",
     hours: "Opening hours",
-    noHours: "No clear opening hours in the knowledge base.",
+    noHours: "No clear opening hours are available.",
     approx: "approx.",
   },
   pl: {
@@ -346,7 +378,7 @@ const mapTranslations = {
     serviceType: "Usluga",
     distance: "Odleglosc",
     hours: "Godziny otwarcia",
-    noHours: "Brak jasnych godzin otwarcia w bazie wiedzy.",
+    noHours: "Brak jasnych godzin otwarcia.",
     approx: "ok.",
   },
   ro: {
@@ -360,7 +392,7 @@ const mapTranslations = {
     serviceType: "Serviciu",
     distance: "Distanta",
     hours: "Program",
-    noHours: "Nu exista un program clar in baza de cunostinte.",
+    noHours: "Nu exista un program clar.",
     approx: "cca.",
   },
   ru: {
@@ -374,8 +406,161 @@ const mapTranslations = {
     serviceType: "Usluga",
     distance: "Rasstoyanie",
     hours: "Chasy raboty",
-    noHours: "V baze znaniy net ponyatnykh chasov raboty.",
+    noHours: "Net ponyatnykh chasov raboty.",
     approx: "okolo",
+  },
+};
+
+const screenTranslations = {
+  de: {
+    languageSubtitle: "Bitte zuerst Sprache wählen.",
+    homeTitle: "Start",
+    homeHint: "Wie möchten Sie Hilfe suchen?",
+    voiceTextMode: "Sprechen",
+    textMode: "Tippen",
+    symbolMode: "Symbole",
+    emergencyMode: "Notfall",
+    back: "Zurück",
+    home: "Start",
+    language: "Sprache",
+    cancel: "Abbrechen",
+    help: "Hilfe",
+    endSession: "Ende",
+    emergency: "Notfall",
+    cancelDone: "Anfrage abgebrochen.",
+    helpText: "Wählen Sie ein Symbol, sprechen Sie eine kurze Frage oder tippen Sie wenige Wörter. Bei akuter Gefahr: Notfall.",
+    symbolsTitle: "Symbole",
+    symbolsHint: "Wählen Sie, was Sie brauchen.",
+    moreHelp: "Weitere Hilfe",
+    substepTitle: "Auswahl",
+    substepHint: "Bitte eine Möglichkeit wählen.",
+    selectedPrefix: "Sie suchen:",
+    resultsTitle: "Ergebnis",
+    resultsHint: "Kurze Hinweise und passende Orte.",
+    noAddress: "Keine sichere Adresse vorhanden.",
+    noHours: "Keine klaren Öffnungszeiten vorhanden.",
+    phone: "Telefon",
+    lastUpdated: "Stand",
+  },
+  en: {
+    languageSubtitle: "Please choose a language first.",
+    homeTitle: "Start",
+    homeHint: "How would you like to look for help?",
+    voiceTextMode: "Speak",
+    textMode: "Type",
+    symbolMode: "Symbols",
+    emergencyMode: "Emergency",
+    back: "Back",
+    home: "Start",
+    language: "Language",
+    cancel: "Cancel",
+    help: "Help",
+    endSession: "End",
+    emergency: "Emergency",
+    cancelDone: "Request cancelled.",
+    helpText: "Choose a symbol, say a short question, or type a few words. In immediate danger: Emergency.",
+    symbolsTitle: "Symbols",
+    symbolsHint: "Choose what you need.",
+    moreHelp: "More help",
+    substepTitle: "Choice",
+    substepHint: "Please choose one option.",
+    selectedPrefix: "You are looking for:",
+    resultsTitle: "Result",
+    resultsHint: "Short notes and matching places.",
+    noAddress: "No safe address is available.",
+    noHours: "No clear opening hours are available.",
+    phone: "Phone",
+    lastUpdated: "Updated",
+  },
+  pl: {
+    languageSubtitle: "Najpierw wybierz język.",
+    homeTitle: "Start",
+    homeHint: "Jak chcesz szukać pomocy?",
+    voiceTextMode: "Mów",
+    textMode: "Pisz",
+    symbolMode: "Symbole",
+    emergencyMode: "Alarm",
+    back: "Wstecz",
+    home: "Start",
+    language: "Język",
+    cancel: "Anuluj",
+    help: "Pomoc",
+    endSession: "Koniec",
+    emergency: "Alarm",
+    cancelDone: "Zapytanie anulowane.",
+    helpText: "Wybierz symbol, powiedz krótkie pytanie albo wpisz kilka słów. W bezpośrednim zagrożeniu: Alarm.",
+    symbolsTitle: "Symbole",
+    symbolsHint: "Wybierz, czego potrzebujesz.",
+    moreHelp: "Więcej pomocy",
+    substepTitle: "Wybór",
+    substepHint: "Wybierz jedną możliwość.",
+    selectedPrefix: "Szukasz:",
+    resultsTitle: "Wynik",
+    resultsHint: "Krótkie wskazówki i pasujące miejsca.",
+    noAddress: "Brak bezpiecznego adresu.",
+    noHours: "Brak jasnych godzin otwarcia.",
+    phone: "Telefon",
+    lastUpdated: "Aktualizacja",
+  },
+  ro: {
+    languageSubtitle: "Alege mai întâi limba.",
+    homeTitle: "Start",
+    homeHint: "Cum vrei să cauți ajutor?",
+    voiceTextMode: "Vorbește",
+    textMode: "Scrie",
+    symbolMode: "Simboluri",
+    emergencyMode: "Urgență",
+    back: "Înapoi",
+    home: "Start",
+    language: "Limba",
+    cancel: "Anulează",
+    help: "Ajutor",
+    endSession: "Sfârșit",
+    emergency: "Urgență",
+    cancelDone: "Cerere anulată.",
+    helpText: "Alege un simbol, spune o întrebare scurtă sau scrie câteva cuvinte. În pericol imediat: Urgență.",
+    symbolsTitle: "Simboluri",
+    symbolsHint: "Alege ce ai nevoie.",
+    moreHelp: "Mai mult ajutor",
+    substepTitle: "Alegere",
+    substepHint: "Alege o opțiune.",
+    selectedPrefix: "Cauți:",
+    resultsTitle: "Rezultat",
+    resultsHint: "Indicații scurte și locuri potrivite.",
+    noAddress: "Nu există o adresă sigură.",
+    noHours: "Nu există program clar.",
+    phone: "Telefon",
+    lastUpdated: "Actualizat",
+  },
+  ru: {
+    languageSubtitle: "Сначала выберите язык.",
+    homeTitle: "Старт",
+    homeHint: "Как вы хотите искать помощь?",
+    voiceTextMode: "Говорить",
+    textMode: "Писать",
+    symbolMode: "Символы",
+    emergencyMode: "Срочно",
+    back: "Назад",
+    home: "Старт",
+    language: "Язык",
+    cancel: "Отмена",
+    help: "Помощь",
+    endSession: "Конец",
+    emergency: "Срочно",
+    cancelDone: "Запрос отменен.",
+    helpText: "Выберите символ, скажите короткий вопрос или напишите несколько слов. При прямой опасности: Срочно.",
+    symbolsTitle: "Символы",
+    symbolsHint: "Выберите, что вам нужно.",
+    moreHelp: "Еще помощь",
+    substepTitle: "Выбор",
+    substepHint: "Выберите один вариант.",
+    selectedPrefix: "Вы ищете:",
+    resultsTitle: "Результат",
+    resultsHint: "Короткие подсказки и подходящие места.",
+    noAddress: "Нет надежного адреса.",
+    noHours: "Нет понятных часов работы.",
+    phone: "Телефон",
+    lastUpdated: "Обновлено",
   },
 };
 
@@ -392,6 +577,8 @@ const state = {
   runtimeHealth: null,
   browserRecognition: null,
   submitting: false,
+  activeRequestController: null,
+  recordingCancelled: false,
   sessionId: null,
   sessionNotice: null,
   sessionTimerId: null,
@@ -404,6 +591,13 @@ const state = {
   selectedMapDestinationId: null,
   mapInstance: null,
   mapMarkers: [],
+  screen: "language",
+  screenHistory: [],
+  symbolConfig: null,
+  symbolConfigLanguage: null,
+  selectedSymbolCategory: null,
+  selectedSymbolSubstep: null,
+  latestSymbolAnswer: null,
   language: loadInitialLanguage(),
 };
 
@@ -431,8 +625,99 @@ function getMapCopy() {
   return mapTranslations[state.language] || mapTranslations.de;
 }
 
+function getScreenCopy() {
+  return screenTranslations[state.language] || screenTranslations.de;
+}
+
 function getMapConfig() {
   return state.runtimeHealth?.map || defaultMapConfig;
+}
+
+function showScreen(screenName, options = {}) {
+  const previous = state.screen;
+  const push = options.push !== false && previous && previous !== screenName;
+  if (push) {
+    state.screenHistory.push(previous);
+  }
+  state.screen = screenName;
+  for (const screen of elements.screens) {
+    screen.hidden = screen.dataset.screen !== screenName;
+  }
+  elements.globalNav.hidden = screenName === "language";
+  elements.backButton.disabled = state.screenHistory.length === 0;
+  if (!["voice", "symbol-results"].includes(screenName)) {
+    clearMapPanel();
+  } else if (state.currentMapData?.destinations?.length) {
+    elements.mapPanel.hidden = false;
+  }
+  renderSessionState();
+}
+
+function goBack() {
+  const previous = state.screenHistory.pop();
+  if (!previous) {
+    showScreen("home", { push: false });
+    return;
+  }
+  showScreen(previous, { push: false });
+}
+
+function goHome() {
+  state.screenHistory = [];
+  state.selectedSymbolCategory = null;
+  state.selectedSymbolSubstep = null;
+  showPlaceholder();
+  clearSymbolResults();
+  showScreen("home", { push: false });
+}
+
+function returnToLanguageSelection() {
+  cancelCurrentSpeech();
+  state.screenHistory = [];
+  clearSessionState(getCopy().session.inactive);
+  showPlaceholder();
+  clearSymbolResults();
+  showScreen("language", { push: false });
+}
+
+function iconMarkup(icon) {
+  const icons = {
+    back: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M28 12 16 24l12 12M17 24h23"/></svg>',
+    home: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="m8 24 16-14 16 14M13 22v18h22V22M20 40V28h8v12"/></svg>',
+    language: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 12h18M17 8v4M14 12c2 7 7 12 14 15M24 12c-2 6-7 11-15 15M28 36l5-14 5 14M30 31h6M6 40h20M28 8h14v14"/></svg>',
+    cancel: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 14 34 34M34 14 14 34"/></svg>',
+    help: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 16a9 9 0 1 1 13 8c-4 2-5 4-5 8M24 39v1"/></svg>',
+    end: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M20 8h-8v32h8M28 15l9 9-9 9M36 24H20"/></svg>',
+    mic: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 8a6 6 0 0 0-6 6v10a6 6 0 0 0 12 0V14a6 6 0 0 0-6-6zM12 22a12 12 0 0 0 24 0M24 34v8M17 42h14"/></svg>',
+    keyboard: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 13h32v22H8zM14 20h1M21 20h1M28 20h1M35 20h1M14 27h1M21 27h1M28 27h1M20 33h8"/></svg>',
+    grid: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M10 10h11v11H10zM27 10h11v11H27zM10 27h11v11H10zM27 27h11v11H27z"/></svg>',
+    bed: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M8 18v20M8 28h32M40 24v14M14 24h9M25 28v-8h9a6 6 0 0 1 6 6v2M12 38v4M38 38v4"/></svg>',
+    food: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 7v15M20 7v15M10 7v12a7 7 0 0 0 14 0V7M17 25v16M34 7v34M30 7h8v17h-8z"/></svg>',
+    water: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 6s12 14 12 24a12 12 0 0 1-24 0C12 20 24 6 24 6zM19 31a5 5 0 0 0 6 5"/></svg>',
+    wash: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M10 21h28v10a10 10 0 0 1-10 10h-8a10 10 0 0 1-10-10V21zM15 16h18M19 10h10M14 21v-3M34 21v-3"/></svg>',
+    toilet: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M13 7h18v17a9 9 0 0 1-9 9h-9V7zM31 16h5a4 4 0 0 1 4 4v3a10 10 0 0 1-10 10h-8M18 33v8M15 41h19M18 14h8"/></svg>',
+    shower: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 17a9 9 0 0 1 18 0M13 19h22M24 25v2M17 27v2M31 27v2M20 34v2M28 34v2M12 42h24"/></svg>',
+    medical: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M19 8h10v11h11v10H29v11H19V29H8V19h11z"/></svg>',
+    alert: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 6 43 40H5L24 6zM24 17v12M24 35v1"/></svg>',
+    clothes: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M18 8h12l9 8-6 7-4-3v21H19V20l-4 3-6-7 9-8zM20 8a4 4 0 0 0 8 0"/></svg>',
+    addiction: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M15 33 33 15M18 10l20 20a7 7 0 0 1-10 10L8 20a7 7 0 0 1 10-10z"/></svg>',
+    documents: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M14 6h15l7 7v29H14zM29 6v9h7M19 24h13M19 30h13M19 36h8"/></svg>',
+    station: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M13 8h22a5 5 0 0 1 5 5v17a8 8 0 0 1-8 8H16a8 8 0 0 1-8-8V13a5 5 0 0 1 5-5zM14 16h20M15 38l-4 5M33 38l4 5M17 30h.1M31 30h.1"/></svg>',
+    question: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M16 17a8 8 0 1 1 13 7c-4 2-5 4-5 8M24 39v1"/></svg>',
+    person: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 23a7 7 0 1 0 0-14 7 7 0 0 0 0 14zM11 42a13 13 0 0 1 26 0"/></svg>',
+    child: '<svg viewBox="0 0 48 48" aria-hidden="true"><path d="M24 21a6 6 0 1 0 0-12 6 6 0 0 0 0 12zM14 42l4-14h12l4 14M18 31h12"/></svg>',
+  };
+  return icons[icon] || icons.question;
+}
+
+function buttonContent(icon, label) {
+  return `<span class="button-icon" aria-hidden="true">${iconMarkup(icon)}</span><span class="button-label"></span>`;
+}
+
+function setIconButton(button, icon, label) {
+  button.innerHTML = buttonContent(icon, label);
+  button.querySelector(".button-label").textContent = label;
+  button.setAttribute("aria-label", label);
 }
 
 function showPlaceholder() {
@@ -773,7 +1058,7 @@ function renderSessionState() {
   const copy = getCopy();
   const fallbackText = state.sessionId ? copy.session.active : copy.session.inactive;
   elements.sessionState.textContent = state.sessionNotice || fallbackText;
-  elements.endConversationButton.disabled = state.submitting || state.recording || !state.sessionId;
+  elements.endConversationButton.disabled = state.submitting || state.recording;
 }
 
 function scheduleSessionExpiry() {
@@ -784,6 +1069,11 @@ function scheduleSessionExpiry() {
   state.sessionTimerId = window.setTimeout(() => {
     state.sessionId = null;
     state.sessionNotice = getCopy().session.expired;
+    cancelCurrentSpeech();
+    showPlaceholder();
+    clearSymbolResults();
+    elements.manualQuestionInput.value = "";
+    showScreen("language", { push: false });
     renderSessionState();
   }, state.sessionTimeoutMs);
 }
@@ -920,19 +1210,42 @@ function updateInputModeUi() {
   elements.manualQuestionInput.disabled = state.submitting || state.recording;
   elements.manualSubmitButton.disabled = state.submitting || state.recording;
   elements.manualSubmitButton.textContent = copy.manualSubmit;
+  elements.cancelRequestButton.disabled = !(state.submitting || state.recording || state.currentAudio);
   updateLanguageButtons();
 }
 
 function renderCopy() {
   const copy = getCopy();
   const mapCopy = getMapCopy();
+  const screenCopy = getScreenCopy();
   document.documentElement.lang = state.language;
   document.title = copy.title;
   elements.brandEyebrow.textContent = copy.brandEyebrow;
   elements.appTitle.textContent = copy.title;
-  elements.appSubtitle.textContent = copy.subtitle;
+  elements.appSubtitle.textContent = screenCopy.languageSubtitle;
   elements.languageLabel.textContent = copy.languageLabel;
   elements.languageHint.textContent = copy.languageHint;
+  elements.homeTitle.textContent = screenCopy.homeTitle;
+  elements.homeHint.textContent = screenCopy.homeHint;
+  elements.voiceTextModeLabel.textContent = screenCopy.voiceTextMode;
+  elements.textModeLabel.textContent = screenCopy.textMode;
+  elements.symbolModeLabel.textContent = screenCopy.symbolMode;
+  elements.emergencyModeLabel.textContent = screenCopy.emergencyMode;
+  setIconButton(elements.backButton, "back", screenCopy.back);
+  setIconButton(elements.homeButton, "home", screenCopy.home);
+  setIconButton(elements.changeLanguageButton, "language", screenCopy.language);
+  setIconButton(elements.cancelRequestButton, "cancel", screenCopy.cancel);
+  setIconButton(elements.helpButton, "help", screenCopy.help);
+  setIconButton(elements.emergencyNavButton, "alert", screenCopy.emergency);
+  setIconButton(elements.endConversationButton, "end", screenCopy.endSession);
+  renderStaticIcons();
+  elements.symbolTitle.textContent = screenCopy.symbolsTitle;
+  elements.symbolHint.textContent = screenCopy.symbolsHint;
+  elements.moreHelpSummary.textContent = screenCopy.moreHelp;
+  elements.symbolSubstepTitle.textContent = screenCopy.substepTitle;
+  elements.symbolSubstepHint.textContent = screenCopy.substepHint;
+  elements.symbolResultsTitle.textContent = screenCopy.resultsTitle;
+  elements.symbolResultsHint.textContent = screenCopy.resultsHint;
   elements.interactionLabel.textContent = copy.interactionLabel;
   elements.interactionHint.textContent = copy.interactionHint;
   elements.endConversationButton.textContent = copy.endConversation;
@@ -957,6 +1270,265 @@ function renderCopy() {
   renderStatus();
   renderSessionState();
   updateInputModeUi();
+  if (state.symbolConfig) {
+    renderSymbolCategories();
+  }
+  if (state.selectedSymbolCategory) {
+    renderSymbolSubsteps(state.selectedSymbolCategory);
+  }
+  if (state.latestSymbolAnswer) {
+    renderSymbolResults(state.latestSymbolAnswer);
+  }
+}
+
+function renderStaticIcons() {
+  for (const target of document.querySelectorAll("[data-icon]")) {
+    target.innerHTML = iconMarkup(target.dataset.icon);
+  }
+}
+
+async function loadSymbolConfig() {
+  if (state.symbolConfig && state.symbolConfigLanguage === state.language) {
+    return state.symbolConfig;
+  }
+  const response = await fetch(`/api/symbol/config?language=${encodeURIComponent(state.language)}`);
+  if (!response.ok) {
+    throw new Error("symbol_config_failed");
+  }
+  state.symbolConfig = await response.json();
+  state.symbolConfigLanguage = state.language;
+  renderSymbolCategories();
+  return state.symbolConfig;
+}
+
+function renderSymbolCategories() {
+  if (!state.symbolConfig?.categories) {
+    return;
+  }
+  elements.primarySymbolGrid.replaceChildren();
+  elements.secondarySymbolGrid.replaceChildren();
+  for (const category of state.symbolConfig.categories) {
+    if (category.id === "hygiene" && category.substeps?.length) {
+      for (const substep of category.substeps) {
+        const button = createSymbolTile(substep.label, substep.icon);
+        button.addEventListener("click", () => {
+          state.selectedSymbolCategory = category;
+          state.selectedSymbolSubstep = substep;
+          void submitSymbolAction(category.id, substep.id);
+        });
+        elements.primarySymbolGrid.append(button);
+      }
+      continue;
+    }
+    const button = createSymbolTile(category.label, category.icon, category.id === "emergency");
+    button.addEventListener("click", () => handleSymbolCategory(category));
+    if (category.group === "secondary") {
+      elements.secondarySymbolGrid.append(button);
+    } else {
+      elements.primarySymbolGrid.append(button);
+    }
+  }
+}
+
+function createSymbolTile(label, icon, emergency = false) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = `symbol-tile${emergency ? " symbol-tile--emergency" : ""}`;
+  button.innerHTML = `<span class="symbol-tile__icon">${iconMarkup(icon)}</span><span class="symbol-tile__label"></span>`;
+  button.querySelector(".symbol-tile__label").textContent = label;
+  button.setAttribute("aria-label", label);
+  return button;
+}
+
+function handleSymbolCategory(category) {
+  state.selectedSymbolCategory = category;
+  state.selectedSymbolSubstep = null;
+  if (category.substeps?.length) {
+    renderSymbolSubsteps(category);
+    showScreen("symbol-substep");
+    return;
+  }
+  void submitSymbolAction(category.id);
+}
+
+function renderSymbolSubsteps(category) {
+  if (!category) {
+    return;
+  }
+  state.selectedSymbolCategory = category;
+  elements.symbolSubstepTitle.textContent = category.label;
+  elements.symbolSubstepHint.textContent = `${getScreenCopy().selectedPrefix} ${category.label}`;
+  elements.symbolSubstepGrid.replaceChildren();
+  for (const substep of category.substeps || []) {
+    const button = createSymbolTile(substep.label, substep.icon);
+    button.addEventListener("click", () => {
+      state.selectedSymbolSubstep = substep;
+      void submitSymbolAction(category.id, substep.id);
+    });
+    elements.symbolSubstepGrid.append(button);
+  }
+}
+
+function clearSymbolResults() {
+  state.latestSymbolAnswer = null;
+  elements.symbolAnswerText.textContent = "";
+  elements.symbolNoMapReason.hidden = true;
+  elements.symbolNoMapReason.textContent = "";
+  elements.symbolResultList.replaceChildren();
+}
+
+function selectedSymbolLabel() {
+  return state.selectedSymbolSubstep?.label || state.selectedSymbolCategory?.label || "";
+}
+
+function symbolLabelForAction(categoryId, substepId = null) {
+  const category = state.symbolConfig?.categories?.find((item) => item.id === categoryId);
+  if (category) {
+    const substep = substepId ? category.substeps?.find((item) => item.id === substepId) : null;
+    return substep?.label || category.label;
+  }
+  if (categoryId === "emergency") {
+    return getScreenCopy().emergency;
+  }
+  return selectedSymbolLabel();
+}
+
+async function submitSymbolAction(categoryId, substepId = null) {
+  const controller = startCancelableRequest();
+  if (state.symbolConfig?.categories?.length) {
+    state.selectedSymbolCategory = state.symbolConfig.categories.find((item) => item.id === categoryId) || state.selectedSymbolCategory;
+    state.selectedSymbolSubstep =
+      state.selectedSymbolCategory?.id === categoryId && substepId
+        ? state.selectedSymbolCategory.substeps?.find((item) => item.id === substepId) || null
+        : null;
+  }
+  cancelCurrentSpeech();
+  clearMapPanel();
+  clearSymbolResults();
+  state.submitting = true;
+  updateInputModeUi();
+  setStatus("processing");
+  try {
+    const response = await fetch("/api/symbol/answer", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal: controller.signal,
+      body: JSON.stringify({
+        category_id: categoryId,
+        substep_id: substepId,
+        language: state.language,
+        session_id: state.sessionId,
+      }),
+    });
+    if (!response.ok) {
+      throw new Error("symbol_answer_failed");
+    }
+    const answer = await response.json();
+    applySessionResponse(answer);
+    renderSymbolResults(answer);
+    renderMap(answer);
+    showScreen("symbol-results");
+    setStatus(answer.status === "crisis" ? "idle" : "speaking");
+    await speakAnswer(answer.answer_text, controller.signal);
+  } catch (error) {
+    if (!isAbortError(error)) {
+      handleUiError(error);
+      showScreen("voice");
+    }
+  } finally {
+    finishCancelableRequest(controller);
+    state.submitting = false;
+    updateInputModeUi();
+    if (state.statusKey !== "error") {
+      setReadyStatus();
+    }
+  }
+}
+
+function renderSymbolResults(answer) {
+  state.latestSymbolAnswer = answer;
+  const screenCopy = getScreenCopy();
+  const label = symbolLabelForAction(answer?.category_id, answer?.substep_id);
+  elements.symbolResultsHint.textContent = label ? `${screenCopy.selectedPrefix} ${label}` : screenCopy.resultsHint;
+  elements.symbolAnswerText.textContent = answer?.answer_text || "";
+  if (answer?.no_map_reason) {
+    elements.symbolNoMapReason.hidden = false;
+    elements.symbolNoMapReason.textContent = answer.no_map_reason;
+  } else {
+    elements.symbolNoMapReason.hidden = true;
+    elements.symbolNoMapReason.textContent = "";
+  }
+  elements.symbolResultList.replaceChildren();
+  for (const card of answer?.cards || []) {
+    const article = document.createElement("article");
+    article.className = "symbol-result-card";
+    article.setAttribute("role", "listitem");
+
+    const title = document.createElement("h3");
+    title.className = "symbol-result-card__title";
+    title.textContent = card.title;
+    article.append(title);
+
+    const address = document.createElement("p");
+    address.className = "symbol-result-card__line";
+    address.textContent = card.address || screenCopy.noAddress;
+    article.append(address);
+
+    if (card.opening_hours?.length) {
+      const hours = document.createElement("ul");
+      hours.className = "symbol-result-card__hours";
+      for (const line of card.opening_hours) {
+        const item = document.createElement("li");
+        item.textContent = line;
+        hours.append(item);
+      }
+      article.append(hours);
+    } else {
+      const noHours = document.createElement("p");
+      noHours.className = "symbol-result-card__line symbol-result-card__muted";
+      noHours.textContent = screenCopy.noHours;
+      article.append(noHours);
+    }
+
+    if (card.phone) {
+      const phone = document.createElement("p");
+      phone.className = "symbol-result-card__line";
+      phone.textContent = `${screenCopy.phone}: ${card.phone}`;
+      article.append(phone);
+    }
+
+    if (card.description) {
+      const description = document.createElement("p");
+      description.className = "symbol-result-card__line";
+      description.textContent = card.description;
+      article.append(description);
+    }
+
+    const action = document.createElement("p");
+    action.className = "symbol-result-card__action";
+    action.textContent = card.action;
+    article.append(action);
+
+    if (card.last_updated) {
+      const updated = document.createElement("p");
+      updated.className = "symbol-result-card__updated";
+      updated.textContent = `${screenCopy.lastUpdated}: ${card.last_updated}`;
+      article.append(updated);
+    }
+
+    if (card.has_map_location) {
+      article.tabIndex = 0;
+      article.addEventListener("click", () => selectMapDestination(card.page_id));
+      article.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          selectMapDestination(card.page_id);
+        }
+      });
+    }
+
+    elements.symbolResultList.append(article);
+  }
 }
 
 function cancelCurrentSpeech() {
@@ -970,6 +1542,64 @@ function cancelCurrentSpeech() {
   if ("speechSynthesis" in window) {
     window.speechSynthesis.cancel();
   }
+}
+
+function isAbortError(error) {
+  return error?.name === "AbortError" || error?.message === "request_cancelled";
+}
+
+function startCancelableRequest() {
+  if (state.activeRequestController) {
+    state.activeRequestController.abort();
+  }
+  state.activeRequestController = new AbortController();
+  return state.activeRequestController;
+}
+
+function finishCancelableRequest(controller) {
+  if (state.activeRequestController === controller) {
+    state.activeRequestController = null;
+  }
+}
+
+function cancelRecording() {
+  const recorderActive = state.mediaRecorder && state.mediaRecorder.state !== "inactive";
+  state.recordingCancelled = Boolean(recorderActive);
+  if (state.browserRecognition) {
+    try {
+      state.browserRecognition.stop();
+    } catch {}
+  }
+  if (recorderActive) {
+    try {
+      state.mediaRecorder.stop();
+    } catch {}
+  } else {
+    state.recordingCancelled = false;
+  }
+  state.chunks = [];
+  state.recording = false;
+}
+
+function cancelCurrentRequest() {
+  if (state.activeRequestController) {
+    state.activeRequestController.abort();
+    state.activeRequestController = null;
+  }
+  cancelRecording();
+  cancelCurrentSpeech();
+  state.submitting = false;
+  updateInputModeUi();
+  setStatus("idle");
+  showPlaceholder();
+  clearSymbolResults();
+  goHome();
+  setStatusMessage(getScreenCopy().cancelDone);
+}
+
+function setStatusMessage(message) {
+  state.statusKey = "";
+  elements.statusText.textContent = message;
 }
 
 function normalizeSpeechText(text, language) {
@@ -989,7 +1619,7 @@ function normalizeSpeechText(text, language) {
     [/Mo-Fr/g, language === "de" ? "Montag bis Freitag" : "Monday to Friday"],
     [/Mo – Fr/g, language === "de" ? "Montag bis Freitag" : "Monday to Friday"],
     [/Sa, So, Feiertag(e)?/g, language === "de" ? "Samstag, Sonntag und Feiertage" : "Saturday, Sunday and public holidays"],
-    [/Str\./g, language === "de" ? "Strasse" : "Street"],
+    [/Str\./g, language === "de" ? "Straße" : "Street"],
     [/Nr\./g, language === "de" ? "Nummer" : "number"],
     [/;/g, "."],
   ];
@@ -1056,7 +1686,7 @@ async function loadHealth() {
   }
 }
 
-async function transcribeAudio(blob, language, debugTranscript = null) {
+async function transcribeAudio(blob, language, debugTranscript = null, signal = undefined) {
   const form = new FormData();
   form.append("audio", blob, "recording.webm");
   form.append("language", language);
@@ -1066,6 +1696,7 @@ async function transcribeAudio(blob, language, debugTranscript = null) {
   const response = await fetch("/api/speech/transcribe", {
     method: "POST",
     body: form,
+    signal,
   });
   if (!response.ok) {
     throw new Error("transcription_failed");
@@ -1073,11 +1704,12 @@ async function transcribeAudio(blob, language, debugTranscript = null) {
   return response.json();
 }
 
-async function answerQuery(transcript, language) {
+async function answerQuery(transcript, language, signal = undefined) {
   const response = await fetch("/api/query/answer", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ transcript, language, session_id: state.sessionId }),
+    signal,
   });
   if (!response.ok) {
     throw new Error("answer_generation_failed");
@@ -1085,12 +1717,13 @@ async function answerQuery(transcript, language) {
   return response.json();
 }
 
-async function synthesizeAnswer(text, language) {
+async function synthesizeAnswer(text, language, signal = undefined) {
   const speechText = normalizeSpeechText(text, language);
   const response = await fetch("/api/speech/synthesize", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ text: speechText, language }),
+    signal,
   });
   if (!response.ok) {
     return null;
@@ -1103,10 +1736,12 @@ function playAudio(url) {
   return new Promise((resolve) => {
     const audio = new Audio(url);
     state.currentAudio = audio;
+    updateInputModeUi();
     const finish = () => {
       if (state.currentAudio === audio) {
         state.currentAudio = null;
       }
+      updateInputModeUi();
       resolve();
     };
     audio.addEventListener("ended", finish, { once: true });
@@ -1133,8 +1768,8 @@ function speakWithBrowser(text, language) {
   });
 }
 
-async function speakAnswer(text) {
-  const synthesis = await synthesizeAnswer(text, state.language);
+async function speakAnswer(text, signal = undefined) {
+  const synthesis = await synthesizeAnswer(text, state.language, signal);
   if (synthesis?.status === "ok" && synthesis.audio_url) {
     await playAudio(synthesis.audio_url);
     return;
@@ -1154,19 +1789,25 @@ function handleUiError(error) {
 }
 
 async function submitTranscript(transcript) {
+  const controller = startCancelableRequest();
   state.submitting = true;
   updateInputModeUi();
   setStatus("processing");
 
   try {
-    const answer = await answerQuery(transcript, state.language);
+    const answer = await answerQuery(transcript, state.language, controller.signal);
     applySessionResponse(answer);
     showAnswerState(answer);
     showAnswer(answer.answer_text);
     renderMap(answer);
     setStatus(answer.status === "clarification_needed" ? "clarifying" : "speaking");
-    await speakAnswer(answer.answer_text);
+    await speakAnswer(answer.answer_text, controller.signal);
+  } catch (error) {
+    if (!isAbortError(error)) {
+      throw error;
+    }
   } finally {
+    finishCancelableRequest(controller);
     state.submitting = false;
     state.recording = false;
     updateInputModeUi();
@@ -1177,32 +1818,42 @@ async function submitTranscript(transcript) {
 }
 
 async function processAudio(blob) {
+  const controller = startCancelableRequest();
   setStatus("processing");
-  const transcription = await transcribeAudio(blob, state.language);
-  if (transcription.status !== "ok") {
-    const detail = transcription.detail ? ` ${transcription.detail}` : "";
-    if (canUseBrowserSpeechRecognition()) {
-      state.forceBrowserSttFallback = true;
+  try {
+    const transcription = await transcribeAudio(blob, state.language, null, controller.signal);
+    if (transcription.status !== "ok") {
+      const detail = transcription.detail ? ` ${transcription.detail}` : "";
+      if (canUseBrowserSpeechRecognition()) {
+        state.forceBrowserSttFallback = true;
+        clearMapPanel();
+        showAnswer(`${getCopy().errors.backendSpeechFallback}${detail}`.trim());
+        setStatus("browserFallback");
+        return;
+      }
       clearMapPanel();
-      showAnswer(`${getCopy().errors.backendSpeechFallback}${detail}`.trim());
-      setStatus("browserFallback");
+      showAnswer(`${getCopy().errors.backendSpeechUnavailable}${detail}`.trim());
+      setStatus("typedFallback");
       return;
     }
-    clearMapPanel();
-    showAnswer(`${getCopy().errors.backendSpeechUnavailable}${detail}`.trim());
-    setStatus("typedFallback");
-    return;
-  }
 
-  const transcript = (transcription.transcript || "").trim();
-  if (!transcript) {
-    clearMapPanel();
-    showAnswer(getCopy().errors.speechUnavailable);
-    setStatus("error");
-    return;
-  }
+    const transcript = (transcription.transcript || "").trim();
+    if (!transcript) {
+      clearMapPanel();
+      showAnswer(getCopy().errors.speechUnavailable);
+      setStatus("error");
+      return;
+    }
 
-  await submitTranscript(transcript);
+    finishCancelableRequest(controller);
+    await submitTranscript(transcript);
+  } catch (error) {
+    if (!isAbortError(error)) {
+      throw error;
+    }
+  } finally {
+    finishCancelableRequest(controller);
+  }
 }
 
 async function ensureRecorder() {
@@ -1223,6 +1874,11 @@ async function ensureRecorder() {
     }
   });
   mediaRecorder.addEventListener("stop", async () => {
+    if (state.recordingCancelled) {
+      state.recordingCancelled = false;
+      state.chunks = [];
+      return;
+    }
     const blob = new Blob(state.chunks, { type: recorderSupport.mimeType || "audio/webm" });
     state.chunks = [];
     try {
@@ -1342,7 +1998,11 @@ async function handleRecordClick() {
 }
 
 async function handleEndConversation() {
-  if (!state.sessionId || state.submitting || state.recording) {
+  if (state.submitting || state.recording) {
+    return;
+  }
+  if (!state.sessionId) {
+    returnToLanguageSelection();
     return;
   }
   const currentSessionId = state.sessionId;
@@ -1357,23 +2017,105 @@ async function handleEndConversation() {
     }
     const body = await response.json();
     clearSessionState(sessionNoticeForEvent(body.session_event) || getCopy().session.ended);
+    elements.manualQuestionInput.value = "";
+    showPlaceholder();
+    clearSymbolResults();
+    showScreen("language", { push: false });
   } catch (error) {
     handleUiError(error);
   }
 }
 
 function setLanguage(language) {
-  if (!SUPPORTED_LANGUAGES.includes(language) || language === state.language) {
+  if (!SUPPORTED_LANGUAGES.includes(language)) {
     return;
   }
   cancelCurrentSpeech();
+  const changed = language !== state.language;
   state.language = language;
   clearSessionState(getCopy().session.inactive);
   persistLanguage(language);
+  if (changed) {
+    state.symbolConfig = null;
+    state.symbolConfigLanguage = null;
+  }
+  state.screenHistory = [];
+  elements.manualQuestionInput.value = "";
   showPlaceholder();
+  clearSymbolResults();
   renderCopy();
   setReadyStatus();
+  showScreen("home", { push: false });
 }
+
+async function openSymbolMode() {
+  try {
+    await loadSymbolConfig();
+    clearSymbolResults();
+    showScreen("symbols");
+  } catch (error) {
+    handleUiError(error);
+    showScreen("voice");
+  }
+}
+
+function openVoiceMode(options = {}) {
+  clearSymbolResults();
+  clearMapPanel();
+  showScreen("voice");
+  if (options.focusText) {
+    focusManualQuestion();
+  }
+}
+
+function showHelp() {
+  cancelCurrentSpeech();
+  clearMapPanel();
+  hideAnswerState();
+  showAnswer(getScreenCopy().helpText);
+  showScreen("voice");
+  setReadyStatus();
+}
+
+elements.backButton.addEventListener("click", () => {
+  goBack();
+});
+
+elements.homeButton.addEventListener("click", () => {
+  goHome();
+});
+
+elements.changeLanguageButton.addEventListener("click", () => {
+  returnToLanguageSelection();
+});
+
+elements.cancelRequestButton.addEventListener("click", () => {
+  cancelCurrentRequest();
+});
+
+elements.helpButton.addEventListener("click", () => {
+  showHelp();
+});
+
+elements.emergencyNavButton.addEventListener("click", () => {
+  void submitSymbolAction("emergency");
+});
+
+elements.voiceTextModeButton.addEventListener("click", () => {
+  openVoiceMode();
+});
+
+elements.textModeButton.addEventListener("click", () => {
+  openVoiceMode({ focusText: true });
+});
+
+elements.symbolModeButton.addEventListener("click", () => {
+  void openSymbolMode();
+});
+
+elements.emergencyModeButton.addEventListener("click", () => {
+  void submitSymbolAction("emergency");
+});
 
 elements.recordButton.addEventListener("click", () => {
   void handleRecordClick();
@@ -1406,6 +2148,7 @@ for (const button of elements.languageButtons) {
 
 showPlaceholder();
 renderCopy();
+showScreen("language", { push: false });
 void loadHealth().then(() => {
   updateInputModeUi();
   if (!state.runtimeHealth) {

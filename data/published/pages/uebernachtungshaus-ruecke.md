@@ -1,19 +1,18 @@
 ---
-title: "Flyer Uebernachtungshaus Ruecke"
+title: "Übernachtungshaus Rücke"
 category: "housing"
-service_type: "food_distribution"
+service_type: "overnight_shelter"
 language: "de"
 publisher: "Stadt Leipzig"
 address: "Rückmarsdorfer Str. 5-7, 04179 Leipzig"
 opening_hours:
   - "Montag bis Freitag 16:00 bis 8:00 Uhr"
-description: "Flyer Uebernachtungshaus Ruecke"
+description: "Übernachtungshaus für wohnungslose Männer"
 target_groups:
-  - "addiction"
   - "homeless"
   - "men"
 gender_access: "men"
-phone: "01.08.2023"
+phone: "0341 123 4504"
 email: "notunterbringung@leipzig.de"
 tags:
   - "uebernachtung"
@@ -23,7 +22,10 @@ aliases:
   - "flyer"
   - "Flyer Uebernachtungshaus Ruecke"
   - "notunterkunft"
+  - "Rücke"
+  - "rücke"
   - "ruecke"
+  - "Übernachtungshaus Rücke"
   - "uebernachtung"
   - "uebernachtungshaus"
   - "wohnungslosigkeit"
@@ -34,7 +36,7 @@ source_content_hash: "07c875565706eec0a32ce4608614c7defbbd847d96239d33c233dbb63c
 source_last_seen: "2026-04-21T05:42:29.964284+00:00"
 last_updated: "2026-04-21"
 ---
-# Flyer Uebernachtungshaus Ruecke
+# Übernachtungshaus Rücke
 
 - Source: https://static.leipzig.de/fileadmin/mediendatenbank/leipzig-de/Stadt/02.5_Dez5_Jugend_Soziales_Gesundheit_Schule/50_Sozialamt/Wohnungsnotfallhilfe_und_Notunterbringung/Flyer_%C3%9Cbernachtungshaus_R%C3%BCcke.pdf
 - Generated: 2026-04-21T05:42:29.964284+00:00

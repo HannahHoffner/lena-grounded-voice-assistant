@@ -8,6 +8,27 @@ from fastapi.testclient import TestClient
 from app.main import create_app
 
 
+def test_frontend_copy_does_not_expose_internal_knowledge_base_terms() -> None:
+    static_root = Path(__file__).resolve().parents[1] / "app" / "static"
+    frontend_text = "\n".join(
+        [
+            (static_root / "app.js").read_text(encoding="utf-8"),
+            (static_root / "index.html").read_text(encoding="utf-8"),
+        ]
+    )
+
+    assert "Wissensbasis" not in frontend_text
+    assert "knowledge base" not in frontend_text
+    assert "baze wiedzy" not in frontend_text
+    assert "baza locala de cunostinte" not in frontend_text
+    assert "baze znanii" not in frontend_text
+    assert "download the app" not in frontend_text
+    assert "search online" not in frontend_text
+    assert "google maps" not in frontend_text.casefold()
+    assert "app herunterladen" not in frontend_text.casefold()
+    assert "online suchen" not in frontend_text.casefold()
+
+
 def test_health_endpoint_reports_providers(monkeypatch, tmp_path) -> None:
     monkeypatch.setenv("LENA_BOOTSTRAP_RUNTIME_FROM_SCRAPER", "false")
     monkeypatch.setenv("LENA_STT_PROVIDER", "mock")
@@ -83,7 +104,7 @@ def test_out_of_scope_query_redirects_to_supported_topics(monkeypatch) -> None:
     assert body["status"] == "out_of_scope"
     assert body["out_of_scope"] is True
     assert "Leipzig" in body["answer_text"]
-    assert "support services" in body["answer_text"]
+    assert "local help services" in body["answer_text"]
 
 
 def test_crisis_query_bypasses_normal_answering(monkeypatch) -> None:
@@ -98,7 +119,7 @@ def test_crisis_query_bypasses_normal_answering(monkeypatch) -> None:
     assert body["crisis_mode"] is True
     assert "112" in body["answer_text"]
     assert "110" in body["answer_text"]
-    assert "TelefonSeelsorge" in body["answer_text"]
+    assert "emergency services" in body["answer_text"]
     assert "notfallkontakte" in body["retrieved_page_ids"]
 
 
@@ -142,6 +163,38 @@ def test_shower_answer_includes_concrete_place_details(monkeypatch) -> None:
     assert "Nuernberger Strasse 31" in body["answer_text"] or "Nürnberger Straße 31" in body["answer_text"]
 
 
+def test_toilet_query_returns_public_toilet_map(monkeypatch) -> None:
+    monkeypatch.setenv("LENA_BOOTSTRAP_RUNTIME_FROM_SCRAPER", "false")
+    monkeypatch.setenv("LENA_REWRITE_PROVIDER", "template")
+    app = create_app()
+    client = TestClient(app)
+    response = client.post("/api/query/answer", json={"transcript": "wo sind toiletten?", "language": "de"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "ok"
+    assert "City-Toiletten" in body["answer_text"]
+    assert "Lene-Voigt-Park" in body["answer_text"]
+    assert body["map_data"] is not None
+    assert len(body["map_data"]["destinations"]) == 21
+    assert any(destination["label"] == "Lene-Voigt-Park" for destination in body["map_data"]["destinations"])
+
+
+def test_free_toilet_query_returns_lene_voigt_park_map(monkeypatch) -> None:
+    monkeypatch.setenv("LENA_BOOTSTRAP_RUNTIME_FROM_SCRAPER", "false")
+    monkeypatch.setenv("LENA_REWRITE_PROVIDER", "template")
+    app = create_app()
+    client = TestClient(app)
+    response = client.post("/api/query/answer", json={"transcript": "wo kann ich umsonst aufs klo?", "language": "de"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "ok"
+    assert "Kostenfrei" in body["answer_text"]
+    assert "Lene-Voigt-Park" in body["answer_text"]
+    assert body["map_data"] is not None
+    assert body["map_data"]["selected_destination_id"] == "toilet-0021"
+    assert [destination["label"] for destination in body["map_data"]["destinations"]] == ["Lene-Voigt-Park"]
+
+
 def test_location_answer_includes_address_for_specific_place(monkeypatch) -> None:
     monkeypatch.setenv("LENA_BOOTSTRAP_RUNTIME_FROM_SCRAPER", "false")
     monkeypatch.setenv("LENA_REWRITE_PROVIDER", "template")
@@ -159,6 +212,25 @@ def test_location_answer_includes_address_for_specific_place(monkeypatch) -> Non
     assert body["map_data"]["destinations"][0]["page_id"] in {"leipziger-oase", "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog"}
 
 
+def test_cold_query_returns_ruecke_with_address_not_addressless_bridge(monkeypatch) -> None:
+    monkeypatch.setenv("LENA_BOOTSTRAP_RUNTIME_FROM_SCRAPER", "false")
+    monkeypatch.setenv("LENA_REWRITE_PROVIDER", "template")
+    app = create_app()
+    client = TestClient(app)
+
+    response = client.post("/api/query/answer", json={"transcript": "Mir ist kalt", "language": "de"})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "ok"
+    assert body["retrieved_page_ids"][0] == "uebernachtungshaus-ruecke"
+    assert "Übernachtungshaus Rücke" in body["answer_text"]
+    assert "Rückmarsdorfer Str. 5-7" in body["answer_text"]
+    assert "Heilsarmee" not in body["answer_text"]
+    assert "Bruecke" not in body["answer_text"]
+    assert "keine genaue Adresse" not in body["answer_text"]
+
+
 def test_answer_endpoint_supports_cross_language_food_lookup(monkeypatch) -> None:
     monkeypatch.setenv("LENA_BOOTSTRAP_RUNTIME_FROM_SCRAPER", "false")
     monkeypatch.setenv("LENA_REWRITE_PROVIDER", "template")
@@ -171,6 +243,11 @@ def test_answer_endpoint_supports_cross_language_food_lookup(monkeypatch) -> Non
     assert body["retrieved_page_ids"][0].startswith("tafel-leipzig")
     assert "Tafel Leipzig" in body["answer_text"]
     assert body["answer_text"].count("You can go to") <= 1
+    lowered = body["answer_text"].casefold()
+    assert "download the app" not in lowered
+    assert "check the website" not in lowered
+    assert "search online" not in lowered
+    assert "google maps" not in lowered
 
 
 def test_food_overview_answer_can_return_multiple_map_markers(monkeypatch) -> None:
@@ -186,6 +263,10 @@ def test_food_overview_answer_can_return_multiple_map_markers(monkeypatch) -> No
     assert len(body["map_data"]["destinations"]) >= 2
     destination_ids = {item["page_id"] for item in body["map_data"]["destinations"]}
     assert "tafel-leipzig-markkleeberg" not in destination_ids
+    lowered = body["answer_text"].casefold()
+    assert "download the app" not in lowered
+    assert "check the website" not in lowered
+    assert "search online" not in lowered
 
 
 def test_non_map_statuses_return_null_map_data(monkeypatch) -> None:
@@ -299,7 +380,7 @@ def test_session_follow_up_keeps_same_place_for_hours_question(monkeypatch) -> N
 
     assert first["retrieved_page_ids"][0] in {"leipziger-oase", "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog"}
     assert second["retrieved_page_ids"][0] in {"leipziger-oase", "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog"}
-    assert "keine eigenen Oeffnungszeiten" in second["answer_text"]
+    assert "keine eigenen Öffnungszeiten" in second["answer_text"]
 
 
 def test_session_follow_up_keeps_same_place_for_address_question(monkeypatch) -> None:

@@ -52,7 +52,14 @@ def main() -> int:
         )[0]
     )
 
-    tts_provider = create_tts_provider(settings.tts_provider, settings.piper_binary, settings.piper_voice_models)
+    tts_provider = create_tts_provider(
+        settings.tts_provider,
+        settings.piper_binary,
+        settings.piper_voice_models,
+        settings.piper_voice_configs,
+        settings.piper_default_voice_model,
+        settings.piper_default_voice_config,
+    )
     tts_health = tts_provider.health()
     checks.append(
         _check(
@@ -76,8 +83,15 @@ def main() -> int:
             checks.append(_check("ollama", model_ok, detail)[0])
         except Exception as exc:
             checks.append(_check("ollama", False, f"unreachable at {settings.ollama_url}: {exc}")[0])
+    elif settings.rewrite_provider in {"openai_compatible", "blablador"}:
+        provider_label = settings.rewrite_provider
+        configured = bool(settings.llm_base_url and settings.llm_api_key)
+        detail = f"configured={configured}; base_url={settings.llm_base_url or 'missing'}; model={settings.llm_model}"
+        if not settings.llm_api_key:
+            detail += "; api_key=missing"
+        checks.append(_check(provider_label, configured, detail)[0])
     else:
-        checks.append(_check("ollama", True, "template mode selected; Ollama not required")[0])
+        checks.append(_check("llm", True, "template mode selected; LLM provider not required")[0])
 
     degraded_mode_ok = settings.rewrite_provider == "template" and settings.stt_provider == "mock" and settings.tts_provider == "mock"
     checks.append(

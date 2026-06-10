@@ -1207,9 +1207,9 @@
   },
   {
     "page_id": "uebernachtungshaus-ruecke",
-    "title": "Flyer Uebernachtungshaus Ruecke",
+    "title": "Übernachtungshaus Rücke",
     "category": "housing",
-    "service_type": "food_distribution",
+    "service_type": "overnight_shelter",
     "language": "de",
     "source_url": "https://static.leipzig.de/fileadmin/mediendatenbank/leipzig-de/Stadt/02.5_Dez5_Jugend_Soziales_Gesundheit_Schule/50_Sozialamt/Wohnungsnotfallhilfe_und_Notunterbringung/Flyer_%C3%9Cbernachtungshaus_R%C3%BCcke.pdf",
     "last_updated": "2026-04-21",
@@ -1218,9 +1218,8 @@
     "opening_hours": [
       "Montag bis Freitag 16:00 bis 8:00 Uhr"
     ],
-    "description": "Flyer Uebernachtungshaus Ruecke",
+    "description": "Übernachtungshaus für wohnungslose Männer",
     "target_groups": [
-      "addiction",
       "homeless",
       "men"
     ],
@@ -1228,7 +1227,7 @@
     "walk_in": null,
     "requires_registration": null,
     "languages": [],
-    "phone": "01.08.2023",
+    "phone": "0341 123 4504",
     "email": "notunterbringung@leipzig.de",
     "tags": [
       "uebernachtung",
@@ -1239,7 +1238,10 @@
       "flyer",
       "Flyer Uebernachtungshaus Ruecke",
       "notunterkunft",
+      "Rücke",
+      "rücke",
       "ruecke",
+      "Übernachtungshaus Rücke",
       "uebernachtung",
       "uebernachtungshaus",
       "wohnungslosigkeit"
@@ -2867,14 +2869,14 @@
   },
   {
     "page_id": "heilsarmee-begegnungszentrum",
-    "title": "Heilsarmee Begegnungszentrum Die Bruecke",
+    "title": "Heilsarmee Begegnungszentrum Die Brücke",
     "category": "social",
     "service_type": "food_distribution",
     "language": "de",
     "source_url": "https://www.heilsarmee.de/leipzig/begegnungszentrum.html",
     "last_updated": "2026-04-21",
     "publisher": "Heilsarmee Leipzig",
-    "address": null,
+    "address": "Südblick 5A, 04329 Leipzig",
     "opening_hours": [],
     "description": "Begegnungszentrum \"Die Brücke\"",
     "target_groups": [
@@ -2884,7 +2886,7 @@
     "walk_in": null,
     "requires_registration": null,
     "languages": [],
-    "phone": null,
+    "phone": "0341 2518880",
     "email": null,
     "tags": [
       "begegnungszentrum",
@@ -2894,8 +2896,10 @@
     ],
     "aliases": [
       "begegnungszentrum",
+      "brücke",
       "bruecke",
       "heilsarmee",
+      "Heilsarmee Begegnungszentrum Die Brücke",
       "Heilsarmee Begegnungszentrum Die Bruecke",
       "jobcenter",
       "kleiderkammer",
@@ -2909,13 +2913,12 @@
     "file_path": "heilsarmee-begegnungszentrum.md",
     "review_status": "published",
     "validation_issues": [
-      "missing_address",
       "missing_opening_hours"
     ],
-    "normalized_address": null,
+    "normalized_address": "sudblick 5a 04329 leipzig",
     "latitude": null,
     "longitude": null,
-    "geo_status": "missing_address",
+    "geo_status": null,
     "geo_source": null,
     "geo_confidence": null,
     "geo_precision": null

@@ -66,13 +66,14 @@
   },
   {
     "source_id": "uebernachtungshaus-ruecke",
-    "title": "Flyer Uebernachtungshaus Ruecke",
+    "title": "Übernachtungshaus Rücke",
     "url": "https://static.leipzig.de/fileadmin/mediendatenbank/leipzig-de/Stadt/02.5_Dez5_Jugend_Soziales_Gesundheit_Schule/50_Sozialamt/Wohnungsnotfallhilfe_und_Notunterbringung/Flyer_%C3%9Cbernachtungshaus_R%C3%BCcke.pdf",
     "language": "de",
     "category": "housing",
+    "service_type": "overnight_shelter",
     "publisher": "Stadt Leipzig",
     "format": "pdf",
-    "tags": ["uebernachtung", "notunterkunft", "wohnungslosigkeit"]
+    "tags": ["uebernachtung", "notunterkunft", "wohnungslosigkeit", "rücke"]
   },
   {
     "source_id": "hilfe-bei-obdachlosigkeit",
@@ -119,10 +120,21 @@
     "title": "Oeffentliche Toiletten",
     "url": "https://www.leipzig.de/service-portal/themen-und-lebenslagen/sicherheit-und-ordnung/oeffentliche-toiletten",
     "language": "de",
+    "source_type": "html",
+    "trust_tier": 1,
+    "allowed_domains": ["www.leipzig.de"],
+    "include_patterns": ["toiletten", "sanitaeranlagen", "city-toilette", "euroschluessel", "kostenfrei", "standorte"],
+    "exclude_patterns": ["impressum", "datenschutz", "presse", "news", "veranstaltungen"],
+    "crawl_depth": 0,
+    "follow_pdf_links": false,
+    "entity_expectation": "service_catalog",
+    "schedule_class": "daily",
+    "priority": 25,
     "category": "hygiene",
+    "service_type": "hygiene",
     "publisher": "Stadt Leipzig",
     "format": "html",
-    "tags": ["toiletten", "hygiene", "oeffentlich"]
+    "tags": ["toiletten", "hygiene", "oeffentlich", "kostenfrei", "euroschluessel"]
   },
   {
     "source_id": "notfallkontakte",
@@ -369,7 +381,7 @@
   },
   {
     "source_id": "heilsarmee-begegnungszentrum",
-    "title": "Heilsarmee Begegnungszentrum Die Bruecke",
+    "title": "Heilsarmee Begegnungszentrum Die Brücke",
     "url": "https://www.heilsarmee.de/leipzig/begegnungszentrum.html",
     "language": "de",
     "category": "social",

@@ -119,3 +119,26 @@ def test_published_dataset_fixes_known_problem_pages() -> None:
         assert page["service_type"] == "service_catalog"
         assert page["address"] is None
         assert page["opening_hours"] == []
+
+
+def test_frontend_kiosk_controls_are_present() -> None:
+    root = Path(__file__).resolve().parents[1]
+    index_html = (root / "app" / "static" / "index.html").read_text(encoding="utf-8")
+    app_js = (root / "app" / "static" / "app.js").read_text(encoding="utf-8")
+
+    for element_id in [
+        "backButton",
+        "homeButton",
+        "changeLanguageButton",
+        "cancelRequestButton",
+        "helpButton",
+        "emergencyNavButton",
+        "endConversationButton",
+        "textModeButton",
+    ]:
+        assert f'id="{element_id}"' in index_html
+        assert element_id in app_js
+
+    assert "toilet:" in app_js
+    assert "shower:" in app_js
+    assert "AbortController" in app_js

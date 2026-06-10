@@ -25,7 +25,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--rewrite-provider",
-        choices=["template", "ollama"],
+        choices=["template", "ollama", "openai_compatible", "blablador"],
         help="Override the configured rewrite provider for this run.",
     )
     parser.add_argument(
@@ -42,6 +42,14 @@ def build_parser() -> argparse.ArgumentParser:
         "--ollama-model",
         help="Override the configured Ollama model for this run.",
     )
+    parser.add_argument(
+        "--llm-model",
+        help="Override the configured OpenAI-compatible or Blablador model alias for this run.",
+    )
+    parser.add_argument(
+        "--llm-base-url",
+        help="Override the configured OpenAI-compatible base URL for this run.",
+    )
     return parser
 
 
@@ -56,6 +64,10 @@ def main() -> None:
         os.environ["LENA_TTS_PROVIDER"] = args.tts_provider
     if args.ollama_model:
         os.environ["LENA_OLLAMA_MODEL"] = args.ollama_model
+    if args.llm_model:
+        os.environ["LENA_LLM_MODEL"] = args.llm_model
+    if args.llm_base_url:
+        os.environ["LENA_LLM_BASE_URL"] = args.llm_base_url
 
     uvicorn.run(
         "app.main:create_app",
