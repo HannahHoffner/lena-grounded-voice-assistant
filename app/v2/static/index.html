@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LENA v2</title>
+    <link rel="stylesheet" href="/leaflet/leaflet.css" />
+    <link rel="stylesheet" href="/static/styles.css?v=20260616e" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <nav class="global-nav" aria-label="Navigation">
+        <button class="nav-button" id="homeButton" type="button" aria-label="Start">
+          <span class="button-icon" data-icon="home" aria-hidden="true"></span>
+          <span class="button-label">Start</span>
+        </button>
+        <button class="nav-button" id="backButton" type="button" aria-label="Zurück">
+          <span class="button-icon" data-icon="back" aria-hidden="true"></span>
+          <span class="button-label">Zurück</span>
+        </button>
+        <button class="nav-button" id="languageButton" type="button" aria-label="Sprache ändern">
+          <span class="button-icon" data-icon="language" aria-hidden="true"></span>
+          <span class="button-label">Sprache</span>
+        </button>
+        <button class="nav-button" id="cancelButton" type="button" aria-label="Anfrage abbrechen">
+          <span class="button-icon" data-icon="cancel" aria-hidden="true"></span>
+          <span class="button-label">Abbrechen</span>
+        </button>
+        <button class="nav-button" id="endSessionButton" type="button" aria-label="Sitzung beenden">
+          <span class="button-icon" data-icon="end" aria-hidden="true"></span>
+          <span class="button-label">Ende</span>
+        </button>
+      </nav>
+
+      <section class="screen language-screen" id="languageView" aria-labelledby="languageTitle">
+        <p class="eyebrow">LENA v2</p>
+        <h1 id="languageTitle">Wähle deine Sprache.</h1>
+        <div class="language-grid" role="list">
+          <button type="button" class="language-option" data-language="de"><span class="flag-icon flag-icon--de" aria-hidden="true"></span><span>Deutsch</span></button>
+          <button type="button" class="language-option" data-language="en"><span class="flag-icon flag-icon--gb" aria-hidden="true"></span><span>English</span></button>
+          <button type="button" class="language-option" data-language="pl"><span class="flag-icon flag-icon--pl" aria-hidden="true"></span><span>Polski</span></button>
+          <button type="button" class="language-option" data-language="ro"><span class="flag-icon flag-icon--ro" aria-hidden="true"></span><span>Romana</span></button>
+          <button type="button" class="language-option" data-language="ru"><span class="flag-icon flag-icon--ru" aria-hidden="true"></span><span>Russkiy</span></button>
+        </div>
+      </section>
+
+      <section class="screen main-screen" id="mainView" aria-labelledby="mainTitle" hidden>
+        <header class="hero-row">
+          <div>
+            <p class="eyebrow">Kleiner lokaler Wegweiser</p>
+            <h1 id="mainTitle">Was brauchst du?</h1>
+            <p class="intro-line" id="introLine"></p>
+          </div>
+          <button class="emergency-tile" id="emergencyButton" type="button" aria-label="Notfall Hilfe">
+            <span class="mode-tile__icon" data-icon="alert" aria-hidden="true"></span>
+            <span>Notfall</span>
+          </button>
+        </header>
+
+        <section class="help-section" aria-labelledby="mainTitle">
+          <div class="symbol-grid v2-home-symbol-grid" id="symbolGrid" aria-label="Hilfethemen"></div>
+        </section>
+
+        <section class="interaction-section" id="talkPanel" aria-labelledby="talkTitle">
+          <h2 id="talkTitle">Sprich mit mir</h2>
+          <div class="interaction-actions">
+            <button class="mode-tile voice-tile" id="micButton" type="button" aria-label="Aufnahme starten">
+              <span class="mode-tile__icon" data-icon="mic" aria-hidden="true"></span>
+              <span id="micButtonText">Mikrofon</span>
+            </button>
+            <button class="mode-tile text-tile" id="textModeButton" type="button" aria-label="Text eingeben">
+              <span class="mode-tile__icon" data-icon="keyboard" aria-hidden="true"></span>
+              <span id="textModeButtonText">Text</span>
+            </button>
+          </div>
+        </section>
+
+        <p class="selected-line" id="selectedLine" hidden></p>
+
+        <section class="transcript-review flow-panel" id="transcriptReview" aria-labelledby="reviewTitle" hidden>
+          <label class="manual-label" id="reviewTitle" for="transcriptInput">Ich habe verstanden:</label>
+          <div class="manual-input-row">
+            <textarea id="transcriptInput" class="manual-input" rows="3"></textarea>
+            <button class="manual-submit" id="sendTranscriptButton" type="button">Senden</button>
+          </div>
+          <div class="review-actions">
+            <button class="retry-button" id="retryTranscriptButton" type="button">Nochmal sprechen</button>
+            <button class="retry-button" id="cancelTranscriptButton" type="button">Abbrechen</button>
+          </div>
+        </section>
+
+        <section class="text-panel flow-panel" id="textPanel" aria-labelledby="textTitle" hidden>
+          <h2 id="textTitle">Oder tippe</h2>
+          <form id="textForm" class="manual-form">
+            <label class="sr-only" for="textInput">Deine Frage</label>
+            <div class="manual-input-row">
+              <textarea id="textInput" class="manual-input" rows="3" placeholder="Was brauchst du?"></textarea>
+              <button class="manual-submit" id="textSubmitButton" type="submit">Senden</button>
+            </div>
+          </form>
+        </section>
+
+        <section class="answer-panel flow-panel" id="answerPanel" aria-live="polite" aria-atomic="false" hidden>
+          <p class="status-pill" id="statusLine">Bereit</p>
+          <h2 id="answerLabel">Antwort</h2>
+          <div class="answer-text" id="answerText">Die Antwort erscheint hier.</div>
+          <div class="follow-up-options" id="followUpOptions"></div>
+          <div class="card-list" id="cardList"></div>
+          <div class="source-line" id="sourceLine"></div>
+          <button class="retry-button speak-button" id="speakButton" type="button" hidden>
+            <span class="button-icon" data-icon="speaker" aria-hidden="true"></span>
+            <span>Anhören</span>
+          </button>
+        </section>
+
+        <section id="mapPanel" class="map-panel flow-panel" hidden aria-labelledby="mapLabel">
+          <div class="map-panel__head">
+            <h2 id="mapLabel">Karte</h2>
+            <p id="mapHint">Relevante Orte ab Leipzig Hauptbahnhof.</p>
+          </div>
+          <div id="mapCanvasWrap" class="map-canvas-wrap">
+            <div id="answerMap" class="answer-map" role="img" aria-label="Karte mit relevanten Orten"></div>
+            <p id="mapFallback" class="map-fallback" hidden></p>
+          </div>
+          <div class="map-meta">
+            <div class="map-meta__column">
+              <p id="mapListLabel" class="map-meta__label">Orte</p>
+              <div id="mapDestinationList" class="map-destination-list" role="list"></div>
+            </div>
+            <article id="mapDetailCard" class="map-detail-card" aria-live="polite"></article>
+          </div>
+        </section>
+      </section>
+    </main>
+    <script src="/leaflet/leaflet.js"></script>
+    <script src="/static/app.js?v=20260616e" defer></script>
+  </body>
+</html>

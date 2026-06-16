@@ -45,6 +45,30 @@ Open `http://127.0.0.1:8000/`.
 
 The UI includes both speech input and a small typed-question field so retrieval can be tested even when local or browser STT is unavailable.
 
+## LENA v2 Clean Prototype
+
+LENA v1 remains the default and uses the published KB in `data/published/`.
+The clean v2 prototype runs as a separate FastAPI app so it can be rebuilt without changing v1 behavior.
+
+```powershell
+cd code
+python -m app.v2 --port 8001 --rewrite-provider template --stt-provider mock --tts-provider mock
+```
+
+Open `http://127.0.0.1:8001/`.
+
+V2 uses `data/v2/curated_kb/offers.json`, a small reviewed KB derived from the Leipzig Schadensminimierung source page:
+
+https://www.leipzig.de/leben-in-leipzig/gesundheit/suchthilfe/schadensminimierung
+
+The v2 runtime does not scrape the live page. To check whether the source page changed and create review snapshots/reports, run:
+
+```powershell
+python scripts/check_v2_sources.py
+```
+
+Manual review is required before publishing any v2 KB update. See `docs/lena_v2_clean_rebuild.md`.
+
 Optional one-command overrides:
 
 ```powershell

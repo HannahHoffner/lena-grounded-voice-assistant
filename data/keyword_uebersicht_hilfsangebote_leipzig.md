@@ -1,0 +1,532 @@
+# Keyword-Übersicht zur Wissensbasis Hilfsangebote Leipzig
+
+> Diese Übersicht wurde aus den annotierten Retrieval-Keywords der Wissensbasis erzeugt. Die Zahlen in Klammern verweisen auf die Eintragsnummern in der Markdown-Wissensbasis.
+
+## Konzept
+
+- **Primäre Suche über Bedarfe:** z. B. `übernachtung`, `essen`, `duschen`, `medizin`, `postadresse`, `beratung`, `sucht`, `kleidung`.
+- **Sekundäre Filter über Zielgruppen:** z. B. `frauen`, `männer`, `jugendliche`, `erwachsene`, `drogengebrauchende`, `ohne krankenversicherung`.
+- **Räumliche Filter:** Stadtbezirk, Ortsteil und wichtige Standorte wie `hauptbahnhof`, `schwanenteich`, `lindenauer markt`.
+- **Zeitfilter:** Wochentage und zentrale Zeitfenster wurden als Keywords aufgenommen, damit Anfragen wie „heute Abend“, „sonntag“, „nachts“ oder „freitag“ leichter gematcht werden können. Eine echte Prüfung von „jetzt geöffnet“ sollte zusätzlich über strukturierte Öffnungszeiten erfolgen.
+- **Synonym-/Schreibvarianten:** Wichtige Varianten wie `übernachtung`/`uebernachtung`, `männer`/`maenner`, `lößnig`/`loessnig` wurden aufgenommen.
+
+## Hauptbedarfe / Angebotsarten
+
+- `übernachtung` → Einträge: 8, 15, 16, 17, 18
+- `uebernachtung` → Einträge: 8, 15, 16, 17, 18
+- `notschlafstelle` → Einträge: 8, 15, 16
+- `notübernachtung` → Einträge: 6, 8, 16
+- `tagestreff` → Einträge: 19, 20, 21
+- `essen` → Einträge: 6, 7, 19, 20, 21, 24, 26
+- `mittagessen` → Einträge: 19, 20, 21
+- `frühstück` → Einträge: 20
+- `lebensmittel` → Einträge: 18, 26
+- `lebensmittelverteilung` → Einträge: 26
+- `getränke` → Einträge: 6, 7, 21, 26
+- `kaffee` → Einträge: 7, 21
+- `tee` → Einträge: 7, 8, 17
+- `wasser` → Einträge: 7
+- `duschen` → Einträge: 1, 2, 3, 16, 19, 20, 21, 27, 28, 29, 30
+- `dusche` → Einträge: 19, 20, 21
+- `wäsche waschen` → Einträge: 1, 2, 3, 8, 16, 17, 19, 20, 21, 27, 28, 29, 30
+- `wäscheservice` → Einträge: 20
+- `kleidung` → Einträge: 1, 2, 3, 6, 7, 17, 18, 19, 24, 26
+- `kleiderkammer` → Einträge: 17, 19
+- `kleidungsausgabe` → Einträge: 1, 2, 3
+- `warme kleidung` → Einträge: 6
+- `schlafsäcke` → Einträge: 6, 7, 26
+- `hygieneartikel` → Einträge: 18, 26
+- `postadresse` → Einträge: 16, 19, 20, 21, 27, 28, 29, 30
+- `postzustelladresse` → Einträge: 19
+- `schließfächer` → Einträge: 19
+- `beratung` → Einträge: 1, 2, 3, 4, 5, 9, 15, 16, 21, 22, 25, 27, 28, 29, 30
+- `sozialberatung` → Einträge: 9, 18, 19, 20, 30
+- `soziale beratung` → Einträge: 7, 24
+- `krisenintervention` → Einträge: 1, 2, 3, 16, 18, 21, 25, 27, 28, 29, 30
+- `vermittlung` → Einträge: 1, 2, 3, 4, 5, 6, 22, 23, 27, 28, 29, 30
+- `begleitung` → Einträge: 1, 2, 3, 20, 25, 27, 28, 29
+- `ämterbegleitung` → Einträge: 1, 2, 3, 4, 5, 20
+- `behördenbegleitung` → Einträge: 30
+- `medizin` → Einträge: 9, 10, 20
+- `medizinische versorgung` → Einträge: 10, 17
+- `medizinische notversorgung` → Einträge: 15, 16, 21, 25
+- `ärztliche sprechstunde` → Einträge: 10, 20
+- `anonymer behandlungsschein` → Einträge: 9
+- `sucht` → Einträge: 22, 23
+- `drogen` → Einträge: 22, 23
+- `alkohol` → Einträge: 22, 23
+- `konsummittelvergabe` → Einträge: 16, 21, 25
+- `konsumutensilien` → Einträge: 15
+- `safer use` → Einträge: 15, 16, 21, 25, 27, 28, 29
+- `safer sex` → Einträge: 15, 16, 21, 25, 27, 28, 29
+- `kondome` → Einträge: 1, 2, 3, 15, 16, 21, 25
+
+## Zielgruppen
+
+- `jugendliche` → Einträge: 1, 2, 3, 4, 5, 27, 28, 29, 30
+- `junge menschen` → Einträge: 1, 2, 3, 4, 5, 27, 28, 29, 30
+- `erwachsene` → Einträge: 6, 22, 23, 24
+- `frauen` → Einträge: 15, 18
+- `männer` → Einträge: 8, 15, 17
+- `maenner` → Einträge: 8, 17
+- `wohnungslose frauen` → Einträge: 18
+- `wohnungslose männer` → Einträge: 8, 17
+- `obdachlos` → Einträge: 6, 8, 10, 15, 16, 17, 18
+- `wohnungslos` → Einträge: 6, 8, 10, 15, 16, 17, 18
+- `ohne festen wohnsitz` → Einträge: 10
+- `ohne krankenversicherung` → Einträge: 9
+- `drogengebrauchende` → Einträge: 15, 16, 21, 25
+- `drogenkonsumierende` → Einträge: 15, 16, 21, 25
+- `ab 18` → Einträge: 15
+- `flinta` → Einträge: 5, 30
+
+## Orte / räumliche Suche
+
+- `hauptbahnhof` → Einträge: 6, 7, 10, 23, 26, 27
+- `westseite hauptbahnhof` → Einträge: 6
+- `zentrum` → Einträge: 7, 24
+- `mitte` → Einträge: 7, 16, 20, 21, 24, 26, 27
+- `zentrum-ost` → Einträge: 16, 21, 27, 29
+- `zentrum-west` → Einträge: 26
+- `zentrum-südost` → Einträge: 20, 24, 27, 29
+- `alt-west` → Einträge: 1, 14, 17, 19
+- `lindenau` → Einträge: 1, 22
+- `neulindenau` → Einträge: 19, 22
+- `altlindenau` → Einträge: 22
+- `leutzsch` → Einträge: 14, 17, 22
+- `plagwitz` → Einträge: 22
+- `kleinzschocher` → Einträge: 22
+- `grünau` → Einträge: 2, 22
+- `schönau` → Einträge: 2
+- `schoenau` → Einträge: 2
+- `süd` → Einträge: 4, 5, 8, 18, 30
+- `südvorstadt` → Einträge: 18, 30
+- `connewitz` → Einträge: 4
+- `lößnig` → Einträge: 5, 30
+- `loessnig` → Einträge: 5
+- `dölitz-dösen` → Einträge: 8, 30
+- `doelitz-doesen` → Einträge: 8
+- `ost` → Einträge: 3, 25, 28
+- `paunsdorf` → Einträge: 3
+- `neustadt-neuschönefeld` → Einträge: 25, 28
+- `reudnitz` → Einträge: 28
+- `sellerhausen` → Einträge: 28
+- `volkmarsdorf` → Einträge: 28
+- `nord` → Einträge: 29
+- `nordost` → Einträge: 9, 10, 15
+- `gohlis` → Einträge: 23, 29
+- `eutritzsch` → Einträge: 23, 29
+- `möckern` → Einträge: 23, 29
+- `mockau` → Einträge: 23
+- `thekla` → Einträge: 23
+- `lindenthal` → Einträge: 23, 29
+- `schwanenteich` → Einträge: 23, 24
+- `goethestraße` → Einträge: 23, 24
+- `lindenauer markt` → Einträge: 22
+- `rabet` → Einträge: 25
+- `koehlerstraße` → Einträge: 10, 25
+- `köhlerstraße` → Einträge: 10, 25
+- `torgauer platz` → Einträge: 25
+
+## Organisationen / Eigennamen
+
+- `safe` → Einträge: 6, 22, 23
+- `hilfebus` → Einträge: 6
+- `bahnhofsmission` → Einträge: 7
+- `cabl` → Einträge: 9
+- `uvo` → Einträge: 10
+- `sozialamt` → Einträge: 11, 12, 13, 14
+- `soziale wohnhilfen` → Einträge: 11, 12, 13, 14
+- `zentrum für drogenhilfe` → Einträge: 15, 16, 21, 25
+- `alternative i` → Einträge: 16, 21
+- `alternative iii` → Einträge: 15
+- `kontaktcafé` → Einträge: 21
+- `kontaktcafe` → Einträge: 21
+- `leipziger oase` → Einträge: 20
+- `oase` → Einträge: 20
+- `insel` → Einträge: 19
+- `szl` → Einträge: 19
+- `suchtzentrum` → Einträge: 19
+- `diakonie` → Einträge: 20, 24
+- `mobile alternative` → Einträge: 25
+- `care bags` → Einträge: 26
+- `timmi tohelp` → Einträge: 26
+- `machtlos` → Einträge: 30
+- `streetwork mitte` → Einträge: 27
+- `streetwork ost` → Einträge: 28
+- `streetwork nord` → Einträge: 29
+- `team konsum` → Einträge: 22
+- `team wohnen` → Einträge: 23
+
+## Zeit-Keywords
+
+- `montag` → Einträge: 5, 21, 27, 30
+- `dienstag` → Einträge: 4, 9, 13, 21, 23, 24, 25, 28, 30
+- `mittwoch` → Einträge: 4, 10, 21, 22, 23, 25, 27, 29, 30
+- `donnerstag` → Einträge: 1, 4, 5, 9, 13, 20, 21, 22, 25, 26, 28, 30
+- `freitag` → Einträge: 4, 10, 21, 23, 25, 27, 30
+- `samstag` → Einträge: 20, 21
+- `sonntag` → Einträge: 6, 7, 10, 19, 21
+- `täglich` → Einträge: 6, 16
+- `wochenende` → Einträge: 8, 15, 17, 18
+- `feiertag` → Einträge: 8, 15, 17, 18, 20
+- `standzeit` → Einträge: 1
+- `ab 16 uhr` → Einträge: 4, 5, 8
+- `08 bis 16 uhr` → Einträge: 19, 20
+- `09 bis 18 uhr` → Einträge: 7, 13
+- `10 bis 16 uhr` → Einträge: 22, 23
+- `11 bis 14 uhr` → Einträge: 21
+- `12 bis 15 uhr` → Einträge: 30
+- `13 bis 16 uhr` → Einträge: 27
+- `14 bis 16 uhr` → Einträge: 28, 29
+- `15 bis 18 uhr` → Einträge: 21
+- `16 bis 08 uhr` → Einträge: 17, 18
+- `16 bis 19 uhr` → Einträge: 26
+- `17 bis 18 uhr` → Einträge: 23, 24
+- `18 bis 10 uhr` → Einträge: 15, 16
+- `18 bis 23 uhr` → Einträge: 6
+- `21 bis 08 uhr` → Einträge: 8
+
+## Vollständiger alphabetischer Keyword-Index
+
+- `08 bis 16 uhr` → Einträge: 19, 20
+- `09 bis 10 uhr` → Einträge: 20
+- `09 bis 12 uhr` → Einträge: 9, 19
+- `09 bis 14 uhr` → Einträge: 20
+- `09 bis 15 uhr` → Einträge: 19
+- `09 bis 16 uhr` → Einträge: 13
+- `09 bis 18 uhr` → Einträge: 7, 13
+- `10 bis 12 uhr` → Einträge: 25
+- `10 bis 13 uhr` → Einträge: 24
+- `10 bis 16 uhr` → Einträge: 22, 23
+- `10 uhr` → Einträge: 10
+- `11 bis 14 uhr` → Einträge: 21
+- `12 bis 13:30 uhr` → Einträge: 20
+- `12 bis 15 uhr` → Einträge: 30
+- `13 bis 15 uhr` → Einträge: 25
+- `13 bis 16 uhr` → Einträge: 27
+- `13:30 bis 18 uhr` → Einträge: 7
+- `14 bis 16 uhr` → Einträge: 28, 29
+- `14 uhr` → Einträge: 10
+- `15 bis 17 uhr` → Einträge: 30
+- `15 bis 17:30 uhr` → Einträge: 30
+- `15 bis 18 uhr` → Einträge: 21
+- `15:30 bis 18 uhr` → Einträge: 30
+- `16 bis 08 uhr` → Einträge: 17, 18
+- `16 bis 17 uhr` → Einträge: 30
+- `16 bis 17:30 uhr` → Einträge: 22
+- `16 bis 18 uhr` → Einträge: 21
+- `16 bis 19 uhr` → Einträge: 26
+- `17 bis 18 uhr` → Einträge: 23, 24
+- `17 bis 19 uhr` → Einträge: 25
+- `17 bis 20 uhr` → Einträge: 9
+- `18 bis 10 uhr` → Einträge: 15, 16
+- `18 bis 19 uhr` → Einträge: 30
+- `18 bis 23 uhr` → Einträge: 6
+- `18:30 uhr` → Einträge: 10
+- `20 bis 21 uhr` → Einträge: 6
+- `20 uhr` → Einträge: 10
+- `21 bis 08 uhr` → Einträge: 8
+- `5 euro` → Einträge: 8, 17
+- `ab 16 uhr` → Einträge: 4, 5, 8
+- `ab 18` → Einträge: 15
+- `alkohol` → Einträge: 22, 23
+- `alt-west` → Einträge: 1, 14, 17, 19
+- `alte messe` → Einträge: 27
+- `alternative i` → Einträge: 16, 21
+- `alternative iii` → Einträge: 15
+- `altlindenau` → Einträge: 22
+- `anger-crottendorf` → Einträge: 28
+- `anonymer behandlungsschein` → Einträge: 9
+- `anwaltsprechstunde` → Einträge: 21
+- `arbeit` → Einträge: 8, 17, 22
+- `aufsuchend` → Einträge: 10
+- `auskunft` → Einträge: 13
+- `bahnhofsmission` → Einträge: 7
+- `begleitung` → Einträge: 1, 2, 3, 20, 25, 27, 28, 29
+- `behandlungsschein` → Einträge: 9
+- `behörden` → Einträge: 18, 22, 25
+- `behördenangelegenheiten` → Einträge: 16, 23
+- `behördenbegleitung` → Einträge: 30
+- `bekleidung` → Einträge: 17, 18
+- `belegte brötchen` → Einträge: 7
+- `beratung` → Einträge: 1, 2, 3, 4, 5, 9, 15, 16, 21, 22, 25, 27, 28, 29, 30
+- `beschäftigung` → Einträge: 22
+- `bewerbung` → Einträge: 30
+- `brötchen` → Einträge: 7
+- `brötchenausgabe` → Einträge: 24
+- `cabl` → Einträge: 9
+- `care bags` → Einträge: 26
+- `chausseehaus` → Einträge: 27
+- `chopinstraße` → Einträge: 16, 21
+- `clearingstelle` → Einträge: 9
+- `connewitz` → Einträge: 4
+- `decken` → Einträge: 6
+- `diakonie` → Einträge: 20, 24
+- `dienstag` → Einträge: 4, 9, 13, 21, 23, 24, 25, 28, 30
+- `dienstag bis freitag` → Einträge: 5
+- `doelitz-doesen` → Einträge: 8
+- `donnerstag` → Einträge: 1, 4, 5, 9, 13, 20, 21, 22, 25, 26, 28, 30
+- `dresdner straße` → Einträge: 10
+- `drogen` → Einträge: 22, 23
+- `drogengebrauchende` → Einträge: 15, 16, 21, 25
+- `drogenkonsumierende` → Einträge: 15, 16, 21, 25
+- `drohende wohnungslosigkeit` → Einträge: 11
+- `dusche` → Einträge: 19, 20, 21
+- `duschen` → Einträge: 1, 2, 3, 16, 19, 20, 21, 27, 28, 29, 30
+- `dölitz-dösen` → Einträge: 8, 30
+- `einzelfallhilfe` → Einträge: 27, 28, 29
+- `energiesperre` → Einträge: 11
+- `energiezufuhr` → Einträge: 11
+- `entgiftung` → Einträge: 15
+- `erlebnispädagogik` → Einträge: 4, 5
+- `erstbesteck` → Einträge: 15
+- `erwachsene` → Einträge: 6, 22, 23, 24
+- `essen` → Einträge: 6, 7, 19, 20, 21, 24, 26
+- `eutritzsch` → Einträge: 23, 29
+- `fachdienste` → Einträge: 18
+- `feiertag` → Einträge: 8, 15, 17, 18, 20
+- `finanzen` → Einträge: 8, 17
+- `finanzielle lebensgrundlage` → Einträge: 18
+- `finanzielle probleme` → Einträge: 23
+- `flinta` → Einträge: 5, 30
+- `frauen` → Einträge: 15, 18
+- `freitag` → Einträge: 4, 10, 21, 23, 25, 27, 30
+- `freizeitpädagogik` → Einträge: 4, 5
+- `frühstück` → Einträge: 20
+- `gemeinschaftsunterkünfte` → Einträge: 30
+- `gerichtsbegleitung` → Einträge: 1, 2, 3
+- `gesprächsangebot` → Einträge: 22
+- `gesundheit` → Einträge: 8, 17, 23
+- `gesundheitssystem` → Einträge: 9
+- `getränke` → Einträge: 6, 7, 21, 26
+- `goethestraße` → Einträge: 23, 24
+- `gohlis` → Einträge: 23, 29
+- `gohlis-mitte` → Einträge: 29
+- `gohlis-nord` → Einträge: 29
+- `gohlis-süd` → Einträge: 29
+- `grundversorgung` → Einträge: 6, 18, 25, 27, 28, 29
+- `gruppenangebote` → Einträge: 27, 28, 29
+- `grünau` → Einträge: 2, 22
+- `hauptbahnhof` → Einträge: 6, 7, 10, 23, 26, 27
+- `hilfebus` → Einträge: 6
+- `hygieneartikel` → Einträge: 18, 26
+- `imbiss` → Einträge: 19
+- `individuelle unterstützung` → Einträge: 30
+- `information` → Einträge: 22, 27, 28, 29
+- `informationen` → Einträge: 1, 2, 3
+- `innenstadt` → Einträge: 26
+- `insel` → Einträge: 19
+- `instagram` → Einträge: 1
+- `internet` → Einträge: 27, 28, 29, 30
+- `isomatten` → Einträge: 26
+- `jobberatung` → Einträge: 30
+- `jugendliche` → Einträge: 1, 2, 3, 4, 5, 27, 28, 29, 30
+- `jugendrechtsberatung` → Einträge: 30
+- `junge menschen` → Einträge: 1, 2, 3, 4, 5, 27, 28, 29, 30
+- `kaffee` → Einträge: 7, 21
+- `keine beratung` → Einträge: 26
+- `keine sozialarbeit` → Einträge: 26
+- `kleiderkammer` → Einträge: 17, 19
+- `kleidung` → Einträge: 1, 2, 3, 6, 7, 17, 18, 19, 24, 26
+- `kleidungsausgabe` → Einträge: 1, 2, 3
+- `kleinzschocher` → Einträge: 22
+- `kochangebot` → Einträge: 30
+- `koehlerstraße` → Einträge: 10, 25
+- `kohlweg` → Einträge: 25
+- `kondomausgabe` → Einträge: 1, 2, 3
+- `kondome` → Einträge: 1, 2, 3, 15, 16, 21, 25
+- `konsum` → Einträge: 22
+- `konsummittelabgabe` → Einträge: 30
+- `konsummittelvergabe` → Einträge: 16, 21, 25
+- `konsumutensilien` → Einträge: 15
+- `kontaktcafe` → Einträge: 21
+- `kontaktcafé` → Einträge: 21
+- `kostenlos` → Einträge: 8
+- `krankenhaus` → Einträge: 20
+- `krisenintervention` → Einträge: 1, 2, 3, 16, 18, 21, 25, 27, 28, 29, 30
+- `köhlerstraße` → Einträge: 10, 25
+- `lebensmittel` → Einträge: 18, 26
+- `lebensmittelabgabe` → Einträge: 30
+- `lebensmittelverteilung` → Einträge: 26
+- `lebenspraktische hilfen` → Einträge: 4, 5
+- `leipziger oase` → Einträge: 20
+- `leipziger süden` → Einträge: 30
+- `leutzsch` → Einträge: 14, 17, 22
+- `lindenau` → Einträge: 1, 22
+- `lindenauer markt` → Einträge: 22
+- `lindenthal` → Einträge: 23, 29
+- `loessnig` → Einträge: 5
+- `lößnig` → Einträge: 5, 30
+- `lützschena-stahmeln` → Einträge: 29
+- `machtlos` → Einträge: 30
+- `maenner` → Einträge: 8, 17
+- `medibus` → Einträge: 10, 25
+- `medizin` → Einträge: 9, 10, 20
+- `medizinische grundversorgung` → Einträge: 18
+- `medizinische notversorgung` → Einträge: 15, 16, 21, 25
+- `medizinische sprechstunde` → Einträge: 8
+- `medizinische versorgung` → Einträge: 10, 17
+- `meldeangelegenheiten` → Einträge: 8, 17, 18
+- `mittagessen` → Einträge: 19, 20, 21
+- `mitte` → Einträge: 7, 16, 20, 21, 24, 26, 27
+- `mittwoch` → Einträge: 4, 10, 21, 22, 23, 25, 27, 29, 30
+- `mobile alternative` → Einträge: 25
+- `mobile jugendarbeit` → Einträge: 1, 2, 3, 4, 5, 27, 28, 29, 30
+- `mobile kleiderkammer` → Einträge: 24
+- `mockau` → Einträge: 23
+- `montag` → Einträge: 5, 21, 27, 30
+- `montag bis freitag` → Einträge: 7, 15, 17, 18, 19, 20
+- `männer` → Einträge: 8, 15, 17
+- `möckern` → Einträge: 23, 29
+- `neulindenau` → Einträge: 19, 22
+- `neustadt-neuschönefeld` → Einträge: 25, 28
+- `nord` → Einträge: 29
+- `nordost` → Einträge: 9, 10, 15
+- `nordwest` → Einträge: 23
+- `notschlafstelle` → Einträge: 8, 15, 16
+- `notunterbringung` → Einträge: 11, 14
+- `notversorgung` → Einträge: 6
+- `notübernachtung` → Einträge: 6, 8, 16
+- `oase` → Einträge: 20
+- `obdachlos` → Einträge: 6, 8, 10, 15, 16, 17, 18
+- `obdachlosigkeit` → Einträge: 11, 12, 14, 22, 23
+- `ohne festen wohnsitz` → Einträge: 10
+- `ohne krankenversicherung` → Einträge: 9
+- `ost` → Einträge: 3, 25, 28
+- `osten` → Einträge: 24
+- `passangelegenheiten` → Einträge: 8, 17
+- `paunsdorf` → Einträge: 3
+- `pausenmobil` → Einträge: 4, 5, 30
+- `pc` → Einträge: 27, 28, 29, 30
+- `persönliche hilfen` → Einträge: 11
+- `pflegerische sprechstunde` → Einträge: 10
+- `plagwitz` → Einträge: 22
+- `postadresse` → Einträge: 16, 19, 20, 21, 27, 28, 29, 30
+- `postadressendienst` → Einträge: 20
+- `postzustelladresse` → Einträge: 19
+- `prager straße` → Einträge: 11, 12, 13
+- `projekte` → Einträge: 30
+- `psychiatrische sprechstunde` → Einträge: 21
+- `psychosoziale beratung` → Einträge: 18
+- `rabet` → Einträge: 25
+- `reisehilfe` → Einträge: 7
+- `reisehilfen` → Einträge: 7
+- `reudnitz` → Einträge: 28
+- `reudnitz-thonberg` → Einträge: 11, 12, 13
+- `rückmarsdorfer straße` → Einträge: 14, 16, 17
+- `sachgebiet wohnen` → Einträge: 13
+- `safe` → Einträge: 6, 22, 23
+- `safer sex` → Einträge: 15, 16, 21, 25, 27, 28, 29
+- `safer use` → Einträge: 15, 16, 21, 25, 27, 28, 29
+- `samstag` → Einträge: 20, 21
+- `schlafen` → Einträge: 8, 17
+- `schlafsäcke` → Einträge: 6, 7, 26
+- `schließfächer` → Einträge: 19
+- `schoenau` → Einträge: 2
+- `schuhe` → Einträge: 26
+- `schuldnerberatung` → Einträge: 18
+- `schule` → Einträge: 4, 5
+- `schwanenteich` → Einträge: 23, 24
+- `schönau` → Einträge: 2
+- `schönefeld-abtnaundorf` → Einträge: 9, 10
+- `schönefeld-ost` → Einträge: 15
+- `seehausen` → Einträge: 29
+- `seelische belastungen` → Einträge: 22, 23
+- `selbstbehauptungsworkshop` → Einträge: 5
+- `selbstversorgung` → Einträge: 15
+- `sellerhausen` → Einträge: 28
+- `snacks` → Einträge: 22
+- `sonntag` → Einträge: 6, 7, 10, 19, 21
+- `sorgen` → Einträge: 22, 23
+- `sozialamt` → Einträge: 11, 12, 13, 14
+- `sozialberatung` → Einträge: 9, 18, 19, 20, 30
+- `sozialdienst` → Einträge: 8, 17
+- `soziale beratung` → Einträge: 7, 24
+- `soziale wohnhilfen` → Einträge: 11, 12, 13, 14
+- `sozialpsychiatrischer dienst` → Einträge: 18
+- `sozialwohnung` → Einträge: 13
+- `sozialwohnungen` → Einträge: 13
+- `spdi` → Einträge: 18
+- `spieleabend` → Einträge: 30
+- `sportforum` → Einträge: 27
+- `stadt leipzig` → Einträge: 11, 12, 13, 14
+- `stadtweit` → Einträge: 6
+- `standzeit` → Einträge: 1
+- `straßensozialarbeit` → Einträge: 24
+- `streetmobil` → Einträge: 29
+- `streetwork` → Einträge: 1, 2, 3, 4, 5, 27, 28, 29, 30
+- `streetwork erwachsene` → Einträge: 22, 23, 24, 25
+- `streetwork mitte` → Einträge: 27
+- `streetwork nord` → Einträge: 29
+- `streetwork ost` → Einträge: 28
+- `substitution` → Einträge: 15, 21
+- `sucht` → Einträge: 22, 23
+- `suchtberatung` → Einträge: 15
+- `suchtzentrum` → Einträge: 19
+- `suppenausgabe` → Einträge: 6, 24
+- `szl` → Einträge: 19
+- `süd` → Einträge: 4, 5, 8, 18, 30
+- `süden` → Einträge: 24
+- `südost` → Einträge: 11, 12, 13
+- `südvorstadt` → Einträge: 18, 30
+- `tagestreff` → Einträge: 19, 20, 21
+- `taubestraße` → Einträge: 10
+- `team konsum` → Einträge: 22
+- `team wohnen` → Einträge: 23
+- `tee` → Einträge: 7, 8, 17
+- `telefonische terminvereinbarung` → Einträge: 14
+- `terminvereinbarung` → Einträge: 9, 14
+- `thekla` → Einträge: 23
+- `timmi tohelp` → Einträge: 26
+- `torgauer platz` → Einträge: 25
+- `täglich` → Einträge: 6, 16
+- `uebernachtung` → Einträge: 8, 15, 16, 17, 18
+- `unterkunft` → Einträge: 8, 17
+- `unterstützung` → Einträge: 1, 2, 3
+- `uvo` → Einträge: 10
+- `vermittlung` → Einträge: 1, 2, 3, 4, 5, 6, 22, 23, 27, 28, 29, 30
+- `verweisberatung` → Einträge: 6
+- `volkmarsdorf` → Einträge: 28
+- `wahren` → Einträge: 29
+- `warme getränke` → Einträge: 22
+- `warme kleidung` → Einträge: 6
+- `warmes essen` → Einträge: 6
+- `waschmaschine` → Einträge: 19
+- `wasser` → Einträge: 7
+- `wbs` → Einträge: 13
+- `wechselnde orte` → Einträge: 1
+- `weitervermittlung` → Einträge: 10
+- `west` → Einträge: 2
+- `westseite hauptbahnhof` → Einträge: 6
+- `wiederitzsch` → Einträge: 29
+- `wirtschaftliche hilfen` → Einträge: 11
+- `wochenende` → Einträge: 8, 15, 17, 18
+- `wohnberechtigungsschein` → Einträge: 11, 13
+- `wohnen` → Einträge: 23
+- `wohnung` → Einträge: 8, 17
+- `wohnungslos` → Einträge: 6, 8, 10, 15, 16, 17, 18
+- `wohnungslose frauen` → Einträge: 18
+- `wohnungslose männer` → Einträge: 8, 17
+- `wohnungslosigkeit` → Einträge: 11, 12, 14, 22, 23
+- `wohnungsnotfall` → Einträge: 7, 11, 12
+- `wohnungsnotfallhilfe` → Einträge: 12
+- `wohnungsprobleme` → Einträge: 22, 23
+- `wohnungssuche` → Einträge: 11, 18
+- `wundsprechstunde` → Einträge: 21
+- `wäsche waschen` → Einträge: 1, 2, 3, 8, 16, 17, 19, 20, 21, 27, 28, 29, 30
+- `wäscheservice` → Einträge: 20
+- `zentrum` → Einträge: 7, 24
+- `zentrum für drogenhilfe` → Einträge: 15, 16, 21, 25
+- `zentrum nord` → Einträge: 23
+- `zentrum-ost` → Einträge: 16, 21, 27, 29
+- `zentrum-südost` → Einträge: 20, 24, 27, 29
+- `zentrum-west` → Einträge: 26
+- `ämter` → Einträge: 22, 25
+- `ämterbegleitung` → Einträge: 1, 2, 3, 4, 5, 20
+- `ängste` → Einträge: 22, 23
+- `ärzte` → Einträge: 25
+- `ärztliche sprechstunde` → Einträge: 10, 20
+- `überlebenshilfe` → Einträge: 15
+- `übernachtung` → Einträge: 8, 15, 16, 17, 18
+- `übernachtungshaus` → Einträge: 8, 17, 18

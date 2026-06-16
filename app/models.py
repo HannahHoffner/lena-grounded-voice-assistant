@@ -229,6 +229,12 @@ class QueryAnswerResponse(BaseModel):
     session_event: SessionEvent = SessionEvent.STARTED
     session_message: str | None = None
     temporal_context: TemporalContext | None = None
+    sources: list[str] = Field(default_factory=list)
+    last_checked: str | None = None
+    answer_evidence: list[dict[str, Any]] = Field(default_factory=list)
+    requirements: list[str] = Field(default_factory=list)
+    cards: list["SymbolResultCard"] = Field(default_factory=list)
+    follow_up_options: list[dict[str, str]] = Field(default_factory=list)
 
 
 class SymbolResultCard(BaseModel):
@@ -237,10 +243,18 @@ class SymbolResultCard(BaseModel):
     category: str
     service_type: str
     address: str | None = None
+    location: str | None = None
     opening_hours: list[str] = Field(default_factory=list)
     phone: str | None = None
+    email: str | None = None
+    website: str | None = None
     description: str | None = None
+    card_summary: str | None = None
     action: str
+    target_groups: list[str] = Field(default_factory=list)
+    requirements: str | None = None
+    services_provided: list[str] = Field(default_factory=list)
+    notes: str | None = None
     last_updated: str | None = None
     has_map_location: bool = False
 
@@ -262,6 +276,11 @@ class SymbolActionResponse(BaseModel):
     session_event: SessionEvent = SessionEvent.STARTED
     session_message: str | None = None
     temporal_context: TemporalContext | None = None
+    sources: list[str] = Field(default_factory=list)
+    last_checked: str | None = None
+    answer_evidence: list[dict[str, Any]] = Field(default_factory=list)
+    requirements: list[str] = Field(default_factory=list)
+    follow_up_options: list[dict[str, str]] = Field(default_factory=list)
 
 
 class KnowledgeAnswer(BaseModel):
@@ -275,6 +294,11 @@ class KnowledgeAnswer(BaseModel):
     crisis_mode: bool = False
     retrieved_page_ids: list[str] = Field(default_factory=list)
     map_data: MapData | None = None
+    sources: list[str] = Field(default_factory=list)
+    last_checked: str | None = None
+    answer_evidence: list[dict[str, Any]] = Field(default_factory=list)
+    requirements: list[str] = Field(default_factory=list)
+    follow_up_options: list[dict[str, str]] = Field(default_factory=list)
 
 
 class LLMKnowledgeAnswer(BaseModel):

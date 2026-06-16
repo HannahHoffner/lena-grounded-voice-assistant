@@ -8,6 +8,8 @@ The intended scenario is a public or semi-public terminal where a user can choos
 
 The core design principle is source-grounded answering: LENA first retrieves controlled entries from the local knowledge base and only then formulates an answer. The LLM, when enabled, is a rewrite and translation layer over retrieved evidence, not the primary knowledge source.
 
+V1 is the stable default app served by `app/main.py` on port 8000. A clean experimental v2 rebuild is isolated under `app/v2/` and can be started separately on port 8001 with `python -m app.v2 --port 8001`. V2 uses a reduced one-source KB derived from the Leipzig Schadensminimierung page and does not replace the v1 runtime.
+
 ## 2. High-Level Architecture
 
 ```text
