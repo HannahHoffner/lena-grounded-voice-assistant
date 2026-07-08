@@ -134,11 +134,26 @@ def create_app() -> FastAPI:
         language: str = Form(...),
         debug_transcript: str | None = Form(default=None),
     ) -> TranscribeResponse:
+        selected_language: Language | None = None
         try:
-            transcript = await app.state.stt_provider.transcribe(audio, language, debug_transcript=debug_transcript)
-            return TranscribeResponse(transcript=transcript, provider=app.state.stt_provider.name, status="ok")
+            selected_language = Language(language)
+            transcript = await app.state.stt_provider.transcribe(audio, selected_language, debug_transcript=debug_transcript)
+            return TranscribeResponse(
+                transcript=transcript,
+                text=transcript,
+                language=selected_language,
+                provider=app.state.stt_provider.name,
+                status="ok",
+            )
         except Exception as exc:  # pragma: no cover - depends on runtime provider
-            return TranscribeResponse(transcript="", provider=app.state.stt_provider.name, status="error", detail=str(exc))
+            return TranscribeResponse(
+                transcript="",
+                text="",
+                language=selected_language,
+                provider=app.state.stt_provider.name,
+                status="error",
+                detail=str(exc),
+            )
 
     @app.post("/api/query/answer", response_model=QueryAnswerResponse)
     async def answer_query(payload: QueryRequest) -> QueryAnswerResponse:

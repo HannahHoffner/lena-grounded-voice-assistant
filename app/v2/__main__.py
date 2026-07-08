@@ -7,7 +7,10 @@ import uvicorn
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Run the clean LENA v2 local service.")
+    parser = argparse.ArgumentParser(
+        description="Run the clean LENA v2 local service.",
+        epilog="V2 defaults to Blablador, faster_whisper, and Piper. Override with provider flags for tests.",
+    )
     parser.add_argument("--host", default="127.0.0.1", help="Host to bind the service to.")
     parser.add_argument("--port", type=int, default=8001, help="Port to bind the v2 service to.")
     parser.add_argument("--reload", dest="reload", action="store_true", default=True, help="Enable auto-reload.")

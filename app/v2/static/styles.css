@@ -465,10 +465,40 @@ h2 {
   box-shadow: 0 0 0 3px rgba(23, 101, 141, 0.12);
 }
 
+.offer-card__head {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: start;
+  gap: 10px;
+}
+
 .offer-card h3 {
   margin: 0;
   font-size: 1.05rem;
   line-height: 1.25;
+}
+
+.offer-card__speak {
+  display: grid;
+  width: 42px;
+  min-width: 42px;
+  height: 42px;
+  min-height: 42px;
+  place-items: center;
+  border-color: var(--border);
+  background: var(--blue-soft);
+  color: var(--blue);
+  padding: 0;
+}
+
+.offer-card__speak svg {
+  width: 22px;
+  height: 22px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.4;
 }
 
 .offer-card > p {

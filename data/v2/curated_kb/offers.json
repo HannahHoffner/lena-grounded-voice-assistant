@@ -1504,7 +1504,7 @@
     },
     {
       "offer_id": "uebernachtungshaus-maenner-leutzsch",
-      "name": "Übernachtungshaus für wohnungslose Männer",
+      "name": "Übernachtungshaus Rücke",
       "organization": "Soziale Wohnhilfen / Übernachtungshaus",
       "category": "sleep",
       "subcategory": "men_overnight_shelter",
@@ -1595,21 +1595,21 @@
         {
           "field_name": "card_summary",
           "source_url": "data/wissensbasis_hilfsangebote_leipzig_annotiert.md",
-          "evidence_text": "Übernachtungshaus für wohnungslose Männer in Leutzsch mit Übernachtung, Wäschewaschen, Tee, Kleiderkammer, medizinischer Versorgung und Sozialdienst. Geöffnet Montag–Freitag 16:00–08:00 Uhr, Wochenende/Feiertag ganztägig.",
+          "evidence_text": "Übernachtungshaus Rücke für volljährige wohnungslose Männer. Adresse Rückmarsdorfer Straße 5-7. Geöffnet Montag bis Freitag 16:00-08:00 Uhr, Wochenende und Feiertag ganztägig.",
           "checked_at": "2026-06-15",
           "source_hash": "8c909954fc135538c321b2f68d6165c63896415756a5b6f80359bde79303d9bd"
         },
         {
           "field_name": "retrieval_keywords",
           "source_url": "data/wissensbasis_hilfsangebote_leipzig_annotiert.md",
-          "evidence_text": "übernachtung, übernachtungshaus, männer, wohnungslose männer, obdachlos, wohnungslos, leutzsch, alt-west, rückmarsdorfer straße, schlafen, wäsche waschen, tee, kleiderkammer, bekleidung, kleidung, medizinische versorgung, sozialdienst, passangelegenheiten, meldeangelegenheiten, finanzen, gesundheit, wohnung, unterkunft, arbeit, 5 euro, montag bis freitag, 16 bis 08 uhr, wochenende, feiertag",
+          "evidence_text": "übernachtung, übernachtungshaus, männer, wohnungslose männer, obdachlos, wohnungslos, leutzsch, alt-west, rückmarsdorfer straße, schlafen, wäsche waschen, tee, kleiderkammer, bekleidung, kleidung, medizinische versorgung, sozialdienst, passangelegenheiten, meldeangelegenheiten, finanzen, gesundheit, wohnung, unterkunft, arbeit, 5 euro, montag bis freitag, 16 bis 08 uhr, wochenende, feiertag, rücke, ruecke, rückmarsdorfer straße 5-7, volljährige wohnungslose männer",
           "checked_at": "2026-06-15",
           "source_hash": "8c909954fc135538c321b2f68d6165c63896415756a5b6f80359bde79303d9bd"
         },
         {
           "field_name": "facts",
           "source_url": "data/wissensbasis_hilfsangebote_leipzig_annotiert.md",
-          "evidence_text": "{\"angebote\": [\"Übernachtung (5,00 € pro Nacht)\", \"Wäsche waschen (2,50 €)\", \"kostenloses Teeangebot\", \"Bekleidung aus der hauseigenen Kleiderkammer\", \"medizinische Versorgung\", \"Unterstützung in persönlichen Angelegenheiten durch Sozialdienst (z. B. bei Pass-und Meldeangelegenheiten, Finanzen, Gesundheit, Wohnung, Unterkunft, Arbeit)\"], \"oeffnungszeiten\": [\"Montag - Freitag: 16:00 - 08:00 Uhr\", \"Samstag, Sonntag und Feiertag: ganztägig\"], \"telefon\": [\"0341 1234502\", \"0341 1234504\"], \"email\": [\"notunterbringung@leipzig.de\"], \"ansprechpartner\": [\"Frau Larissa Zienert (Einrichtungsleitung)\"], \"karten_kurzbeschreibung\": \"Übernachtungshaus für wohnungslose Männer in Leutzsch mit Übernachtung, Wäschewaschen, Tee, Kleiderkammer, medizinischer Versorgung und Sozialdienst. Geöffnet Montag–Freitag 16:00–08:00 Uhr, Wochenende/Feiertag ganztägig.\"}",
+          "evidence_text": "{\"angebote\": [\"Übernachtung (5,00 € pro Nacht)\", \"Wäsche waschen (2,50 €)\", \"kostenloses Teeangebot\", \"Bekleidung aus der hauseigenen Kleiderkammer\", \"medizinische Versorgung\", \"Unterstützung in persönlichen Angelegenheiten durch Sozialdienst (z. B. bei Pass-und Meldeangelegenheiten, Finanzen, Gesundheit, Wohnung, Unterkunft, Arbeit)\"], \"oeffnungszeiten\": [\"Montag - Freitag: 16:00 - 08:00 Uhr\", \"Samstag, Sonntag und Feiertag: ganztägig\"], \"telefon\": [\"0341 1234504\"], \"email\": [\"notunterbringung@leipzig.de\"], \"ansprechpartner\": [\"Frau Larissa Zienert (Einrichtungsleitung)\"], \"karten_kurzbeschreibung\": \"Übernachtungshaus Rücke für volljährige wohnungslose Männer. Adresse Rückmarsdorfer Straße 5-7. Geöffnet Montag bis Freitag 16:00-08:00 Uhr, Wochenende und Feiertag ganztägig.\", \"zielgruppe\": [\"volljährig, männlich und wohnungslos\"]}",
           "checked_at": "2026-06-15",
           "source_hash": "8c909954fc135538c321b2f68d6165c63896415756a5b6f80359bde79303d9bd"
         }
@@ -1618,7 +1618,8 @@
       "location": "Alt-West / Leutzsch",
       "target_group": [
         "homeless",
-        "men"
+        "men",
+        "adults"
       ],
       "cost": "Übernachtung 5,00 € pro Nacht; Wäsche waschen 2,50 €.",
       "services_provided": [
@@ -1640,12 +1641,12 @@
         "schlafen",
         "übernachtung"
       ],
-      "address": "Rückmarsdorfer Straße 7, 04179 Leipzig",
+      "address": "Rückmarsdorfer Straße 5-7, 04179 Leipzig",
       "coordinates": {
         "latitude": 51.3476211,
         "longitude": 12.3123814
       },
-      "phone": "0341 1234502; 0341 1234504",
+      "phone": "0341 1234504",
       "email": "notunterbringung@leipzig.de",
       "fax": "0341 1234505",
       "contact_people": [
@@ -1653,7 +1654,8 @@
       ],
       "notes": null,
       "detail_source_urls": [
-        "https://www.leipzig.de/leben-in-leipzig/gesundheit/suchthilfe/schadensminimierung/detailseite-listenansicht-wohnungslosenhilfe-und-streetwork/projekt/uebernachtungshaus-fuer-wohnungslose-maenner"
+        "https://www.leipzig.de/leben-in-leipzig/gesundheit/suchthilfe/schadensminimierung/detailseite-listenansicht-wohnungslosenhilfe-und-streetwork/projekt/uebernachtungshaus-fuer-wohnungslose-maenner",
+        "https://static.leipzig.de/fileadmin/mediendatenbank/leipzig-de/Stadt/02.5_Dez5_Jugend_Soziales_Gesundheit_Schule/50_Sozialamt/Wohnungsnotfallhilfe_und_Notunterbringung/Flyer_%c3%9cbernachtungshaus_R%c3%bccke.pdf"
       ],
       "field_evidence": {
         "address": [
@@ -1732,7 +1734,7 @@
           {
             "field_name": "card_summary",
             "source_url": "data/wissensbasis_hilfsangebote_leipzig_annotiert.md",
-            "evidence_text": "Übernachtungshaus für wohnungslose Männer in Leutzsch mit Übernachtung, Wäschewaschen, Tee, Kleiderkammer, medizinischer Versorgung und Sozialdienst. Geöffnet Montag–Freitag 16:00–08:00 Uhr, Wochenende/Feiertag ganztägig.",
+            "evidence_text": "Übernachtungshaus Rücke für volljährige wohnungslose Männer. Adresse Rückmarsdorfer Straße 5-7. Geöffnet Montag bis Freitag 16:00-08:00 Uhr, Wochenende und Feiertag ganztägig.",
             "checked_at": "2026-06-15",
             "source_hash": "8c909954fc135538c321b2f68d6165c63896415756a5b6f80359bde79303d9bd"
           }
@@ -1741,7 +1743,7 @@
           {
             "field_name": "retrieval_keywords",
             "source_url": "data/wissensbasis_hilfsangebote_leipzig_annotiert.md",
-            "evidence_text": "übernachtung, übernachtungshaus, männer, wohnungslose männer, obdachlos, wohnungslos, leutzsch, alt-west, rückmarsdorfer straße, schlafen, wäsche waschen, tee, kleiderkammer, bekleidung, kleidung, medizinische versorgung, sozialdienst, passangelegenheiten, meldeangelegenheiten, finanzen, gesundheit, wohnung, unterkunft, arbeit, 5 euro, montag bis freitag, 16 bis 08 uhr, wochenende, feiertag",
+            "evidence_text": "übernachtung, übernachtungshaus, männer, wohnungslose männer, obdachlos, wohnungslos, leutzsch, alt-west, rückmarsdorfer straße, schlafen, wäsche waschen, tee, kleiderkammer, bekleidung, kleidung, medizinische versorgung, sozialdienst, passangelegenheiten, meldeangelegenheiten, finanzen, gesundheit, wohnung, unterkunft, arbeit, 5 euro, montag bis freitag, 16 bis 08 uhr, wochenende, feiertag, rücke, ruecke, rückmarsdorfer straße 5-7, volljährige wohnungslose männer",
             "checked_at": "2026-06-15",
             "source_hash": "8c909954fc135538c321b2f68d6165c63896415756a5b6f80359bde79303d9bd"
           }
@@ -1750,7 +1752,7 @@
           {
             "field_name": "facts",
             "source_url": "data/wissensbasis_hilfsangebote_leipzig_annotiert.md",
-            "evidence_text": "{\"angebote\": [\"Übernachtung (5,00 € pro Nacht)\", \"Wäsche waschen (2,50 €)\", \"kostenloses Teeangebot\", \"Bekleidung aus der hauseigenen Kleiderkammer\", \"medizinische Versorgung\", \"Unterstützung in persönlichen Angelegenheiten durch Sozialdienst (z. B. bei Pass-und Meldeangelegenheiten, Finanzen, Gesundheit, Wohnung, Unterkunft, Arbeit)\"], \"oeffnungszeiten\": [\"Montag - Freitag: 16:00 - 08:00 Uhr\", \"Samstag, Sonntag und Feiertag: ganztägig\"], \"telefon\": [\"0341 1234502\", \"0341 1234504\"], \"email\": [\"notunterbringung@leipzig.de\"], \"ansprechpartner\": [\"Frau Larissa Zienert (Einrichtungsleitung)\"], \"karten_kurzbeschreibung\": \"Übernachtungshaus für wohnungslose Männer in Leutzsch mit Übernachtung, Wäschewaschen, Tee, Kleiderkammer, medizinischer Versorgung und Sozialdienst. Geöffnet Montag–Freitag 16:00–08:00 Uhr, Wochenende/Feiertag ganztägig.\"}",
+            "evidence_text": "{\"angebote\": [\"Übernachtung (5,00 € pro Nacht)\", \"Wäsche waschen (2,50 €)\", \"kostenloses Teeangebot\", \"Bekleidung aus der hauseigenen Kleiderkammer\", \"medizinische Versorgung\", \"Unterstützung in persönlichen Angelegenheiten durch Sozialdienst (z. B. bei Pass-und Meldeangelegenheiten, Finanzen, Gesundheit, Wohnung, Unterkunft, Arbeit)\"], \"oeffnungszeiten\": [\"Montag - Freitag: 16:00 - 08:00 Uhr\", \"Samstag, Sonntag und Feiertag: ganztägig\"], \"telefon\": [\"0341 1234504\"], \"email\": [\"notunterbringung@leipzig.de\"], \"ansprechpartner\": [\"Frau Larissa Zienert (Einrichtungsleitung)\"], \"karten_kurzbeschreibung\": \"Übernachtungshaus Rücke für volljährige wohnungslose Männer. Adresse Rückmarsdorfer Straße 5-7. Geöffnet Montag bis Freitag 16:00-08:00 Uhr, Wochenende und Feiertag ganztägig.\", \"zielgruppe\": [\"volljährig, männlich und wohnungslos\"]}",
             "checked_at": "2026-06-15",
             "source_hash": "8c909954fc135538c321b2f68d6165c63896415756a5b6f80359bde79303d9bd"
           }
@@ -1760,7 +1762,7 @@
         "Montag - Freitag: 16:00 - 08:00 Uhr",
         "Samstag, Sonntag und Feiertag: ganztägig"
       ],
-      "card_summary": "Übernachtungshaus für wohnungslose Männer in Leutzsch mit Übernachtung, Wäschewaschen, Tee, Kleiderkammer, medizinischer Versorgung und Sozialdienst. Geöffnet Montag–Freitag 16:00–08:00 Uhr, Wochenende/Feiertag ganztägig.",
+      "card_summary": "Übernachtungshaus Rücke für volljährige wohnungslose Männer. Adresse Rückmarsdorfer Straße 5-7. Geöffnet Montag bis Freitag 16:00-08:00 Uhr, Wochenende und Feiertag ganztägig.",
       "retrieval_keywords": [
         "übernachtung",
         "übernachtungshaus",
@@ -1790,7 +1792,11 @@
         "montag bis freitag",
         "16 bis 08 uhr",
         "wochenende",
-        "feiertag"
+        "feiertag",
+        "rücke",
+        "ruecke",
+        "rückmarsdorfer straße 5-7",
+        "volljährige wohnungslose männer"
       ],
       "facts": {
         "angebote": [
@@ -1806,7 +1812,6 @@
           "Samstag, Sonntag und Feiertag: ganztägig"
         ],
         "telefon": [
-          "0341 1234502",
           "0341 1234504"
         ],
         "email": [
@@ -1815,9 +1820,13 @@
         "ansprechpartner": [
           "Frau Larissa Zienert (Einrichtungsleitung)"
         ],
-        "karten_kurzbeschreibung": "Übernachtungshaus für wohnungslose Männer in Leutzsch mit Übernachtung, Wäschewaschen, Tee, Kleiderkammer, medizinischer Versorgung und Sozialdienst. Geöffnet Montag–Freitag 16:00–08:00 Uhr, Wochenende/Feiertag ganztägig."
+        "karten_kurzbeschreibung": "Übernachtungshaus Rücke für volljährige wohnungslose Männer. Adresse Rückmarsdorfer Straße 5-7. Geöffnet Montag bis Freitag 16:00-08:00 Uhr, Wochenende und Feiertag ganztägig.",
+        "zielgruppe": [
+          "volljährig, männlich und wohnungslos"
+        ]
       },
-      "phone_reachable_when": null
+      "phone_reachable_when": null,
+      "requirements": "Volljährig, männlich und wohnungslos."
     },
     {
       "offer_id": "aww-frauen-uebernachtungshaus",
@@ -3723,7 +3732,7 @@
         {
           "field_name": "card_summary",
           "source_url": "data/wissensbasis_hilfsangebote_leipzig_annotiert.md",
-          "evidence_text": "SAFE Team Wohnen: Beratung und warmes Essen/Getränke Dienstag 17:00-18:00 Uhr am Schwanenteich (Goethestraße). Außerdem Hilfe bei Wohnen, Finanzen, Sucht, Gesundheit und Behörden.",
+          "evidence_text": "SAFE Team Wohnen: Hilfe bei Wohnungs- und Obdachlosigkeit, Geld, Konsum, Gesundheit und Behörden. Bürozeit Dienstag 10:00-16:00 Uhr Demmeringstraße 32. Standzeiten: Dienstag 17:00-18:00 Uhr Schwanenteich, Mittwoch und Freitag 10:00-16:00 Uhr Hauptbahnhof.",
           "checked_at": "2026-06-15",
           "source_hash": "8c909954fc135538c321b2f68d6165c63896415756a5b6f80359bde79303d9bd"
         },
@@ -3737,7 +3746,7 @@
         {
           "field_name": "facts",
           "source_url": "data/wissensbasis_hilfsangebote_leipzig_annotiert.md",
-          "evidence_text": "{\"angebote\": [\"Hilfe, Beratung und Unterstützung bei Wohnungs- und\", \"Obdachlosigkeit, Schwierigkeiten mit der Wohnung, finanziellen Problemen,\", \"Fragen zu Alkohol- und Drogenkonsum oder Suchtproblemen,\", \"seelischen Belastungen, Sorgen und Ängsten, gesundheitlichen Problemen\", \"Vermittlung zu anderen Kontakten oder Institutionen\", \"Unterstützung bei Behördenangelegenheiten\", \"Standzeiten:\", \"jeden Dienstag 17:00 bis 18:00 Uhr am Schwanenteich (Goethestraße)\", \"in Kooperation mit dem Streetwork-Team der Diakonie\", \"jeden Mittwoch und Freitag 10:00 - 16:00 Uhr Hauptbahnhof\"], \"oeffnungszeiten\": [\"Dienstag: 10:00 - 16:00 Uhr (Bürozeit)\"], \"einsatzzeiten\": [\"Dienstag 17:00-18:00 Uhr Schwanenteich / Goethestraße: Beratung, Information, warme Mahlzeiten und Getränke\", \"Dienstag 17:00-18:00 Uhr Schwanenteich / Goethestraße\", \"Mittwoch und Freitag 10:00-16:00 Uhr Hauptbahnhof\", \"Standzeiten:\", \"jeden Dienstag 17:00 bis 18:00 Uhr am Schwanenteich (Goethestraße)\", \"jeden Mittwoch und Freitag 10:00 - 16:00 Uhr Hauptbahnhof\", \"Einsatzgebiete: Leipziger Norden mit Schwerpunkt Zentrum Nord, Nordwest, Eutritzsch, Gohlis, Moeckern, Mockau, Thekla, LindenthalInstagramkanal: #safeleipzig\", \"Einsatzgebiete: Leipziger Norden mit Schwerpunkt Zentrum Nord, Nordwest, Eutritzsch, Gohlis, Möckern, Mockau, Thekla, LindenthalInstagramkanal: #safeleipzig\"], \"standorte\": [\"Goethestraße / Schwanenteich, 04109 Leipzig\", \"Hauptbahnhof, Westseite, Kurt-Schumacher-Straße, 04109 Leipzig\"], \"telefon\": [\"0175 6758041 (Herr Neufert)\", \"0176 60778246 (Frau Scheffler)\", \"0157 58466472 (Frau Hoffmann)\", \"01577 6295555 (Herr Udich)\"], \"email\": [\"streetwork.nord@suchtzentrum.de\", \"projektleitung.safe@suchtzentrum.de\"], \"ansprechpartner\": [\"Herr Tino Neufert (Leitung)\"], \"website\": \"https://www.suchtzentrum.de/safe/team-wohnen\", \"hinweise\": [\"Einsatzgebiete: Leipziger Norden mit Schwerpunkt Zentrum Nord, Nordwest, Eutritzsch, Gohlis, Möckern, Mockau, Thekla, LindenthalInstagramkanal: #safeleipzig\"], \"karten_kurzbeschreibung\": \"SAFE Team Wohnen: Streetwork für Erwachsene mit Hilfe bei Wohnungs- und Obdachlosigkeit, Wohnungsproblemen, Finanzen, Alkohol-/Drogenkonsum, seelischen Belastungen, Gesundheit, Vermittlung und Behördenangelegenheiten. Bürozeit Dienstag 10:00–16:00 Uhr; Standzeiten Dienstag 17:00–18:00 Uhr Schwanenteich sowie Mittwoch und Freitag 10:00–16:00 Uhr Hauptbahnhof.\"}",
+          "evidence_text": "{\"angebote\": [\"Hilfe, Beratung und Unterstützung bei Wohnungs- und\", \"Obdachlosigkeit, Schwierigkeiten mit der Wohnung, finanziellen Problemen,\", \"Fragen zu Alkohol- und Drogenkonsum oder Suchtproblemen,\", \"seelischen Belastungen, Sorgen und Ängsten, gesundheitlichen Problemen\", \"Vermittlung zu anderen Kontakten oder Institutionen\", \"Unterstützung bei Behördenangelegenheiten\", \"Standzeiten:\", \"jeden Dienstag 17:00 bis 18:00 Uhr am Schwanenteich (Goethestraße)\", \"in Kooperation mit dem Streetwork-Team der Diakonie\", \"jeden Mittwoch und Freitag 10:00 - 16:00 Uhr Hauptbahnhof\"], \"oeffnungszeiten\": [\"Dienstag: 10:00 - 16:00 Uhr (Bürozeit)\"], \"einsatzzeiten\": [\"Dienstag 17:00-18:00 Uhr Schwanenteich / Goethestraße: Beratung, Information, warme Mahlzeiten und Getränke\", \"Dienstag 17:00-18:00 Uhr Schwanenteich / Goethestraße\", \"Mittwoch und Freitag 10:00-16:00 Uhr Hauptbahnhof\", \"Standzeiten:\", \"jeden Dienstag 17:00 bis 18:00 Uhr am Schwanenteich (Goethestraße)\", \"jeden Mittwoch und Freitag 10:00 - 16:00 Uhr Hauptbahnhof\", \"Einsatzgebiete: Leipziger Norden mit Schwerpunkt Zentrum Nord, Nordwest, Eutritzsch, Gohlis, Moeckern, Mockau, Thekla, LindenthalInstagramkanal: #safeleipzig\", \"Einsatzgebiete: Leipziger Norden mit Schwerpunkt Zentrum Nord, Nordwest, Eutritzsch, Gohlis, Möckern, Mockau, Thekla, LindenthalInstagramkanal: #safeleipzig\"], \"standorte\": [\"Demmeringstraße 32, 04177 Leipzig\", \"Goethestraße / Schwanenteich, 04109 Leipzig\", \"Hauptbahnhof, Westseite, Kurt-Schumacher-Straße, 04109 Leipzig\"], \"telefon\": [\"0175 6758041 (Herr Neufert)\", \"0176 60778246 (Frau Scheffler)\", \"0157 58466472 (Frau Hoffmann)\", \"01577 6295555 (Herr Udich)\"], \"email\": [\"streetwork.nord@suchtzentrum.de\", \"projektleitung.safe@suchtzentrum.de\"], \"ansprechpartner\": [\"Herr Tino Neufert (Leitung)\"], \"website\": \"https://www.suchtzentrum.de/safe/team-wohnen\", \"hinweise\": [\"Einsatzgebiete: Leipziger Norden mit Schwerpunkt Zentrum Nord, Nordwest, Eutritzsch, Gohlis, Möckern, Mockau, Thekla, LindenthalInstagramkanal: #safeleipzig\"], \"karten_kurzbeschreibung\": \"SAFE Team Wohnen: Streetwork für Erwachsene mit Hilfe bei Wohnungs- und Obdachlosigkeit, Wohnungsproblemen, Finanzen, Alkohol-/Drogenkonsum, seelischen Belastungen, Gesundheit, Vermittlung und Behördenangelegenheiten. Bürozeit Dienstag 10:00–16:00 Uhr; Standzeiten Dienstag 17:00–18:00 Uhr Schwanenteich sowie Mittwoch und Freitag 10:00–16:00 Uhr Hauptbahnhof.\"}",
           "checked_at": "2026-06-15",
           "source_hash": "8c909954fc135538c321b2f68d6165c63896415756a5b6f80359bde79303d9bd"
         }
@@ -3896,7 +3905,7 @@
           {
             "field_name": "card_summary",
             "source_url": "data/wissensbasis_hilfsangebote_leipzig_annotiert.md",
-            "evidence_text": "SAFE Team Wohnen: Beratung und warmes Essen/Getränke Dienstag 17:00-18:00 Uhr am Schwanenteich (Goethestraße). Außerdem Hilfe bei Wohnen, Finanzen, Sucht, Gesundheit und Behörden.",
+            "evidence_text": "SAFE Team Wohnen: Hilfe bei Wohnungs- und Obdachlosigkeit, Geld, Konsum, Gesundheit und Behörden. Bürozeit Dienstag 10:00-16:00 Uhr Demmeringstraße 32. Standzeiten: Dienstag 17:00-18:00 Uhr Schwanenteich, Mittwoch und Freitag 10:00-16:00 Uhr Hauptbahnhof.",
             "checked_at": "2026-06-15",
             "source_hash": "8c909954fc135538c321b2f68d6165c63896415756a5b6f80359bde79303d9bd"
           }
@@ -3914,7 +3923,7 @@
           {
             "field_name": "facts",
             "source_url": "data/wissensbasis_hilfsangebote_leipzig_annotiert.md",
-            "evidence_text": "{\"angebote\": [\"Hilfe, Beratung und Unterstützung bei Wohnungs- und\", \"Obdachlosigkeit, Schwierigkeiten mit der Wohnung, finanziellen Problemen,\", \"Fragen zu Alkohol- und Drogenkonsum oder Suchtproblemen,\", \"seelischen Belastungen, Sorgen und Ängsten, gesundheitlichen Problemen\", \"Vermittlung zu anderen Kontakten oder Institutionen\", \"Unterstützung bei Behördenangelegenheiten\", \"Standzeiten:\", \"jeden Dienstag 17:00 bis 18:00 Uhr am Schwanenteich (Goethestraße)\", \"in Kooperation mit dem Streetwork-Team der Diakonie\", \"jeden Mittwoch und Freitag 10:00 - 16:00 Uhr Hauptbahnhof\"], \"oeffnungszeiten\": [\"Dienstag: 10:00 - 16:00 Uhr (Bürozeit)\"], \"einsatzzeiten\": [\"Dienstag 17:00-18:00 Uhr Schwanenteich / Goethestraße: Beratung, Information, warme Mahlzeiten und Getränke\", \"Dienstag 17:00-18:00 Uhr Schwanenteich / Goethestraße\", \"Mittwoch und Freitag 10:00-16:00 Uhr Hauptbahnhof\", \"Standzeiten:\", \"jeden Dienstag 17:00 bis 18:00 Uhr am Schwanenteich (Goethestraße)\", \"jeden Mittwoch und Freitag 10:00 - 16:00 Uhr Hauptbahnhof\", \"Einsatzgebiete: Leipziger Norden mit Schwerpunkt Zentrum Nord, Nordwest, Eutritzsch, Gohlis, Moeckern, Mockau, Thekla, LindenthalInstagramkanal: #safeleipzig\", \"Einsatzgebiete: Leipziger Norden mit Schwerpunkt Zentrum Nord, Nordwest, Eutritzsch, Gohlis, Möckern, Mockau, Thekla, LindenthalInstagramkanal: #safeleipzig\"], \"standorte\": [\"Goethestraße / Schwanenteich, 04109 Leipzig\", \"Hauptbahnhof, Westseite, Kurt-Schumacher-Straße, 04109 Leipzig\"], \"telefon\": [\"0175 6758041 (Herr Neufert)\", \"0176 60778246 (Frau Scheffler)\", \"0157 58466472 (Frau Hoffmann)\", \"01577 6295555 (Herr Udich)\"], \"email\": [\"streetwork.nord@suchtzentrum.de\", \"projektleitung.safe@suchtzentrum.de\"], \"ansprechpartner\": [\"Herr Tino Neufert (Leitung)\"], \"website\": \"https://www.suchtzentrum.de/safe/team-wohnen\", \"hinweise\": [\"Einsatzgebiete: Leipziger Norden mit Schwerpunkt Zentrum Nord, Nordwest, Eutritzsch, Gohlis, Möckern, Mockau, Thekla, LindenthalInstagramkanal: #safeleipzig\"], \"karten_kurzbeschreibung\": \"SAFE Team Wohnen: Streetwork für Erwachsene mit Hilfe bei Wohnungs- und Obdachlosigkeit, Wohnungsproblemen, Finanzen, Alkohol-/Drogenkonsum, seelischen Belastungen, Gesundheit, Vermittlung und Behördenangelegenheiten. Bürozeit Dienstag 10:00–16:00 Uhr; Standzeiten Dienstag 17:00–18:00 Uhr Schwanenteich sowie Mittwoch und Freitag 10:00–16:00 Uhr Hauptbahnhof.\"}",
+            "evidence_text": "{\"angebote\": [\"Hilfe, Beratung und Unterstützung bei Wohnungs- und\", \"Obdachlosigkeit, Schwierigkeiten mit der Wohnung, finanziellen Problemen,\", \"Fragen zu Alkohol- und Drogenkonsum oder Suchtproblemen,\", \"seelischen Belastungen, Sorgen und Ängsten, gesundheitlichen Problemen\", \"Vermittlung zu anderen Kontakten oder Institutionen\", \"Unterstützung bei Behördenangelegenheiten\", \"Standzeiten:\", \"jeden Dienstag 17:00 bis 18:00 Uhr am Schwanenteich (Goethestraße)\", \"in Kooperation mit dem Streetwork-Team der Diakonie\", \"jeden Mittwoch und Freitag 10:00 - 16:00 Uhr Hauptbahnhof\"], \"oeffnungszeiten\": [\"Dienstag: 10:00 - 16:00 Uhr (Bürozeit)\"], \"einsatzzeiten\": [\"Dienstag 17:00-18:00 Uhr Schwanenteich / Goethestraße: Beratung, Information, warme Mahlzeiten und Getränke\", \"Dienstag 17:00-18:00 Uhr Schwanenteich / Goethestraße\", \"Mittwoch und Freitag 10:00-16:00 Uhr Hauptbahnhof\", \"Standzeiten:\", \"jeden Dienstag 17:00 bis 18:00 Uhr am Schwanenteich (Goethestraße)\", \"jeden Mittwoch und Freitag 10:00 - 16:00 Uhr Hauptbahnhof\", \"Einsatzgebiete: Leipziger Norden mit Schwerpunkt Zentrum Nord, Nordwest, Eutritzsch, Gohlis, Moeckern, Mockau, Thekla, LindenthalInstagramkanal: #safeleipzig\", \"Einsatzgebiete: Leipziger Norden mit Schwerpunkt Zentrum Nord, Nordwest, Eutritzsch, Gohlis, Möckern, Mockau, Thekla, LindenthalInstagramkanal: #safeleipzig\"], \"standorte\": [\"Demmeringstraße 32, 04177 Leipzig\", \"Goethestraße / Schwanenteich, 04109 Leipzig\", \"Hauptbahnhof, Westseite, Kurt-Schumacher-Straße, 04109 Leipzig\"], \"telefon\": [\"0175 6758041 (Herr Neufert)\", \"0176 60778246 (Frau Scheffler)\", \"0157 58466472 (Frau Hoffmann)\", \"01577 6295555 (Herr Udich)\"], \"email\": [\"streetwork.nord@suchtzentrum.de\", \"projektleitung.safe@suchtzentrum.de\"], \"ansprechpartner\": [\"Herr Tino Neufert (Leitung)\"], \"website\": \"https://www.suchtzentrum.de/safe/team-wohnen\", \"hinweise\": [\"Einsatzgebiete: Leipziger Norden mit Schwerpunkt Zentrum Nord, Nordwest, Eutritzsch, Gohlis, Möckern, Mockau, Thekla, LindenthalInstagramkanal: #safeleipzig\"], \"karten_kurzbeschreibung\": \"SAFE Team Wohnen: Streetwork für Erwachsene mit Hilfe bei Wohnungs- und Obdachlosigkeit, Wohnungsproblemen, Finanzen, Alkohol-/Drogenkonsum, seelischen Belastungen, Gesundheit, Vermittlung und Behördenangelegenheiten. Bürozeit Dienstag 10:00–16:00 Uhr; Standzeiten Dienstag 17:00–18:00 Uhr Schwanenteich sowie Mittwoch und Freitag 10:00–16:00 Uhr Hauptbahnhof.\"}",
             "checked_at": "2026-06-15",
             "source_hash": "8c909954fc135538c321b2f68d6165c63896415756a5b6f80359bde79303d9bd"
           }
@@ -3923,7 +3932,7 @@
       "opening_times": [
         "Dienstag: 10:00 - 16:00 Uhr (Bürozeit)"
       ],
-      "card_summary": "SAFE Team Wohnen: Beratung und warmes Essen/Getränke Dienstag 17:00-18:00 Uhr am Schwanenteich (Goethestraße). Außerdem Hilfe bei Wohnen, Finanzen, Sucht, Gesundheit und Behörden.",
+      "card_summary": "SAFE Team Wohnen: Hilfe bei Wohnungs- und Obdachlosigkeit, Geld, Konsum, Gesundheit und Behörden. Bürozeit Dienstag 10:00-16:00 Uhr Demmeringstraße 32. Standzeiten: Dienstag 17:00-18:00 Uhr Schwanenteich, Mittwoch und Freitag 10:00-16:00 Uhr Hauptbahnhof.",
       "retrieval_keywords": [
         "safe",
         "team wohnen",
@@ -3991,6 +4000,7 @@
           "Einsatzgebiete: Leipziger Norden mit Schwerpunkt Zentrum Nord, Nordwest, Eutritzsch, Gohlis, Möckern, Mockau, Thekla, LindenthalInstagramkanal: #safeleipzig"
         ],
         "standorte": [
+          "Demmeringstraße 32, 04177 Leipzig",
           "Goethestraße / Schwanenteich, 04109 Leipzig",
           "Hauptbahnhof, Westseite, Kurt-Schumacher-Straße, 04109 Leipzig"
         ],
@@ -4015,6 +4025,17 @@
       },
       "phone_reachable_when": null,
       "map_points": [
+        {
+          "point_id": "buero-demmeringstraße",
+          "label": "SAFE Team Wohnen: Büro Demmeringstraße",
+          "address": "Demmeringstraße 32, 04177 Leipzig",
+          "latitude": 51.3379213,
+          "longitude": 12.3323055,
+          "opening_hours": [
+            "Dienstag: 10:00 - 16:00 Uhr (Bürozeit)"
+          ],
+          "note": "Bürozeit. Beratung zu Wohnen, Geld, Konsum, Gesundheit und Behörden."
+        },
         {
           "point_id": "schwanenteich",
           "label": "SAFE Team Wohnen: Schwanenteich",
@@ -8045,7 +8066,7 @@
         "decke",
         "schlafsack"
       ],
-      "phone": "0152 33661087 (nur zu Einsatzzeiten des Busses); 0175 6758041 (Herr Tino Neufert / Leitung)",
+      "phone": "0152 33661087 (nur zu Einsatzzeiten des Busses)",
       "phone_reachable_when": "Nur zu Einsatzzeiten des Hilfebusses.",
       "email": "hilfebus@suchtzentrum.de",
       "website": "https://www.suchtzentrum.de/unsere-angebote/streetwork/hilfebus",

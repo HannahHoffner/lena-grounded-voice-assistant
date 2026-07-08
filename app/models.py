@@ -107,6 +107,8 @@ class Manifest(BaseModel):
 
 class TranscribeResponse(BaseModel):
     transcript: str
+    text: str = ""
+    language: Language | None = None
     provider: str
     status: Literal["ok", "error"]
     detail: str | None = None

@@ -15,6 +15,15 @@ const state = {
   selectedOfferId: null,
   activeCategoryId: null,
   activeCategoryLabel: "",
+  currentAudio: null,
+};
+
+const speechLanguageMap = {
+  de: "de-DE",
+  en: "en-GB",
+  pl: "pl-PL",
+  ro: "ro-RO",
+  ru: "ru-RU",
 };
 
 const labels = {
@@ -62,6 +71,7 @@ const labels = {
     chipPlace: "Ort",
     chipTime: "Zeit",
     chipPhone: "Telefon",
+    speakCard: "Karte vorlesen",
     detailPhone: "Telefon",
     detailEmail: "E-Mail",
     detailWeb: "Web",
@@ -115,6 +125,7 @@ const labels = {
     chipPlace: "Place",
     chipTime: "Time",
     chipPhone: "Phone",
+    speakCard: "Read card aloud",
     detailPhone: "Phone",
     detailEmail: "Email",
     detailWeb: "Web",
@@ -168,6 +179,7 @@ const labels = {
     chipPlace: "Miejsce",
     chipTime: "Czas",
     chipPhone: "Telefon",
+    speakCard: "Odczytaj kartę",
     detailPhone: "Telefon",
     detailEmail: "E-mail",
     detailWeb: "Web",
@@ -221,6 +233,7 @@ const labels = {
     chipPlace: "Loc",
     chipTime: "Ora",
     chipPhone: "Telefon",
+    speakCard: "Citește cardul",
     detailPhone: "Telefon",
     detailEmail: "E-mail",
     detailWeb: "Web",
@@ -274,6 +287,7 @@ const labels = {
     chipPlace: "Mesto",
     chipTime: "Vremya",
     chipPhone: "Telefon",
+    speakCard: "Prochitat kartochku",
     detailPhone: "Telefon",
     detailEmail: "E-mail",
     detailWeb: "Web",
@@ -589,11 +603,12 @@ function renderCards(cards) {
     const meta = [];
     if (card.address) meta.push(metaChip("map", copy().chipPlace, card.address));
     else if (card.location) meta.push(metaChip("map", copy().chipPlace, card.location));
-    const primaryTime = firstUsefulTime(card.opening_hours || []);
-    if (primaryTime) meta.push(metaChip("clock", copy().chipTime, primaryTime));
+    const timeSummary = timeSummaryText(card.opening_hours || []);
+    if (timeSummary) meta.push(metaChip("clock", copy().chipTime, timeSummary));
     if (card.phone) meta.push(metaChip("phone", copy().chipPhone, primaryPhone(card.phone)));
     const details = [];
     if (card.phone && card.phone.includes(";")) details.push(`<p><strong>${escapeHtml(copy().detailPhone)}:</strong> ${escapeHtml(card.phone)}</p>`);
+    if ((card.opening_hours || []).length > 1) details.push(`<p><strong>${escapeHtml(copy().chipTime)}:</strong> ${escapeHtml(usefulTimes(card.opening_hours || []).join(" | "))}</p>`);
     if (card.email) details.push(`<p><strong>${escapeHtml(copy().detailEmail)}:</strong> ${escapeHtml(card.email)}</p>`);
     if (card.website) details.push(`<p><strong>${escapeHtml(copy().detailWeb)}:</strong> <a href="${escapeAttribute(card.website)}" target="_blank" rel="noopener noreferrer">${escapeHtml(card.website)}</a></p>`);
     const targetGroups = card.target_groups || [];
@@ -603,7 +618,11 @@ function renderCards(cards) {
     if (card.notes) details.push(`<p><strong>${escapeHtml(copy().detailNote)}:</strong> ${escapeHtml(card.notes)}</p>`);
     const expanded = state.selectedOfferId === card.page_id;
     const targetLine = targetGroups.length ? `<p class="offer-card__target"><strong>${escapeHtml(copy().detailForWhom)}:</strong> ${escapeHtml(targetGroups.join(", "))}</p>` : "";
-    item.innerHTML = `<h3>${escapeHtml(shortTitle(card.title, card.page_id))}</h3><p>${escapeHtml(shortSummary(card.description || card.card_summary || ""))}</p>${targetLine}<div class="offer-meta">${meta.join("")}</div><div class="offer-card__details" ${expanded ? "" : "hidden"}>${details.join("")}</div>`;
+    item.innerHTML = `<div class="offer-card__head"><h3>${escapeHtml(shortTitle(card.title, card.page_id))}</h3><button class="offer-card__speak" type="button" aria-label="${escapeAttribute(copy().speakCard)}" title="${escapeAttribute(copy().speakCard)}">${iconMarkup("speaker")}</button></div><p>${escapeHtml(shortSummary(card.description || card.card_summary || ""))}</p>${targetLine}<div class="offer-meta">${meta.join("")}</div><div class="offer-card__details" ${expanded ? "" : "hidden"}>${details.join("")}</div>`;
+    item.querySelector(".offer-card__speak").addEventListener("click", (event) => {
+      event.stopPropagation();
+      void speakText(cardSpeechText(card));
+    });
     item.addEventListener("click", (event) => {
       if (event.target.closest("a")) return;
       selectOffer(card.page_id, { fromCard: true });
@@ -701,6 +720,17 @@ function primaryPhone(phone) {
   return String(phone || "").split(";")[0].trim();
 }
 
+function cardSpeechText(card) {
+  const parts = [shortTitle(card.title, card.page_id), shortSummary(card.description || card.card_summary || "")];
+  const targetGroups = card.target_groups || [];
+  if (targetGroups.length) parts.push(`${copy().detailForWhom}: ${targetGroups.join(", ")}.`);
+  if (card.address) parts.push(`${copy().chipPlace}: ${card.address}.`);
+  else if (card.location) parts.push(`${copy().chipPlace}: ${card.location}.`);
+  if ((card.opening_hours || []).length) parts.push(`${copy().chipTime}: ${(card.opening_hours || []).join(". ")}.`);
+  if (card.phone) parts.push(`${copy().chipPhone}: ${primaryPhone(card.phone)}.`);
+  return parts.filter(Boolean).join(" ");
+}
+
 function renderSourceLine(data) {
   const parts = [];
   if (data.last_checked) parts.push(`${copy().checked}: ${data.last_checked}`);
@@ -780,8 +810,8 @@ function renderMapDetail(destination) {
   const distance = document.createElement("p");
   distance.textContent = destination.distance_meters ? `${copy().distance}: ${formatDistance(destination.distance_meters)}` : "";
   const time = document.createElement("p");
-  const primaryTime = firstUsefulTime(destination.opening_hours || []);
-  time.textContent = primaryTime ? `${copy().chipTime}: ${primaryTime}` : "";
+  const timeSummary = timeSummaryText(destination.opening_hours || []);
+  time.textContent = timeSummary ? `${copy().chipTime}: ${timeSummary}` : "";
   card.append(title, address);
   if (distance.textContent) card.append(distance);
   if (time.textContent) card.append(time);
@@ -926,13 +956,21 @@ function mapPopup(destination) {
     `<strong>${escapeHtml(shortTitle(destination.label, destination.page_id))}</strong>`,
     escapeHtml(destination.address || ""),
   ];
-  const primaryTime = firstUsefulTime(destination.opening_hours || []);
-  if (primaryTime) lines.push(escapeHtml(primaryTime));
+  const timeSummary = timeSummaryText(destination.opening_hours || []);
+  if (timeSummary) lines.push(escapeHtml(timeSummary));
   return lines.filter(Boolean).join("<br>");
 }
 
 function firstUsefulTime(openingHours) {
-  return openingHours.find((item) => {
+  return usefulTimes(openingHours)[0] || "";
+}
+
+function timeSummaryText(openingHours) {
+  return usefulTimes(openingHours).join(" | ");
+}
+
+function usefulTimes(openingHours) {
+  return openingHours.filter((item) => {
     const text = String(item || "").trim();
     if (!text) return false;
     const normalized = text.toLocaleLowerCase("de-DE");
@@ -945,7 +983,7 @@ function firstUsefulTime(openingHours) {
       "kostenlose notschlafstelle",
       "sozialdienst erreichbarkeit",
     ].some((label) => normalized.includes(label));
-  }) || "";
+  });
 }
 
 async function toggleMic() {
@@ -1031,17 +1069,16 @@ function cancelCurrentRequest() {
 
 async function speakLastAnswer() {
   if (!state.lastAnswer) return;
-  const data = await api("/api/speech/synthesize", {
-    method: "POST",
-    body: JSON.stringify({ text: state.lastAnswer, language: state.language }),
-  });
-  if (data.audio_url) {
-    new Audio(data.audio_url).play();
-  }
+  await speakText(state.lastAnswer);
 }
 
 async function speakIntroOnce() {
   const text = copy().introText;
+  if (!text) return;
+  await speakText(text);
+}
+
+async function speakText(text) {
   if (!text) return;
   try {
     const data = await api("/api/speech/synthesize", {
@@ -1049,10 +1086,47 @@ async function speakIntroOnce() {
       body: JSON.stringify({ text, language: state.language }),
     });
     if (data.audio_url) {
-      void new Audio(data.audio_url).play();
+      await playBackendAudio(data.audio_url);
+      return;
     }
   } catch {
-    // Intro speech is helpful, but the UI must never depend on TTS.
+    // Speech is helpful, but the UI must never depend on backend TTS.
+  }
+  speakWithBrowser(text);
+}
+
+function playBackendAudio(url) {
+  stopSpeechOutput();
+  return new Promise((resolve) => {
+    const audio = new Audio(url);
+    state.currentAudio = audio;
+    const finish = () => {
+      if (state.currentAudio === audio) state.currentAudio = null;
+      resolve();
+    };
+    audio.addEventListener("ended", finish, { once: true });
+    audio.addEventListener("error", finish, { once: true });
+    audio.play().catch(finish);
+  });
+}
+
+function speakWithBrowser(text) {
+  if (!("speechSynthesis" in window)) return;
+  stopSpeechOutput();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = speechLanguageMap[state.language] || "de-DE";
+  utterance.rate = 0.95;
+  utterance.pitch = 1.0;
+  window.speechSynthesis.speak(utterance);
+}
+
+function stopSpeechOutput() {
+  if (state.currentAudio) {
+    state.currentAudio.pause();
+    state.currentAudio = null;
+  }
+  if ("speechSynthesis" in window) {
+    window.speechSynthesis.cancel();
   }
 }
 

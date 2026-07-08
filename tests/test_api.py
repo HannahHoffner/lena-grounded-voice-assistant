@@ -6,6 +6,7 @@ from pathlib import Path
 from fastapi.testclient import TestClient
 
 from app.main import create_app
+from app.providers.stt import create_stt_provider
 
 
 def test_frontend_copy_does_not_expose_internal_knowledge_base_terms() -> None:
@@ -51,7 +52,9 @@ def test_health_endpoint_reports_providers(monkeypatch, tmp_path) -> None:
     assert body["tts_configured_provider"] == "mock"
     assert body["tts_ready"] is True
     assert body["speech"]["stt"]["active_provider"] == "mock"
+    assert body["speech"]["stt"]["real_audio"] is False
     assert body["speech"]["tts"]["active_provider"] == "mock"
+    assert body["speech"]["tts"]["audio_output"] is False
 
 
 def test_answer_endpoint_returns_weak_match_or_ok(monkeypatch) -> None:
@@ -505,7 +508,7 @@ def test_crisis_query_supports_german_response(monkeypatch) -> None:
     assert "110" in body["answer_text"]
 
 
-def test_transcribe_endpoint_accepts_form_language_string(monkeypatch, tmp_path: Path) -> None:
+def test_transcribe_endpoint_returns_graceful_error_for_mock_without_debug(monkeypatch, tmp_path: Path) -> None:
     monkeypatch.setenv("LENA_BOOTSTRAP_RUNTIME_FROM_SCRAPER", "false")
     monkeypatch.setenv("LENA_STT_PROVIDER", "mock")
     app = create_app()
@@ -527,6 +530,77 @@ def test_transcribe_endpoint_accepts_form_language_string(monkeypatch, tmp_path:
 
     assert response.status_code == 200
     body = response.json()
+    assert body["status"] == "error"
+    assert body["provider"] == "mock"
+    assert body["transcript"] == ""
+    assert body["text"] == ""
+    assert body["language"] == "de"
+    assert "Mock STT cannot transcribe real audio" in body["detail"]
+
+
+def test_transcribe_endpoint_accepts_debug_transcript(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("LENA_BOOTSTRAP_RUNTIME_FROM_SCRAPER", "false")
+    monkeypatch.setenv("LENA_STT_PROVIDER", "mock")
+    app = create_app()
+    client = TestClient(app)
+
+    audio_path = tmp_path / "sample.wav"
+    with wave.open(str(audio_path), "wb") as handle:
+        handle.setnchannels(1)
+        handle.setsampwidth(2)
+        handle.setframerate(16000)
+        handle.writeframes(b"\x00\x00" * 1600)
+
+    with audio_path.open("rb") as handle:
+        response = client.post(
+            "/api/speech/transcribe",
+            files={"audio": ("sample.wav", handle, "audio/wav")},
+            data={"language": "de", "debug_transcript": "Ich brauche Medizin."},
+        )
+
+    assert response.status_code == 200
+    body = response.json()
     assert body["status"] == "ok"
     assert body["provider"] == "mock"
-    assert body["transcript"]
+    assert body["transcript"] == "Ich brauche Medizin."
+    assert body["text"] == body["transcript"]
+    assert body["language"] == "de"
+
+
+def test_faster_whisper_provider_falls_back_gracefully(monkeypatch) -> None:
+    def fail_init(*args, **kwargs):  # noqa: ANN002, ANN003
+        raise RuntimeError("missing local whisper model")
+
+    monkeypatch.setattr("app.providers.stt.FasterWhisperProvider", fail_init)
+
+    provider = create_stt_provider("faster_whisper")
+    health = provider.health()
+
+    assert provider.name == "mock"
+    assert health["configured_provider"] == "faster_whisper"
+    assert health["ready"] is False
+    assert health["real_audio"] is False
+    assert health["fallback_from"] == "faster_whisper"
+    assert "missing local whisper model" in str(health["detail"])
+
+
+def test_synthesize_endpoint_returns_unavailable_when_piper_assets_are_missing(monkeypatch) -> None:
+    monkeypatch.setenv("LENA_BOOTSTRAP_RUNTIME_FROM_SCRAPER", "false")
+    monkeypatch.setenv("LENA_TTS_PROVIDER", "piper")
+    monkeypatch.setenv("LENA_PIPER_BINARY", "C:/missing/piper.exe")
+    monkeypatch.setenv("LENA_PIPER_VOICE_DE", "C:/missing/de.onnx")
+    app = create_app()
+    client = TestClient(app)
+
+    health = client.get("/api/health").json()
+    assert health["tts_provider"] == "mock"
+    assert health["tts_configured_provider"] == "piper"
+    assert health["tts_ready"] is False
+
+    response = client.post("/api/speech/synthesize", json={"text": "Ich bin LENA.", "language": "de"})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "unavailable"
+    assert body["provider"] == "mock"
+    assert body["audio_url"] is None

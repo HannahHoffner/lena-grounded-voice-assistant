@@ -36,10 +36,12 @@ from ..temporal import build_temporal_context
 from ..transcripts import TranscriptStore
 from .kb import V2KnowledgeBase
 from .models import V2Category, V2Offer
+from .presentation import display_name, primary_phone
 from .service import V2AnswerService, retrieve_for_symbols
 
 
 def create_v2_app() -> FastAPI:
+    _apply_v2_provider_defaults()
     settings = load_settings()
     app_root = settings.app_root
     kb_path = _v2_kb_path(app_root)
@@ -96,13 +98,18 @@ def create_v2_app() -> FastAPI:
             "source_hash": app.state.kb.v2_dataset.source_hash,
             "source_last_checked": app.state.kb.source_last_checked,
             "stt_provider": app.state.stt_provider.name,
+            "stt_configured_provider": stt_health["configured_provider"],
             "stt_ready": stt_health["ready"],
             "rewrite_provider": app.state.rewrite_provider.name,
+            "configured_rewrite_provider": app.state.settings.rewrite_provider,
             "rewrite_model": app.state.rewrite_provider.model_name,
             "llm_active": app.state.rewrite_provider.uses_llm,
+            "llm_base_url_configured": bool(app.state.settings.llm_base_url),
+            "llm_api_key_configured": bool(app.state.settings.llm_api_key),
             "v2_prompt_loaded": app.state.rewrite_provider.prompt_loaded,
             "v2_prompt_path": str(app.state.rewrite_provider.system_prompt_path),
             "tts_provider": app.state.tts_provider.name,
+            "tts_configured_provider": tts_health["configured_provider"],
             "tts_ready": tts_health["ready"],
             "speech": {"stt": stt_health, "tts": tts_health},
             "last_transcript_source": app.state.last_transcript_source,
@@ -123,24 +130,41 @@ def create_v2_app() -> FastAPI:
         language: str = Form(...),
         debug_transcript: str | None = Form(default=None),
     ) -> TranscribeResponse:
+        selected_language: Language | None = None
         try:
+            selected_language = Language(language)
             if app.state.stt_provider.name == "mock" and not debug_transcript:
                 app.state.last_transcript_source = "mock_unavailable"
                 app.state.last_transcript_language = language
                 return TranscribeResponse(
                     transcript="",
+                    text="",
+                    language=selected_language,
                     provider=app.state.stt_provider.name,
                     status="error",
                     detail="Mock STT is active. Real speech transcription is unavailable; type your request or provide an explicit debug_transcript.",
                 )
-            transcript = await app.state.stt_provider.transcribe(audio, language, debug_transcript=debug_transcript)
+            transcript = await app.state.stt_provider.transcribe(audio, selected_language, debug_transcript=debug_transcript)
             app.state.last_transcript_source = "debug_transcript" if debug_transcript else app.state.stt_provider.name
             app.state.last_transcript_language = language
-            return TranscribeResponse(transcript=transcript, provider=app.state.stt_provider.name, status="ok")
+            return TranscribeResponse(
+                transcript=transcript,
+                text=transcript,
+                language=selected_language,
+                provider=app.state.stt_provider.name,
+                status="ok",
+            )
         except Exception as exc:  # pragma: no cover - provider/runtime dependent
             app.state.last_transcript_source = "error"
             app.state.last_transcript_language = language
-            return TranscribeResponse(transcript="", provider=app.state.stt_provider.name, status="error", detail=str(exc))
+            return TranscribeResponse(
+                transcript="",
+                text="",
+                language=selected_language,
+                provider=app.state.stt_provider.name,
+                status="error",
+                detail=str(exc),
+            )
 
     @app.post("/api/query/answer", response_model=QueryAnswerResponse)
     async def answer_query(payload: QueryRequest) -> QueryAnswerResponse:
@@ -279,6 +303,14 @@ def create_v2_app() -> FastAPI:
     return app
 
 
+def _apply_v2_provider_defaults() -> None:
+    os.environ.setdefault("LENA_REWRITE_PROVIDER", "blablador")
+    os.environ.setdefault("LENA_LLM_BASE_URL", "https://api.blablador.fz-juelich.de/v1/")
+    os.environ.setdefault("LENA_LLM_MODEL", "alias-large")
+    os.environ.setdefault("LENA_STT_PROVIDER", "faster_whisper")
+    os.environ.setdefault("LENA_TTS_PROVIDER", "piper")
+
+
 def _v2_kb_path(app_root: Path) -> Path:
     raw = os.getenv("LENA_V2_KB_PATH", "data/v2/curated_kb/offers.json")
     path = Path(raw)
@@ -313,7 +345,7 @@ def _build_v2_map_data(answer: KnowledgeAnswer | QueryAnswerResponse, kb: V2Know
                     MapDestination(
                         id=key,
                         page_id=offer.offer_id,
-                        label=point.label,
+                        label=point.label or display_name(offer),
                         organization_label=offer.organization,
                         service_type=offer.subcategory or offer.category,
                         address=point.address,
@@ -333,7 +365,7 @@ def _build_v2_map_data(answer: KnowledgeAnswer | QueryAnswerResponse, kb: V2Know
                 MapDestination(
                     id=key,
                     page_id=offer.offer_id,
-                    label=offer.name,
+                    label=display_name(offer),
                     organization_label=offer.organization,
                     service_type=offer.subcategory or offer.category,
                     address=offer.address,
@@ -428,13 +460,44 @@ def _category_for_symbol(symbol_id: str) -> V2Category:
 def _symbol_answer_text(language: Language, category: V2Category, offers: list[V2Offer]) -> str:
     if not offers:
         return {"de": "Dazu habe ich keine sichere Information.", "en": "I do not have safe information for that."}.get(language.value, "I do not have safe information for that.")
-    return {
-        "de": "Ich habe Orte gefunden. Tippe auf einen Ort. Dann siehst du Adresse, Zeit und Telefon.",
-        "en": "I found places. Tap a place. Then you see address, time, and phone.",
-        "pl": "Znalazlem pasujaca pomoc. Wybierz karte, aby zobaczyc adres, godziny i kontakt.",
-        "ro": "Am gasit ajutor potrivit. Alege un card pentru adresa, program si contact.",
-        "ru": "Ya nashel podkhodyashchuyu pomoshch. Vyberi kartochku, chtoby uvidet adres, vremya i kontakt.",
-    }.get(language.value, "I found suitable help. Choose a card for details.")
+    intro = {
+        "food": {
+            "de": "Ich habe Orte für Essen oder Getränke gefunden.",
+            "en": "I found places for food or drinks.",
+            "pl": "Znalazłam miejsca z jedzeniem albo napojami.",
+            "ro": "Am găsit locuri pentru mâncare sau băuturi.",
+            "ru": "Ya nashla mesta s edoy ili napitkami.",
+        },
+        "sleep": {
+            "de": "Ich habe Orte für Schlafen oder Notunterkunft gefunden.",
+            "en": "I found places for sleep or emergency accommodation.",
+            "pl": "Znalazłam miejsca do spania albo noclegu awaryjnego.",
+            "ro": "Am găsit locuri pentru dormit sau cazare de urgență.",
+            "ru": "Ya nashla mesta dlya nochlega ili srochnogo razmeshcheniya.",
+        },
+        "medical": {
+            "de": "Ich habe medizinische Hilfe gefunden.",
+            "en": "I found medical help.",
+            "pl": "Znalazłam pomoc medyczną.",
+            "ro": "Am găsit ajutor medical.",
+            "ru": "Ya nashla meditsinskuyu pomoshch.",
+        },
+        "general_advice": {
+            "de": "Ich habe Beratung gefunden.",
+            "en": "I found advice services.",
+            "pl": "Znalazłam miejsca z poradą.",
+            "ro": "Am găsit servicii de consiliere.",
+            "ru": "Ya nashla mesta dlya konsultatsii.",
+        },
+    }.get(category, CATEGORY_SUMMARY_TEXT["other_source_listed"])
+    hint = {
+        "de": "Brauchst du mehr Informationen? Tippe auf eine Karte. Dort siehst du Ort, Zeit und Telefon.",
+        "en": "Do you need more information? Tap a card. It shows place, time, and phone.",
+        "pl": "Czy potrzebujesz więcej informacji? Naciśnij kartę. Tam jest miejsce, czas i telefon.",
+        "ro": "Ai nevoie de mai multe informații? Apasă pe un card. Acolo vezi locul, ora și telefonul.",
+        "ru": "Nuzhno bolshe informatsii? Nazhmi na kartochku. Tam est mesto, vremya i telefon.",
+    }
+    return f"{_t(intro, language)} {_t(hint, language)}"
 
 
 CATEGORY_SUMMARY_TEXT = {
@@ -494,6 +557,82 @@ CATEGORY_SERVICE_TEXT = {
     for key, values in CATEGORY_SUMMARY_TEXT.items()
 }
 
+SHORT_SUMMARY_TEXT = {
+    "hilfebus": {
+        "de": "Mobile Hilfe täglich 18-23 Uhr: Essen, Getränke, warme Kleidung und Vermittlung zu Notübernachtung. Sonntag 20-21 Uhr Suppenausgabe am Hauptbahnhof.",
+        "en": "Mobile help daily 6-11 pm: food, drinks, warm clothes, and referral to emergency accommodation. Sunday 8-9 pm soup at the main station.",
+        "pl": "Mobilna pomoc codziennie 18-23: jedzenie, napoje, ciepłe ubrania i skierowanie do noclegu awaryjnego. Niedziela 20-21 zupa przy dworcu.",
+        "ro": "Ajutor mobil zilnic 18-23: mâncare, băuturi, haine calde și îndrumare spre cazare de urgență. Duminică 20-21 supă la gară.",
+        "ru": "Mobilnaya pomoshch ezhednevno 18-23: eda, napitki, teplaya odezhda i napravlenie k srochnomu nochlegu. Voskresene 20-21 sup u vokzala.",
+    },
+    "safe-team-wohnen": {
+        "de": "Hilfe bei Wohnung, Geld, Konsum, Gesundheit und Behörden. Büro: Di 10-16 Uhr Demmeringstraße. Standzeiten: Di 17-18 Uhr Schwanenteich, Mi/Fr 10-16 Uhr Hauptbahnhof.",
+        "en": "Help with housing, money, substance use, health, and offices. Office: Tue 10-4 at Demmeringstraße. Outreach: Tue 5-6 at Schwanenteich, Wed/Fri 10-4 at the main station.",
+        "pl": "Pomoc z mieszkaniem, pieniędzmi, używaniem substancji, zdrowiem i urzędami. Biuro: wt. 10-16 Demmeringstraße. Punkty: wt. 17-18 Schwanenteich, śr./pt. 10-16 dworzec.",
+        "ro": "Ajutor cu locuința, banii, consumul, sănătatea și instituțiile. Birou: marți 10-16 Demmeringstraße. Puncte: marți 17-18 Schwanenteich, miercuri/vineri 10-16 gara principală.",
+        "ru": "Pomoshch s zhilyem, dengami, upotrebleniem, zdorovyem i uchrezhdeniyami. Ofis: vt 10-16 Demmeringstraße. Tochki: vt 17-18 Schwanenteich, sr/pt 10-16 vokzal.",
+    },
+    "diakonie-streetwork": {
+        "de": "Beratung, Information und warme Mahlzeiten/Getränke dienstags am Schwanenteich.",
+        "en": "Advice, information, and warm meals/drinks on Tuesdays at Schwanenteich.",
+        "pl": "Porada, informacja i ciepłe posiłki/napoje we wtorki przy Schwanenteich.",
+        "ro": "Consiliere, informații și mese/băuturi calde marțea la Schwanenteich.",
+        "ru": "Konsultatsiya, informatsiya i goryachaya eda/napitki po vtornikam u Schwanenteich.",
+    },
+    "safe-team-konsum": {
+        "de": "Beratung zu Drogen/Konsum mit warmen Getränken und kleinen Snacks an lokalen Standzeiten.",
+        "en": "Advice about drugs/substance use with warm drinks and small snacks at local stand times.",
+        "pl": "Porada o narkotykach/używaniu, ciepłe napoje i małe przekąski w lokalnych punktach.",
+        "ro": "Consiliere despre droguri/consum, băuturi calde și gustări mici la puncte locale.",
+        "ru": "Konsultatsiya po narkotikam/upotrebleniyu, teplye napitki i zakuski v lokalnykh tochkakh.",
+    },
+    "uvo-medical-outreach": {
+        "de": "Aufsuchende medizinische Hilfe mit Medibus an festen Standzeiten.",
+        "en": "Outreach medical help with a Medibus at fixed local stand times.",
+        "pl": "Mobilna pomoc medyczna z Medibusem w stałych miejscach i godzinach.",
+        "ro": "Ajutor medical mobil cu Medibus la ore și locuri fixe.",
+        "ru": "Vyezdnaya meditsinskaya pomoshch s Medibus v fiksirovannykh mestakh i vremya.",
+    },
+    "cabl-clearingstelle": {
+        "de": "Hilfe für Menschen ohne regulären Zugang zum Gesundheitssystem. Beratung und anonyme Behandlungsscheine.",
+        "en": "Help for people without regular access to the health system. Advice and anonymous treatment certificates.",
+        "pl": "Pomoc dla osób bez regularnego dostępu do systemu zdrowia. Porada i anonimowe zaświadczenia medyczne.",
+        "ro": "Ajutor pentru persoane fără acces regulat la sistemul medical. Consiliere și certificate medicale anonime.",
+        "ru": "Pomoshch lyudyam bez obychnogo dostupa k sisteme zdravookhraneniya. Konsultatsiya i anonimnye meditsinskie spravki.",
+    },
+    "kontaktcafe-alternative-i": {
+        "de": "Kontaktcafé mit Mittagessen, Dusche, Beratung, Konsummitteln/Spritzen, Kondomen und medizinischer Notversorgung.",
+        "en": "Contact café with lunch, shower, advice, safer-use supplies/syringes, condoms, and emergency medical help.",
+        "pl": "Kawiarnia kontaktowa z obiadem, prysznicem, poradą, materiałami safer use/strzykawkami, prezerwatywami i pomocą medyczną.",
+        "ro": "Cafenea de contact cu prânz, duș, consiliere, materiale safer-use/seringi, prezervative și ajutor medical de urgență.",
+        "ru": "Kontakt-kafe s obedom, dushem, konsultatsiey, safer-use materialami/shpritsami, prezervativami i meditsinskoy neotlozhnoy pomoshchyu.",
+    },
+    "alternative-i-notschlafstelle": {
+        "de": "Notschlafstelle mit Dusche, Waschen, Beratung, Safer Use, Konsummitteln/Spritzen und medizinischer Notversorgung.",
+        "en": "Emergency sleeping place with shower, washing, advice, safer-use supplies/syringes, and emergency medical help.",
+        "pl": "Nocleg awaryjny z prysznicem, praniem, poradą, materiałami safer use/strzykawkami i pomocą medyczną.",
+        "ro": "Loc de dormit de urgență cu duș, spălat, consiliere, materiale safer-use/seringi și ajutor medical.",
+        "ru": "Srochnyy nochleg s dushem, stirkoy, konsultatsiey, safer-use materialami/shpritsami i meditsinskoy pomoshchyu.",
+    },
+    "mobile-alternative": {
+        "de": "Mobile Drogenhilfe mit Beratung, Safer Use, Hygiene, Kondomen und Spritzentausch an lokalen Standzeiten.",
+        "en": "Mobile drug help with advice, safer use, hygiene, condoms, and syringe exchange at local stand times.",
+        "pl": "Mobilna pomoc narkotykowa: porada, safer use, higiena, prezerwatywy i wymiana strzykawek.",
+        "ro": "Ajutor mobil pentru droguri: consiliere, safer use, igienă, prezervative și schimb de seringi.",
+        "ru": "Mobilnaya narkopomoshch: konsultatsiya, safer use, gigiena, prezervativy i obmen shpritsov.",
+    },
+}
+
+TARGET_GROUP_TRANSLATIONS = [
+    (("adults", "erwachsene"), {"de": "Erwachsene", "en": "Adults", "pl": "Dorośli", "ro": "Adulți", "ru": "Vzroslye"}),
+    (("homeless", "obdach", "wohnungslos", "without housing", "without fixed housing"), {"de": "Menschen ohne Unterkunft", "en": "People without housing", "pl": "Osoby bez mieszkania", "ro": "Persoane fără locuință", "ru": "Lyudi bez zhilya"}),
+    (("housing problems", "wohnungsnot"), {"de": "Menschen in Wohnungsnot", "en": "People with housing problems", "pl": "Osoby w kryzysie mieszkaniowym", "ro": "Persoane cu probleme locative", "ru": "Lyudi s zhilishchnymi problemami"}),
+    (("addiction", "sucht"), {"de": "Menschen mit Fragen zu Sucht", "en": "People with addiction questions", "pl": "Osoby z pytaniami o uzależnienie", "ro": "Persoane cu întrebări despre dependență", "ru": "Lyudi s voprosami o zavisimosti"}),
+    (("drugs", "substance", "drogen", "konsum"), {"de": "Menschen, die Drogen konsumieren", "en": "People who use substances", "pl": "Osoby używające substancji", "ro": "Persoane care consumă substanțe", "ru": "Lyudi, upotreblyayushchie veshchestva"}),
+    (("women", "frauen"), {"de": "Frauen", "en": "Women", "pl": "Kobiety", "ro": "Femei", "ru": "Zhenshchiny"}),
+    (("men", "maenner", "männer"), {"de": "Männer", "en": "Men", "pl": "Mężczyźni", "ro": "Bărbați", "ru": "Muzhchiny"}),
+]
+
 SERVICE_TRANSLATIONS = [
     (("anonyme behandlung", "behandlungsschein", "gesundheitssystem"), {"de": "anonyme Behandlungsscheine", "en": "anonymous treatment certificates", "pl": "anonimowe zaświadczenia medyczne", "ro": "certificate medicale anonime", "ru": "anonimnye meditsinskie spravki"}),
     (("medizinische notversorgung", "medizinische versorgung", "aerztliche", "arzt", "medibus"), {"de": "medizinische Hilfe", "en": "medical help", "pl": "pomoc medyczna", "ro": "ajutor medical", "ru": "meditsinskaya pomoshch"}),
@@ -505,6 +644,7 @@ SERVICE_TRANSLATIONS = [
     (("dusche", "duschen", "waesche", "waschen", "hygiene"), {"de": "Duschen oder Waschen", "en": "showers or washing", "pl": "prysznic albo pranie", "ro": "duș sau spălat", "ru": "dush ili stirka"}),
     (("postadresse", "postadress"), {"de": "Postadresse", "en": "postal address", "pl": "adres pocztowy", "ro": "adresă poștală", "ru": "pochtovyy adres"}),
     (("behoerden", "aemter", "finanzen", "wohnung", "vermittlung"), {"de": "Hilfe mit Behörden und Vermittlung", "en": "help with offices and referrals", "pl": "pomoc w urzędach i przekierowanie", "ro": "ajutor cu instituții și îndrumare", "ru": "pomoshch s uchrezhdeniyami i napravlenie"}),
+    (("konsummittel", "konsumutensilien", "spritzen", "spritzentausch", "erstbesteck"), {"de": "Konsummittel und Spritzen", "en": "safer-use supplies and syringes", "pl": "materiały safer use i strzykawki", "ro": "materiale safer-use și seringi", "ru": "materialy safer use i shpritsy"}),
     (("safer use", "safer sex", "konsumutensilien", "kondom", "erstbesteck"), {"de": "Safer Use und Kondome", "en": "safer use supplies and condoms", "pl": "materiały safer use i prezerwatywy", "ro": "materiale safer use și prezervative", "ru": "materialy safer use i prezervativy"}),
 ]
 
@@ -561,24 +701,24 @@ SLEEP_TIME_CHECK = {
 
 def _card_for_offer(offer: V2Offer, language: Language, temporal_context=None, request_text: str = "") -> SymbolResultCard:
     primary_point = offer.map_points[0] if offer.map_points else None
-    opening_hours = primary_point.opening_hours if primary_point else offer.all_times[:4]
+    opening_hours = _card_opening_hours(offer)
     if offer.category == "sleep":
         hint = _sleep_availability_hint(opening_hours, language, temporal_context, request_text)
         if hint:
             opening_hours = [hint, *opening_hours]
     return SymbolResultCard(
         page_id=offer.offer_id,
-        title=offer.name,
+        title=display_name(offer),
         category=offer.category,
         service_type=offer.subcategory or offer.category,
         address=primary_point.address if primary_point else offer.address,
         location=offer.location,
         opening_hours=opening_hours,
-        phone=offer.phone,
+        phone=primary_phone(offer),
         email=offer.email,
         website=offer.website,
         description=_localized_offer_summary(offer, language),
-        card_summary=offer.card_summary,
+        card_summary=_localized_offer_summary(offer, language),
         action={
             "de": "Tippe auf den Ort für mehr Infos.",
             "en": "You can ask there for help.",
@@ -595,7 +735,53 @@ def _card_for_offer(offer: V2Offer, language: Language, temporal_context=None, r
     )
 
 
+def _card_opening_hours(offer: V2Offer) -> list[str]:
+    if offer.offer_id == "hilfebus":
+        return [
+            "Täglich: 18:00 - 23:00 Uhr mobiler Einsatz, stadtweit",
+            "Sonntag: 20:00 - 21:00 Uhr Hauptbahnhof Westseite mit Suppenausgabe",
+        ]
+    if offer.offer_id == "safe-team-wohnen":
+        return [
+            "Dienstag: 10:00 - 16:00 Uhr Büro Demmeringstraße",
+            "Dienstag: 17:00 - 18:00 Uhr Schwanenteich",
+            "Mittwoch und Freitag: 10:00 - 16:00 Uhr Hauptbahnhof",
+        ]
+    values: list[str] = []
+    for value in [*offer.opening_times, *offer.einsatzzeiten]:
+        _append_display_time(values, value)
+    for point in offer.map_points:
+        for value in point.opening_hours:
+            label = point.label.split(":", 1)[-1].strip() if point.label else ""
+            time_text = f"{value} {label}".strip() if label and label not in value else value
+            _append_display_time(values, time_text)
+    return values
+
+
+def _append_display_time(values: list[str], value: str | None) -> None:
+    if not value:
+        return
+    text = " ".join(str(value).split()).strip()
+    normalized = _normalize_for_translation(text)
+    if not text or text.endswith(":") or normalized.startswith("standzeiten:"):
+        return
+    if normalized.startswith("einsatzgebiete") or "instagramkanal" in normalized:
+        return
+    if len(text) > 180:
+        return
+    has_time_signal = bool(
+        re.search(r"\b\d{1,2}[:.]\d{2}\b", text)
+        or any(day in normalized for day in ("montag", "dienstag", "mittwoch", "donnerstag", "freitag", "samstag", "sonntag", "taeglich", "taglich"))
+        or any(term in normalized for term in ("ganzt", "terminvereinbarung", "flexibilitaet", "flexibilität"))
+    )
+    if has_time_signal and text not in values:
+        values.append(text)
+
+
 def _localized_offer_summary(offer: V2Offer, language: Language) -> str:
+    known = SHORT_SUMMARY_TEXT.get(offer.offer_id)
+    if known:
+        return _t(known, language)
     if language == Language.DE:
         return offer.card_summary or offer.short_description
     services = _localized_services(offer, language, limit=4)
@@ -613,12 +799,10 @@ def _localized_offer_summary(offer: V2Offer, language: Language) -> str:
     return _t(CATEGORY_SUMMARY_TEXT.get(offer.category, CATEGORY_SUMMARY_TEXT["other_source_listed"]), language)
 
 
-def _localized_services(offer: V2Offer, language: Language, *, limit: int = 6) -> list[str]:
-    if language == Language.DE:
-        return offer.services_provided
+def _localized_services(offer: V2Offer, language: Language, *, limit: int = 4) -> list[str]:
     result: list[str] = []
     for value in offer.services_provided:
-        translated = _translate_service_item(value, language)
+        translated = value if language == Language.DE else _translate_service_item(value, language)
         if translated and translated not in result:
             result.append(translated)
         if len(result) >= limit:
@@ -639,9 +823,26 @@ def _localized_target_groups(offer: V2Offer, language: Language) -> list[str]:
         return [_t({"de": "Menschen in Wohnungsnot / ohne Unterkunft", "en": "People in housing emergency / without accommodation", "pl": "Osoby w kryzysie mieszkaniowym / bez noclegu", "ro": "Persoane în urgență locativă / fără cazare", "ru": "Lyudi v zhilishchnom krizise / bez nochlega"}, language)]
     if offer.offer_id == "hilfebus":
         return [_t({"de": "Obdachlose Menschen / Menschen ohne Unterkunft", "en": "People without housing / without accommodation", "pl": "Osoby bez dachu nad głową / bez noclegu", "ro": "Persoane fără adăpost / fără cazare", "ru": "Lyudi bez doma / bez nochlega"}, language)]
+    result: list[str] = []
+    for value in offer.target_group:
+        translated = _translate_target_group(value, language)
+        if translated and translated not in result:
+            result.append(translated)
+        if len(result) >= 2:
+            break
+    return result
+
+
+def _translate_target_group(value: str, language: Language) -> str | None:
+    normalized = _normalize_for_translation(value)
+    if not normalized:
+        return None
+    for keywords, translations in TARGET_GROUP_TRANSLATIONS:
+        if any(keyword in normalized for keyword in keywords):
+            return _t(translations, language)
     if language == Language.DE:
-        return offer.target_group
-    return []
+        return value if not re.fullmatch(r"[a-z_ ,/-]+", value) else None
+    return None
 
 
 def _translate_service_item(value: str, language: Language) -> str | None:
@@ -699,6 +900,11 @@ def _t(values: dict[str, str], language: Language) -> str:
 def _sleep_availability_hint(opening_hours: list[str], language: Language, temporal_context, request_text: str = "") -> str | None:
     if not opening_hours:
         return _t(SLEEP_TIME_CHECK, language)
+    normalized_request = _normalize_for_translation(request_text)
+    asks_for_time = bool(
+        any(term in normalized_request for term in ("heute", "today", "tonight", "heute nacht", "jetzt"))
+        or _requested_weekday_name(request_text, language, temporal_context)
+    )
     day_name = _requested_weekday_name(request_text, language, temporal_context)
     start = _first_start_time(opening_hours)
     if any("ganzt" in _normalize_for_translation(value) for value in opening_hours):
@@ -725,7 +931,7 @@ def _sleep_availability_hint(opening_hours: list[str], language: Language, tempo
                 },
                 language,
             )
-        if request_text and any(term in _normalize_for_translation(request_text) for term in ("heute", "today", "tonight", "heute nacht", "jetzt")):
+        if request_text and any(term in normalized_request for term in ("heute", "today", "tonight", "heute nacht", "jetzt")):
             return _t(
                 {
                     "de": f"Heute ab {start} Uhr",
@@ -736,7 +942,7 @@ def _sleep_availability_hint(opening_hours: list[str], language: Language, tempo
                 },
                 language,
             )
-    return _t(SLEEP_TIME_CHECK, language)
+    return _t(SLEEP_TIME_CHECK, language) if asks_for_time else None
 
 
 def _requested_weekday_name(request_text: str, language: Language, temporal_context) -> str | None:

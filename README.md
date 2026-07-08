@@ -52,10 +52,22 @@ The clean v2 prototype runs as a separate FastAPI app so it can be rebuilt witho
 
 ```powershell
 cd code
-python -m app.v2 --port 8001 --rewrite-provider template --stt-provider mock --tts-provider mock
+python -m app.v2 --port 8001
 ```
 
 Open `http://127.0.0.1:8001/`.
+
+By default, the v2 app now starts with the real-provider profile:
+
+- LLM: `blablador`
+- STT: `faster_whisper`
+- TTS: `piper`
+
+If the Blablador API key, Whisper dependency/model, Piper binary, or Piper voice files are missing, v2 keeps running and reports the fallback/availability state in `/api/health`. For a deliberate degraded test run, pass explicit overrides:
+
+```powershell
+python -m app.v2 --port 8001 --rewrite-provider template --stt-provider mock --tts-provider mock
+```
 
 V2 uses `data/v2/curated_kb/offers.json`, a small reviewed KB derived from the Leipzig Schadensminimierung source page:
 
@@ -91,6 +103,7 @@ The app now starts with the local LLM answer path enabled by default:
 Environment variables:
 
 ```powershell
+$env:LENA_LLM_API_KEY="<your Blablador token for v2>"
 $env:LENA_STT_PROVIDER="faster_whisper"
 $env:LENA_REWRITE_PROVIDER="ollama"
 $env:LENA_TTS_PROVIDER="piper"
@@ -99,6 +112,63 @@ $env:LENA_SYSTEM_PROMPT_PATH="data/prompts/system_prompt.md"
 ```
 
 The editable Ollama system prompt lives in `data/prompts/system_prompt.md`.
+
+## Speech API Setup And Manual Checks
+
+Speech input and output are provider-based backend APIs shared by V1 and V2.
+
+Health check:
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/api/health
+Invoke-RestMethod http://127.0.0.1:8001/api/health
+```
+
+STT endpoint:
+
+```text
+POST /api/speech/transcribe
+```
+
+Mock STT is for tests and explicit debugging only. It does not pretend to recognize real audio. Without `debug_transcript`, mock STT returns a graceful error so the UI can offer typed input.
+
+Debug STT test:
+
+```powershell
+$tmp = New-TemporaryFile
+Set-Content -Path $tmp -Value "mock audio placeholder"
+Invoke-RestMethod `
+  -Method Post `
+  -Uri http://127.0.0.1:8001/api/speech/transcribe `
+  -Form @{ language = "de"; debug_transcript = "Ich brauche Medizin."; audio = Get-Item $tmp }
+Remove-Item $tmp
+```
+
+Real STT uses `faster-whisper` when configured:
+
+```powershell
+python -m app.v2 --port 8001 --stt-provider faster_whisper --tts-provider mock --rewrite-provider template
+```
+
+If `faster-whisper` or the local model cannot initialize, LENA falls back gracefully and reports the reason in `/api/health`.
+
+TTS endpoint:
+
+```text
+POST /api/speech/synthesize
+```
+
+Mock TTS returns `status=unavailable`. Piper is used when configured with a local binary and voice files. If backend TTS is unavailable, the frontend can fall back to browser `speechSynthesis`.
+
+Manual TTS test:
+
+```powershell
+Invoke-RestMethod `
+  -Method Post `
+  -Uri http://127.0.0.1:8001/api/speech/synthesize `
+  -ContentType "application/json" `
+  -Body '{"text":"Ich bin LENA.","language":"de"}'
+```
 
 ## Answer Style and Safety
 

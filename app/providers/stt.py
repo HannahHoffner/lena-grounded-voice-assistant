@@ -15,6 +15,7 @@ class BaseSttProvider(ABC):
     name = "base"
     configured_name = "base"
     ready = True
+    real_audio = True
     detail: str | None = None
     fallback_from: str | None = None
 
@@ -27,6 +28,7 @@ class BaseSttProvider(ABC):
             "configured_provider": self.configured_name,
             "active_provider": self.name,
             "ready": self.ready,
+            "real_audio": self.real_audio,
             "detail": self.detail,
             "fallback_from": self.fallback_from,
         }
@@ -34,6 +36,7 @@ class BaseSttProvider(ABC):
 
 class MockSttProvider(BaseSttProvider):
     name = "mock"
+    real_audio = False
 
     def __init__(self, *, configured_name: str = "mock", detail: str | None = None, fallback_from: str | None = None) -> None:
         self.configured_name = configured_name
@@ -44,14 +47,7 @@ class MockSttProvider(BaseSttProvider):
     async def transcribe(self, audio: UploadFile, language: Language | str, debug_transcript: str | None = None) -> str:
         if debug_transcript:
             return debug_transcript
-        normalized_language = _normalize_language(language)
-        return {
-            Language.DE: "Wo kann ich heute essen?",
-            Language.EN: "Where can I get food today?",
-            Language.PL: "Gdzie mogę dziś dostać jedzenie?",
-            Language.RO: "Unde pot primi mâncare astăzi?",
-            Language.RU: "Где я могу получить еду сегодня?",
-        }[normalized_language]
+        raise RuntimeError("Mock STT cannot transcribe real audio. Provide debug_transcript or configure faster_whisper.")
 
 
 class FasterWhisperProvider(BaseSttProvider):

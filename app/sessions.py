@@ -66,7 +66,27 @@ ATTRIBUTE_FOLLOWUP_TOKENS = {
     "wie",
     "wo",
 }
-TARGET_GROUP_FOLLOWUP_TOKENS = {"frau", "frauen", "familien", "families", "maenner", "mann", "men", "women"}
+TARGET_GROUP_FOLLOWUP_TOKENS = {
+    "frau",
+    "frauen",
+    "familien",
+    "families",
+    "maenner",
+    "männer",
+    "mann",
+    "men",
+    "women",
+    "divers",
+    "diverse",
+    "drogen",
+    "drogengebrauch",
+    "konsum",
+    "substance",
+    "drugs",
+    "unter",
+    "minderjaehrig",
+    "minderjährig",
+}
 TOPIC_TOKENS = {
     "beratung",
     "clothing",

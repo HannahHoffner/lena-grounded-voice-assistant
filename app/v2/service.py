@@ -13,6 +13,7 @@ from ..models import ConversationContext, KnowledgeAnswer, Language, RetrievedPa
 from ..retrieval import normalize_text, tokenize
 from .kb import V2KnowledgeBase
 from .models import V2Category, V2Intent, V2Offer
+from .presentation import compact_names, display_name, primary_phone
 
 
 SOURCE_PAGE_URL = "https://www.leipzig.de/leben-in-leipzig/gesundheit/suchthilfe/schadensminimierung"
@@ -62,8 +63,11 @@ class V2AnswerService:
         if self.uses_llm:
             intent = await self._llm_intent(intent, conversation_context, temporal_context) or intent
 
+        target = _detect_sleep_target(transcript)
+        if intent.primary_need != "sleep" and target != "unknown" and _context_was_sleep(conversation_context):
+            intent = intent.model_copy(update={"primary_need": "sleep"})
+
         if intent.primary_need == "sleep":
-            target = _detect_sleep_target(transcript)
             ranked = _retrieve_sleep(kb, intent, transcript, conversation_context, temporal_context, target)
             selected = [item.offer for item in ranked[:6]]
             answer_text = _sleep_answer(selected, intent, language, temporal_context, target)
@@ -88,7 +92,7 @@ class V2AnswerService:
 
         if self.uses_llm:
             candidate = await self._llm_answer(transcript, language, intent, selected, deterministic, conversation_context, temporal_context)
-            if candidate and not _unsupported_sensitive_fact(candidate, deterministic, selected):
+            if candidate and _is_simple_overview_answer(candidate) and not _unsupported_sensitive_fact(candidate, deterministic, selected):
                 answer_text = candidate
 
         return KnowledgeAnswer(
@@ -141,7 +145,11 @@ class V2AnswerService:
         prompt = "\n".join(
             [
                 "You are LENA v2. Answer a vulnerable user from the provided evidence only.",
-                "Use simple language, short sentences, and an informal tone for German with du, never Sie.",
+                "Use simple, complete sentences.",
+                "Use an informal tone for German with du, never Sie.",
+                "Give only an overview answer. Do not list addresses, phone numbers, opening hours, or several offers in one paragraph.",
+                "If the user needs details, tell them to tap a card or ask for more information.",
+                "Maximum 4 short sentences.",
                 "Do not invent phone numbers, times, addresses, costs, requirements, diagnoses, legal advice, or service availability.",
                 "Keep official names, organization names, addresses, and source titles unchanged.",
                 f"Selected language: {language.value}",
@@ -186,7 +194,20 @@ class V2AnswerService:
 def retrieve_for_symbols(kb: V2KnowledgeBase, category: V2Category, limit: int = 6) -> list[RankedOffer]:
     intent = V2Intent(selected_language=Language.DE, user_input=category, primary_need=category, confidence=0.9)
     ranked = _retrieve(kb, intent, category, None, None, limit=12)
-    if category in {"medical", "sleep", "general_advice"}:
+    if category == "medical":
+        allowed = {
+            "medical",
+            "addiction",
+        }
+        ranked = [
+            item
+            for item in ranked
+            if item.offer.category in allowed
+            or item.offer.offer_id in {"kontaktcafe-alternative-i", "alternative-i-notschlafstelle", "mobile-alternative"}
+        ]
+    elif category == "sleep":
+        ranked = [item for item in ranked if item.offer.category == category or item.offer.offer_id == "hilfebus"]
+    elif category == "general_advice":
         ranked = [item for item in ranked if item.offer.category == category]
     return ranked[:limit]
 
@@ -231,6 +252,27 @@ def _detect_sleep_target(transcript: str) -> SleepTarget:
     if tokens & {"mann", "maenner", "männer", "man", "men", "male"}:
         return "man"
     return "unknown"
+
+
+def _context_was_sleep(context: ConversationContext | None) -> bool:
+    if not context:
+        return False
+    topic = normalize_text(context.last_topic or "")
+    place = normalize_text(context.last_place_page_id or "")
+    summary = normalize_text(context.history_summary or "")
+    haystack = f" {topic} {place} {summary} "
+    return any(
+        term in haystack
+        for term in (
+            "sleep",
+            "uebernachtung",
+            "ubernachtung",
+            "notunterbringung",
+            "notschlaf",
+            "schlafplatz",
+            "unterkunft",
+        )
+    )
 
 
 def _retrieve(
@@ -312,6 +354,17 @@ def _retrieve(
                 score += 2.2
             if any(term in offer.offer_id for term in ("mobile-jugendarbeit", "streetwork-mitte", "streetwork-ost", "streetwork-nord")):
                 score -= 1.2
+        if intent.primary_need == "medical":
+            if offer.offer_id == "uvo-medical-outreach":
+                score += 4.0
+            elif offer.offer_id == "cabl-clearingstelle":
+                score += 3.2
+            elif offer.offer_id == "kontaktcafe-alternative-i":
+                score += 2.8
+            elif offer.offer_id == "mobile-alternative":
+                score += 2.4
+            elif offer.offer_id in {"alternative-i-notschlafstelle", "alternative-iii-notschlafstelle"}:
+                score += 1.8
         if score > 0:
             ranked.append(RankedOffer(offer=offer, score=round(score, 4)))
     ranked.sort(key=lambda item: (-item.score, _category_rank(item.offer, intent), item.offer.offer_id))
@@ -429,11 +482,11 @@ def _sleep_rank(offer: V2Offer, target: SleepTarget) -> int:
             "soziale-wohnhilfen-notunterbringung",
             "uebernachtungshaus-maenner-leutzsch",
             "hilfebus",
-            "uebernachtungshaus-frauen",
+            "aww-frauen-uebernachtungshaus",
             "alternative-i-notschlafstelle",
             "alternative-iii-notschlafstelle",
         ],
-        "woman": ["uebernachtungshaus-frauen", "soziale-wohnhilfen-notunterbringung", "hilfebus"],
+        "woman": ["aww-frauen-uebernachtungshaus", "soziale-wohnhilfen-notunterbringung", "hilfebus"],
         "man": ["uebernachtungshaus-maenner-leutzsch", "soziale-wohnhilfen-notunterbringung", "hilfebus"],
         "diverse": ["soziale-wohnhilfen-notunterbringung", "hilfebus"],
         "substance_use": ["alternative-i-notschlafstelle", "alternative-iii-notschlafstelle", "safe-team-konsum", "hilfebus", "soziale-wohnhilfen-notunterbringung"],
@@ -447,37 +500,38 @@ def _sleep_rank(offer: V2Offer, target: SleepTarget) -> int:
 
 def _sleep_answer(offers: list[V2Offer], intent: V2Intent, language: Language, temporal_context: TemporalContext | None, target: SleepTarget) -> str:
     day = _sleep_day_phrase(intent, language, temporal_context)
+    day_part = f" {day}" if day else ""
     hilfebus_phone = "0152 33661087"
     if target == "woman":
         return _t(
             {
-                "de": f"Du suchst einen Schlafplatz {day}. Für Frauen passt zuerst das Übernachtungshaus in der Scharnhorststraße. Die Notunterbringung kann auch weiterhelfen. Der Hilfebus hilft abends: {hilfebus_phone}.",
-                "en": f"You are looking for a place to sleep {day}. For women, start with the women’s overnight shelter in Scharnhorststraße. The emergency accommodation office can also help. The Hilfebus can help in the evening: {hilfebus_phone}.",
-                "pl": f"Szukasz miejsca do spania {day}. Dla kobiet najpierw pokażę noclegownię dla kobiet. Pomóc może też urząd ds. noclegu awaryjnego. Hilfebus pomaga wieczorem: {hilfebus_phone}.",
-                "ro": f"Cauți un loc de dormit {day}. Pentru femei, începe cu adăpostul pentru femei. Te poate ajuta și biroul pentru cazare de urgență. Hilfebus ajută seara: {hilfebus_phone}.",
-                "ru": f"Ty ishchesh mesto dlya sna {day}. Dlya zhenshchin snachala podhodit nochleg dlya zhenshchin. Otdel Notunterbringung tozhe mozhet pomoch. Hilfebus pomogaet vecherom: {hilfebus_phone}.",
+                "de": f"Du suchst einen Schlafplatz{day_part}. Für Frauen passt zuerst das Übernachtungshaus in der Scharnhorststraße. Die Notunterbringung kann auch weiterhelfen. Der Hilfebus hilft abends: {hilfebus_phone}.",
+                "en": f"You are looking for a place to sleep{day_part}. For women, start with the women’s overnight shelter in Scharnhorststraße. The emergency accommodation office can also help. The Hilfebus can help in the evening: {hilfebus_phone}.",
+                "pl": f"Szukasz miejsca do spania{day_part}. Dla kobiet najpierw pokażę noclegownię dla kobiet. Pomóc może też urząd ds. noclegu awaryjnego. Hilfebus pomaga wieczorem: {hilfebus_phone}.",
+                "ro": f"Cauți un loc de dormit{day_part}. Pentru femei, începe cu adăpostul pentru femei. Te poate ajuta și biroul pentru cazare de urgență. Hilfebus ajută seara: {hilfebus_phone}.",
+                "ru": f"Ty ishchesh mesto dlya sna{day_part}. Dlya zhenshchin snachala podhodit nochleg dlya zhenshchin. Otdel Notunterbringung tozhe mozhet pomoch. Hilfebus pomogaet vecherom: {hilfebus_phone}.",
             },
             language,
         )
     if target == "man":
         return _t(
             {
-                "de": f"Du suchst einen Schlafplatz {day}. Wende dich zuerst an das Übernachtungshaus Rücke in der Rückmarsdorfer Straße. Telefon: 0341 1234504. Der Hilfebus hilft abends: {hilfebus_phone}.",
-                "en": f"You are looking for a place to sleep {day}. First contact Übernachtungshaus Rücke in Rückmarsdorfer Straße. Phone: 0341 1234504. The Hilfebus can help in the evening: {hilfebus_phone}.",
-                "pl": f"Szukasz miejsca do spania {day}. Najpierw skontaktuj się z Übernachtungshaus Rücke przy Rückmarsdorfer Straße. Telefon: 0341 1234504. Hilfebus pomaga wieczorem: {hilfebus_phone}.",
-                "ro": f"Cauți un loc de dormit {day}. Contactează mai întâi Übernachtungshaus Rücke pe Rückmarsdorfer Straße. Telefon: 0341 1234504. Hilfebus ajută seara: {hilfebus_phone}.",
-                "ru": f"Ty ishchesh mesto dlya sna {day}. Snachala obratis v Übernachtungshaus Rücke na Rückmarsdorfer Straße. Telefon: 0341 1234504. Hilfebus pomogaet vecherom: {hilfebus_phone}.",
+                "de": f"Du suchst einen Schlafplatz{day_part}. Wende dich zuerst an das Übernachtungshaus Rücke in der Rückmarsdorfer Straße. Telefon: 0341 1234504. Der Hilfebus hilft abends: {hilfebus_phone}.",
+                "en": f"You are looking for a place to sleep{day_part}. First contact Übernachtungshaus Rücke in Rückmarsdorfer Straße. Phone: 0341 1234504. The Hilfebus can help in the evening: {hilfebus_phone}.",
+                "pl": f"Szukasz miejsca do spania{day_part}. Najpierw skontaktuj się z Übernachtungshaus Rücke przy Rückmarsdorfer Straße. Telefon: 0341 1234504. Hilfebus pomaga wieczorem: {hilfebus_phone}.",
+                "ro": f"Cauți un loc de dormit{day_part}. Contactează mai întâi Übernachtungshaus Rücke pe Rückmarsdorfer Straße. Telefon: 0341 1234504. Hilfebus ajută seara: {hilfebus_phone}.",
+                "ru": f"Ty ishchesh mesto dlya sna{day_part}. Snachala obratis v Übernachtungshaus Rücke na Rückmarsdorfer Straße. Telefon: 0341 1234504. Hilfebus pomogaet vecherom: {hilfebus_phone}.",
             },
             language,
         )
     if target == "substance_use":
         return _t(
             {
-                "de": f"Du suchst einen Schlafplatz {day}. Bei Drogengebrauch passen zuerst Alternative I und Alternative III. Der Hilfebus kann abends auch helfen: {hilfebus_phone}.",
-                "en": f"You are looking for a place to sleep {day}. For substance use, start with Alternative I and Alternative III. The Hilfebus can also help in the evening: {hilfebus_phone}.",
-                "pl": f"Szukasz miejsca do spania {day}. Przy używaniu substancji najpierw pasują Alternative I i Alternative III. Hilfebus może też pomóc wieczorem: {hilfebus_phone}.",
-                "ro": f"Cauți un loc de dormit {day}. Pentru consum de substanțe, începe cu Alternative I și Alternative III. Hilfebus poate ajuta seara: {hilfebus_phone}.",
-                "ru": f"Ty ishchesh mesto dlya sna {day}. Pri upotreblenii veshchestv snachala podhodyat Alternative I i Alternative III. Hilfebus tozhe mozhet pomoch vecherom: {hilfebus_phone}.",
+                "de": f"Du suchst einen Schlafplatz{day_part}. Bei Drogengebrauch passen zuerst Alternative I und Alternative III. Der Hilfebus kann abends auch helfen: {hilfebus_phone}.",
+                "en": f"You are looking for a place to sleep{day_part}. For substance use, start with Alternative I and Alternative III. The Hilfebus can also help in the evening: {hilfebus_phone}.",
+                "pl": f"Szukasz miejsca do spania{day_part}. Przy używaniu substancji najpierw pasują Alternative I i Alternative III. Hilfebus może też pomóc wieczorem: {hilfebus_phone}.",
+                "ro": f"Cauți un loc de dormit{day_part}. Pentru consum de substanțe, începe cu Alternative I și Alternative III. Hilfebus poate ajuta seara: {hilfebus_phone}.",
+                "ru": f"Ty ishchesh mesto dlya sna{day_part}. Pri upotreblenii veshchestv snachala podhodyat Alternative I i Alternative III. Hilfebus tozhe mozhet pomoch vecherom: {hilfebus_phone}.",
             },
             language,
         )
@@ -495,11 +549,11 @@ def _sleep_answer(offers: list[V2Offer], intent: V2Intent, language: Language, t
     question = _t(SLEEP_TARGET_QUESTION, language)
     return _t(
         {
-            "de": f"Du suchst einen Schlafplatz {day}. Wende dich zuerst an die Notunterbringung Rückmarsdorfer Straße. Dort wird dir weitergeholfen. Telefon: 0341 1234504. Der Hilfebus kann abends auch helfen: {hilfebus_phone}. {question}",
-            "en": f"You are looking for a place to sleep {day}. First contact the emergency accommodation office at Rückmarsdorfer Straße. They can help you. Phone: 0341 1234504. The Hilfebus can also help in the evening: {hilfebus_phone}. {question}",
-            "pl": f"Szukasz miejsca do spania {day}. Najpierw skontaktuj się z pomocą przy Rückmarsdorfer Straße. Tam powiedzą ci, co dalej. Telefon: 0341 1234504. Hilfebus może też pomóc wieczorem: {hilfebus_phone}. {question}",
-            "ro": f"Cauți un loc de dormit {day}. Contactează mai întâi ajutorul de la Rückmarsdorfer Straße. Acolo primești sprijin. Telefon: 0341 1234504. Hilfebus poate ajuta seara: {hilfebus_phone}. {question}",
-            "ru": f"Ty ishchesh mesto dlya sna {day}. Snachala obratis v pomoshch na Rückmarsdorfer Straße. Tam tebe pomogut. Telefon: 0341 1234504. Hilfebus tozhe mozhet pomoch vecherom: {hilfebus_phone}. {question}",
+            "de": f"Du suchst einen Schlafplatz{day_part}. Wende dich zuerst an die Notunterbringung Rückmarsdorfer Straße. Dort wird dir weitergeholfen. Telefon: 0341 1234504. Der Hilfebus kann abends auch helfen: {hilfebus_phone}. {question}",
+            "en": f"You are looking for a place to sleep{day_part}. First contact the emergency accommodation office at Rückmarsdorfer Straße. They can help you. Phone: 0341 1234504. The Hilfebus can also help in the evening: {hilfebus_phone}. {question}",
+            "pl": f"Szukasz miejsca do spania{day_part}. Najpierw skontaktuj się z pomocą przy Rückmarsdorfer Straße. Tam powiedzą ci, co dalej. Telefon: 0341 1234504. Hilfebus może też pomóc wieczorem: {hilfebus_phone}. {question}",
+            "ro": f"Cauți un loc de dormit{day_part}. Contactează mai întâi ajutorul de la Rückmarsdorfer Straße. Acolo primești sprijin. Telefon: 0341 1234504. Hilfebus poate ajuta seara: {hilfebus_phone}. {question}",
+            "ru": f"Ty ishchesh mesto dlya sna{day_part}. Snachala obratis v pomoshch na Rückmarsdorfer Straße. Tam tebe pomogut. Telefon: 0341 1234504. Hilfebus tozhe mozhet pomoch vecherom: {hilfebus_phone}. {question}",
         },
         language,
     )
@@ -538,27 +592,18 @@ def _sleep_day_phrase(intent: V2Intent, language: Language, temporal_context: Te
 
 
 def _deterministic_answer(offers: list[V2Offer], intent: V2Intent, language: Language, temporal_context: TemporalContext | None) -> str:
-    if intent.primary_need == "sleep":
-        prefix = _t(SLEEP_PREFIX, language)
-    elif intent.primary_need == "medical":
-        prefix = _t(MEDICAL_PREFIX, language)
-    elif intent.primary_need == "food":
-        prefix = _t(FOOD_PREFIX, language)
-    elif intent.primary_need == "addiction":
-        prefix = _t(ADDICTION_PREFIX, language)
-    elif intent.primary_need == "hygiene":
-        prefix = _t(HYGIENE_PREFIX, language)
-    else:
-        prefix = _t(ADVICE_PREFIX, language)
-    parts = [prefix]
-    for offer in offers[:2]:
-        parts.append(_offer_sentence(offer, language, temporal_context, intent))
-    return " ".join(part for part in parts if part)
+    del temporal_context
+    names = compact_names(offers)
+    templates = CATEGORY_RESULT_TEXT.get(intent.primary_need, CATEGORY_RESULT_TEXT["general_advice"])
+    text = _t(templates, language)
+    if not names:
+        return text
+    return f"{text} {_t(CARD_HINT_TEXT, language)}"
 
 
 def _offer_sentence(offer: V2Offer, language: Language, temporal_context: TemporalContext | None, intent: V2Intent) -> str:
     time = _best_time(offer, temporal_context)
-    details: list[str] = [offer.name]
+    details: list[str] = [display_name(offer)]
     if offer.address:
         details.append(_t({"de": f"Adresse: {offer.address}.", "en": f"Address: {offer.address}.", "pl": f"Adres: {offer.address}.", "ro": f"Adresa: {offer.address}.", "ru": f"Adres: {offer.address}."}, language))
     elif offer.location:
@@ -569,10 +614,9 @@ def _offer_sentence(offer: V2Offer, language: Language, temporal_context: Tempor
         timing = _availability_sentence(_availability_for_offer(offer, temporal_context, intent), language)
         if timing:
             details.append(timing)
-    if offer.phone:
-        phone_text = f"{offer.phone}"
-        if offer.phone_reachable_when:
-            phone_text = f"{phone_text} ({offer.phone_reachable_when})"
+    phone = primary_phone(offer)
+    if phone:
+        phone_text = f"{phone}"
         details.append(_t({"de": f"Telefon: {phone_text}.", "en": f"Phone: {phone_text}.", "pl": f"Telefon: {phone_text}.", "ro": f"Telefon: {phone_text}.", "ru": f"Telefon: {phone_text}."}, language))
     if offer.requirements:
         details.append(_t({"de": f"Wichtig: {offer.requirements}.", "en": f"Important: {offer.requirements}.", "pl": f"Wazne: {offer.requirements}.", "ro": f"Important: {offer.requirements}.", "ru": f"Vazhno: {offer.requirements}."}, language))
@@ -753,7 +797,22 @@ def _category_matches(offer: V2Offer, category: str) -> bool:
     if category == "general_advice":
         return offer.category in {"general_advice", "addiction"} or any(term in haystack for term in ("beratung", "unterstuetzung", "vermittlung"))
     if category == "medical":
-        return any(term in haystack for term in ("medizin", "arzt", "aerzt", "gesundheit", "behandlung", "sprechstunde"))
+        return any(
+            term in haystack
+            for term in (
+                "medizin",
+                "arzt",
+                "aerzt",
+                "gesundheit",
+                "behandlung",
+                "sprechstunde",
+                "safer use",
+                "konsummittel",
+                "spritzen",
+                "notversorgung",
+                "medibus",
+            )
+        )
     return False
 
 
@@ -770,8 +829,19 @@ def _category_rank(offer: V2Offer, intent: V2Intent) -> int:
             return 0
         if "alternative" in offer.offer_id:
             return 1
-    if intent.primary_need == "medical" and offer.category == "medical":
-        return 0
+    if intent.primary_need == "medical":
+        order = {
+            "uvo-medical-outreach": 0,
+            "cabl-clearingstelle": 1,
+            "kontaktcafe-alternative-i": 2,
+            "mobile-alternative": 3,
+            "alternative-i-notschlafstelle": 4,
+            "alternative-iii-notschlafstelle": 5,
+        }
+        if offer.offer_id in order:
+            return order[offer.offer_id]
+        if offer.category == "medical":
+            return 2
     if intent.primary_need == "addiction" and offer.category == "addiction":
         return 0
     if intent.primary_need == "general_advice":
@@ -887,6 +957,18 @@ def _unsupported_sensitive_fact(answer: str, deterministic: str, offers: list[V2
     return False
 
 
+def _is_simple_overview_answer(answer: str) -> bool:
+    text = answer.strip()
+    if len(text) > 360:
+        return False
+    if re.search(r"\b(?:telefon|phone|adresse|address|zeit|time|öffnungszeit|opening)\s*:", text, flags=re.IGNORECASE):
+        return False
+    if re.search(r"\b(?:\+49\s*)?(?:0\d{2,5}[\s/-]?\d{3,}|\d{3,}[\s/-]\d{3,})\b", text):
+        return False
+    sentence_count = len([part for part in re.split(r"[.!?]+", text) if part.strip()])
+    return sentence_count <= 4
+
+
 def _clean_text(text: str | None) -> str:
     return " ".join((text or "").split()).strip()
 
@@ -960,6 +1042,57 @@ HYGIENE_PREFIX = {
     "pl": "W sprawie prysznica, prania albo higieny te miejsca moga pomoc:",
     "ro": "Pentru dus, spalat sau igiena, aceste locuri pot ajuta:",
     "ru": "Dlya dusha, stirki ili gigieny eti mesta mogut pomoch:",
+}
+CATEGORY_RESULT_TEXT = {
+    "food": {
+        "de": "Ich habe Orte für Essen oder Getränke gefunden.",
+        "en": "I found places for food or drinks.",
+        "pl": "Znalazłam miejsca z jedzeniem albo napojami.",
+        "ro": "Am găsit locuri pentru mâncare sau băuturi.",
+        "ru": "Ya nashla mesta s edoy ili napitkami.",
+    },
+    "sleep": {
+        "de": "Ich habe Orte für Schlafen oder Notunterkunft gefunden.",
+        "en": "I found places for sleep or emergency accommodation.",
+        "pl": "Znalazłam miejsca do spania albo noclegu awaryjnego.",
+        "ro": "Am găsit locuri pentru dormit sau cazare de urgență.",
+        "ru": "Ya nashla mesta dlya nochlega ili srochnogo razmeshcheniya.",
+    },
+    "medical": {
+        "de": "Ich habe medizinische Hilfe gefunden.",
+        "en": "I found medical help.",
+        "pl": "Znalazłam pomoc medyczną.",
+        "ro": "Am găsit ajutor medical.",
+        "ru": "Ya nashla meditsinskuyu pomoshch.",
+    },
+    "general_advice": {
+        "de": "Ich habe Beratungsstellen gefunden.",
+        "en": "I found advice services.",
+        "pl": "Znalazłam miejsca z poradą.",
+        "ro": "Am găsit servicii de consiliere.",
+        "ru": "Ya nashla mesta dlya konsultatsii.",
+    },
+    "addiction": {
+        "de": "Ich habe Hilfe zu Drogen, Konsum oder Sucht gefunden.",
+        "en": "I found help for drugs, substance use, or addiction.",
+        "pl": "Znalazłam pomoc przy narkotykach, używaniu albo uzależnieniu.",
+        "ro": "Am găsit ajutor pentru droguri, consum sau dependență.",
+        "ru": "Ya nashla pomoshch po narkotikam, upotrebleniyu ili zavisimosti.",
+    },
+    "hygiene": {
+        "de": "Ich habe Orte für Duschen, Waschen oder Hygiene gefunden.",
+        "en": "I found places for showers, washing, or hygiene.",
+        "pl": "Znalazłam miejsca z prysznicem, praniem albo higieną.",
+        "ro": "Am găsit locuri pentru duș, spălat sau igienă.",
+        "ru": "Ya nashla mesta dlya dusha, stirki ili gigieny.",
+    },
+}
+CARD_HINT_TEXT = {
+    "de": "Brauchst du mehr Informationen? Tippe auf eine Karte. Dort siehst du Ort, Zeit und Telefon.",
+    "en": "Do you need more information? Tap a card. It shows place, time, and phone.",
+    "pl": "Czy potrzebujesz więcej informacji? Naciśnij kartę. Tam jest miejsce, czas i telefon.",
+    "ro": "Ai nevoie de mai multe informații? Apasă pe un card. Acolo vezi locul, ora și telefonul.",
+    "ru": "Nuzhno bolshe informatsii? Nazhmi na kartochku. Tam est mesto, vremya i telefon.",
 }
 SLEEP_TARGET_QUESTION = {
     "de": "Für wen suchst du einen Schlafplatz?",

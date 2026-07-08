@@ -47,6 +47,7 @@ class BaseTtsProvider(ABC):
     name = "base"
     configured_name = "base"
     ready = True
+    audio_output = True
     detail: str | None = None
     fallback_from: str | None = None
 
@@ -59,6 +60,7 @@ class BaseTtsProvider(ABC):
             "configured_provider": self.configured_name,
             "active_provider": self.name,
             "ready": self.ready,
+            "audio_output": self.audio_output,
             "detail": self.detail,
             "fallback_from": self.fallback_from,
         }
@@ -66,6 +68,7 @@ class BaseTtsProvider(ABC):
 
 class MockTtsProvider(BaseTtsProvider):
     name = "mock"
+    audio_output = False
 
     def __init__(self, *, configured_name: str = "mock", detail: str | None = None, fallback_from: str | None = None) -> None:
         self.configured_name = configured_name
@@ -151,51 +154,6 @@ class PiperTtsProvider(BaseTtsProvider):
             config_path=default_voice.config_path,
             fallback=True,
         )
-
-
-def normalize_tts_text(text: str, language: Language) -> str:
-    normalized = " ".join((text or "").split()).strip()
-    if not normalized:
-        return normalized
-
-    replacements = [
-        ("AWW", "Advent Wohlfahrtswerk" if language == Language.DE else "Advent Welfare Association"),
-        ("DRK", "Deutsches Rotes Kreuz" if language == Language.DE else "German Red Cross"),
-        ("SZL", "Suchtzentrum Leipzig" if language == Language.DE else "Leipzig addiction support center"),
-        ("e.V.", "eingetragener Verein" if language == Language.DE else "registered association"),
-        ("gGmbH", "gemeinnuetzige Gesellschaft mit beschraenkter Haftung" if language == Language.DE else "non profit limited company"),
-        ("z. B.", "zum Beispiel" if language == Language.DE else "for example"),
-        ("u. a.", "unter anderem" if language == Language.DE else "among other things"),
-        ("Mo-Fr", "Montag bis Freitag" if language == Language.DE else "Monday to Friday"),
-        ("Mo – Fr", "Montag bis Freitag" if language == Language.DE else "Monday to Friday"),
-        ("Mo-So", "Montag bis Sonntag" if language == Language.DE else "Monday to Sunday"),
-        ("Sa, So, Feiertage", "Samstag, Sonntag und Feiertage" if language == Language.DE else "Saturday, Sunday and public holidays"),
-        ("Sa, So, Feiertag", "Samstag, Sonntag und Feiertage" if language == Language.DE else "Saturday, Sunday and public holidays"),
-        ("Str.", "Strasse" if language == Language.DE else "Street"),
-        ("str.", "strasse" if language == Language.DE else "street"),
-        ("Nr.", "Nummer" if language == Language.DE else "number"),
-        ("ca.", "circa"),
-        (";", "."),
-    ]
-    for source, target in replacements:
-        normalized = normalized.replace(source, target)
-
-    normalized = re.sub(
-        r"(\d{1,2}(?::\d{2})?)\s*[–-]\s*(\d{1,2}(?::\d{2})?)\s*Uhr",
-        r"\1 bis \2 Uhr",
-        normalized,
-    )
-    normalized = re.sub(r"\bDi\b", "Dienstag" if language == Language.DE else "Tuesday", normalized)
-    normalized = re.sub(r"\bDo\b", "Donnerstag" if language == Language.DE else "Thursday", normalized)
-    normalized = re.sub(r"\bMi\b", "Mittwoch" if language == Language.DE else "Wednesday", normalized)
-    normalized = re.sub(r"\bFr\b", "Freitag" if language == Language.DE else "Friday", normalized)
-    normalized = re.sub(r"\bSa\b", "Samstag" if language == Language.DE else "Saturday", normalized)
-    normalized = re.sub(r"\bSo\b", "Sonntag" if language == Language.DE else "Sunday", normalized)
-    normalized = re.sub(r"\bMo\b", "Montag" if language == Language.DE else "Monday", normalized)
-    normalized = normalized.replace("–", " bis ").replace("/", " oder ").replace("&", " und ")
-    normalized = normalized.replace("-", " - ")
-    normalized = re.sub(r"\s{2,}", " ", normalized).strip()
-    return normalized
 
 
 def normalize_for_tts(text: str, language: Language, *, normalize_umlauts: bool = False) -> str:

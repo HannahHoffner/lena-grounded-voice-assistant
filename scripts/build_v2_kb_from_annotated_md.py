@@ -265,6 +265,7 @@ def apply_section(offer: dict[str, Any], section: Section, source_hash: str | No
             "karten_kurzbeschreibung": card_summary,
         }
     )
+    apply_known_fact_annotations(offer)
     offer["review_status"] = "reviewed"
     offer["reviewer"] = REVIEWER
     offer["reviewed_at"] = REVIEWED_AT
@@ -278,13 +279,22 @@ def apply_section(offer: dict[str, Any], section: Section, source_hash: str | No
     set_evidence(offer, [item for item in evidence_items if item["evidence_text"]])
 
 
+def apply_known_fact_annotations(offer: dict[str, Any]) -> None:
+    if offer.get("offer_id") == "uebernachtungshaus-maenner-leutzsch":
+        facts = offer.setdefault("facts", {})
+        facts["oeffnungszeiten"] = offer.get("opening_times", [])
+        facts["telefon"] = ["0341 1234504"]
+        facts["zielgruppe"] = ["volljährig, männlich und wohnungslos"]
+        facts["karten_kurzbeschreibung"] = offer.get("card_summary")
+
+
 def apply_known_source_annotations(offer: dict[str, Any]) -> None:
     offer_id = offer.get("offer_id")
     if offer_id == "safe-team-wohnen":
         offer["card_summary"] = (
-            "SAFE Team Wohnen: Beratung und warmes Essen/Getränke Dienstag 17:00-18:00 Uhr "
-            "am Schwanenteich (Goethestraße). Außerdem Hilfe bei Wohnen, Finanzen, Sucht, "
-            "Gesundheit und Behörden."
+            "SAFE Team Wohnen: Hilfe bei Wohnungs- und Obdachlosigkeit, Geld, Konsum, Gesundheit und Behörden. "
+            "Bürozeit Dienstag 10:00-16:00 Uhr Demmeringstraße 32. "
+            "Standzeiten: Dienstag 17:00-18:00 Uhr Schwanenteich, Mittwoch und Freitag 10:00-16:00 Uhr Hauptbahnhof."
         )
         offer["services_provided"] = unique(
             [
@@ -311,6 +321,15 @@ def apply_known_source_annotations(offer: dict[str, Any]) -> None:
             ]
         )
         offer["map_points"] = [
+            {
+                "point_id": "buero-demmeringstrasse",
+                "label": "SAFE Team Wohnen: Büro Demmeringstraße",
+                "address": "Demmeringstraße 32, 04177 Leipzig",
+                "latitude": 51.3379213,
+                "longitude": 12.3323055,
+                "opening_hours": ["Dienstag: 10:00 - 16:00 Uhr (Bürozeit)"],
+                "note": "Bürozeit. Beratung zu Wohnen, Geld, Konsum, Gesundheit und Behörden.",
+            },
             {
                 "point_id": "schwanenteich",
                 "label": "SAFE Team Wohnen: Schwanenteich",
@@ -374,8 +393,26 @@ def apply_known_source_annotations(offer: dict[str, Any]) -> None:
                 "note": "Warme Getränke, kleine Snacks und Gesprächsangebot.",
             }
         ]
+    elif offer_id == "uebernachtungshaus-maenner-leutzsch":
+        flyer_url = "https://static.leipzig.de/fileadmin/mediendatenbank/leipzig-de/Stadt/02.5_Dez5_Jugend_Soziales_Gesundheit_Schule/50_Sozialamt/Wohnungsnotfallhilfe_und_Notunterbringung/Flyer_%c3%9cbernachtungshaus_R%c3%bccke.pdf"
+        offer["name"] = "Übernachtungshaus Rücke"
+        offer["address"] = "Rückmarsdorfer Straße 5-7, 04179 Leipzig"
+        offer["phone"] = "0341 1234504"
+        offer["target_group"] = ["homeless", "men", "adults"]
+        offer["requirements"] = "Volljährig, männlich und wohnungslos."
+        offer["opening_times"] = [
+            "Montag - Freitag: 16:00 - 08:00 Uhr",
+            "Samstag, Sonntag und Feiertag: ganztägig",
+        ]
+        offer["card_summary"] = (
+            "Übernachtungshaus Rücke für volljährige wohnungslose Männer. "
+            "Adresse Rückmarsdorfer Straße 5-7. Geöffnet Montag bis Freitag 16:00-08:00 Uhr, "
+            "Wochenende und Feiertag ganztägig."
+        )
+        offer["retrieval_keywords"] = unique([*offer.get("retrieval_keywords", []), "rücke", "ruecke", "rückmarsdorfer straße 5-7", "volljährige wohnungslose männer"])
+        offer["detail_source_urls"] = unique([*offer.get("detail_source_urls", []), flyer_url])
     elif offer_id == "hilfebus":
-        offer["phone"] = "0152 33661087 (nur zu Einsatzzeiten des Busses); 0175 6758041 (Herr Tino Neufert / Leitung)"
+        offer["phone"] = "0152 33661087 (nur zu Einsatzzeiten des Busses)"
         offer["phone_reachable_when"] = "Nur zu Einsatzzeiten des Hilfebusses."
         offer["map_points"] = [
             {
