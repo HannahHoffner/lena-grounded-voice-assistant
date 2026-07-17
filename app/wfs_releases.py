@@ -299,16 +299,25 @@ def verify_release(settings: Settings, release_id: str, *, pending: bool = False
         raise WfsReleaseError("Invalid release ID")
     paths = WfsReleasePaths.from_settings(settings)
     root = paths.pending if pending else paths.releases
-    release = verify_release_path(root / release_id, expected_id=release_id)
-    if release.manifest.base_release_id:
-        base = verify_release_path(
-            WfsReleasePaths.from_settings(settings).releases / release.manifest.base_release_id,
-            expected_id=release.manifest.base_release_id,
+    try:
+        release = verify_release_path(root / release_id, expected_id=release_id)
+        if release.manifest.base_release_id:
+            base = verify_release_path(
+                paths.releases / release.manifest.base_release_id,
+                expected_id=release.manifest.base_release_id,
+            )
+            diff = json.loads((release.path / "diff.json").read_text(encoding="utf-8"))
+            if diff.get("previous_hash") != base.manifest.content_hash:
+                raise WfsReleaseError("Diff does not describe its base release")
+        return release
+    except Exception as exc:
+        LOGGER.warning(
+            "wfs.release.validation_failed",
+            extra={"release_id": release_id, "error_type": type(exc).__name__},
         )
-        diff = json.loads((release.path / "diff.json").read_text(encoding="utf-8"))
-        if diff.get("previous_hash") != base.manifest.content_hash:
-            raise WfsReleaseError("Diff does not describe its base release")
-    return release
+        if isinstance(exc, WfsReleaseError):
+            raise
+        raise WfsReleaseError("Release validation failed") from exc
 
 
 def _activate(paths: WfsReleasePaths, release: VerifiedRelease) -> None:
@@ -322,6 +331,8 @@ def _activate(paths: WfsReleasePaths, release: VerifiedRelease) -> None:
 
 def promote_release(settings: Settings, release_id: str) -> VerifiedRelease:
     """Aktiviert exakt einen vorhandenen Pending-Release ohne Netzwerkzugriff."""
+    if not valid_release_id(release_id):
+        raise WfsReleaseError("Invalid release ID")
     paths = WfsReleasePaths.from_settings(settings)
     with _RELEASE_LOCK:
         LOGGER.info("wfs.promotion.started", extra={"release_id": release_id})
