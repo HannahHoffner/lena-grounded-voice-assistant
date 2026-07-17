@@ -19,7 +19,7 @@ from .i18n import (
     translation_store_path,
     write_json,
 )
-from .kb_loader import load_knowledge_base
+from .kb_loader import load_active_knowledge_base
 from .models import Language, OfferRecord
 
 
@@ -210,7 +210,7 @@ async def update_translations(
     dry_run: bool,
 ) -> dict[str, Any]:
     """Aktualisiert erforderliche Store-Einträge, optional ohne Schreibzugriff."""
-    kb = load_knowledge_base(settings.kb_path)
+    kb = load_active_knowledge_base(settings)
     store = mark_translation_state_for_offers(
         kb.offers,
         settings,

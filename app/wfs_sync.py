@@ -6,7 +6,10 @@ import argparse
 import asyncio
 import hashlib
 import json
+import logging
+import os
 import re
+import tempfile
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
@@ -16,11 +19,21 @@ from typing import Any
 import httpx
 
 from .config import Settings, load_settings
-from .i18n import mark_translation_state_for_offers
 from .models import OfferRecord
+from .wfs_releases import (
+    WfsReleaseError,
+    WfsReleasePaths,
+    create_pending_release,
+    list_releases,
+    load_active_release,
+    promote_release,
+    rollback_release,
+    verify_release,
+)
 
 
 FEATURE_TYPE = "OpenData:wohnungslosenhilfe"
+LOGGER = logging.getLogger(__name__)
 EXPECTED_FIELDS = {
     "lnr", "name", "kat", "adr", "str", "hnr", "hnrz", "plz", "ort", "ot", "sbz",
     "oeffn", "angebot", "ap1", "ap2", "ap3", "ap4", "ap5", "tel1", "tel2", "tel3",
@@ -52,35 +65,6 @@ class WfsTimeoutError(WfsSyncError):
 
 
 @dataclass(frozen=True)
-class WfsPaths:
-    canonical: Path
-    current_raw: Path
-    snapshots: Path
-    last_report: Path
-    runtime: Path
-    pending_raw: Path
-    pending_canonical: Path
-    pending_report: Path
-    state: Path
-
-    @classmethod
-    def from_settings(cls, settings: Settings) -> "WfsPaths":
-        data_root = settings.app_root / "data"
-        runtime = settings.app_root / "runtime" / "wfs"
-        return cls(
-            canonical=settings.kb_path,
-            current_raw=data_root / "wfs" / "current.geojson",
-            snapshots=data_root / "wfs" / "snapshots",
-            last_report=data_root / "wfs" / "last_change_report.json",
-            runtime=runtime,
-            pending_raw=runtime / "pending.geojson",
-            pending_canonical=runtime / "pending_offers.json",
-            pending_report=runtime / "change_report.json",
-            state=runtime / "state.json",
-        )
-
-
-@dataclass(frozen=True)
 class WfsSyncResult:
     checked_at: str
     changed: bool
@@ -90,10 +74,12 @@ class WfsSyncResult:
     added: int
     removed: int
     modified: int
+    release_id: str | None = None
+    active_release_id: str | None = None
 
 
 def load_wfs_state(settings: Settings) -> dict[str, Any]:
-    return _read_json(WfsPaths.from_settings(settings).state) or {}
+    return _read_json(WfsReleasePaths.from_settings(settings).state) or {}
 
 
 def _now() -> str:
@@ -102,9 +88,27 @@ def _now() -> str:
 
 def _atomic_json(path: Path, payload: Any) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_name(f".{path.name}.tmp")
-    temporary.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-    temporary.replace(path)
+    temporary: Path | None = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            newline="\n",
+            dir=path.parent,
+            prefix=f".{path.name}.",
+            suffix=".tmp",
+            delete=False,
+        ) as handle:
+            temporary = Path(handle.name)
+            json.dump(payload, handle, ensure_ascii=False, indent=2)
+            handle.write("\n")
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.replace(temporary, path)
+        temporary = None
+    finally:
+        if temporary is not None:
+            temporary.unlink(missing_ok=True)
 
 
 def _read_json(path: Path) -> dict[str, Any] | None:
@@ -337,17 +341,46 @@ async def fetch_wfs(settings: Settings) -> dict[str, Any]:
     return payload
 
 
-def _remove_if_present(path: Path) -> None:
-    if path.is_file():
-        path.unlink()
+def migrate_legacy_release(settings: Settings):
+    """Übernimmt den bestehenden aktiven Stand idempotent ohne WFS-Abruf."""
+    active = load_active_release(settings)
+    if active is not None:
+        return active
+    paths = WfsReleasePaths.from_settings(settings)
+    if not paths.legacy_canonical.is_file() or not paths.legacy_snapshot.is_file():
+        return None
+    canonical = _read_json(paths.legacy_canonical)
+    raw = _read_json(paths.legacy_snapshot)
+    if canonical is None or raw is None:
+        raise WfsSyncError("Legacy WFS release is invalid")
+    validate_feature_collection(raw)
+    normalized = canonical_payload(raw, settings)
+    content_hash = str(canonical.get("source", {}).get("content_hash", ""))
+    if normalized.get("source", {}).get("content_hash") != content_hash:
+        raise WfsSyncError("Legacy canonical data and snapshot differ")
+    release_id = f"legacy-{content_hash[:12]}"
+    paths = WfsReleasePaths.from_settings(settings)
+    if (paths.releases / release_id).is_dir():
+        return rollback_release(settings, release_id)
+    if not (paths.pending / release_id).is_dir():
+        report = diff_canonical(None, canonical)
+        create_pending_release(
+            settings,
+            raw=raw,
+            canonical=canonical,
+            diff=report,
+            base_release_id=None,
+            release_id=release_id,
+        )
+    return promote_release(settings, release_id)
 
 
 async def sync_wfs(settings: Settings, *, promote: bool = False) -> WfsSyncResult:
-    """Ruft den WFS ab und staged oder aktiviert einen validierten Datenstand.
+    """Erzeugt aus genau einem WFS-Abruf einen unveränderlichen Release.
 
     Args:
         settings: WFS-URL und Projektpfade.
-        promote: Aktiviert Daten atomar, wenn ``True``; sonst nur Staging.
+        promote: Aktiviert den soeben erzeugten Release bei tatsächlicher Änderung.
 
     Returns:
         Status, Hashes und Zeitpunkte des Synchronisationslaufs.
@@ -356,38 +389,31 @@ async def sync_wfs(settings: Settings, *, promote: bool = False) -> WfsSyncResul
         WfsSyncError: Bei Netzwerk-, Schema- oder Schreibfehlern.
     """
     checked_at = _now()
-    paths = WfsPaths.from_settings(settings)
+    try:
+        active = migrate_legacy_release(settings)
+    except WfsReleaseError as exc:
+        raise WfsSyncError("Legacy WFS migration failed") from exc
+    paths = WfsReleasePaths.from_settings(settings)
     raw = await fetch_wfs(settings)
     current = canonical_payload(raw, settings)
-    previous = _read_json(paths.canonical)
+    previous = _read_json(active.offers_path) if active else _read_json(paths.legacy_canonical)
     report = diff_canonical(previous, current)
     changed = bool(
         report["previous_hash"] != report["current_hash"] or report["normalization_changed"]
     )
-
-    if changed:
-        _atomic_json(paths.pending_raw, raw)
-        _atomic_json(paths.pending_canonical, current)
-        _atomic_json(paths.pending_report, report)
-
-    promoted = False
-    if changed and promote:
-        _atomic_json(paths.current_raw, raw)
-        _atomic_json(paths.canonical, current)
-        _atomic_json(paths.last_report, report)
-        paths.snapshots.mkdir(parents=True, exist_ok=True)
-        snapshot = paths.snapshots / f"{current['source']['content_hash'][:12]}.geojson"
-        if not snapshot.exists():
-            _atomic_json(snapshot, raw)
-        mark_translation_state_for_offers(
-            [OfferRecord.model_validate(item) for item in current["offers"]],
+    try:
+        pending = create_pending_release(
             settings,
-            dataset_hash=current["source"]["content_hash"],
+            raw=raw,
+            canonical=current,
+            diff=report,
+            base_release_id=active.release_id if active else None,
         )
-        _remove_if_present(paths.pending_raw)
-        _remove_if_present(paths.pending_canonical)
-        _remove_if_present(paths.pending_report)
-        promoted = True
+        promoted_release = promote_release(settings, pending.release_id) if changed and promote else None
+    except WfsReleaseError as exc:
+        raise WfsSyncError("WFS release processing failed") from exc
+    promoted = promoted_release is not None
+    active_release_id = promoted_release.release_id if promoted_release else (active.release_id if active else None)
 
     state = {
         "last_checked_at": checked_at,
@@ -396,6 +422,8 @@ async def sync_wfs(settings: Settings, *, promote: bool = False) -> WfsSyncResul
         "source_feature_count": current["source"]["feature_count"],
         "source_content_hash": current["source"]["content_hash"],
         "pending_changes": bool(changed and not promoted),
+        "pending_release_id": pending.release_id if not promoted else None,
+        "active_release_id": active_release_id,
         "last_promoted_at": checked_at if promoted else (_read_json(paths.state) or {}).get("last_promoted_at"),
     }
     _atomic_json(paths.state, state)
@@ -408,6 +436,8 @@ async def sync_wfs(settings: Settings, *, promote: bool = False) -> WfsSyncResul
         added=len(report["added"]),
         removed=len(report["removed"]),
         modified=len(report["modified"]),
+        release_id=pending.release_id,
+        active_release_id=active_release_id,
     )
 
 
@@ -415,14 +445,33 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Check and normalize the Leipzig Wohnungslosenhilfe WFS.")
     action = parser.add_mutually_exclusive_group()
     action.add_argument("--check", action="store_true", help="Check and stage changes without activating them.")
-    action.add_argument("--promote", action="store_true", help="Validate and activate the current WFS data.")
+    action.add_argument("--promote", metavar="RELEASE_ID", help="Validate and activate an existing pending release.")
+    action.add_argument("--verify", metavar="RELEASE_ID", help="Verify an active release without changing it.")
+    action.add_argument("--rollback", metavar="RELEASE_ID", help="Atomically activate a previous valid release.")
+    action.add_argument("--list", action="store_true", help="List active and pending release IDs.")
     return parser
 
 
 def main() -> None:
     args = build_parser().parse_args()
-    result = asyncio.run(sync_wfs(load_settings(), promote=args.promote))
-    print(json.dumps(result.__dict__, ensure_ascii=False, indent=2))
+    settings = load_settings()
+    if args.promote:
+        result: Any = promote_release(settings, args.promote).manifest.model_dump(mode="json")
+    elif args.verify:
+        pending = args.verify in list_releases(settings, pending=True)
+        result = verify_release(settings, args.verify, pending=pending).manifest.model_dump(mode="json")
+    elif args.rollback:
+        result = rollback_release(settings, args.rollback).manifest.model_dump(mode="json")
+    elif args.list:
+        active = load_active_release(settings)
+        result = {
+            "active": active.release_id if active else None,
+            "releases": list_releases(settings),
+            "pending": list_releases(settings, pending=True),
+        }
+    else:
+        result = asyncio.run(sync_wfs(settings, promote=False)).__dict__
+    print(json.dumps(result, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":

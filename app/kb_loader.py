@@ -10,6 +10,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from .models import OfferRecord
+from .config import Settings
+from .wfs_releases import WfsReleaseError, load_active_release
 
 
 SECTION_RE = re.compile(
@@ -37,6 +39,7 @@ class KnowledgeBase:
     offers: list[OfferRecord]
     source_kind: str = "markdown"
     metadata: dict[str, object] = field(default_factory=dict)
+    release_id: str | None = None
 
     def by_id(self) -> dict[str, OfferRecord]:
         return {offer.id: offer for offer in self.offers}
@@ -186,4 +189,23 @@ def load_knowledge_base(path: Path) -> KnowledgeBase:
         source_hash=hashlib.sha256(source_bytes).hexdigest(),
         offers=parse_markdown(markdown),
         source_kind="markdown",
+    )
+
+
+def load_active_knowledge_base(settings: Settings) -> KnowledgeBase:
+    """Lädt Pointer und Daten aus genau einem WFS-Release oder dem Legacy-Pfad."""
+    try:
+        release = load_active_release(settings)
+    except WfsReleaseError as exc:
+        raise KnowledgeBaseError("Active WFS release is invalid") from exc
+    if release is None:
+        return load_knowledge_base(settings.kb_path)
+    knowledge_base = load_knowledge_base(release.offers_path)
+    return KnowledgeBase(
+        path=knowledge_base.path,
+        source_hash=knowledge_base.source_hash,
+        offers=knowledge_base.offers,
+        source_kind=knowledge_base.source_kind,
+        metadata=knowledge_base.metadata,
+        release_id=release.release_id,
     )

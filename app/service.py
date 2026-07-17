@@ -285,7 +285,7 @@ class QueryService:
         """
         session = self.sessions.resolve(payload.session_id, payload.language)
         conversation_history = list(session.turns)
-        interaction = QueryInteraction()
+        interaction = QueryInteraction(data_release_id=self.kb.release_id)
         response = await self._query_core(payload, conversation_history, interaction)
         selected_offers = [self.kb.by_id()[card.id] for card in response.cards if card.id in self.kb.by_id()]
         map_data = build_map_data(selected_offers)

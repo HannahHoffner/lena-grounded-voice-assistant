@@ -63,7 +63,8 @@ def test_template_query_writes_one_complete_final_interaction(tmp_path: Path) ->
     assert record["retrieval_result_count"] >= len(record["source_ids"])
     assert record["acute_risk_detected"] is False
     assert record["fallback_used"] is False
-    assert record["schema_version"] == 1
+    assert record["schema_version"] == 2
+    assert record["data_release_id"] is None
     assert record["software_version"]
     assert record["timestamp"].endswith("Z")
     assert len(_records(settings.interaction_log_path)) == 1  # type: ignore[arg-type]

@@ -133,6 +133,7 @@ class QueryInteraction(BaseModel):
     retrieval_result_count: int = Field(default=0, ge=0)
     acute_risk_detected: bool = False
     fallback_used: bool = False
+    data_release_id: str | None = None
 
 
 class QueryResponse(BaseModel):

@@ -29,7 +29,7 @@ def software_version() -> str:
 class InteractionRecord(BaseModel):
     """Validierter Datensatz einer vollständig sichtbaren Nutzerinteraktion."""
 
-    schema_version: Literal[1] = 1
+    schema_version: Literal[2] = 2
     timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
     session_id: str | None
     language: Language
@@ -41,6 +41,7 @@ class InteractionRecord(BaseModel):
     retrieval_result_count: int = Field(default=0, ge=0)
     acute_risk_detected: bool = False
     fallback_used: bool = False
+    data_release_id: str | None = None
     software_version: str = Field(default_factory=software_version)
 
 

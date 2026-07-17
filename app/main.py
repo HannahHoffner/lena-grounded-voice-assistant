@@ -15,7 +15,7 @@ from fastapi.staticfiles import StaticFiles
 from .config import Settings, load_settings
 from .i18n import load_translation_store, translation_summary
 from .interactions import InteractionRecord, InteractionWriter
-from .kb_loader import KnowledgeBase, KnowledgeBaseError, load_knowledge_base
+from .kb_loader import KnowledgeBase, KnowledgeBaseError, load_active_knowledge_base
 from .models import Language, QueryRequest, QueryResponse, SpeechSynthesisRequest
 from .service import NO_RESULTS, QueryService
 from .speech import (
@@ -89,7 +89,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     kb: KnowledgeBase | None = None
     kb_error = False
     try:
-        kb = load_knowledge_base(settings.kb_path)
+        kb = load_active_knowledge_base(settings)
     except KnowledgeBaseError:
         kb_error = True
 
@@ -116,7 +116,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     "promoted": result.promoted,
                 }
                 if result.promoted:
-                    refreshed = load_knowledge_base(settings.kb_path)
+                    refreshed = load_active_knowledge_base(settings)
                     app.state.kb = refreshed
                     app.state.service = QueryService(settings, refreshed)
                     app.state.kb_error = False
@@ -195,6 +195,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "offer_count": len(active_kb.offers) if active_kb else 0,
             "source_kind": active_kb.source_kind if active_kb else None,
             "source_hash": active_kb.source_hash if active_kb else None,
+            "data_release_id": active_kb.release_id if active_kb else None,
             "configured_provider": settings.rewrite_provider,
             "active_provider": effective,
             "llm_router_available": active_service.full_context_available if active_service else False,
@@ -314,6 +315,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 retrieval_result_count=trace.retrieval_result_count,
                 acute_risk_detected=trace.acute_risk_detected,
                 fallback_used=trace.fallback_used,
+                data_release_id=trace.data_release_id,
             )
         )
         return response
