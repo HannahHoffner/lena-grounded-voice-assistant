@@ -44,6 +44,13 @@ lösen das bestehende technische Fallback aus und gelten nicht als erkannte oder
 ausgeschlossene Gefahr. Das Verfahren besitzt keine Risikostufen und keine
 zusätzliche Keyword-Klassifikation.
 
+Der LLM-Router besitzt eine kürzere Gesamtgrenze als der Formulator. Läuft der
+Router ab, wird kein Safety-Wert erfunden; der deterministische Retrievalpfad
+läuft weiter und das Interaktionsprotokoll markiert den kontrollierten Fallback.
+Läuft nur der Formulator ab, wird die bestehende Template-Antwort als tatsächlich
+sichtbare und gespeicherte Antwort verwendet. Ein Timeout erzeugt keinen zweiten
+Interaktionsdatensatz.
+
 ## WFS-Aktualisierung
 
 `sync_wfs()` ruft WFS 2.0 `GetFeature` als GeoJSON ab. Die Pipeline validiert
@@ -51,6 +58,9 @@ Typ, erforderliche Properties, eindeutige `lnr`-IDs und Point-Geometrien. Danach
 entstehen normalisierte `OfferRecord`s und stabile Feature-/Dataset-Hashes.
 `--check` schreibt ausstehende Daten unter `runtime/wfs/`; `--promote` ersetzt
 den kanonischen Stand atomar und aktualisiert Snapshot und Änderungsbericht.
+Der HTTPX-Client begrenzt Verbindungsaufbau und Lesen getrennt. Connect- oder
+Read-Timeouts enden vor Normalisierung, Staging und Promotion; der vorhandene
+aktive Datenstand bleibt dabei unverändert.
 
 ## Übersetzungen
 
@@ -77,6 +87,11 @@ antworten beide Endpunkte mit HTTP 503 und geben keine internen Zugangsdaten
 aus. Unmittelbar vor beiden Syntheseprovidern ersetzt `normalize_tts_text()`
 das Token `112` durch sprachabhängig einzeln gesprochene Ziffern; im Browser
 und in `QueryResponse` bleibt `112` sichtbar.
+
+STT und TTS haben je eine Gesamtgrenze um den tatsächlichen Provideraufruf. Ein
+STT-Timeout liefert kein Transkript und löst daher keinen Query- oder
+Interaktionsdatensatz aus. TTS wird erst nach der sichtbaren Textantwort
+aufgerufen; sein Timeout verändert das bereits korrekte Textprotokoll nicht.
 
 `POST /api/query` prüft nach dem absoluten Pydantic-Limit zusätzlich
 `QUERY_MAX_CHARS`. Kategorieanfragen mit leerem Query bleiben zulässig; zu

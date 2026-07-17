@@ -130,6 +130,8 @@ Quelle: Stadt Leipzig, WFS Wohnungslosenhilfe,
 - Das Repository kennt keine Kapazitäten oder garantierte Aufnahme.
 - Zeitangaben werden nur für ausdrücklich unterstützte Regeln ausgewertet.
 - Server-STT und beide TTS-Varianten benötigen externe Dienste.
+- Externe Provider sind zeitlich begrenzt. Bei Edge-TTS beendet Cancellation den
+  lokalen Stream, garantiert aber keinen Abbruch bereits gestarteter externer Arbeit.
 - WFS-Promotion und Übersetzungsprüfung besitzen keine Admin-Oberfläche.
 - `runtime/sessions.json` kann Nutzereingaben enthalten und ist nicht für eine
   gemeinsame oder öffentliche Ablage bestimmt.

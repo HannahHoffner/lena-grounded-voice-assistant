@@ -15,7 +15,9 @@ und Sessionvariablen weiterhin akzeptiert.
 | `BLABLADOR_BASE_URL` | für Blablador | – | OpenAI-kompatible Basis-URL |
 | `BLABLADOR_API_KEY` | für Blablador | – | Zugangstoken; niemals committen |
 | `BLABLADOR_MODEL` | für Blablador | – | Modell-ID oder Alias |
-| `BLABLADOR_TIMEOUT_SECONDS` | nein | `30` | HTTP-Timeout, mindestens 1 s |
+| `LLM_ROUTER_TIMEOUT_SECONDS` | nein | `15` | Gesamtgrenze für den kompakten LLM-Router, mindestens 0,1 s |
+| `LLM_FORMULATOR_TIMEOUT_SECONDS` | nein | `30` | Gesamtgrenze für Formulator und Übersetzungswartung, mindestens 0,1 s |
+| `BLABLADOR_TIMEOUT_SECONDS` | nein | – | Legacy-Fallback für beide LLM-Grenzen, wenn deren neue Variablen fehlen |
 | `BLABLADOR_MAX_CONTEXT_CHARS` | nein | `50000` | maximale Kontextgröße, mindestens 10000 |
 | `BLABLADOR_MAX_TOKENS` | nein | `1200` | Ausgabelimit, mindestens 200 |
 | `SESSION_TIMEOUT_SECONDS` | nein | `180` | Sessionablauf, mindestens 30 s |
@@ -31,7 +33,8 @@ und Sessionvariablen weiterhin akzeptiert.
 | `SPEECH_TRANSCRIPTION_BASE_URL` | für STT | Blablador-URL | Audio-Endpunkt-Basis |
 | `SPEECH_TRANSCRIPTION_API_KEY` | für STT | Blablador-Key | Zugangstoken |
 | `SPEECH_TRANSCRIPTION_MODEL` | nein | `whisper-large-v3` | STT-Modell |
-| `SPEECH_TRANSCRIPTION_TIMEOUT_SECONDS` | nein | `45` | Timeout, mindestens 5 s |
+| `STT_TIMEOUT_SECONDS` | nein | `45` | STT-Gesamt- und HTTPX-Transportgrenze, mindestens 0,1 s |
+| `SPEECH_TRANSCRIPTION_TIMEOUT_SECONDS` | nein | – | Legacy-Name für `STT_TIMEOUT_SECONDS` |
 | `SPEECH_TRANSCRIPTION_MAX_BYTES` | nein | `10485760` | maximales Audio; Bereich 1024–26214400 Bytes |
 | `SPEECH_SYNTHESIS_PROVIDER` | nein | `edge` oder automatisch `openai` | `edge`/`openai` |
 | `SPEECH_SYNTHESIS_BASE_URL` | für OpenAI-TTS | – | TTS-Endpunkt-Basis |
@@ -39,7 +42,8 @@ und Sessionvariablen weiterhin akzeptiert.
 | `SPEECH_SYNTHESIS_MODEL` | nein | `gpt-4o-mini-tts` bei OpenAI | TTS-Modell |
 | `SPEECH_SYNTHESIS_VOICE` | nein | `alloy` | Voice-Name |
 | `SPEECH_SYNTHESIS_RESPONSE_FORMAT` | nein | `mp3` | Antwortformat |
-| `SPEECH_SYNTHESIS_TIMEOUT_SECONDS` | nein | `45` | Timeout, mindestens 5 s |
+| `TTS_TIMEOUT_SECONDS` | nein | `45` | TTS-Gesamtgrenze für OpenAI-kompatibles und Edge-TTS, mindestens 0,1 s |
+| `SPEECH_SYNTHESIS_TIMEOUT_SECONDS` | nein | – | Legacy-Name für `TTS_TIMEOUT_SECONDS` |
 | `SPEECH_SYNTHESIS_MAX_CHARS` | nein | `4000` | maximaler TTS-Text; Bereich 1–20000 Zeichen |
 
 ## WFS
@@ -50,9 +54,23 @@ und Sessionvariablen weiterhin akzeptiert.
 | `WFS_AUTO_SYNC` | nein | `true` | periodische Prüfung aktivieren |
 | `WFS_AUTO_PROMOTE` | nein | `false` | geprüfte Änderungen automatisch aktivieren |
 | `WFS_CHECK_INTERVAL_HOURS` | nein | `24` | Prüfintervall, mindestens 1 h |
+| `WFS_CONNECT_TIMEOUT_SECONDS` | nein | `10` | Verbindungs-/Poolgrenze des WFS-Clients, mindestens 0,1 s |
+| `WFS_READ_TIMEOUT_SECONDS` | nein | `30` | Lese-/Schreibgrenze des WFS-Clients, mindestens 0,1 s |
 
 Booleans akzeptieren `1`, `true`, `yes` oder `on` als wahr. Ungültige numerische
 Werte fallen auf die im Code definierten Standards zurück.
+
+Alle Timeoutwerte müssen positiv und endlich sein. Ungültige Umgebungswerte
+fallen auf sichere Standards zurück; explizite `Settings` mit null, negativen
+oder nicht endlichen Grenzen werden abgewiesen. Die Untergrenze von 0,1 Sekunden
+dient schnellen kontrollierten Tests und ist kein empfohlener Betriebswert.
+
+Ein Router-Timeout führt in das deterministische Retrieval und gilt weder als
+erkannte noch als ausgeschlossene Akutgefahr. Ein Formulator-Timeout verwendet
+den vorhandenen Template-Fallback. Es gibt keinen automatischen LLM-Retry.
+STT- und TTS-Timeouts ergeben generische HTTP-503-Antworten. WFS trennt
+Verbindungs- und Lesetimeout; vor vollständigem Download und Validierung wird
+kein aktiver Datenstand verändert.
 
 `INTERACTION_LOGGING_ENABLED` ist bewusst unabhängig vom technischen Log-Level.
 Für Tests oder Betriebsformen ohne Volltextspeicherung kann der Schalter auf

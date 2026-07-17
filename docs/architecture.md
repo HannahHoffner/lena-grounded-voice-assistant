@@ -48,6 +48,13 @@ Formulator sieht nur bei `false` die ausgewählten vollständigen Datensätze. E
 Nachprüfung blockiert nicht
 belegte Zahlen, Zeiten, URLs, E-Mail-Adressen und Verfügbarkeitsaussagen.
 
+Router und Formulator verwenden denselben asynchronen HTTPX-Transport, aber
+getrennte Gesamtgrenzen von standardmäßig 15 beziehungsweise 30 Sekunden. Eine
+Gesamtgrenze umschließt den tatsächlichen Netzwerkaufruf; HTTPX begrenzt
+zusätzlich seine Transportphasen. Transportfehler werden nicht automatisch
+wiederholt. Bei Timeout greift derselbe kontrollierte deterministische
+beziehungsweise Template-Fallback wie bei anderen Providerfehlern.
+
 `app/wfs_sync.py` validiert eine vollständige GeoJSON-FeatureCollection,
 normalisiert Features, berechnet stabile Hashes und schreibt Änderungen atomar.
 `app/kb_loader.py` lädt primär das kanonische JSON; der Markdown-Parser bleibt
@@ -64,6 +71,13 @@ EPSG:25833 nach WGS84 und erstellt Ziele relativ zum Leipziger Hauptbahnhof.
 Vor der Synthese ersetzt der Adapter das eigenständige Token `112`
 sprachabhängig durch einzeln gesprochene Ziffern. Die visuelle API-Antwort bleibt
 unverändert.
+
+STT und TTS besitzen jeweils eine konfigurierbare Gesamtgrenze von standardmäßig
+45 Sekunden. OpenAI-kompatible Aufrufe erhalten zusätzlich denselben HTTPX-
+Transporttimeout. Bei Edge-TTS bricht Cancellation den lokalen asynchronen
+Stream ab; LENA kann nicht garantieren, dass dadurch bereits begonnene Arbeit
+des externen Dienstes beendet wird. Die Adapter erzeugen keine temporären
+Audiodateien, sondern halten Request und Ergebnis im Speicher.
 
 `app/interactions.py` trennt das lokale Forschungsprotokoll vom technischen
 Logging. Der HTTP-Adapter schreibt nach dem finalen `QueryService`-Ergebnis
@@ -109,6 +123,9 @@ Links nur nach expliziter Protokollprüfung.
   Anwendung `edge-tts`.
 - Kartenkacheln und `edge-tts` benötigen im Browser beziehungsweise Backend
   Netzwerkzugriff.
+- Der WFS-Client verwendet standardmäßig 10 Sekunden für den Verbindungsaufbau
+  und 30 Sekunden für das Lesen. Ein Timeout findet vor Validierung und Writes
+  statt und lässt den aktiven Datenstand unverändert.
 
 ## Unvollständig oder bewusst nicht implementiert
 
@@ -116,6 +133,9 @@ Links nur nach expliziter Protokollprüfung.
 - keine grafische Review-/Administrationsoberfläche für WFS und Übersetzungen
 - kein produktionsreifes Einwilligungs-, Zugriffs-, Aufbewahrungs-, Lösch-,
   Pseudonymisierungs- oder Anonymisierungskonzept für Interaktionsprotokolle
+- keine prozessübergreifende Provider-Nebenläufigkeitsbegrenzung; mangels lokaler
+  Modelle und belegter externer Kontingentgrenzen ist derzeit keine Semaphore
+  implementiert
 - keine Mehrbenutzer- oder Datenbank-Persistenz für Sessions
 - keine dokumentierte produktive Deployment-Orchestrierung, Authentifizierung,
   Rate-Limits oder TLS-Terminierung

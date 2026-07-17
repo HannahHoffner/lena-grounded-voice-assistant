@@ -881,6 +881,156 @@ Kriseninhalten sind nicht anonym und müssen vor produktiver oder institutionell
 Forschungsnutzung neu bewertet werden. Paket 3B kann die übrigen Health- und
 Fehlerverträge behandeln, ohne diese lokale Prototyppersistenz auszuweiten.
 
+### Paket 3B (P1): Provider-Timeouts und kontrollierte Ressourcenbegrenzung
+
+**Status:** Abgeschlossen und lokal verifiziert auf
+`modernization/provider-timeouts` (Stand 2026-07-17).
+
+**Ziel und Akzeptanzvertrag:** Alle tatsächlich verwendeten externen Provider
+besitzen zentral konfigurierte, positive und im realen Aufrufpfad wirksame
+Timeouts. LLM-Router und -Formulator haben getrennte Gesamtgrenzen, STT und TTS
+enden kontrolliert, und WFS verwendet getrennte Verbindungs- und Lesetimeouts.
+Bestehende Query-Fallbacks, Akutgefahrlogik, Requestgrenzen, 112-Normalisierung
+und das Interaktionsprotokoll bleiben erhalten. Es entstehen weder neue Retries
+noch eine Queue oder verteilte Ressourcensteuerung.
+
+**Review der blockierenden Pfade:**
+
+| Pfad | Bibliothek/Schnittstelle | Aktueller Stand | gewünschte Grenze und Fehlerpfad |
+|---|---|---|---|
+| LLM-Router | asynchrones `httpx.AsyncClient.post` in `BlabladorProvider._post` | `BLABLADOR_TIMEOUT_SECONDS` gilt als allgemeiner HTTPX-Phasentimeout; zwei Transportversuche können die Dauer verdoppeln | `LLM_ROUTER_TIMEOUT_SECONDS=15`; Gesamtgrenze mit `asyncio.timeout`, HTTPX-Transportgrenze und `ProviderTimeoutError`; vorhandener deterministischer Fallback, keine Safety-Aussage |
+| LLM-Formulator | derselbe asynchrone HTTPX-Transport | gleicher gemeinsamer Wert und Retry wie Router | `LLM_FORMULATOR_TIMEOUT_SECONDS=30`; getrennte Gesamtgrenze, Template-Fallback und redigiertes Timeout-Event |
+| Übersetzungswartung | asynchrones `httpx.AsyncClient.post` | gemeinsamer Blablador-Wert, kein Retry | Formulatorwert als Wartungs-Providergrenze; generischer `TranslationError`, keine halbe Store-Aktualisierung |
+| Server-STT | asynchrones multipart HTTPX-POST, Audiodaten liegen nur im Speicher | `SPEECH_TRANSCRIPTION_TIMEOUT_SECONDS=45` als HTTPX-Phasentimeout | `STT_TIMEOUT_SECONDS=45` als Gesamt- und Transportgrenze; HTTP 503, kein Query-/Interaktionsdatensatz |
+| OpenAI-TTS | asynchrones HTTPX-POST, Audio nur im Speicher | `SPEECH_SYNTHESIS_TIMEOUT_SECONDS=45` als HTTPX-Phasentimeout | `TTS_TIMEOUT_SECONDS=45`; HTTP 503, sichtbare bereits gespeicherte Textantwort bleibt unverändert |
+| Edge-TTS | asynchroner `edge_tts.Communicate.stream()` | keine explizite Gesamtgrenze; Byte-Chunks nur im Speicher | derselbe TTS-Gesamtwert um den Stream; Cancellation wird an den asynchronen Stream weitergereicht, ohne Garantie über providerseitige Verarbeitung |
+| WFS | asynchrones `httpx.AsyncClient.get` | fest codierte 30 Sekunden, keine Trennung | `WFS_CONNECT_TIMEOUT_SECONDS=10`, `WFS_READ_TIMEOUT_SECONDS=30`; `WfsTimeoutError`, bestehender aktiver Stand bleibt vor Validierung/Schreiben unverändert |
+| lokale Modelle/Subprozesse | Suche in `app/` | nicht vorhanden | keine scheinbare Timeout- oder Prozessbeendigungsgarantie implementieren |
+
+HTTPX unterstützt getrennte Connect-, Read-, Write- und Poolgrenzen. Für LLM,
+STT und TTS begrenzt zusätzlich `asyncio.timeout` die gesamte asynchrone
+Operation; Cancellation erreicht den HTTPX-Aufruf und dessen Client-Kontext.
+Bei Edge-TTS wird der asynchrone Stream abgebrochen, aber LENA kann nicht
+garantieren, dass ein externer Dienst bereits begonnene serverseitige Arbeit
+beendet. WFS benötigt gemäß Betriebsprofil getrennte Connect-/Read-Grenzen; die
+Write-/Poolwerte werden aus diesen beiden sicheren Grenzen abgeleitet.
+
+**Wertebegründung:** Der Router verarbeitet nur den kompakten Index und soll mit
+15 Sekunden schneller auf deterministisches Retrieval zurückfallen. Der
+Formulator darf wegen größerem Kontext 30 Sekunden benötigen. STT und TTS
+behalten ihre bisherigen 45 Sekunden als kompatible Gesamtgrenze. WFS erhält
+10 Sekunden für Verbindungsaufbau und 30 Sekunden für die vollständige kleine
+GeoJSON-Antwort. Tests überschreiben alle Werte mit Millisekundenwerten, ohne
+reale Wartezeit. Null, negative, nicht endliche und ungültige Werte fallen beim
+zentralen Laden auf die positiven Standards zurück; direkte `Settings`-Objekte
+werden beim Erzeugen der Provider zusätzlich geprüft.
+
+**Fallback- und Fehlervertrag:** Router-Timeout ist ein Providerfehler und setzt
+weder `acute_risk_detected=true` noch eine Aussage über ausgeschlossene Gefahr;
+`QueryService` verwendet den bestehenden deterministischen Pfad. Ein
+Formulator-Timeout nutzt ausschließlich den vorhandenen Template-Fallback.
+STT/TTS bleiben HTTP 503 mit generischem Text. STT erzeugt ohne Transkript keine
+`/api/query`-Interaktion. TTS läuft nach der Textinteraktion separat und ändert
+deren JSONL-Datensatz nicht. WFS schreibt erst nach vollständigem Download,
+JSON- und Vertragscheck; ein Timeout berührt aktive Dateien nicht. Technische
+Events sind `query.router.timeout`, `query.formulation.timeout`, `stt.timeout`,
+`tts.timeout` und `wfs.sync.failed` mit redigiertem Fehlertyp.
+
+**Nebenläufigkeit und Retries:** Es gibt keine lokalen Modell- oder
+Subprozessaufrufe. Alle geprüften Provider sind externe asynchrone Dienste;
+konkrete lokale Kapazitäts- oder Kontingentgrenzen sind nicht im Repository
+belegt. Daher wird keine Semaphore eingeführt. Der bestehende LLM-Retry bei
+jedem `httpx.TransportError` wird entfernt, weil er die Maximaldauer verdoppelt
+und auch Timeoutfehler wiederholt. Es gibt keine weiteren automatischen
+Provider-Retries im Runtime-Pfad. Eine spätere Semaphore wäre nur pro Prozess
+wirksam und benötigt reale Last-/Providerdaten.
+
+Der explizite Übersetzungs-Wartungsbefehl versucht nach einem fehlgeschlagenen
+Mehrsprachenaufruf jede der höchstens vier Zielsprachen einzeln. Dieser
+bestehende, endliche CLI-Fallback kann kumulativ bis zu fünf
+Formulator-Timeouts benötigen, blockiert aber keinen Nutzerrequest und schreibt
+fehlgeschlagene Einträge nicht als erfolgreiche Übersetzung. Eine Änderung
+dieser Wartungspolitik ist nicht Teil von 3B.
+
+**Betroffene Dateien:**
+
+| Datei | Änderung | Risiko |
+|---|---|---|
+| `app/config.py` | neue zentrale positive Timeoutwerte und Legacy-Aliase | Konfigurationskompatibilität |
+| `app/providers/llm.py` | getrennte Gesamtgrenzen, Timeouttyp, kein Retry | korrekter Template-Fallback |
+| `app/speech.py` | Gesamtgrenzen um HTTPX und Edge-Stream | Cancellation und generische 503 |
+| `app/wfs_sync.py` | expliziter HTTPX-Connect-/Read-Timeout und Typ | aktiver Stand darf unverändert bleiben |
+| `app/translate_offers.py` | Formulatorgrenze im Wartungspfad | keine Teilaktualisierung |
+| `app/main.py` / `app/service.py` | stabile redigierte Timeout-Events | keine Volltexte im Log |
+| `.env.example`, bestehende Dokumentation | Werte, Wirkung und Grenzen | keine übertriebene Abbruchgarantie |
+| `tests/test_provider_timeouts.py` und bestehende Fixtures | schnelle reale Providergrenzentests | keine zeitabhängigen/flakigen Tests |
+
+**Dead Ends und Mitigation:**
+
+| Dead End | Auswirkung | Mitigation | Verifikation |
+|---|---|---|---|
+| nur API-`wait_for` | interner Providervertrag bleibt unbegrenzt | Timeout direkt in LLM-/Speech-/WFS-Adaptern | Adapter- und realer API-Pfad |
+| synchroner Code im Event Loop | Timeout beendet Blockade nicht | nur vorhandene asynchrone Netzwerk-/Streamaufrufe umschließen; keine lokalen Sync-Modelle vorhanden | Call-Path-Review |
+| LLM-Retry verdoppelt Grenze | Timeout wird erneut ausgeführt | Retry entfernen; genau ein Transportversuch | Aufrufzähler im Test |
+| Router-Timeout als Safety-`false` | falsche Sicherheitsbehauptung | `ProviderTimeoutError` führt unverändert in deterministischen Fallback, Safety bleibt nicht erkannt | Query- und JSONL-Test |
+| Edge-Timeout als harter Serverabbruch dokumentiert | falsche Garantie | nur Cancellation des lokalen Streams zusagen, externe Grenze dokumentieren | Doku-Review |
+| TTS-Timeout löscht Textantwort | Nutzer verliert bereits sichtbaren Inhalt | TTS-Endpunkt bleibt getrennt; Interaktionsdatensatz vor TTS unverändert | API-/JSONL-Test |
+| WFS-Timeout schreibt Teilstand | aktive Fachdateien werden beschädigt | Download vollständig vor `canonical_payload` und jedem Write | Hash-/Dateiinhalt vor/nach Timeout |
+| Semaphore ohne belegtes Limit | unnötige lokale Engstelle, keine Worker-Garantie | keine Begrenzung in 3B; Risiko transparent dokumentieren | finaler Diff |
+| Exceptiontexte im Log | URLs oder Inhalte können austreten | nur Eventname und Exception-Klassenname | `caplog` mit Geheimwerten |
+| langsame Sleeps in Tests | flakige Suite | kontrollierte blockierende Coroutines, Millisekundenwerte und Events | Laufzeit der fokussierten Suite |
+
+**Teststrategie:** Konfigurationstests prüfen positive Standards, Legacy-Aliase,
+ungültige Werte und tatsächlich an Provider übergebene kleine Werte. LLM-Tests
+patchen nur `_post`, blockieren kontrolliert bis zur Cancellation und prüfen
+Router-/Formulatorfallback, je einen erfolgreichen Pfad, genau einen Aufruf,
+Timeout-Events, kein Safety-Signal und keine Query im Log. Speech-Tests ersetzen
+HTTPX beziehungsweise Edge an der bestehenden Providergrenze, prüfen Erfolg,
+Timeout, Cancellation, 503, 112-Regression und unverändertes JSONL. WFS-Tests
+simulieren `httpx.ConnectTimeout` und `ReadTimeout`, prüfen Timeoutobjekt,
+unveränderte aktive Dateien und keine Pending-/Promotiondateien. Danach laufen
+`python -m pytest tests/test_provider_timeouts.py -q`, die relevanten Safety-,
+Request- und Observabilitytests, `python -m pytest`, `python -m compileall -q
+app`, `python -m app --help`, `git diff --check` sowie Runtime-, Secret- und
+Dependency-Diff-Review.
+
+**Rollback:** Die getrennten lokalen Implementierungs-, Test- und
+Dokumentationscommits können ohne Datenmigration revertiert werden. Die neuen
+Variablen besitzen kompatible Standards und akzeptieren die bisherigen
+`BLABLADOR_TIMEOUT_SECONDS`, `SPEECH_TRANSCRIPTION_TIMEOUT_SECONDS` und
+`SPEECH_SYNTHESIS_TIMEOUT_SECONDS` als Legacy-Fallback. Ein Rollback berührt
+weder aktive WFS-Daten noch lokale Interaktionsprotokolle.
+
+**Fortschritt:**
+
+- [x] sauberer Paket-3A-Stand und neuer lokaler Branch geprüft.
+- [x] Dokumentation, Provider, HTTP-Clients, Retries, Subprozesse und Tests geprüft.
+- [x] Timeoutwirkung, Dead Ends, Werte, Dateien und Verifikation geplant.
+- [x] Implementierung und fokussierte Tests abgeschlossen: 11 Tests bestanden.
+- [x] Gesamtsuite (126 Tests) und manueller Reliability-Review erfolgreich.
+- [x] `code-documentation` angewendet und Dokumentation gegengeprüft.
+- [x] Paket 3B nach vollständiger Verifikation abgeschlossen.
+
+**Verifikationsergebnis:** `python -m pytest tests/test_provider_timeouts.py
+-q` meldete 11 bestandene Tests; `python -m pytest` meldete 126 bestandene
+Tests in unter fünf Sekunden. `python -m compileall -q app`, `python -m app
+--help` und `git diff --check` waren erfolgreich. Kontrollierte Fakes belegten
+Cancellation des Router-, Formulator-, STT- und Edge-TTS-Aufrufs, die
+HTTPX-Timeoutübersetzung von OpenAI-TTS, WFS-Connect-/Read-Timeouts ohne
+Dateiänderung, den einzelnen LLM-Transportversuch sowie den begrenzten
+Übersetzungsaufruf. Logs enthielten weder Testanfragen noch private
+Exceptiontexte. JSONL enthielt bei Query-Timeout genau die kontrollierte finale
+Fallbackantwort; STT erzeugte keinen Datensatz und TTS veränderte den vorhandenen
+Textdatensatz nicht. Es wurden keine Runtime-Dateien, Abhängigkeiten oder
+Remote-Einstellungen geändert.
+
+**Strukturentscheidung:** `app/providers/llm.py`, `app/service.py` und
+`app/wfs_sync.py` bleiben trotz mehr als 400 Zeilen unverändert zugeschnitten.
+Die Ergänzungen betreffen jeweils ihre vorhandene Provider-, Orchestrierungs-
+beziehungsweise WFS-Transportverantwortung. Eine Aufteilung in Paket 3B würde
+die ausdrücklich ausgeschlossene allgemeine Modularisierung vorziehen und den
+Reliability-Diff unnötig vergrößern.
+
 ### Paket 4 (P1): Sessions atomar und begrenzt speichern
 
 **Ziel:** Kein unbeschränktes Wachstum, kein direkter nicht-atomarer Write und

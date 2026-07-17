@@ -24,6 +24,7 @@ ersetzt beziehungsweise über lokale Testantworten geprüft.
 | `tests/test_frontend_security.py` | statische Absicherung der Leaflet-Popup-Sinks |
 | `tests/test_safety.py` | Akutgefahr-Vertrag, kontrollierte Antwort und TTS |
 | `tests/test_observability.py` | technische Events, finale JSONL-Paare, Redaktionsgrenzen und Schreibfehler |
+| `tests/test_provider_timeouts.py` | LLM-, Speech-, WFS- und Übersetzungs-Timeouts sowie Fallbacks |
 
 ## Continuous Integration
 
@@ -58,6 +59,7 @@ Fokussierte Prüfung des Protokollpfads:
 
 ```powershell
 python -m pytest tests/test_observability.py -q
+python -m pytest tests/test_provider_timeouts.py -q
 ```
 
 ## Fehlende automatisierte Prüfungen

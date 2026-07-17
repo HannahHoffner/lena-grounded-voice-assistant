@@ -32,6 +32,12 @@ Setze mindestens `REWRITE_PROVIDER=template` und `WFS_AUTO_SYNC=false`, wenn der
 Start keine Modell- oder WFS-Anfrage auslösen soll. Das Frontend bleibt nutzbar;
 Speech und Kartenkacheln können ohne Netzwerk eingeschränkt sein.
 
+Für langsame oder kontrolliert blockierte Provider können die Timeoutwerte aus
+[Konfiguration](configuration.md) angepasst werden. Sehr kleine Werte eignen
+sich nur für Tests. Ein Timeout führt bei Query-Providern in den vorhandenen
+Fallback; Speech antwortet mit HTTP 503 und WFS behält den zuletzt aktivierten
+Datenstand.
+
 ## Zustandsdateien
 
 `runtime/` enthält generierte WFS-Stagingdaten, Sessions und bei aktivierter
