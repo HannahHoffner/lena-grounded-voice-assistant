@@ -20,7 +20,7 @@ eigenen Pull Request entsprechen.
 
 - [ ] P0-Sicherheitsbefunde besitzen fachlich/technisch freigegebene Lösungen
       und Regressionstests.
-- [ ] `Code3/` besitzt eine kanonische Git-Historie und CI-fähige Baseline.
+- [x] `Code3/` besitzt eine kanonische Git-Historie und CI-fähige Baseline.
 - [ ] Nutzer-, WFS- und Übersetzungsdaten werden atomar, begrenzt und
       nachvollziehbar verarbeitet.
 - [ ] Fallbacks sind redigiert beobachtbar, ohne Secrets oder Nutzerdaten zu
@@ -134,12 +134,13 @@ Blablador-Nutzung, Übersetzung, Karten und Fallbacks. Nutzeranfragen lesen nur
 
 ### Working Tree Considerations
 
-`Code3/` ist kein Git-Repository. Bestehende Nutzeränderungen, Branches und Diffs
-sind nicht unterscheidbar. `.env` und `.env.local` wurden nicht gelesen. Bis zur
-Git-Baseline darf keine automatisierte Bereinigung oder Massenformatierung
-stattfinden. `runtime/`, `.pytest_cache/`, `__pycache__/` und lokale Secrets sind
-generiert; `app/static/vendor/` ist Drittanbieter-Code. Aktivierte Dateien unter
-`data/` dürfen nur über definierte Wartungsprozesse verändert werden.
+Zum Zeitpunkt des ursprünglichen Reviews war `Code3/` kein Git-Repository;
+Nutzeränderungen, Branches und Diffs waren dort nicht unterscheidbar. Paket 1
+hat diesen Stand inzwischen auf einem neuen Branch des bestehenden
+LENA-Repositories versioniert. `.env` und `.env.local` wurden nicht gelesen.
+`runtime/`, `.pytest_cache/`, `__pycache__/` und lokale Secrets sind generiert;
+`app/static/vendor/` ist Drittanbieter-Code. Aktivierte Dateien unter `data/`
+dürfen nur über definierte Wartungsprozesse verändert werden.
 
 ## Dead-End-Risiken
 
@@ -448,7 +449,7 @@ bewusst versioniert, lokale Zustände und Secrets ausgeschlossen und die bereits
 lokal funktionierenden Python-Prüfungen als minimale GitHub-Actions-Baseline
 verdrahtet.
 
-- Status: In progress (2026-07-17).
+- Status: Completed (2026-07-17).
 - Entscheidungspfad: **A – bestehendes kanonisches Repository gefunden**.
 - Nutzen: sehr hoch. Aufwand: mittel. Änderungsrisiko: mittel–hoch wegen des
   bewussten Wechsels vom bisherigen v1/v2-Baum auf den geprüften Code3-Baum.
@@ -562,23 +563,23 @@ Deployment, Node-, Browser-, Lint-, Typ- oder Securityschritt wird ergänzt.
 
 **Akzeptanzkriterien:**
 
-- [ ] Kanonischer LENA-Remote und Ausgangscommit sind dokumentiert und bleiben
+- [x] Kanonischer LENA-Remote und Ausgangscommit sind dokumentiert und bleiben
       unverändert erreichbar.
-- [ ] `modernization/code3-baseline` basiert auf `c20a38a`; kein neuer Remote,
+- [x] `modernization/code3-baseline` basiert auf `c20a38a`; kein neuer Remote,
       Push oder Merge erfolgt.
-- [ ] Der Branch enthält ausschließlich geprüfte Source-, Dokumentations-,
+- [x] Der Branch enthält ausschließlich geprüfte Source-, Dokumentations-,
       Fixture- und aktivierte Laufzeitdaten sowie minimale CI-Metadaten.
-- [ ] `.env*`, Sessions, Runtime-Staging, Caches, Builds, Audio, DBs, Modelle,
+- [x] `.env*`, Sessions, Runtime-Staging, Caches, Builds, Audio, DBs, Modelle,
       Browserprofile und OneDrive-Konflikte sind wirksam ausgeschlossen.
-- [ ] Keine ungeeignete Datei über 1 MiB und keine unerwartete Binärdatei ist im
+- [x] Keine ungeeignete Datei über 1 MiB und keine unerwartete Binärdatei ist im
       Index; die drei Leaflet-PNGs sind bewusst versioniert.
-- [ ] `python -m pytest` und `python -m compileall -q app` laufen vor den Commits
+- [x] `python -m pytest` und `python -m compileall -q app` laufen vor den Commits
       sowie auf dem finalen Branch erfolgreich.
-- [ ] GitHub Actions bildet exakt diese lokal erfolgreichen Prüfungen ohne
+- [x] GitHub Actions bildet exakt diese lokal erfolgreichen Prüfungen ohne
       Secrets oder Schreibrechte ab; ein Remote-Lauf wird nicht behauptet.
-- [ ] `git status`, `git diff --check`, `git ls-files`, `git check-ignore` und
+- [x] `git status`, `git diff --check`, `git ls-files`, `git check-ignore` und
       Secret-/Datenschutzprüfungen liefern nachvollziehbare Ergebnisse.
-- [ ] Baseline- und CI-Commit sind getrennt und behaupten keine verlorene
+- [x] Baseline- und CI-Commit sind getrennt und behaupten keine verlorene
       Entwicklungshistorie.
 
 **Dead Ends und Mitigation:**
@@ -799,7 +800,8 @@ Evidence: Dateiinventar und abschließende Inhaltsprüfung.
 - [x] Vollständige relevante Pytest-Suite ausgeführt.
 - [x] Packaging real gebaut und Inhalt kontrolliert.
 - [x] Finalen Dokumentationsumfang selbst geprüft.
-- [ ] Git-Diff geprüft — nicht möglich, da `Code3/` kein Git-Repository ist.
+- [x] Git-Diff für Paket 1 im kanonischen Repository geprüft; beim ursprünglichen
+      Review war dies in `Code3/` noch nicht möglich.
 
 Evidence: 58 Tests bestanden; `compileall` und Import-Smoke erfolgreich; Wheel
 ohne Static/Data bestätigt.
@@ -828,10 +830,10 @@ Pfadinventar und erneute Test-/Compile-Ausführung.
 
 ## Rollback and Recovery
 
-Dieser Durchlauf ändert nur zwei neue Markdown-Dateien. Rollback bedeutet, diese
-beiden Dateien im späteren kanonischen Git-Repository zu entfernen. Da aktuell
-kein Git verfügbar ist, dürfen sie nicht über destructive Shell-Befehle
-zurückgesetzt werden; eine spätere Rücknahme erfolgt als expliziter Patch.
+Der ursprüngliche Review-Durchlauf änderte nur zwei Markdown-Dateien. Seine
+Rollbacknotiz entstand vor der Git-Baseline. Seit Paket 1 erfolgen Rücknahmen im
+kanonischen Repository als explizite Reverts; destruktive Resets bleiben
+ausgeschlossen.
 
 Für spätere Pakete gilt:
 
@@ -917,6 +919,23 @@ Ein Arbeitspaket wird gestoppt und nicht „fertig“ erklärt, wenn:
 - 2026-07-17 — 21 fokussierte Safety-Tests sowie vollständige Suite mit 81
   Tests und `python -m compileall -q app` erfolgreich; `code-documentation`
   auf Architektur, Datenfluss, Review und ExecPlan angewendet.
+- 2026-07-17 — Projektumfeld begrenzt durchsucht: aktives
+  `lena-grounded-voice-assistant`-Repository als kanonisch bestätigt; ältere
+  LENA-/Thesis-Repositories als Backups beziehungsweise fachfremd verworfen.
+- 2026-07-17 — Neuen lokalen Branch `modernization/code3-baseline` auf
+  `c20a38a` angelegt und 51 geprüfte Code3-Dateien übernommen. Der Commit
+  `43b88bc` bewahrt die Vorgängerhistorie und kennzeichnet den Stand als
+  geprüfte Baseline, nicht als rekonstruierte Entstehungshistorie.
+- 2026-07-17 — `.gitignore`, Index, Dateigrößen, Binärtypen, sensible Pfade und
+  Secret-Muster geprüft. Lokale `.env*`, Sessions, Runtime-Staging und
+  generierte Artefakte sind ausgeschlossen; aktive WFS-/i18n-/Canonical-Daten
+  und Testfixtures bleiben versioniert.
+- 2026-07-17 — Minimalen GitHub-Actions-Workflow mit `checkout@v7`,
+  `setup-python@v6`, Python 3.11, Pytest und `compileall` ergänzt. Lokale
+  Workflowbefehle und 81 Tests bestehen; ein Remote-CI-Lauf ist nicht erfolgt.
+- 2026-07-17 — `$code-documentation` auf README, Setup, Testing,
+  Architekturreview und ExecPlan angewendet; kein Remote verändert, kein Push
+  oder Merge ausgeführt.
 
 ## Decision Log
 
@@ -933,11 +952,29 @@ Ein Arbeitspaket wird gestoppt und nicht „fertig“ erklärt, wenn:
 - Decision: Packaging als P1, nicht kosmetischen Build-Befund behandeln.
   - Context: Reales Wheel enthält weder UI noch Daten.
   - Choice: Clean-Install-Smoke als späteres Acceptance-Gate.
+- Decision: Bestehenden LENA-Remote statt neuem Code3-Repository verwenden.
+  - Context: `MA Projekt/code` ist sauber, remote-synchron und besitzt die
+    spezifische LENA-v1/v2-Historie; Code3 selbst hat keine Git-Metadaten.
+  - Options: neues Repository, Backup übernehmen oder neuer Branch im aktiven
+    LENA-Repository.
+  - Choice: Pfad A mit `modernization/code3-baseline` ab `c20a38a`.
+  - Consequences: Historie bleibt erreichbar; Code3 ersetzt auf diesem Branch
+    bewusst die alte Parallelarchitektur.
+- Decision: GitHub Actions auf bestehende lokale Prüfungen begrenzen.
+  - Context: GitHub ist durch `origin` belegt; keine weiteren Quality-Tools sind
+    konfiguriert.
+  - Choice: Python 3.11, Pytest und `compileall`, nur `contents: read`.
+  - Consequences: robuste minimale CI; Lint, Typen, Browser und Packaging folgen
+    in getrennten Paketen.
 
 ## Discoveries
 
-- `Code3/` besitzt keine Git-Metadaten; benachbarte Repositories sind andere
-  Projektstände.
+- `Code3/` selbst besitzt keine Git-Metadaten; der geprüfte Stand liegt nun im
+  bestehenden LENA-Repository auf `modernization/code3-baseline`.
+- Der Baseline-Vergleich umfasst 5 identische, 19 veränderte, 27 neue und 127
+  nur im Vorgänger vorhandene Dateien. Der Baseline-Commit umfasst 172
+  Statuszeilen einschließlich einer erkannten Umbenennung; mit dem separat
+  ergänzten Workflow umfasst der finale Branchdiff 173 Pfade.
 - Alle vom Frontend verwendeten IDs existieren im HTML; alle nutzerbezogenen
   Backendrouten sind verdrahtet.
 - Popupdaten folgen seit Paket 0A dem bereits etablierten sicheren
@@ -954,7 +991,9 @@ Ein Arbeitspaket wird gestoppt und nicht „fertig“ erklärt, wenn:
 - Acceptance requirements: Review, Zielbild und PR-Pakete erstellt; Paket 0A
   schließt beide bestätigten Popup-HTML-Sinks. Paket 0B validiert das
   LLM-Akutgefahr-Signal und ersetzt bei `true` den normalen Pfad durch den
-  kontrollierten, lokalisierten 112-Hinweis.
+  kontrollierten, lokalisierten 112-Hinweis. Paket 1 bewahrt die bestehende
+  LENA-Historie, versioniert Code3 auf einem lokalen Baseline-Branch und ergänzt
+  minimale GitHub-CI.
 - Tests: `python -m pytest tests/test_frontend_security.py -q` — 2 passed;
   `python -m pytest tests/test_safety.py -q` — 21 passed;
   `python -m pytest` — 81 passed.
@@ -963,9 +1002,13 @@ Ein Arbeitspaket wird gestoppt und nicht „fertig“ erklärt, wenn:
   alle Router-/Formulatoraufrufe, Pydantic-Verträge, früher Safety-Return,
   Sprachabdeckung und beide TTS-Providerpfade statisch nachvollzogen; keine
   Live-Provideraufrufe.
-- Documentation: `code-documentation` angewendet; Pfade, Symbole, Befehle,
-  Prioritäten, UTF-8, Markdown-Fences und Secret-Muster geprüft.
+- Git/CI: Branch `modernization/code3-baseline`, Baseline-Commit `43b88bc`;
+  Workflow lokal strukturell geprüft, aber nicht remote ausgeführt. Kein Push,
+  Merge oder Remote-Update.
+- Documentation: `code-documentation` angewendet; README, Setup, Testing,
+  Architekturreview und ExecPlan mit Git-, CI-, Daten- und Secret-Regeln
+  abgeglichen.
 - Residual risks: fehlender Browser-E2E-Test für Paket 0A, LLM-Falschpositive
   und -negative sowie vier ungeprüfte Übersetzungsentwürfe in Paket 0B,
-  fehlendes Git, Session-/WFS-Integrität, unvollständiges Wheel und nicht live
-  geprüfte externe Dienste.
+  fehlender Remote-CI-/PR-Nachweis, Session-/WFS-Integrität, unvollständiges
+  Wheel, nicht fixierte Abhängigkeiten und nicht live geprüfte externe Dienste.

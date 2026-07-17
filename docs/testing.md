@@ -3,7 +3,7 @@
 ## Ausführung
 
 ```powershell
-cd Code3
+cd code
 python -m pip install -e ".[dev]"
 python -m pytest
 ```
@@ -21,6 +21,24 @@ ersetzt beziehungsweise über lokale Testantworten geprüft.
 | `tests/test_retrieval.py` | Kategorien, Zielgruppen und Ranking |
 | `tests/test_sessions.py` | Session-Lebenszyklus und Folgefragen |
 | `tests/test_wfs_sync.py` | Validierung, Normalisierung, Diff und Promotion |
+| `tests/test_frontend_security.py` | statische Absicherung der Leaflet-Popup-Sinks |
+| `tests/test_safety.py` | Akutgefahr-Vertrag, kontrollierte Antwort und TTS |
+
+## Continuous Integration
+
+`.github/workflows/test.yml` verwendet GitHub Actions mit Python 3.11 und führt
+dieselben nachgewiesenen Befehle wie lokal aus:
+
+```powershell
+python -m pytest
+python -m compileall -q app
+```
+
+Der Workflow besitzt nur Leserechte auf Repository-Inhalte und benötigt keine
+Secrets. Er enthält bewusst kein Deployment, keinen Node-/Browser-Schritt und
+keine noch unkonfigurierten Linter, Type-Checker oder Security-Scanner. Ein
+Remote-CI-Lauf kann erst nach Push beziehungsweise Pull Request bestätigt
+werden; die lokale Ausführung prüft nur Befehle und Workflowstruktur.
 
 ## Manuelle Smoke-Checks
 
@@ -34,5 +52,6 @@ ersetzt beziehungsweise über lokale Testantworten geprüft.
 
 Im Projekt sind derzeit keine Linter-, Type-Checker-, Coverage- oder
 Dokumentations-Linkprüfungen konfiguriert. Es gibt außerdem keine Browser-End-to-
-End-Suite. Solche Werkzeuge dürfen erst nach bewusster Projektentscheidung als
-neue Entwicklungsabhängigkeiten ergänzt werden.
+End-Suite und keinen reproduzierbaren Lock-/Constraints-Stand. Solche Werkzeuge
+und Abhängigkeitsfestlegungen dürfen erst nach bewusster Projektentscheidung in
+einem separaten Paket ergänzt werden.

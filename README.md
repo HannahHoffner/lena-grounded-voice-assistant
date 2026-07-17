@@ -30,7 +30,7 @@ kennt weder freie Kapazitäten noch eine garantierte Aufnahme.
 Voraussetzung ist Python 3.11 oder neuer.
 
 ```powershell
-cd Code3
+cd code
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -e ".[dev]"
@@ -127,9 +127,33 @@ Quelle: Stadt Leipzig, WFS Wohnungslosenhilfe,
 - WFS-Promotion und Übersetzungsprüfung besitzen keine Admin-Oberfläche.
 - `runtime/sessions.json` kann Nutzereingaben enthalten und ist nicht für eine
   gemeinsame oder öffentliche Ablage bestimmt.
-- `Code3/` besitzt im aktuellen Arbeitsordner kein eigenes `.git`-Verzeichnis;
-  Versionskontrolle und Review müssen daher auf Ebene des tatsächlichen
-  Ziel-Repositories eingerichtet beziehungsweise ausgeführt werden.
+- Das Wheel enthält derzeit nicht alle statischen und fachlichen Laufzeitdaten;
+  bis zur Packaging-Modernisierung ist die editable Installation aus dem
+  Checkout der nachgewiesene Betriebsweg.
+
+## Versionskontrolle und CI
+
+Das kanonische Repository ist `lena-grounded-voice-assistant`. Der Branch
+`modernization/code3-baseline` übernimmt den geprüften Code3-Stand auf Basis des
+historischen Commits `c20a38a`. Der Baseline-Commit dokumentiert einen
+kontrollierten Ausgangsstand; er rekonstruiert nicht die außerhalb von Git
+entstandene Entwicklungsgeschichte von Code3.
+
+Erstelle Änderungen auf kurzen Arbeitsbranches und halte Commits auf ein
+reviewbares Thema begrenzt. Echte Zugangsdaten, Sessions und lokale Runtime-
+Artefakte dürfen nicht versioniert werden. Vor einem Commit sollten mindestens
+folgende Befehle erfolgreich sein:
+
+```powershell
+python -m pytest
+python -m compileall -q app
+git diff --check
+```
+
+`.github/workflows/test.yml` führt die beiden Python-Prüfungen bei Pushes und
+Pull Requests auf GitHub aus. Ein vorhandener Workflow ist noch kein Nachweis
+eines erfolgreichen Remote-Laufs; maßgeblich ist der jeweilige Checkstatus auf
+GitHub.
 
 ## Weiterentwicklung und Wartung
 

@@ -17,6 +17,15 @@ durch einen kontrollierten Hinweis auf 112. Die Erkennung bleibt von
 LLM-Verfügbarkeit und -Bewertung abhängig. Die Übersetzungsentwürfe für
 Englisch, Polnisch, Rumänisch und Russisch sind noch menschlich zu prüfen.
 
+Der Git-/CI-Befund wurde am 2026-07-17 mit Modernisierungspaket 1 geschlossen.
+Der geprüfte Stand liegt auf dem lokalen Branch
+`modernization/code3-baseline` des bestehenden GitHub-Repositories
+`lena-grounded-voice-assistant`. Der Commit `43b88bc` bildet die Code3-Baseline
+auf Basis der erhaltenen v1/v2-Historie ab. Eine minimale GitHub-Actions-Datei
+führt Pytest und `compileall` aus; ein Remote-CI-Lauf wurde noch nicht
+ausgeführt. Historische Aussagen dieses Reviews zur fehlenden Git-Baseline
+bleiben als Ausgangsbefund lesbar, sind aber nicht mehr der aktuelle Stand.
+
 ## 1. Executive Summary
 
 `Code3/` ist ein kompakter, grundsätzlich nachvollziehbarer Prototyp mit einer
@@ -30,8 +39,8 @@ Basis für die weitere Entwicklung.
 Der aktuelle Stand ist jedoch noch kein belastbarer Entwicklungs- oder
 Produktionsstand. Die wichtigsten Ursachen sind:
 
-- `Code3/` ist nicht versionskontrolliert; Status, Branches, Diffs und
-  unversionierte Dateien sind nicht feststellbar.
+- Die Code3-Baseline ist nun im bestehenden LENA-Repository versioniert; der
+  lokale Baseline-Branch ist noch nicht gepusht oder per Remote-CI geprüft.
 - Das gebaute Wheel enthält weder Frontend noch Laufzeitdaten und kann die
   Anwendung deshalb nicht vollständig ausliefern.
 - Der im Review bestätigte Stored-XSS-Pfad in Leaflet-Popups ist durch Paket 0A
@@ -287,7 +296,8 @@ Policies sollten aber getrennt und getestet werden.
   versehen.
 - Es gibt keinen Lock- oder Constraints-Stand für reproduzierbare Installationen.
 - Das Wheel ist unvollständig und damit ein bestätigter Packaging-Dead-End.
-- Es gibt keine CI-, Container-, Service-, TLS- oder Deploymentkonfiguration.
+- Es gibt inzwischen minimale Python-CI, aber weiterhin keine Container-,
+  Service-, TLS- oder Deploymentkonfiguration.
 - `pyproject.toml` beschreibt den Stand noch als „Markdown-grounded“.
 - Paketversion 0.1.0 und API-Version 0.2.0 sind inkonsistent.
 
@@ -352,7 +362,8 @@ HTML/JavaScript-ID-Abgleich waren erfolgreich.
 - fehlende Request-Limits bei Speech.
 - unvollständiges Distributionsartefakt.
 - fehlende beobachtbare Fehler- und Fallbackereignisse.
-- keine Git-Historie oder belastbare Änderungsprüfung für `Code3/`.
+- der neue Baseline-Branch ist noch nicht remote geteilt oder durch einen Pull
+  Request reviewt.
 
 ### Weitere Sicherheitsbeobachtungen
 
@@ -360,8 +371,10 @@ HTML/JavaScript-ID-Abgleich waren erfolgreich.
   Bindung ohne Authentifizierung, Rate-Limit, Trusted-Host- oder TLS-Schutz.
 - `/api/health` gibt keine Secrets aus; das ist positiv.
 - `.env` und `.env.local` wurden bewusst nicht gelesen.
-- Es wurde nicht geprüft, ob lokale Geheimnisse früher anderweitig geteilt oder
-  versioniert wurden, da keine Git-Historie existiert.
+- Im ursprünglichen Review konnte mangels Code3-Historie nicht geprüft werden,
+  ob lokale Geheimnisse früher anderweitig geteilt wurden. Die neue Baseline
+  enthält laut Indexscan keine erkannten produktiven Geheimnisse; dies ersetzt
+  keine Prüfung externer oder verlorener Historien.
 - Nutzerdaten werden an Blablador/Speech-Dienste gesendet, wenn konfiguriert.
   Ein dokumentierter Datenschutz- und Einwilligungsrahmen fehlt.
 
@@ -392,7 +405,7 @@ Alle Tests bestanden. `compileall` und Import-Smoke-Test waren erfolgreich.
 - kein Wheel-Installations-/Packaging-Smoke-Test
 - keine Accessibility-Automation
 - keine Coverage-Messung, kein Linter, Formatter oder Type-Checker
-- keine CI-Konfiguration
+- kein bestätigter Remote-CI-Lauf; lokal sind Workflowbefehle verifiziert
 
 Die Provider-Tests prüfen sinnvoll Prompt, IDs und Grounding, ersetzen aber den
 realen externen Dienst. Contract-/Sandbox-Tests gegen einen kontrollierten
@@ -504,7 +517,7 @@ profitieren und Importzyklen vermieden werden.
 |---|---|---:|---:|---:|---|---|
 | P0 | Popup-Rendering ohne HTML-Interpolation | sehr hoch | niedrig | klein | DOM-Testfixture | Popup-Formatierung |
 | P0 | Akutgefahr-Pfad betreiben und Sprachentwürfe freigeben | sehr hoch | niedrig | klein | menschliches Übersetzungsreview, Providerbeobachtung | LLM-Falschpositive/-negative |
-| P1 | `Code3/` in kanonische Git-Historie überführen | sehr hoch | mittel | klein–mittel | Ziel-Repository festlegen | versehentlich falscher Baseline-Import |
+| P1 | Baseline-Branch per Pull Request reviewen und remote absichern | sehr hoch | niedrig | klein | Push-Freigabe | Remote-Checks oder Mergekonflikte |
 | P1 | Speech-Größenlimits und Expositionsgrenze | hoch | niedrig | klein | Grenzwerte definieren | große legitime Audios |
 | P1 | strukturiertes redigiertes Logging | hoch | niedrig | mittel | Event-/Datenschutzschema | Lograuschen |
 | P1 | Session-Write, Lock und Retention absichern | hoch | mittel | mittel | Retention festlegen | Sessionverlust bei Migration |
@@ -520,8 +533,8 @@ profitieren und Importzyklen vermieden werden.
 
 ## 11. Offene Fragen und Unsicherheiten
 
-- Welches Git-Repository soll `Code3/` kanonisch aufnehmen, und welche Dateien
-  sind dort bereits anderweitig versioniert?
+- Wann soll `modernization/code3-baseline` nach gesonderter Freigabe gepusht und
+  als Pull Request gegen den gewünschten Zielbranch geprüft werden?
 - Ist LENA ausschließlich ein lokaler Einzelprozess-Prototyp oder künftig ein
   öffentlich erreichbarer Mehrnutzer-Dienst?
 - Wer prüft und genehmigt die vorhandenen Entwürfe des 112-Hinweises für

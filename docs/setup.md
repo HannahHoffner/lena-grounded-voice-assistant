@@ -10,7 +10,7 @@
 ## Entwicklungsinstallation
 
 ```powershell
-cd Code3
+cd code
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
@@ -34,6 +34,27 @@ Speech und Kartenkacheln können ohne Netzwerk eingeschränkt sein.
 `runtime/` enthält generierte WFS-Stagingdaten und Sessions. Das Verzeichnis ist
 laut `.gitignore` lokal. `data/canonical/offers.json` und die Dateien unter
 `data/wfs/` sind dagegen der aktivierte, nachvollziehbare Datenstand.
+
+## Git-Arbeitsweise und lokale Daten
+
+Das kanonische Checkout-Verzeichnis ist `code/`. Der erste Code3-Baseline-
+Commit baut auf der erhaltenen LENA-v1/v2-Historie auf, bildet aber nicht die
+vollständige Entstehungsgeschichte des zuvor unversionierten Code3-Ordners ab.
+Neue Arbeiten erfolgen auf einem kurzen Branch vom jeweils freigegebenen Stand;
+Commits sollen ein fachlich zusammengehöriges Thema enthalten.
+
+Versioniert werden die aktivierten Daten unter `data/canonical/`, `data/wfs/`
+und `data/i18n/` sowie Testfixtures. Lokal bleiben insbesondere:
+
+- `.env` und `.env.*` außer `.env.example`,
+- `runtime/` einschließlich Fragen und Antworten in Sessions,
+- Caches, virtuelle Umgebungen, Builds und Coverage-Artefakte,
+- Audio, lokale Datenbanken, Browserprofile und heruntergeladene Modelle,
+- temporäre WFS-Promotionen und OneDrive-Konfliktdateien.
+
+Prüfe vor jedem Commit mindestens `git status`, `git diff --check` und die
+vollständige Staging-Liste. Übertrage keine lokale `.env` oder Sessiondatei in
+Issues, Logs oder CI-Konfigurationen.
 
 ## WFS-Betrieb
 

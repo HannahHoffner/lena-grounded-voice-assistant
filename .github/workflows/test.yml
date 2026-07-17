@@ -1,0 +1,31 @@
+name: Python checks
+
+"on":
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v7
+
+      - name: Python einrichten
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+
+      - name: Abhängigkeiten installieren
+        run: python -m pip install -e ".[dev]"
+
+      - name: Tests ausführen
+        run: python -m pytest
+
+      - name: Python-Module kompilieren
+        run: python -m compileall -q app
