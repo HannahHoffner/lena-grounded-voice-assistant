@@ -2,7 +2,7 @@
 
 ## Status
 
-- State: In progress (Remote-Veröffentlichung blockiert)
+- State: Complete
 - Owner: Codex
 - Created: 2026-07-17
 - Last updated: 2026-07-17
@@ -22,11 +22,11 @@ mit tatsächlich ausgeführter GitHub-CI.
       fachliche Daten und besteht einen Clean-Install-/Start-Smoke-Test.
 - [x] Der ältere unversionierte Ordner `Code3` ist nach Inhalts- und
       Secret-Prüfung eindeutig als Archiv stillgelegt, ohne ihn zu löschen.
-- [ ] Der bestehende Branch wird ohne History-Rewrite gepusht und als Draft-PR
+- [x] Der bestehende Branch wird ohne History-Rewrite gepusht und als Draft-PR
       gegen den Remote-Default-Branch geöffnet.
-- [ ] GitHub Actions läuft für den veröffentlichten Stand tatsächlich
+- [x] GitHub Actions läuft für den veröffentlichten Stand tatsächlich
       erfolgreich; ein lokaler Strukturcheck wird nicht als Remote-CI gezählt.
-- [ ] Bestehendes Laufzeit-, API- und Datenverhalten bleibt erhalten.
+- [x] Bestehendes Laufzeit-, API- und Datenverhalten bleibt erhalten.
 
 ## Scope
 
@@ -159,17 +159,17 @@ Tests wurden am 2026-07-17 geprüft.
 
 ### Milestone 3: Verification
 
-- [ ] Run targeted tests.
-- [ ] Run integration/build checks.
-- [ ] Verify packaging, data discovery and installed startup.
-- [ ] Review final diff and secrets.
-- [ ] Push, open Draft-PR and observe Remote-CI.
+- [x] Run targeted tests.
+- [x] Run integration/build checks.
+- [x] Verify packaging, data discovery and installed startup.
+- [x] Review final diff and secrets.
+- [x] Push, open Draft-PR and observe Remote-CI.
 
 ### Milestone 4: Documentation
 
 - [x] Invoke `code-documentation`.
 - [x] Review documentation changes.
-- [ ] Rerun affected checks.
+- [x] Rerun affected checks.
 
 ## Validation plan
 
@@ -206,6 +206,11 @@ Force-Push, keinen Merge und keine Remote-/Default-Branch-Änderung.
   Plan-Dokumentation angewendet.
 - 2026-07-17 — GitHub-Veröffentlichung blockiert: `gh` ist nicht installiert;
   gemäß Publish-Workflow kein alternativer Push oder PR erzeugt.
+- 2026-07-17 — GitHub CLI 2.96.0 installiert und als `HannahHoffner`
+  authentifiziert; Commit `e96fa2a` erstellt und Branch ohne Force-Push nach
+  `origin/modernization/code3-baseline` veröffentlicht.
+- 2026-07-17 — Draft-PR #1 gegen `main` geöffnet. Push- und PR-Workflow liefen
+  auf GitHub/Linux/Python 3.11 in 30 beziehungsweise 34 Sekunden erfolgreich.
 
 ## Decision log
 
@@ -222,16 +227,16 @@ Force-Push, keinen Merge und keine Remote-/Default-Branch-Änderung.
 
 - Setuptools kodiert `data-files` im Wheel unter dessen `.data/data`-Bereich;
   nach Installation liegen sie korrekt unter dem Präfix der Umgebung.
-- Auf dem Rechner ist ausschließlich CPython 3.14 installiert. Die lokale
-  Clean-Installation ersetzt den vorgesehenen Python-3.11-Linux-Nachweis nicht.
+- Auf dem Rechner ist ausschließlich CPython 3.14 installiert. GitHub Actions
+  ergänzt den lokalen Nachweis durch Linux mit CPython 3.11.
 - `Code3` besaß `.env`, `.env.local` und lokale Runtime-Zustände. Diese Inhalte
   wurden nicht gelesen oder vervielfältigt und dürfen nicht veröffentlicht
   werden.
 
 ## Final verification summary
 
-- Acceptance requirements: Constraints, Wheel und eindeutiger Checkout erfüllt;
-  Draft-PR/Remote-CI wegen fehlendem `gh` ausstehend.
+- Acceptance requirements: erfüllt; der veröffentlichte Draft-PR ist technisch
+  geprüft, bleibt aber bis zu einem menschlichen Review bewusst Draft.
 - Tests: `python -m pytest` — 83 passed; Packagingtests — 2 passed.
 - Build: Wheel erfolgreich; erwartete Dateien enthalten; Clean-Install-Smoke
   gegen `/` und `/api/health` erfolgreich.
@@ -239,5 +244,7 @@ Force-Push, keinen Merge und keine Remote-/Default-Branch-Änderung.
   alter Quellpfad fehlt, Archivziel existiert.
 - Documentation: `code-documentation` angewendet; README, Setup, Testing und
   beide ExecPlans aktualisiert.
-- Residual risks: kein Python-3.11-/Linux- und kein Remote-CI-Nachweis bis zur
-  Veröffentlichung; Constraints enthalten keine Hashes.
+- Remote verification: GitHub-Actions-Runs `29568197722` und `29568219430`
+  erfolgreich; Draft-PR `#1` gegen `main` geöffnet.
+- Residual risks: menschliches PR-Review ausstehend; Constraints enthalten keine
+  Artefakthashes.

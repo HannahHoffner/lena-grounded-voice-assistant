@@ -939,8 +939,10 @@ Ein Arbeitspaket wird gestoppt und nicht „fertig“ erklärt, wenn:
 - 2026-07-17 — Python-3.11-Constraints ergänzt, Wheel um Frontend und aktive
   Daten vervollständigt und per Clean-Install-/Health-Smoke geprüft. Die
   unversionierte Vorläuferkopie wurde nach Vergleich reversibel in
-  `Code3-archive-pre-git-20260717` umbenannt. Push, Draft-PR und Remote-CI sind
-  weiterhin durch die lokal fehlende GitHub CLI blockiert.
+  `Code3-archive-pre-git-20260717` umbenannt.
+- 2026-07-17 — Branch veröffentlicht und Draft-PR #1 gegen `main` geöffnet;
+  beide GitHub-Actions-Läufe auf Linux/Python 3.11 einschließlich Wheel-Smoke
+  erfolgreich. Ein menschliches PR-Review steht noch aus.
 
 ## Decision Log
 
@@ -1009,13 +1011,13 @@ Ein Arbeitspaket wird gestoppt und nicht „fertig“ erklärt, wenn:
   alle Router-/Formulatoraufrufe, Pydantic-Verträge, früher Safety-Return,
   Sprachabdeckung und beide TTS-Providerpfade statisch nachvollzogen; keine
   Live-Provideraufrufe.
-- Git/CI: Branch `modernization/code3-baseline`, Baseline-Commit `43b88bc`;
-  Workflow lokal strukturell geprüft, aber nicht remote ausgeführt. Kein Push,
-  Merge oder Remote-Update.
+- Git/CI: Branch `modernization/code3-baseline`, Baseline-Commit `43b88bc` und
+  Reproduzierbarkeits-Commit `e96fa2a`; Draft-PR #1 gegen `main`. Push- und
+  PR-Workflow remote erfolgreich, kein Merge ausgeführt.
 - Documentation: `code-documentation` angewendet; README, Setup, Testing,
   Architekturreview und ExecPlan mit Git-, CI-, Daten- und Secret-Regeln
   abgeglichen.
 - Residual risks: fehlender Browser-E2E-Test für Paket 0A, LLM-Falschpositive
   und -negative sowie vier ungeprüfte Übersetzungsentwürfe in Paket 0B,
-  fehlender Remote-CI-/PR-Nachweis, Session-/WFS-Integrität, Constraints ohne
-  Artefakthashes und nicht live geprüfte externe Dienste.
+  ausstehendes menschliches PR-Review, Session-/WFS-Integrität, Constraints
+  ohne Artefakthashes und nicht live geprüfte externe Dienste.
