@@ -1,200 +1,41 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
-from pathlib import Path
 
-from app.kb import KnowledgeBase
-from app.models import Language, QueryAnswerResponse, QueryRequest, SessionEvent
-from app.sessions import SessionManager, SessionStore
+from app.models import Language
+from app.sessions import SessionStore
 
 
-def _manager(tmp_path) -> tuple[SessionManager, KnowledgeBase]:
-    kb = KnowledgeBase(Path(__file__).resolve().parents[1] / "data" / "published")
+def test_session_resolves_to_new_session_after_three_minutes(
+    tmp_path,
+    monkeypatch,
+) -> None:
+    current = datetime(2026, 7, 8, 12, 0, tzinfo=UTC)
+
+    def fake_now() -> datetime:
+        return current
+
+    monkeypatch.setattr("app.sessions.utc_now", fake_now)
     store = SessionStore(tmp_path / "sessions.json")
-    return SessionManager(store, kb, timeout_seconds=300), kb
+
+    first = store.resolve(None, Language.DE)
+    same = store.resolve(first.session_id, Language.DE)
+
+    assert same.session_id == first.session_id
+
+    current += timedelta(seconds=179)
+    still_same = store.resolve(first.session_id, Language.DE)
+
+    assert still_same.session_id == first.session_id
+
+    current += timedelta(seconds=2)
+    fresh = store.resolve(first.session_id, Language.DE)
+
+    assert fresh.session_id != first.session_id
+    assert fresh.turns == []
 
 
-def _response(session_id: str, page_ids: list[str], answer_text: str = "Test answer") -> QueryAnswerResponse:
-    return QueryAnswerResponse(
-        answer_text=answer_text,
-        status="ok",
-        retrieved_page_ids=page_ids,
-        provider="template",
-        model=None,
-        session_id=session_id,
-    )
+def test_session_timeout_default_is_three_minutes(tmp_path) -> None:
+    store = SessionStore(tmp_path / "sessions.json")
 
-
-def test_session_follow_up_keeps_same_entity_context(tmp_path) -> None:
-    manager, _ = _manager(tmp_path)
-    started_at = datetime(2026, 4, 21, 10, 0, tzinfo=UTC)
-    first_payload = QueryRequest(transcript="Wo kann ich duschen?", language=Language.DE)
-    first = manager.prepare_request(first_payload, now=started_at)
-    manager.record_turn(first.session, first_payload, _response(first.session.session_id, ["leipziger-oase"]), first.context, now=started_at)
-
-    second_payload = QueryRequest(transcript="Wie ist die Adresse?", language=Language.DE, session_id=first.session.session_id)
-    second = manager.prepare_request(second_payload, now=started_at + timedelta(seconds=30))
-
-    assert second.session.session_id == first.session.session_id
-    assert second.session_event == SessionEvent.CONTINUED
-    assert second.context.follow_up_mode == "referential"
-    assert second.context.preferred_page_ids == ["leipziger-oase"]
-
-
-def test_session_alternative_request_excludes_previous_place(tmp_path) -> None:
-    manager, _ = _manager(tmp_path)
-    now = datetime(2026, 4, 21, 10, 0, tzinfo=UTC)
-    first_payload = QueryRequest(transcript="Wo kann ich duschen?", language=Language.DE)
-    first = manager.prepare_request(first_payload, now=now)
-    manager.record_turn(
-        first.session,
-        first_payload,
-        _response(first.session.session_id, ["leipziger-oase", "wohnungsnotfallhilfe-pdf-leipziger-oase-katalog"]),
-        first.context,
-        now=now,
-    )
-
-    second_payload = QueryRequest(transcript="Gibt es noch einen anderen Ort?", language=Language.DE, session_id=first.session.session_id)
-    second = manager.prepare_request(second_payload, now=now + timedelta(seconds=20))
-
-    assert second.context.follow_up_mode == "alternative"
-    assert "leipziger-oase" in second.context.excluded_page_ids
-
-
-def test_session_topic_shift_keeps_session_but_drops_entity_bias(tmp_path) -> None:
-    manager, _ = _manager(tmp_path)
-    now = datetime(2026, 4, 21, 10, 0, tzinfo=UTC)
-    first_payload = QueryRequest(transcript="Wo kann ich duschen?", language=Language.DE)
-    first = manager.prepare_request(first_payload, now=now)
-    manager.record_turn(first.session, first_payload, _response(first.session.session_id, ["leipziger-oase"]), first.context, now=now)
-
-    second_payload = QueryRequest(transcript="Und was ist mit Essen?", language=Language.DE, session_id=first.session.session_id)
-    second = manager.prepare_request(second_payload, now=now + timedelta(seconds=40))
-
-    assert second.session.session_id == first.session.session_id
-    assert second.context.follow_up_mode == "topic_shift"
-    assert second.context.preferred_page_ids == []
-
-
-def test_session_timeout_starts_new_session(tmp_path) -> None:
-    manager, _ = _manager(tmp_path)
-    now = datetime(2026, 4, 21, 10, 0, tzinfo=UTC)
-    first_payload = QueryRequest(transcript="Where can I get food?", language=Language.EN)
-    first = manager.prepare_request(first_payload, now=now)
-    manager.record_turn(first.session, first_payload, _response(first.session.session_id, ["tafel-leipzig-markkleeberg"]), first.context, now=now)
-
-    second_payload = QueryRequest(transcript="Is it open today?", language=Language.EN, session_id=first.session.session_id)
-    second = manager.prepare_request(second_payload, now=now + timedelta(seconds=301))
-
-    assert second.session_event == SessionEvent.EXPIRED_RESET
-    assert second.session.session_id != first.session.session_id
-
-
-def test_language_change_starts_new_session(tmp_path) -> None:
-    manager, _ = _manager(tmp_path)
-    now = datetime(2026, 4, 21, 10, 0, tzinfo=UTC)
-    first_payload = QueryRequest(transcript="Where can I get food?", language=Language.EN)
-    first = manager.prepare_request(first_payload, now=now)
-    manager.record_turn(first.session, first_payload, _response(first.session.session_id, ["tafel-leipzig-markkleeberg"]), first.context, now=now)
-
-    second_payload = QueryRequest(transcript="Wo kann ich duschen?", language=Language.DE, session_id=first.session.session_id)
-    second = manager.prepare_request(second_payload, now=now + timedelta(seconds=30))
-
-    assert second.session_event == SessionEvent.LANGUAGE_RESET
-    assert second.session.session_id != first.session.session_id
-
-
-def test_unrelated_low_signal_query_resets_context(tmp_path) -> None:
-    manager, _ = _manager(tmp_path)
-    now = datetime(2026, 4, 21, 10, 0, tzinfo=UTC)
-    first_payload = QueryRequest(transcript="Wo kann ich duschen?", language=Language.DE)
-    first = manager.prepare_request(first_payload, now=now)
-    manager.record_turn(first.session, first_payload, _response(first.session.session_id, ["leipziger-oase"]), first.context, now=now)
-
-    second_payload = QueryRequest(transcript="astronomy telescope orbit", language=Language.DE, session_id=first.session.session_id)
-    second = manager.prepare_request(second_payload, now=now + timedelta(seconds=30))
-
-    assert second.session_event == SessionEvent.CONTEXT_RESET
-    assert second.session.session_id != first.session.session_id
-
-
-def test_appointment_follow_up_keeps_same_entity_context(tmp_path) -> None:
-    manager, _ = _manager(tmp_path)
-    now = datetime(2026, 4, 21, 10, 0, tzinfo=UTC)
-    first_payload = QueryRequest(transcript="What is CABL?", language=Language.EN)
-    first = manager.prepare_request(first_payload, now=now)
-    manager.record_turn(first.session, first_payload, _response(first.session.session_id, ["cabl-uvo"]), first.context, now=now)
-
-    second_payload = QueryRequest(transcript="Do I need an appointment?", language=Language.EN, session_id=first.session.session_id)
-    second = manager.prepare_request(second_payload, now=now + timedelta(seconds=20))
-
-    assert second.session_event == SessionEvent.CONTINUED
-    assert second.session.session_id == first.session.session_id
-    assert second.context.follow_up_mode == "referential"
-    assert second.context.preferred_page_ids == ["cabl-uvo"]
-
-
-def test_session_records_compact_structured_state(tmp_path) -> None:
-    manager, _ = _manager(tmp_path)
-    now = datetime(2026, 4, 21, 10, 0, tzinfo=UTC)
-    payload = QueryRequest(transcript="Wo kann ich duschen?", language=Language.DE)
-    started = manager.prepare_request(payload, now=now)
-    updated = manager.record_turn(
-        started.session,
-        payload,
-        _response(started.session.session_id, ["leipziger-oase"]),
-        started.context,
-        now=now,
-    )
-
-    assert updated.last_intent == "service_lookup"
-    assert updated.last_topic == "housing"
-    assert updated.last_place_page_id == "leipziger-oase"
-    assert updated.last_service_category == "housing"
-    assert updated.last_retrieved_page_ids == ["leipziger-oase"]
-    assert updated.last_answer_summary == "Test answer"
-
-
-def test_colloquial_hours_follow_up_keeps_same_entity_context(tmp_path) -> None:
-    manager, _ = _manager(tmp_path)
-    now = datetime(2026, 4, 21, 10, 0, tzinfo=UTC)
-    first_payload = QueryRequest(transcript="Wo kann ich duschen?", language=Language.DE)
-    first = manager.prepare_request(first_payload, now=now)
-    manager.record_turn(first.session, first_payload, _response(first.session.session_id, ["leipziger-oase"]), first.context, now=now)
-
-    second_payload = QueryRequest(transcript="Und wann hat die offen?", language=Language.DE, session_id=first.session.session_id)
-    second = manager.prepare_request(second_payload, now=now + timedelta(seconds=20))
-
-    assert second.session_event == SessionEvent.CONTINUED
-    assert second.context.follow_up_mode == "referential"
-    assert second.context.preferred_page_ids == ["leipziger-oase"]
-
-
-def test_route_like_follow_up_keeps_same_entity_context(tmp_path) -> None:
-    manager, _ = _manager(tmp_path)
-    now = datetime(2026, 4, 21, 10, 0, tzinfo=UTC)
-    first_payload = QueryRequest(transcript="Wo kann ich duschen?", language=Language.DE)
-    first = manager.prepare_request(first_payload, now=now)
-    manager.record_turn(first.session, first_payload, _response(first.session.session_id, ["leipziger-oase"]), first.context, now=now)
-
-    second_payload = QueryRequest(transcript="Wie komme ich dahin?", language=Language.DE, session_id=first.session.session_id)
-    second = manager.prepare_request(second_payload, now=now + timedelta(seconds=20))
-
-    assert second.session_event == SessionEvent.CONTINUED
-    assert second.context.follow_up_mode == "referential"
-    assert second.context.preferred_page_ids == ["leipziger-oase"]
-
-
-def test_requirement_follow_up_keeps_same_entity_context(tmp_path) -> None:
-    manager, _ = _manager(tmp_path)
-    now = datetime(2026, 4, 21, 10, 0, tzinfo=UTC)
-    first_payload = QueryRequest(transcript="What is CABL?", language=Language.EN)
-    first = manager.prepare_request(first_payload, now=now)
-    manager.record_turn(first.session, first_payload, _response(first.session.session_id, ["cabl-uvo"]), first.context, now=now)
-
-    second_payload = QueryRequest(transcript="What do I need for that?", language=Language.EN, session_id=first.session.session_id)
-    second = manager.prepare_request(second_payload, now=now + timedelta(seconds=20))
-
-    assert second.session_event == SessionEvent.CONTINUED
-    assert second.context.follow_up_mode == "referential"
-    assert second.context.preferred_page_ids == ["cabl-uvo"]
+    assert store.timeout_seconds == 180

@@ -1,33 +1,67 @@
-# Python
+# Lokale Konfiguration und Zugangsdaten
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*.json
+secrets*.json
+
+# Python-Umgebungen, Caches und Builds
+.venv/
+venv/
+env/
 __pycache__/
 *.py[cod]
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
 .coverage
-.venv/
-venv/
-
-# Node / frontend tooling
-node_modules/
-dist/
+.coverage.*
+htmlcov/
 build/
+dist/
+*.egg-info/
+*.whl
 
-# Local environment
-.env
-.env.*
-!.env.example
+# Lokale Laufzeit-, Nutzer- und Stagingdaten
+runtime/
+*.log
+*.tmp
+*.temp
+*.pid
+*.sqlite
+*.sqlite3
+*.db
+*.wav
+*.mp3
+*.ogg
+*.webm
+*.m4a
 
-# Runtime and generated workspace data
-data/runtime/
-data/scraper_workspace/
-data/evals/results/
-data/voices/piper/
-tools/piper/
+# Lokal heruntergeladene Modelle und Browserprofile
+models/
+weights/
+checkpoints/
+*.onnx
+*.safetensors
+*.gguf
+playwright-report/
+test-results/
+.playwright/
+browser-profile*/
 
-# Local test artifacts
-test-stt.wav
-
-# OS / editor noise
+# Editor-, Betriebssystem- und OneDrive-Artefakte
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
 .DS_Store
 Thumbs.db
+desktop.ini
+*.conflict*
+*OneDrive-conflict*
+*OneDrive-Konflikt*

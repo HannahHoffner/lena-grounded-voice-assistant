@@ -1,1039 +1,302 @@
+"""Deterministisches, mehrsprachiges Retrieval über die lokalen Angebote."""
+
 from __future__ import annotations
 
-import math
 import re
 import unicodedata
-from collections import Counter
+from dataclasses import dataclass
 
-from .kb import KnowledgeBase
-from .models import Language, PageMetadata, RetrievedPage, TemporalContext
+from .models import Category, OfferRecord
 
 
-TOKEN_RE = re.compile(r"[^\W\d_]+", re.UNICODE)
-DETAIL_TOKEN_RE = re.compile(r"\b\d{1,5}[a-z]?\b", re.UNICODE)
-STOPWORDS = {
-    "a",
-    "about",
-    "an",
-    "and",
-    "are",
-    "as",
-    "at",
-    "bei",
-    "bin",
-    "bitte",
-    "brauche",
-    "brauchen",
-    "can",
-    "de",
-    "der",
-    "des",
-    "die",
-    "do",
-    "du",
-    "ein",
-    "eine",
-    "einen",
-    "einer",
-    "en",
-    "es",
-    "for",
-    "get",
-    "gibt",
-    "hab",
-    "habe",
-    "haben",
-    "hast",
-    "hat",
-    "have",
-    "heute",
-    "how",
-    "i",
-    "ich",
-    "im",
-    "in",
-    "info",
-    "informationen",
-    "is",
-    "ist",
-    "kann",
-    "kannst",
-    "kde",
-    "kurz",
-    "mam",
-    "mi",
-    "mir",
-    "mit",
-    "na",
-    "need",
-    "of",
-    "on",
-    "or",
-    "please",
-    "tell",
-    "the",
-    "to",
-    "uber",
-    "ueber",
-    "und",
-    "wann",
-    "warum",
-    "was",
-    "wer",
-    "what",
-    "when",
-    "where",
-    "wie",
-    "work",
-    "works",
-    "wo",
-    "you",
-}
-GENERIC_QUERY_TOKENS = {
-    "beratung",
-    "appointment",
-    "brauch",
-    "brauche",
-    "help",
-    "hilfe",
-    "information",
-    "informationen",
-    "service",
-    "services",
-    "support",
-}
-GENERIC_ALIAS_TERMS = {
-    "hilfe",
-    "leipzig",
-    "leipziger",
-    "service",
-}
-CLOTHING_QUERY_TERMS = {"kleidung", "clothes", "clothing", "ubrania", "haine", "winterkleidung"}
-GERMAN_EQUIVALENTS = str.maketrans(
-    {
-        "\u00e4": "ae",
-        "\u00f6": "oe",
-        "\u00fc": "ue",
-        "\u00df": "ss",
-    }
-)
-QUERY_EXPANSION_RULES: tuple[tuple[set[str], tuple[str, ...]], ...] = (
-    ({"essen", "food", "jedzenie", "mancare", "еда"}, ("tafel", "lebensmittel", "lebensmittelausgabe", "mahlzeit", "mittagstisch", "fruehstueck", "suppe")),
-    ({"kleidung", "clothes", "clothing", "ubrania", "haine", "одежда"}, ("kleiderkammer", "kleidung", "kleiderspenden")),
-    ({"arzt", "doctor", "medical", "medizin", "medic", "lekarz", "doctor", "врач"}, ("gesundheit", "sprechstunde", "arzt", "medizin")),
-    ({"schulden", "debt", "debts", "zadluzenie", "datorii", "долг"}, ("schuldnerberatung", "schulden", "beratung")),
-    ({"schlafen", "unterkunft", "shelter", "sleep", "sleeping", "overnight", "nocleg", "adapost", "ночлег"}, ("notunterkunft", "uebernachtung", "notunterbringung", "wohnungslosigkeit")),
-    ({"sucht", "drugs", "drug", "methadone", "substitution", "addiction", "uzaleznienie", "dependenta", "наркотики"}, ("sucht", "drogen", "methadon", "substitution", "schadensminimierung", "konsum")),
-    ({"wasser", "water", "trinkwasser", "durst"}, ("trinkwasser", "trinkwasserbrunnen", "brunnen", "getraenke")),
-    (
-        {"blanket", "cold", "decke", "friere", "frieren", "kaelte", "kalte", "kalt", "schlafsack", "waerme", "warm", "warme", "warmen", "warmer", "warmes", "winter", "winterkleidung"},
-        ("notunterkunft", "uebernachtung", "wohnungslosigkeit", "tageseinrichtung", "kleiderkammer"),
-    ),
-)
-PHRASE_EXPANSION_RULES: tuple[tuple[str, tuple[str, ...]], ...] = (
-    ("ohne krankenversicherung", ("arzt", "medizin", "sprechstunde", "krankenversicherung")),
-    ("without insurance", ("arzt", "medizin", "sprechstunde", "krankenversicherung")),
-    ("sans assurance", ("arzt", "medizin", "sprechstunde", "krankenversicherung")),
-)
-DOCUMENT_HINTS = {"broschuere", "jahresbericht", "bericht"}
-LOCATION_QUERY_TOKENS = {"adresse", "ort", "platz", "naehe", "nahe", "closest", "close", "location"}
-HOURS_QUERY_TOKENS = {"offen", "open", "oeffnungszeiten", "hours", "today", "heute", "tonight", "nacht", "sonntag", "sunday"}
-CATEGORY_QUERY_HINTS = {
-    "food": {"essen", "food", "tafel", "lebensmittel", "mittagstisch", "mahlzeit", "fruehstueck", "suppe"},
-    "housing": {"unterkunft", "shelter", "stay", "tonight", "uebernachten", "uebernachtung", "notunterkunft", "wohnungslosigkeit", "cold", "friere", "frieren", "kaelte", "kalte", "kalt", "waerme", "warm", "warme", "warmen", "warmer", "warmes", "winter"},
-    "medical": {"arzt", "medical", "medizin", "sprechstunde", "gesundheit"},
-    "addiction": {"sucht", "drug", "drugs", "methadon", "substitution", "konsum"},
-    "clothing": {"kleidung", "clothing", "kleiderkammer", "kleiderspenden"},
-    "water": {"wasser", "water", "trinkwasser", "trinkbrunnen", "trinkwasserbrunnen", "brunnen", "durst", "drinking", "fountain"},
-}
-RELATED_CATEGORIES = {
-    "food": {"food", "social", "housing"},
-    "housing": {"housing", "social"},
-    "medical": {"medical", "social"},
-    "addiction": {"addiction", "social", "housing"},
-    "clothing": {"clothing", "social", "housing"},
-    "water": {"water", "hygiene", "food", "social"},
-}
-EXTRA_QUERY_EXPANSION_RULES: tuple[tuple[set[str], tuple[str, ...]], ...] = (
-    (
-        {
-            "dus",
-            "dusche",
-            "duschen",
-            "duschgelegenheit",
-            "laundry",
-            "pomytsya",
-            "prysznic",
-            "shower",
-            "wash",
-            "washing",
-            "waesche",
-            "waescheservice",
-            "waschen",
-        },
-        ("dusche", "duschgelegenheit", "koerperpflege", "waeschepflege", "tageseinrichtung"),
-    ),
-    (
-        {"termin", "appointment", "anmeldung", "registrierung", "registration"},
-        ("termin", "anmeldung", "sprechstunde", "walk", "walkin"),
-    ),
-    (
-        {"bathroom", "klo", "klos", "restroom", "toilet", "toilets", "toilette", "toiletten", "wc"},
-        ("oeffentliche", "toilette", "toiletten", "hygiene", "city"),
-    ),
-    ({"stay", "tonight", "uebernachten"}, ("shelter", "uebernachtung", "notunterkunft", "notunterbringung", "wohnungslosigkeit")),
-    ({"frau", "frauen", "woman", "women", "kobieta", "femeie"}, ("frauen", "frau", "uebernachtung", "notunterkunft")),
-    ({"mann", "maenner", "manner", "men", "male", "barbat"}, ("maenner", "mann", "uebernachtung", "notunterkunft")),
-    ({"naloxone", "naloxon", "overdose", "ueberdosis"}, ("naloxon", "schadensminimierung", "safe", "konsum")),
-)
-EXTRA_CATEGORY_QUERY_HINTS = {
-    "hygiene": {
-        "dusche",
-        "duschen",
-        "duschgelegenheit",
-        "shower",
-        "wash",
-        "washing",
-        "waesche",
-        "waeschepflege",
-        "waescheservice",
-        "waschen",
-        "toilette",
-        "toiletten",
-        "klo",
-        "klos",
-        "wc",
-        "restroom",
-        "bathroom",
-        "koerperpflege",
+def normalize_text(value: str) -> str:
+    value = value.casefold().replace("ß", "ss")
+    value = unicodedata.normalize("NFKD", value)
+    value = "".join(char for char in value if not unicodedata.combining(char))
+    value = re.sub(r"[^\w]+", " ", value, flags=re.UNICODE)
+    return " ".join(value.replace("_", " ").split())
+
+
+CATEGORY_TERMS: dict[Category, set[str]] = {
+    Category.FOOD: {
+        "essen", "lebensmittel", "mahlzeit", "fruhstuck", "mittagessen", "imbiss", "suppe",
+        "getranke", "hunger", "brotchen", "food", "eat", "meal", "breakfast", "lunch", "hungry",
+        "jedzenie", "zywnosc", "posilek", "glodny", "sniadanie", "mancare", "alimente", "foame",
+        "masa", "еда", "пища", "голод", "завтрак", "обед",
+    },
+    Category.SLEEP: {
+        "schlafen", "schlafplatz", "ubernachten", "ubernachtung", "ubernachtungsplatz", "notschlafstelle",
+        "notunterbringung", "unterkunft", "wohnungslos", "obdachlos", "sleep", "overnight", "stay",
+        "shelter", "accommodation", "homeless", "spanie", "nocleg", "przenocowac", "schronienie",
+        "bezdomny", "dormit", "innopta", "adapost", "cazare", "fara adapost", "сон", "ночлег",
+        "переночевать", "приют", "бездомный", "спать",
+    },
+    Category.MEDICAL: {
+        "medizin", "medizinisch", "medizinische", "arzt", "arztlich", "arztliche", "behandlung", "sprechstunde", "gesundheit", "wunde",
+        "medical", "doctor", "health", "treatment", "clinic", "medyczna", "lekarz", "zdrowie", "leczenie",
+        "medicala", "medic", "sanatate", "tratament", "медицина", "врач", "здоровье", "лечение",
+    },
+    Category.ADVICE: {
+        "beratung", "unterstutzung", "vermittlung", "amter", "behorden", "sozialberatung", "hilfe",
+        "advice", "support", "counselling", "counseling", "authority", "authorities", "porada", "wsparcie",
+        "doradztwo", "urzad", "consiliere", "sprijin", "autoritati", "консультация", "поддержка", "совет",
+        "ведомство",
     },
 }
-EXTRA_RELATED_CATEGORIES = {
-    "hygiene": {"hygiene", "social", "housing", "clothing"},
+
+SOURCE_CATEGORY_MARKERS: dict[Category, set[str]] = {
+    Category.FOOD: {"verteilung von lebensmitteln"},
+    Category.SLEEP: {"ubernachtungshaus"},
+    Category.MEDICAL: {"medizinische versorgung"},
+    Category.ADVICE: {"sozialberatung", "soziale wohnhilfen", "streetwork erwachsene"},
 }
-TEMPORAL_QUERY_TERMS = {
-    "aktuell",
-    "current",
-    "dienstag",
-    "donnerstag",
-    "freitag",
-    "friday",
-    "heute",
-    "jetzt",
-    "mittwoch",
-    "montag",
-    "monday",
-    "morgen",
-    "now",
-    "samstag",
-    "saturday",
-    "sonntag",
-    "sunday",
-    "thursday",
-    "today",
-    "tonight",
-    "tuesday",
-    "weekend",
-    "wochenende",
-    "wednesday",
+
+STOPWORDS = {
+    "ich", "du", "der", "die", "das", "ein", "eine", "und", "oder", "wo", "wie", "kann", "mir", "fur",
+    "i", "you", "the", "a", "an", "and", "or", "where", "how", "can", "me", "for", "to", "get",
+    "ja", "ty", "i", "lub", "gdzie", "jak", "dla", "eu", "tu", "si", "sau", "unde", "cum", "pentru",
+    "я", "ты", "и", "или", "где", "как", "для", "мне",
 }
-WINTER_QUERY_TERMS = {
-    "blanket",
-    "cold",
-    "decke",
-    "friere",
-    "frieren",
-    "kaelte",
-    "kalte",
-    "kalt",
-    "schlafsack",
-    "sleeping",
-    "waerme",
-    "warm",
-    "warme",
-    "warmen",
-    "warmer",
-    "warmes",
-    "winter",
-    "winterkleidung",
+
+DOMAIN_ANCHORS = {
+    "leipzig", "lipsk", "hilfeangebot", "anlaufstelle", "streetwork", "sozial", "wohnungsnot", "sucht",
+    "support service", "help service", "serviciu de ajutor", "услуга помощи",
 }
-SUMMER_QUERY_TERMS = {
-    "brunnen",
-    "drinking",
-    "durst",
-    "fountain",
-    "heat",
-    "heiss",
-    "hitze",
-    "hot",
-    "sommer",
-    "summer",
-    "trinkbrunnen",
-    "trinkwasser",
-    "wasser",
-    "water",
-}
-WINTER_PAGE_TERMS = {
-    "decke",
-    "decken",
-    "hilfebus",
-    "kaelte",
-    "kleiderkammer",
-    "kleidung",
-    "notunterbringung",
-    "schlafsack",
-    "schlafsaecke",
-    "schlafsacke",
-    "uebernachtung",
-    "warme",
-    "winter",
-}
-SUMMER_PAGE_TERMS = {
-    "brunnen",
-    "durst",
-    "getraenke",
-    "tee",
-    "trinkbrunnen",
-    "trinkwasser",
-    "trinkwasserbrunnen",
-    "wasser",
+
+TARGET_TERMS = {
+    "women": {"frau", "frauen", "woman", "women", "kobieta", "kobiety", "femeie", "femei", "женщина", "женщины"},
+    "men": {"mann", "manner", "man", "men", "mezczyzna", "mezczyzni", "barbat", "barbati", "мужчина", "мужчины"},
+    "drug": {"droge", "drogen", "drogenkonsum", "drogengebrauch", "drug", "drugs", "narkotyki", "droguri", "наркотики"},
 }
 
 
-def normalize_text(text: str) -> str:
-    normalized = text.casefold().translate(GERMAN_EQUIVALENTS)
-    decomposed = unicodedata.normalize("NFKD", normalized)
-    return "".join(char for char in decomposed if not unicodedata.combining(char))
+def _contains_term(text: str, term: str) -> bool:
+    normalized_term = normalize_text(term)
+    if " " in normalized_term:
+        return f" {normalized_term} " in f" {text} "
+    return any(
+        token == normalized_term or (len(normalized_term) >= 5 and token.startswith(normalized_term))
+        for token in text.split()
+    )
 
 
-def tokenize(text: str) -> list[str]:
-    normalized = normalize_text(text)
-    return [token for token in TOKEN_RE.findall(normalized) if token not in STOPWORDS and len(token) > 1]
+def _matching_terms(text: str, terms: set[str]) -> set[str]:
+    return {normalize_text(term) for term in terms if _contains_term(text, term)}
 
 
-def detail_tokens(text: str) -> list[str]:
-    normalized = normalize_text(text)
-    return _unique(DETAIL_TOKEN_RE.findall(normalized))
+def detect_categories(query: str) -> list[Category]:
+    normalized = normalize_text(query)
+    scored: list[tuple[int, Category]] = []
+    for category, terms in CATEGORY_TERMS.items():
+        matches = _matching_terms(normalized, terms)
+        if matches:
+            scored.append((len(matches), category))
+    scored.sort(key=lambda item: (-item[0], list(Category).index(item[1])))
+    return [category for _, category in scored]
 
 
-def query_tokens_for_search(text: str, language: Language | None = None) -> list[str]:
-    del language
-    normalized = normalize_text(text)
-    tokens = tokenize(text)
-    expanded = list(tokens)
-    token_set = set(tokens)
-
-    clothing_query = bool(token_set & CLOTHING_QUERY_TERMS)
-    for triggers, additions in QUERY_EXPANSION_RULES + EXTRA_QUERY_EXPANSION_RULES:
-        if clothing_query and "winterkleidung" in triggers:
-            continue
-        if token_set & triggers:
-            for addition in additions:
-                if addition not in token_set:
-                    expanded.append(addition)
-    for phrase, additions in PHRASE_EXPANSION_RULES:
-        if phrase in normalized:
-            for addition in additions:
-                if addition not in token_set:
-                    expanded.append(addition)
-    unique_tokens = _unique(expanded)
-    specific_tokens = [token for token in unique_tokens if token not in GENERIC_QUERY_TOKENS]
-    if specific_tokens:
-        return specific_tokens
-    return unique_tokens
-
-
-def content_lines(markdown: str) -> list[str]:
-    lines: list[str] = []
-    for raw_line in strip_frontmatter(markdown).splitlines():
-        line = raw_line.strip()
-        if not line:
-            continue
-        if line.startswith("# ") or line.startswith("- Source:") or line.startswith("- Generated:"):
-            continue
-        cleaned = line.lstrip("- ").strip()
-        if _is_low_signal_line(cleaned):
-            continue
-        lines.append(cleaned)
-    return lines
-
-
-def strip_frontmatter(markdown: str) -> str:
-    if not markdown.startswith("---\n"):
-        return markdown
-    parts = markdown.split("\n---\n", 1)
-    if len(parts) == 2:
-        return parts[1]
-    return markdown
-
-
-def extract_relevant_passages(
-    query: str,
-    markdown: str,
-    limit: int = 2,
-    query_tokens: set[str] | None = None,
-) -> list[str]:
-    lines = content_lines(markdown)
-    if not lines:
-        return []
-
-    search_tokens = query_tokens or set(tokenize(query))
-    if not search_tokens:
-        return lines[:limit]
-
-    ranked: list[tuple[float, int, str]] = []
-    query_counts = Counter(search_tokens)
-    for index, line in enumerate(lines):
-        window = [line]
-        total_length = len(line)
-        for next_index in range(index + 1, min(len(lines), index + 3)):
-            if total_length >= 260:
-                break
-            next_line = lines[next_index]
-            if _is_low_signal_line(next_line):
-                continue
-            window.append(next_line)
-            total_length += len(next_line)
-
-        passage = " ".join(window).strip()
-        passage_tokens = tokenize(passage)
-        score = _score_tokens(query_counts, passage_tokens)
-        overlap_tokens = search_tokens & set(passage_tokens)
-        if not overlap_tokens:
-            continue
-        score += sum(min(len(token), 10) for token in overlap_tokens) * 0.01
-        ranked.append((score, index, passage))
-
-    if not ranked:
-        return lines[:limit]
-
-    ranked.sort(key=lambda item: (-item[0], item[1]))
-    passages: list[str] = []
-    for _, _, passage in ranked:
-        if passage not in passages:
-            passages.append(passage)
-        if len(passages) == limit:
-            break
-    return passages
-
-
-class RetrievalEngine:
-    def __init__(self, kb: KnowledgeBase) -> None:
-        self.kb = kb
-
-    def retrieve(
-        self,
-        transcript: str,
-        language: Language,
-        limit: int = 3,
-        preferred_page_ids: list[str] | None = None,
-        excluded_page_ids: list[str] | None = None,
-        temporal_context: TemporalContext | None = None,
-        _allow_relaxed_fallback: bool = True,
-    ) -> list[RetrievedPage]:
-        tokens = query_tokens_for_search(transcript, language)
-        if not tokens:
-            return []
-
-        query_counts = Counter(tokens)
-        query_token_set = set(tokens)
-        detail_query_tokens = detail_tokens(transcript)
-        detail_query_counts = Counter(detail_query_tokens)
-        normalized_query = normalize_text(transcript).strip()
-        alias_hits = self._alias_hits(transcript, tokens)
-        preferred_page_ids = preferred_page_ids or []
-        excluded_page_ids = set(excluded_page_ids or [])
-        ranked: list[tuple[float, PageMetadata]] = []
-        location_query = bool(query_token_set & LOCATION_QUERY_TOKENS)
-        temporal_query = _has_temporal_query(normalized_query, query_token_set)
-        hours_query = bool(query_token_set & HOURS_QUERY_TOKENS) or temporal_query
-        seasonal_signal = _seasonal_signal(normalized_query, query_token_set, temporal_context)
-        query_category = _detect_query_category(query_token_set)
-        specific_place_query = _is_specific_place_query(query_token_set, detail_query_tokens, query_category)
-        ignored_specific_tokens = (
-            self._excluded_anchor_tokens(excluded_page_ids)
-            if excluded_page_ids and not preferred_page_ids
-            else set()
-        )
-        candidate_page_ids = self._candidate_page_ids(
-            query_tokens=query_token_set,
-            detail_query_tokens=detail_query_tokens,
-            normalized_query=normalized_query,
-            alias_hits=alias_hits,
-            preferred_page_ids=preferred_page_ids,
-        )
-        available_page_ids = {page.page_id for page in self.kb.dataset.pages}
-        candidate_pages = (
-            [self.kb.get_page(page_id) for page_id in candidate_page_ids if page_id in available_page_ids]
-            if candidate_page_ids
-            else self.kb.dataset.pages
-        )
-        if excluded_page_ids:
-            candidate_pages = [page for page in candidate_pages if page.page_id not in excluded_page_ids]
-        if not candidate_pages:
-            candidate_pages = [page for page in self.kb.dataset.pages if page.page_id not in excluded_page_ids]
-
-        for page in candidate_pages:
-            markdown = self.kb.get_page_markdown(page.page_id)
-            lexical_score = 0.0
-            lexical_score += self._field_score(query_counts, page.entity_kind, weight=0.5)
-            lexical_score += self._field_score(query_counts, page.title, weight=3.2)
-            lexical_score += self._field_score(query_counts, page.canonical_title or "", weight=2.6)
-            lexical_score += self._field_score(query_counts, page.page_id.replace("-", " "), weight=2.8)
-            lexical_score += self._field_score(query_counts, page.category, weight=0.9)
-            lexical_score += self._field_score(query_counts, page.service_type, weight=1.35)
-            lexical_score += self._field_score(query_counts, page.description, weight=1.4)
-            lexical_score += self._field_score(query_counts, " ".join(page.tags), weight=2.2)
-            lexical_score += self._field_score(query_counts, " ".join(page.aliases), weight=2.4)
-            lexical_score += self._field_score(query_counts, " ".join(page.target_groups), weight=1.7)
-            lexical_score += self._field_score(query_counts, page.organization or "", weight=1.2)
-            lexical_score += self._field_score(query_counts, page.district or "", weight=1.15)
-            lexical_score += self._field_score(query_counts, page.eligibility or "", weight=0.85)
-            lexical_score += self._field_score(query_counts, page.gender_access or "", weight=1.1)
-            lexical_score += self._field_score(query_counts, " ".join(page.languages), weight=0.35)
-            lexical_score += self._field_score(query_counts, page.address or "", weight=2.1)
-            lexical_score += self._field_score(query_counts, " ".join(page.opening_hours), weight=1.8)
-            lexical_score += self._field_score(query_counts, page.phone or "", weight=0.2)
-            lexical_score += self._field_score(query_counts, page.email or "", weight=0.2)
-            lexical_score += self._field_score(query_counts, page.publisher or "", weight=0.35)
-            lexical_score += self._field_score(query_counts, page.summary, weight=0.55)
-            lexical_score += self._detail_field_score(detail_query_counts, page.address or "", weight=2.6)
-            lexical_score += self._detail_field_score(detail_query_counts, " ".join(page.opening_hours), weight=1.7)
-            lexical_score += self._best_passage_score(query_counts, markdown) * 2.4
-            lexical_score += alias_hits.get(page.page_id, 0.0)
-            lexical_score += self._category_score(query_category, page)
-            lexical_score += self._temporal_score(page, temporal_context=temporal_context, temporal_query=temporal_query)
-            lexical_score += self._seasonal_score(page, seasonal_signal)
-            lexical_score += self._exact_match_boost(normalized_query, query_token_set, query_category, page, ignored_specific_tokens)
-            lexical_score += self._specific_query_alignment(query_token_set, query_category, page, ignored_specific_tokens)
-            lexical_score += self._detail_match_boost(detail_query_tokens, page)
-
-            has_match_signal = lexical_score > 0.02 or page.page_id in preferred_page_ids
-            score = lexical_score
-            if has_match_signal and page.language == language.value:
-                score += 0.08
-            if has_match_signal and location_query and page.address:
-                score += 0.12
-            if has_match_signal and hours_query and page.opening_hours:
-                score += 0.14
-            if page.page_id in preferred_page_ids:
-                score += 0.6 if has_match_signal else 0.32
-            score += self._concrete_page_score(
-                page,
-                location_query=location_query,
-                hours_query=hours_query,
-                specific_place_query=specific_place_query,
-                detail_query_tokens=detail_query_tokens,
-                has_match_signal=has_match_signal,
-            )
-            score += self._manual_override_score(page)
-            score -= self._document_penalty(page)
-            score -= self._review_penalty(page)
-            score -= self._status_penalty(page)
-            if score > 0.04:
-                ranked.append((score, page))
-
-        if not ranked and _allow_relaxed_fallback and excluded_page_ids and ignored_specific_tokens:
-            fallback_tokens = [
-                token
-                for token in tokens
-                if token not in ignored_specific_tokens and token not in {"anderen", "anderen", "anderer", "anderes", "another", "other", "ort", "place", "noch"}
-            ]
-            if fallback_tokens and fallback_tokens != tokens:
-                return self.retrieve(
-                    " ".join(fallback_tokens),
-                    language,
-                    limit=limit,
-                    preferred_page_ids=preferred_page_ids,
-                    excluded_page_ids=list(excluded_page_ids),
-                    temporal_context=temporal_context,
-                    _allow_relaxed_fallback=False,
-                )
-
-        ranked.sort(key=lambda item: (-item[0], item[1].page_id))
-        return [RetrievedPage(page_id=page.page_id, title=page.title, score=round(score, 4)) for score, page in ranked[:limit]]
-
-    def _field_score(self, query_counts: Counter[str], text: str, weight: float) -> float:
-        return _score_tokens(query_counts, tokenize(text)) * weight
-
-    def _detail_field_score(self, query_counts: Counter[str], text: str, weight: float) -> float:
-        return _score_tokens(query_counts, detail_tokens(text)) * weight
-
-    def _best_passage_score(self, query_counts: Counter[str], markdown: str) -> float:
-        best = 0.0
-        lines = content_lines(markdown)
-        for index, line in enumerate(lines):
-            window = [line]
-            for next_index in range(index + 1, min(len(lines), index + 3)):
-                window.append(lines[next_index])
-            score = _score_tokens(query_counts, tokenize(" ".join(window)))
-            best = max(best, score)
-        return best
-
-    def _exact_match_boost(
-        self,
-        normalized_query: str,
-        query_token_set: set[str],
-        query_category: str | None,
-        page: PageMetadata,
-        ignored_specific_tokens: set[str] | None = None,
-    ) -> float:
-        normalized_title = normalize_text(page.title)
-        normalized_page_id = normalize_text(page.page_id.replace("-", " "))
-        title_tokens = set(tokenize(page.title))
-        page_id_tokens = set(tokenize(page.page_id.replace("-", " ")))
-        page_match_tokens = set(tokenize(" ".join([page.title, page.page_id.replace("-", " "), " ".join(page.aliases), page.address or ""])))
-        category_hints = CATEGORY_QUERY_HINTS.get(query_category, set()) | EXTRA_CATEGORY_QUERY_HINTS.get(query_category, set())
-        raw_query_tokens = set(tokenize(normalized_query))
-        specific_query_tokens = {
-            token
-            for token in raw_query_tokens
-            if token not in GENERIC_QUERY_TOKENS and token not in category_hints
-        }
-        if ignored_specific_tokens:
-            specific_query_tokens -= ignored_specific_tokens
-
-        boost = 0.0
-        if normalized_query and normalized_query == normalized_title:
-            boost += 0.55
-        if normalized_query and normalized_query == normalized_page_id:
-            boost += 0.75
-        if query_token_set and query_token_set <= title_tokens:
-            boost += 0.18
-        if query_token_set and query_token_set <= page_id_tokens:
-            boost += 0.22
-        if specific_query_tokens and specific_query_tokens <= page_match_tokens:
-            boost += 1.35
-        normalized_address = normalize_text(page.address or "")
-        normalized_hours = normalize_text(" ".join(page.opening_hours))
-        normalized_aliases = [normalize_text(alias) for alias in page.aliases]
-        if normalized_query and normalized_address and normalized_query in normalized_address:
-            boost += 1.25
-        if normalized_query and normalized_hours and normalized_query in normalized_hours:
-            boost += 0.9
-        if normalized_query and any(normalized_query == alias for alias in normalized_aliases):
-            boost += 0.55
-        return boost
-
-    def _detail_match_boost(self, detail_query_tokens: list[str], page: PageMetadata) -> float:
-        if not detail_query_tokens:
-            return 0.0
-        page_detail_tokens = set(detail_tokens(" ".join([page.address or "", " ".join(page.opening_hours)])))
-        if not page_detail_tokens:
-            return -0.08
-        overlap = set(detail_query_tokens) & page_detail_tokens
-        if not overlap:
-            return -0.18
-        if set(detail_query_tokens) <= page_detail_tokens:
-            return 0.95
-        return 0.22 * len(overlap)
-
-    def _specific_query_alignment(
-        self,
-        query_token_set: set[str],
-        query_category: str | None,
-        page: PageMetadata,
-        ignored_specific_tokens: set[str] | None = None,
-    ) -> float:
-        category_hints = CATEGORY_QUERY_HINTS.get(query_category, set()) | EXTRA_CATEGORY_QUERY_HINTS.get(query_category, set())
-        specific_tokens = {
-            token
-            for token in query_token_set
-            if token not in GENERIC_QUERY_TOKENS
-            and token not in LOCATION_QUERY_TOKENS
-            and token not in HOURS_QUERY_TOKENS
-            and token not in category_hints
-        }
-        if ignored_specific_tokens:
-            specific_tokens -= ignored_specific_tokens
-        if not specific_tokens:
-            return 0.0
-        page_tokens = set(
-            tokenize(
-                " ".join(
-                    [
-                        page.title,
-                        page.canonical_title or "",
-                        page.page_id.replace("-", " "),
-                        " ".join(page.aliases),
-                        page.description,
-                        page.summary,
-                        " ".join(page.tags),
-                        " ".join(page.target_groups),
-                        page.address or "",
-                        page.organization or "",
-                    ]
-                )
-            )
-        )
-        overlap = specific_tokens & page_tokens
-        if not overlap:
-            return -0.95
-        if overlap == specific_tokens:
-            return 0.8
-        return -0.35 * (len(specific_tokens) - len(overlap))
-
-    def _excluded_anchor_tokens(self, excluded_page_ids: set[str]) -> set[str]:
-        tokens: set[str] = set()
-        for page_id in excluded_page_ids:
-            try:
-                page = self.kb.get_page(page_id)
-            except KeyError:
-                continue
-            tokens.update(tokenize(page.title))
-            tokens.update(tokenize(page.canonical_title or ""))
-            tokens.update(tokenize(page.address or ""))
-            tokens.update(tokenize(" ".join(page.aliases)))
-        return tokens
-
-    def _concrete_page_score(
-        self,
-        page: PageMetadata,
-        *,
-        location_query: bool,
-        hours_query: bool,
-        specific_place_query: bool,
-        detail_query_tokens: list[str],
-        has_match_signal: bool,
-    ) -> float:
-        score = 0.0
-        is_catalog = page.service_type == "service_catalog"
-        if is_catalog:
-            if has_match_signal and (specific_place_query or location_query or hours_query or detail_query_tokens):
-                score -= 1.2
-            else:
-                score += 0.04
-        else:
-            if has_match_signal and specific_place_query:
-                score += 0.22
-            if has_match_signal and location_query and page.address:
-                score += 0.2
-            if has_match_signal and hours_query and page.opening_hours:
-                score += 0.2
-        if has_match_signal and location_query and not page.address:
-            score -= 0.22
-        if has_match_signal and hours_query and not page.opening_hours:
-            score -= 0.18
-        return score
-
-    def _document_penalty(self, page: PageMetadata) -> float:
-        normalized = normalize_text(f"{page.page_id} {page.title}")
-        if any(hint in normalized for hint in DOCUMENT_HINTS):
-            return 0.08
-        return 0.0
-
-    def _review_penalty(self, page: PageMetadata) -> float:
-        if page.review_status == "needs_review":
-            return 0.06 + min(len(page.validation_issues), 4) * 0.01
-        return 0.0
-
-    def _status_penalty(self, page: PageMetadata) -> float:
-        penalty = 0.0
-        if page.stale or page.status == "stale":
-            penalty += 0.05
-        if page.status in {"deprecated", "removed", "merged"}:
-            penalty += 0.4
-        if page.conflict_fields:
-            penalty += min(len(page.conflict_fields), 3) * 0.03
-        return penalty
-
-    def _manual_override_score(self, page: PageMetadata) -> float:
-        overrides = getattr(self.kb, "manual_overrides", [])
-        if not overrides:
-            return 0.0
-        score = 0.0
-        for override in overrides:
-            if not _override_targets_page(override, page):
-                continue
-            if override.type in {"ranking", "intake_priority"}:
-                weight = float(getattr(override, "priority_weight", 0.0) or 0.0)
-                if isinstance(override.value, dict) and "priority_weight" in override.value:
-                    try:
-                        weight = float(override.value["priority_weight"])
-                    except (TypeError, ValueError):
-                        pass
-                score += max(min(weight, 1.0), -1.0)
-            elif override.type == "temporary_closure":
-                score -= 2.5
-            elif override.type == "visibility":
-                visible = override.value
-                if isinstance(visible, dict):
-                    visible = visible.get("visible", True)
-                if visible is False:
-                    score -= 2.5
-        return score
-
-    def _category_score(self, query_category: str | None, page: PageMetadata) -> float:
-        if not query_category:
-            return 0.0
-        page_tokens = set(
-            tokenize(
-                " ".join(
-                    [
-                        page.title,
-                        page.description,
-                        page.summary,
-                        page.category,
-                        page.service_type,
-                        " ".join(page.tags),
-                        " ".join(page.aliases),
-                        " ".join(page.target_groups),
-                        page.gender_access or "",
-                    ]
-                )
-            )
-        )
-        if page.category == query_category:
-            return 0.65
-        related_categories = RELATED_CATEGORIES.get(query_category, set()) | EXTRA_RELATED_CATEGORIES.get(query_category, set())
-        category_hints = CATEGORY_QUERY_HINTS.get(query_category, set()) | EXTRA_CATEGORY_QUERY_HINTS.get(query_category, set())
-        if page.category in related_categories:
-            if page_tokens & category_hints:
-                return 0.35
-            return -0.55
-        return -0.8
-
-    def _temporal_score(self, page: PageMetadata, *, temporal_context: TemporalContext | None, temporal_query: bool) -> float:
-        if not temporal_query or not temporal_context:
-            return 0.0
-        if not page.opening_hours:
-            return -0.04
-        if _opening_hours_supports_weekday(page.opening_hours, temporal_context):
-            return 0.28
-        return 0.04
-
-    def _seasonal_score(self, page: PageMetadata, seasonal_signal: str | None) -> float:
-        if not seasonal_signal:
-            return 0.0
-        page_tokens = set(
-            tokenize(
-                " ".join(
-                    [
-                        page.title,
-                        page.description,
-                        page.summary,
-                        page.category,
-                        page.service_type,
-                        " ".join(page.tags),
-                        " ".join(page.aliases),
-                    ]
-                )
-            )
-        )
-        if seasonal_signal == "winter":
-            if page.service_type in {"overnight_shelter", "day_center", "protected_housing", "clothing_support"}:
-                return 0.7
-            if page.category == "clothing":
-                return 0.55
-            if page.service_type in {"counseling", "housing_placement", "service_catalog"}:
-                return -0.45
-            if page.category == "housing":
-                return 0.3
-            return 0.2 if page_tokens & WINTER_PAGE_TERMS else 0.0
-        if seasonal_signal == "summer":
-            if page.category == "water":
-                return 0.45
-            if page_tokens & SUMMER_PAGE_TERMS:
-                return 0.22
-        return 0.0
-
-    def _alias_hits(self, transcript: str, tokens: list[str]) -> dict[str, float]:
-        scores: dict[str, float] = {}
-        token_set = set(tokens)
-        normalized_transcript = normalize_text(transcript)
-        for alias, page_ids in self.kb.dataset.aliases.items():
-            normalized_alias = normalize_text(alias)
-            if normalized_alias in GENERIC_ALIAS_TERMS:
-                continue
-            if len(normalized_alias) < 4 and " " not in normalized_alias:
-                continue
-            matched = normalized_alias in token_set or (" " in normalized_alias and normalized_alias in normalized_transcript)
-            if not matched:
-                continue
-            page_count = max(len(page_ids), 1)
-            if " " in normalized_alias:
-                bonus = 0.22 / page_count
-            elif len(normalized_alias) >= 8:
-                bonus = 0.34 / page_count
-            else:
-                bonus = 0.1 / page_count
-            if normalized_alias == normalized_transcript:
-                bonus += 0.12 / page_count
-            for page_id in page_ids:
-                scores[page_id] = scores.get(page_id, 0.0) + bonus
-        return scores
-
-    def _candidate_page_ids(
-        self,
-        *,
-        query_tokens: set[str],
-        detail_query_tokens: list[str],
-        normalized_query: str,
-        alias_hits: dict[str, float],
-        preferred_page_ids: list[str],
-    ) -> set[str]:
-        candidate_page_ids: set[str] = set(alias_hits)
-        if normalized_query:
-            candidate_page_ids.update(self.kb.dataset.aliases.get(normalized_query, []))
-        searchable_indexes = ("aliases", "address_terms", "service_types", "target_groups", "organizations", "districts", "hours", "families")
-        for token in query_tokens:
-            for index_name in searchable_indexes:
-                candidate_page_ids.update(self.kb.get_index_hits(index_name, token))
-        for token in detail_query_tokens:
-            candidate_page_ids.update(self.kb.get_index_hits("address_terms", token))
-            candidate_page_ids.update(self.kb.get_index_hits("hours", token))
-        candidate_page_ids.update(preferred_page_ids)
-        return candidate_page_ids
-
-    def should_clarify(self, results: list[RetrievedPage], transcript: str, threshold_gap: float) -> bool:
-        if not results:
-            return False
-
-        query_tokens = tokenize(transcript)
-        generic_query = _is_generic_query(query_tokens)
-        top_score = results[0].score
-
-        if generic_query and len(query_tokens) <= 1:
-            return True
-        if generic_query and len(results) >= 2:
-            return abs(results[0].score - results[1].score) < max(threshold_gap, 0.08) or top_score < 0.45
-        if generic_query:
-            return True
-        if len(query_tokens) < 2 and top_score < 0.32:
-            return True
-        if len(results) >= 2:
-            gap = abs(results[0].score - results[1].score)
-            if gap < threshold_gap and top_score < 0.24:
-                return True
-            if len(query_tokens) <= 2 and gap < 0.06 and top_score < 0.5:
-                return True
-        return False
-
-
-def _score_tokens(query_counts: Counter[str], text_tokens: list[str]) -> float:
-    if not query_counts or not text_tokens:
-        return 0.0
-
-    text_counts = Counter(text_tokens)
-    dot = sum(query_counts[token] * text_counts.get(token, 0) for token in query_counts)
-    if not dot:
-        return 0.0
-
-    query_norm = math.sqrt(sum(value * value for value in query_counts.values()))
-    text_norm = math.sqrt(sum(value * value for value in text_counts.values()))
-    cosine = dot / (query_norm * text_norm) if query_norm and text_norm else 0.0
-    overlap = len(set(query_counts) & set(text_counts)) / max(len(query_counts), 1)
-    return cosine * 0.65 + overlap * 0.35
-
-
-def _is_generic_query(tokens: list[str]) -> bool:
-    if not tokens:
-        return False
-    informative_tokens = [token for token in tokens if token not in GENERIC_QUERY_TOKENS]
-    return not informative_tokens
-
-
-def _detect_query_category(query_token_set: set[str]) -> str | None:
-    if query_token_set & CLOTHING_QUERY_TERMS:
-        return "clothing"
-    for category, hints in {**CATEGORY_QUERY_HINTS, **EXTRA_CATEGORY_QUERY_HINTS}.items():
-        if query_token_set & hints:
-            return category
+def detect_target(query: str) -> str | None:
+    normalized = normalize_text(query)
+    for target, terms in TARGET_TERMS.items():
+        if _matching_terms(normalized, terms):
+            return target
     return None
 
 
-def _is_specific_place_query(
-    query_token_set: set[str],
-    detail_query_tokens: list[str],
-    query_category: str | None,
-) -> bool:
-    if detail_query_tokens:
-        return True
-    category_hints = CATEGORY_QUERY_HINTS.get(query_category, set()) | EXTRA_CATEGORY_QUERY_HINTS.get(query_category, set())
-    specific_tokens = {
-        token
-        for token in query_token_set
-        if token not in GENERIC_QUERY_TOKENS
-        and token not in LOCATION_QUERY_TOKENS
-        and token not in HOURS_QUERY_TOKENS
-        and token not in category_hints
+def is_vague_query(query: str) -> bool:
+    normalized = normalize_text(query)
+    tokens = {token for token in normalized.split() if token not in STOPWORDS}
+    vague_tokens = {
+        "hilfe", "help", "support", "pomoc", "ajutor", "помощь", "bitte", "please", "prosze", "va rog",
+        "пожалуйста", "brauche", "need", "potrzebuje", "am nevoie", "нужна", "нужен",
     }
-    return bool(specific_tokens)
+    return bool(tokens) and len(tokens) <= 4 and tokens <= vague_tokens
 
 
-WEEKDAY_ALIASES = (
-    ("montag", "mo", "monday"),
-    ("dienstag", "di", "tuesday"),
-    ("mittwoch", "mi", "wednesday"),
-    ("donnerstag", "do", "thursday"),
-    ("freitag", "fr", "friday"),
-    ("samstag", "sa", "saturday"),
-    ("sonntag", "so", "sunday"),
-)
+def has_domain_signal(query: str) -> bool:
+    normalized = normalize_text(query)
+    return bool(detect_categories(query)) or bool(_matching_terms(normalized, DOMAIN_ANCHORS))
 
 
-def _has_temporal_query(normalized_query: str, query_token_set: set[str]) -> bool:
-    return bool(query_token_set & TEMPORAL_QUERY_TERMS) or any(term in normalized_query for term in TEMPORAL_QUERY_TERMS)
+@dataclass(frozen=True)
+class RankedOffer:
+    offer: OfferRecord
+    score: int
+    strong_match: bool
+    matched_terms: tuple[str, ...]
 
 
-def _seasonal_signal(normalized_query: str, query_token_set: set[str], temporal_context: TemporalContext | None) -> str | None:
-    del temporal_context
-    if query_token_set & WINTER_QUERY_TERMS or any(term in normalized_query for term in WINTER_QUERY_TERMS):
-        return "winter"
-    if query_token_set & SUMMER_QUERY_TERMS or any(term in normalized_query for term in SUMMER_QUERY_TERMS):
-        return "summer"
-    return None
+@dataclass(frozen=True)
+class RetrievalOutcome:
+    results: list[RankedOffer]
+    selected_category: Category | None
+    strong_match: bool
+    in_scope: bool
+    full_context_recommended: bool
 
 
-def _opening_hours_supports_weekday(opening_hours: list[str], temporal_context: TemporalContext) -> bool:
-    if not opening_hours:
-        return False
-    normalized_hours = normalize_text(" | ".join(opening_hours))
-    weekday_index = temporal_context.weekday_index
-    if any(_weekday_alias_present(normalized_hours, alias) for alias in WEEKDAY_ALIASES[weekday_index]):
-        return True
-    if weekday_index <= 4 and any(pattern in normalized_hours for pattern in ("montag bis freitag", "mo bis fr", "mo-fr", "mo - fr", "mo. bis fr")):
-        return True
-    if weekday_index >= 5 and any(pattern in normalized_hours for pattern in ("samstag, sonntag", "sa, so", "sa und so", "sa, so, feiertag")):
-        return True
-    return False
+def _offer_texts(offer: OfferRecord) -> tuple[str, str, str, str, str]:
+    return (
+        normalize_text(offer.name),
+        normalize_text(f"{offer.source_category} {offer.short_description}"),
+        normalize_text(" ".join(offer.services)),
+        normalize_text(" ".join([*offer.opening_hours_raw, *offer.notes])),
+        normalize_text(offer.raw_text),
+    )
 
 
-def _weekday_alias_present(normalized_hours: str, alias: str) -> bool:
-    if len(alias) <= 2:
-        return bool(re.search(rf"(?<![a-z]){re.escape(alias)}(?![a-z])", normalized_hours))
-    return alias in normalized_hours
+def _score_offer(offer: OfferRecord, query: str, category: Category | None) -> RankedOffer | None:
+    name, classification, services, secondary, raw = _offer_texts(offer)
+    score = 0
+    strong = False
+    matched: set[str] = set()
+
+    if category:
+        terms = CATEGORY_TERMS[category]
+        marker_matches = _matching_terms(classification, SOURCE_CATEGORY_MARKERS[category])
+        core_matches = _matching_terms(f"{name} {classification}", terms)
+        service_matches = _matching_terms(services, terms)
+        secondary_matches = _matching_terms(secondary, terms)
+        raw_matches = _matching_terms(raw, terms)
+        if marker_matches:
+            score += 85 + 5 * len(marker_matches)
+            strong = True
+        if core_matches:
+            score += 50 + 3 * len(core_matches)
+            strong = True
+        if service_matches:
+            score += 35 + 2 * len(service_matches)
+            strong = True
+        if secondary_matches:
+            score += 12 + len(secondary_matches)
+        if raw_matches:
+            score += min(8, len(raw_matches))
+        matched.update(marker_matches | core_matches | service_matches | secondary_matches | raw_matches)
+
+    normalized_query = normalize_text(query)
+    query_tokens = {token for token in normalized_query.split() if len(token) >= 3 and token not in STOPWORDS}
+    if normalized_query and len(normalized_query) >= 4:
+        if _contains_term(name, normalized_query):
+            score += 30
+            strong = True
+        elif _contains_term(raw, normalized_query):
+            score += 10
+    for token in query_tokens:
+        if token in name.split():
+            score += 12
+            strong = True
+            matched.add(token)
+        if token in classification.split():
+            score += 8
+            matched.add(token)
+        if token in services.split():
+            score += 6
+            strong = True
+            matched.add(token)
+        if token in secondary.split():
+            score += 3
+            matched.add(token)
+        elif token in raw.split():
+            score += 1
+            matched.add(token)
+
+    target = detect_target(query)
+    if target:
+        target_text = normalize_text(f"{offer.name} {offer.short_description} {' '.join(offer.services)}")
+        target_matches = _matching_terms(target_text, TARGET_TERMS[target])
+        if target_matches:
+            score += 25
+            strong = True
+            matched.update(target_matches)
+
+    if score <= 0:
+        return None
+    return RankedOffer(offer=offer, score=score, strong_match=strong, matched_terms=tuple(sorted(matched)))
 
 
-def _is_low_signal_line(text: str) -> bool:
-    stripped = text.strip()
-    if not stripped:
-        return True
-    if stripped.startswith("[") and stripped.endswith("]"):
-        return True
-    if stripped.startswith("[") and "](" in stripped:
-        return True
-    if stripped.lower() in {"kontakt", "telefon:", "mail:", "e-mail:"}:
-        return True
-    return len(stripped) < 3
+def retrieve(
+    offers: list[OfferRecord],
+    query: str,
+    category: Category | None = None,
+    *,
+    limit: int = 8,
+) -> RetrievalOutcome:
+    """Rankt Angebote anhand von Kategorie, Fachbegriffen und Zielgruppe.
+
+    Args:
+        offers: Vollständige aktive Angebotsliste.
+        query: Normalisierte oder rohe Nutzerfrage.
+        category: Optionale, explizit im UI ausgewählte Kategorie.
+        limit: Maximale Zahl intern zurückgegebener Treffer.
+
+    Returns:
+        Ranking samt Scope-, Stärke- und Fallbackentscheidung.
+    """
+    detected = detect_categories(query)
+    selected_category = category or (detected[0] if detected else None)
+    ranked = [
+        result
+        for offer in offers
+        if (result := _score_offer(offer, query, selected_category)) is not None
+    ]
+    ranked.sort(key=lambda item: (-item.score, item.offer.source_index))
+    ranked = ranked[:limit]
+    strong_match = any(item.strong_match for item in ranked)
+    in_scope = bool(category or detected or ranked or has_domain_signal(query))
+    full_context_recommended = bool(in_scope and query and not strong_match and not is_vague_query(query))
+    return RetrievalOutcome(
+        results=ranked,
+        selected_category=selected_category,
+        strong_match=strong_match,
+        in_scope=in_scope,
+        full_context_recommended=full_context_recommended,
+    )
 
 
-def _override_targets_page(override, page: PageMetadata) -> bool:
-    target_type = getattr(override, "target_type", None)
-    target_id = getattr(override, "target_id", None)
-    if target_type == "service":
-        return target_id in {page.page_id, page.entity_id}
-    if target_type == "category":
-        return target_id == page.category or target_id == page.service_type
-    return False
+def _facet_strength(offer: OfferRecord, facet: str) -> int:
+    terms = TARGET_TERMS[facet]
+    if _matching_terms(normalize_text(offer.name), terms):
+        return 2
+    if _matching_terms(normalize_text(f"{offer.short_description} {' '.join(offer.services)}"), terms):
+        return 1
+    return 0
 
 
-def _unique(tokens: list[str]) -> list[str]:
-    seen: set[str] = set()
-    unique_tokens: list[str] = []
-    for token in tokens:
-        if token in seen:
-            continue
-        seen.add(token)
-        unique_tokens.append(token)
-    return unique_tokens
+def _has_facet(offer: OfferRecord, facet: str) -> bool:
+    return _facet_strength(offer, facet) > 0
+
+
+def select_card_offers(outcome: RetrievalOutcome, query: str, *, limit: int = 4) -> list[OfferRecord]:
+    """Wählt sichtbare Karten aus und wahrt die Schlafplatz-Zielgruppenregel."""
+    ranked = outcome.results
+    if outcome.selected_category != Category.SLEEP:
+        return [item.offer for item in ranked[:limit]]
+
+    target = detect_target(query)
+    hilfebus = next((item.offer for item in ranked if "hilfebus" in normalize_text(item.offer.name)), None)
+    if target:
+        direct = [item.offer for item in ranked if _has_facet(item.offer, target) and item.offer is not hilfebus]
+        direct.sort(key=lambda offer: -_facet_strength(offer, target))
+        if hilfebus and len(direct) < limit:
+            direct.append(hilfebus)
+        return direct[:limit]
+
+    selected: list[OfferRecord] = []
+    for facet in ("men", "women", "drug"):
+        facet_matches = [
+            item.offer
+            for item in ranked
+            if item.offer not in selected and _has_facet(item.offer, facet) and item.offer is not hilfebus
+        ]
+        facet_matches.sort(key=lambda offer: -_facet_strength(offer, facet))
+        match = facet_matches[0] if facet_matches else None
+        if match:
+            selected.append(match)
+    if hilfebus and len(selected) < limit:
+        selected.append(hilfebus)
+    for item in ranked:
+        if len(selected) >= limit:
+            break
+        if item.offer not in selected:
+            selected.append(item.offer)
+    return selected[:limit]
