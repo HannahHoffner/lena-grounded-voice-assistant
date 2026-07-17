@@ -20,6 +20,7 @@ ersetzt beziehungsweise über lokale Testantworten geprüft.
 | `tests/test_kb_loader.py` | Markdown- und kanonisches JSON-Laden |
 | `tests/test_retrieval.py` | Kategorien, Zielgruppen und Ranking |
 | `tests/test_sessions.py` | Session-Lebenszyklus und Folgefragen |
+| `tests/test_session_persistence.py` | atomare Writes, Parallelzugriffe, TTL/Kapazität, Recovery und API-Fehlerrobustheit |
 | `tests/test_wfs_sync.py` | Validierung, Normalisierung, Diff und Promotion |
 | `tests/test_frontend_security.py` | statische Absicherung der Leaflet-Popup-Sinks |
 | `tests/test_safety.py` | Akutgefahr-Vertrag, kontrollierte Antwort und TTS |
@@ -60,6 +61,7 @@ Fokussierte Prüfung des Protokollpfads:
 ```powershell
 python -m pytest tests/test_observability.py -q
 python -m pytest tests/test_provider_timeouts.py -q
+python -m pytest tests/test_session_persistence.py -q
 ```
 
 ## Fehlende automatisierte Prüfungen

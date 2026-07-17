@@ -100,9 +100,15 @@ lange Texte erreichen `QueryService` nicht und ergeben 422.
 ## Persistenz und Datenschutz
 
 Sessions werden als JSON gespeichert, enthalten Fragen und Antworten und laufen
-konfigurierbar ab. Die Speicherung ist dateibasiert und nicht gegen parallele
-Schreibzugriffe mehrerer Prozesse abgesichert. `runtime/` sollte daher lokal,
-zugriffsgeschützt und gemäß dem Datenschutzkonzept regelmäßig bereinigt werden.
+konfigurierbar ab. Vor dem Antwortpfad löst `QueryService` die Session auf; nach
+der finalen sichtbaren Antwort fügt er genau einen Turn hinzu. Der Store sperrt
+den vollständigen Lese-Ändere-Schreibe-Zyklus innerhalb eines Prozesses,
+entfernt abgelaufene beziehungsweise überzählige Einträge und ersetzt die
+vollständig validierte JSON-Map atomar. Ein Schreibfehler liefert trotzdem das
+In-Memory-Modell zurück und blockiert weder Nutzerantwort noch das getrennte
+Interaktions-JSONL. Die dateibasierte Sperre koordiniert keine mehreren
+Prozesse. `runtime/` sollte daher lokal, zugriffsgeschützt und gemäß dem
+Datenschutzkonzept regelmäßig bereinigt werden.
 
 Nach einer vollständig bearbeiteten `/api/query`-Anfrage schreibt ausschließlich
 der HTTP-Adapter ein zusammenhängendes Paar nach

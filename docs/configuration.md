@@ -20,7 +20,8 @@ und Sessionvariablen weiterhin akzeptiert.
 | `BLABLADOR_TIMEOUT_SECONDS` | nein | – | Legacy-Fallback für beide LLM-Grenzen, wenn deren neue Variablen fehlen |
 | `BLABLADOR_MAX_CONTEXT_CHARS` | nein | `50000` | maximale Kontextgröße, mindestens 10000 |
 | `BLABLADOR_MAX_TOKENS` | nein | `1200` | Ausgabelimit, mindestens 200 |
-| `SESSION_TIMEOUT_SECONDS` | nein | `180` | Sessionablauf, mindestens 30 s |
+| `SESSION_TIMEOUT_SECONDS` | nein | `180` | Sessionablauf in Sekunden; positive Ganzzahl |
+| `SESSION_MAX_ENTRIES` | nein | `500` | maximale Zahl lokal persistierter Sessions; Bereich 1–100000 |
 | `QUERY_MAX_CHARS` | nein | `1000` | maximales Query-Feld; Bereich 1–10000 Zeichen |
 | `TECHNICAL_LOG_LEVEL` | nein | `INFO` | Level der redigierten technischen Ereignisse |
 | `INTERACTION_LOGGING_ENABLED` | nein | `true` | lokales vollständiges Prototyp-Interaktionsprotokoll aktivieren |
@@ -64,6 +65,12 @@ Alle Timeoutwerte müssen positiv und endlich sein. Ungültige Umgebungswerte
 fallen auf sichere Standards zurück; explizite `Settings` mit null, negativen
 oder nicht endlichen Grenzen werden abgewiesen. Die Untergrenze von 0,1 Sekunden
 dient schnellen kontrollierten Tests und ist kein empfohlener Betriebswert.
+
+Der Session-Store entfernt Einträge erst, wenn ihre letzte Aktivität die TTL
+überschreitet; exakt an der Grenze bleibt die Session aktiv. Nach dem
+TTL-Cleanup werden bei Bedarf die ältesten Einträge bis
+`SESSION_MAX_ENTRIES` entfernt. Beide Grenzen gelten für den lokalen
+Einzelprozessbetrieb und sind keine prozessübergreifende Kapazitätssteuerung.
 
 Ein Router-Timeout führt in das deterministische Retrieval und gilt weder als
 erkannte noch als ausgeschlossene Akutgefahr. Ein Formulator-Timeout verwendet

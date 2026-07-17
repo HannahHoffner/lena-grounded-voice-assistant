@@ -134,7 +134,9 @@ Quelle: Stadt Leipzig, WFS Wohnungslosenhilfe,
   lokalen Stream, garantiert aber keinen Abbruch bereits gestarteter externer Arbeit.
 - WFS-Promotion und Übersetzungsprüfung besitzen keine Admin-Oberfläche.
 - `runtime/sessions.json` kann Nutzereingaben enthalten und ist nicht für eine
-  gemeinsame oder öffentliche Ablage bestimmt.
+  gemeinsame oder öffentliche Ablage bestimmt. Der Einzelprozess-Store entfernt
+  abgelaufene und überzählige Sessions bei Zugriffen und ersetzt die JSON-Datei
+  atomar; mehrere Serverprozesse werden nicht koordiniert.
 - `runtime/logs/interactions.jsonl` enthält bei Standardkonfiguration vollständige
   Anfrage-Antwort-Paare für Evaluation und Verbesserung. Diese Daten sind nicht
   anonym und die einfache lokale Speicherung ist nicht produktionsreif; Details

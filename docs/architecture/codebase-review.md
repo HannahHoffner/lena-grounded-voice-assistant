@@ -53,8 +53,8 @@ Produktionsstand. Die wichtigsten Ursachen sind:
   auf 112; LLM-Erkennungsfehler und ungeprüfte Übersetzungsentwürfe bleiben.
 - WFS-Review und Promotion beziehen sich nicht zwingend auf denselben Payload;
   die Aktivierung mehrerer Dateien ist nicht als Gesamtvorgang atomar.
-- Sessions wachsen unbegrenzt, werden nicht atomar geschrieben und sind nicht
-  gegen parallele Requests geschützt.
+- Sessionwachstum, direkte Writes und Parallelzugriffe innerhalb eines Prozesses
+  sind durch Paket 4 begrenzt; mehrere Prozesse bleiben ausdrücklich unkoordiniert.
 - Fehler und Fallbacks sind mangels strukturiertem Logging betrieblich kaum
   sichtbar.
 - Zentrale Dateien und Funktionen bündeln zu viele Verantwortlichkeiten.
@@ -283,11 +283,13 @@ Policies sollten aber getrennt und getestet werden.
 
 ### 5.5 Persistenz, Nebenläufigkeit und Ressourcen
 
-- Sessions werden vollständig gelesen und vollständig neu geschrieben.
-- Der Write ist nicht atomar und besitzt keine Sperre.
-- Abgelaufene Sessions bleiben dauerhaft erhalten. Aktuell liegen 453 Sessions
-  mit rund 271 KiB vor.
-- Ein Mehrprozess-Uvicorn-Betrieb kann Updates verlieren oder JSON beschädigen.
+- Sessions werden weiterhin vollständig gelesen und vollständig neu geschrieben,
+  seit Paket 4 jedoch unter einem prozessweit geteilten Pfad-Lock und per
+  Tempdatei plus atomarem `os.replace()`.
+- TTL- und Kapazitätspruning begrenzen den aktiven Bestand; Recovery-Dateien
+  beschädigter Stände benötigen weiterhin eine bewusste lokale Aufbewahrung.
+- Ein Mehrprozess-Uvicorn-Betrieb kann weiterhin Updates verlieren, weil der
+  Lock absichtlich nur innerhalb eines Prozesses gilt.
 - WFS-Promotion ist nur pro Datei atomar.
 - STT und TTS besitzen seit Paket 2 explizite, getestete Request-Grenzen.
 - HTTP-Clients werden pro Aufruf neu erzeugt; bei der kleinen Last ist dies kein
@@ -335,8 +337,8 @@ kein P0, sollte aber vor einem Mehrnutzerbetrieb adressiert werden.
 | P1 | Geprüfter WFS-Stand ist nicht der promotete Stand | `sync_wfs()` ruft sowohl bei `--check` als auch `--promote` `fetch_wfs()` auf | Daten können sich zwischen Review und Aktivierung ändern | Promotion anhand Content-Hash eines Pending-Artefakts; neuer Check bei Abweichung | Test: Quelle ändert sich zwischen Check und Promote | hoch |
 | P1 | Multi-Datei-Promotion kann Mischstand erzeugen | sequenzielle `_atomic_json()`-Aufrufe, danach Translation-Update und Cleanup | Neustart oder laufender Prozess kann inkonsistente Artefakte sehen | Release-Verzeichnis/Manifest und atomarer Zeigerwechsel oder Recovery-Protokoll | Fault-Injection nach jedem Promotionsschritt | hoch |
 | P1 | Gebautes Wheel ist nicht lauffähig | Test-Wheel enthält weder `app/static/` noch `data/` | Installation funktioniert nur editable aus Checkout | Paketdatenstrategie festlegen; Datenpfade über Resources/externes Datenverzeichnis | Wheel in leerer Umgebung installieren und App/Frontend starten | hoch |
-| P1 | Sessionablage verliert oder beschädigt Daten | `SessionStore._dump_all()` schreibt direkt; Read-modify-write ohne Lock | parallele Requests/Worker überschreiben sich; Prozessabbruch kann JSON beschädigen | zunächst atomarer Write + Pruning + In-Prozess-Lock; Betriebsgrenze dokumentieren | Parallelitäts- und Abbruchtest | hoch |
-| P1 | Abgelaufene Sessions werden nie entfernt | Timeout nur in `resolve()`; Datei enthält 453 Sessions | unbegrenztes Wachstum und unnötige Speicherung personenbezogener Texte | Retention/Pruning beim Laden oder Schreiben; Datenschutzvorgabe | Test mit abgelaufenen Sessions und Größenlimit | hoch |
+| P1 | Sessionablage verliert oder beschädigt Daten (für Einzelprozess in Paket 4 geschlossen) | `SessionStore` sperrt den vollständigen Zyklus und aktiviert per `os.replace()`; kein Mehrprozess-Lock | parallele Requests eines Prozesses sind geschützt, mehrere Worker können sich weiterhin überschreiben | Einzelprozessbetrieb beibehalten oder vor Mehrprozessbetrieb koordinierten Store einführen | `tests/test_session_persistence.py`; später Mehrprozess-Integrationstest | hoch für Einzelprozess, offene Mehrprozessgrenze |
+| P1 | Abgelaufene Sessions werden nie entfernt (in Paket 4 geschlossen) | opportunistisches TTL-Pruning und `SESSION_MAX_ENTRIES` im produktiven Store | aktive JSON-Map ist begrenzt; Recovery-Dateien werden nicht automatisch gelöscht | lokale Recovery-Aufbewahrung betrieblich festlegen | TTL-, Kapazitäts- und Recoverytests | hoch |
 | P1 | Fallbacks maskieren Betriebsfehler | pauschale/lautlose `except`-Pfade in `main.py`, `service.py`, `sessions.py`, `speech.py` | Health kann eingeschränkt bleiben, Ursache fehlt; Fehler wiederholen sich unbemerkt | strukturiertes, redigiertes Logging und Health-Fehlercodes | Tests mit `caplog`; Smoke-Test bei Provider-/WFS-Ausfall | hoch |
 | P1 | Unbegrenzte Speech-Requests (geschlossen in Paket 2) | historisch `request.body()` in `main.py`; kein Audio-/Textlimit | Speicher-/Kostenmissbrauch bei externer Bindung | begrenztes Streaming, typisierter TTS-Vertrag und 413/415/422-Vertrag implementiert; Proxy-Limits bleiben Betriebsaufgabe | `tests/test_request_boundaries.py` knapp unter/über Grenze und chunked | hoch |
 | P2 | Übersetzungs-CLI aktualisiert laufenden Dienst nicht | Stores nur in `QueryService.__init__()` geladen | Wartung wirkt erst nach nicht dokumentiertem Neustart | expliziter Reload/Versionwatch oder dokumentierter Restart | Integrationstest Translation vor/nach Reload | hoch |

@@ -65,7 +65,15 @@ Overrides zu Karten zusammen. `app/translate_offers.py` aktualisiert den Store
 explizit als Wartungsschritt, nicht während einer Nutzeranfrage.
 
 `app/sessions.py` speichert eine begrenzte Anzahl kurzer Frage-/Antwortpaare in
-`runtime/sessions.json`. `app/maps.py` transformiert WFS-Koordinaten aus
+`runtime/sessions.json`. Ein nach absolutem Pfad geteilter `RLock` umfasst im
+Einzelprozess den gesamten Lese-Bereinigungs-Änderungs-Schreib-Zyklus. Writes
+werden als eindeutige temporäre Datei im Zielordner geschrieben, mit `fsync`
+gesichert und per `os.replace()` atomar aktiviert. TTL- und Kapazitätsbereinigung
+laufen opportunistisch bei Sessionzugriffen. Beschädigtes JSON wird unter
+`runtime/` als `sessions.corrupt.<Zeit>.<UUID>.json` quarantänisiert; ein
+Persistenzfehler verhindert die fachliche Antwort nicht. Diese Mechanismen
+koordinieren keine mehreren Prozesse oder Uvicorn-Worker. `app/maps.py`
+transformiert WFS-Koordinaten aus
 EPSG:25833 nach WGS84 und erstellt Ziele relativ zum Leipziger Hauptbahnhof.
 `app/speech.py` kapselt externe Speech-Endpunkte und `edge-tts`.
 Vor der Synthese ersetzt der Adapter das eigenständige Token `112`
@@ -136,7 +144,8 @@ Links nur nach expliziter Protokollprüfung.
 - keine prozessübergreifende Provider-Nebenläufigkeitsbegrenzung; mangels lokaler
   Modelle und belegter externer Kontingentgrenzen ist derzeit keine Semaphore
   implementiert
-- keine Mehrbenutzer- oder Datenbank-Persistenz für Sessions
+- keine Mehrbenutzer-, Mehrprozess- oder Datenbank-Persistenz für Sessions;
+  Recovery-Dateien werden nicht automatisch rotiert oder gelöscht
 - keine dokumentierte produktive Deployment-Orchestrierung, Authentifizierung,
   Rate-Limits oder TLS-Terminierung
 - kein konfiguriertes Linter-, Type-Checker- oder Dokumentations-Buildsystem

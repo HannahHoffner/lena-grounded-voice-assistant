@@ -1033,17 +1033,169 @@ Reliability-Diff unnötig vergrößern.
 
 ### Paket 4 (P1): Sessions atomar und begrenzt speichern
 
-**Ziel:** Kein unbeschränktes Wachstum, kein direkter nicht-atomarer Write und
-klarer Einzel-/Mehrprozessvertrag.
+**Status:** Abgeschlossen auf `modernization/session-persistence` (Stand
+2026-07-17); lokale Commits, nicht gepusht.
 
-- Erwartete Dateien: `app/sessions.py`, `app/config.py`, Sessiontests,
-  Datenschutz-/Betriebsdokumentation.
-- Tests: Pruning, atomarer Fehlerfall, parallele Tasks, beschädigte Datei,
-  maximale Turns/Sessions.
-- Nutzen: hoch. Aufwand: mittel. Risiko: mittel.
-- Rollback: altes JSON vor Migration sichern; neues Format zunächst kompatibel
-  lesen.
-- Abbruchkriterium: Retention oder Betriebsmodell nicht geklärt.
+**Ziel und Akzeptanzvertrag:** Das bestehende, rückwärts kompatible
+`runtime/sessions.json` bleibt eine JSON-Map für den lokalen
+Einzelprozess-Prototyp. Der vollständige Zyklus Lesen, Bereinigen, Ändern,
+Validieren und atomar Schreiben wird innerhalb eines Prozesses geschützt.
+Abgelaufene und überzählige Sessions werden physisch entfernt. Lese-, Recovery-
+und Schreibfehler verhindern weder eine fachliche Antwort noch das getrennte
+Interaktionsprotokoll. Eine Mehrprozess-, Datenbank- oder Forschungsdatenlösung
+ist nicht Teil dieses Pakets.
+
+**Aktuelles Datenmodell und Pfade:** `ConversationSession` in
+`app/sessions.py` enthält eine zufällige 32-stellige UUID4-Hex-ID (128 Bit),
+`Language`, timezone-aware `created_at` und `last_activity_at`, höchstens acht
+`ChatTurn`-Paare sowie `pending_clarification`. `QueryRequest.session_id` ist auf
+80 Zeichen begrenzt. Die ID wird ausschließlich als Schlüssel innerhalb der
+JSON-Map verwendet und beeinflusst keinen Dateinamen. `QueryService` erzeugt
+genau einen `SessionStore` für `runtime/sessions.json`, ruft vor dem asynchronen
+Antwortpfad `resolve()` und danach `add_turn()` auf. Das Frontend verwirft seine
+ID nach drei Minuten oder bei Reset/Sprachwechsel; ein serverseitiger Reset- oder
+Löschendpunkt existiert nicht. Das Interaktionsprotokoll speichert die
+kurzlebige Session-ID separat in `runtime/logs/interactions.jsonl`.
+
+**Bestandsverhalten vor Paket 4 und behobene Race Conditions:** `_load_all()` las bei jedem Zugriff
+die gesamte Map. `save()` führt ohne Sperre Load–Modify–Write aus;
+`_dump_all()` überschreibt die Hauptdatei direkt. Ablauf wird nur in `resolve()`
+für die angefragte Session mit `now - last_activity_at > timeout` geprüft;
+abgelaufene fremde Einträge bleiben dauerhaft gespeichert. Zwei parallele
+Erstellungen können denselben Ausgangszustand lesen und eine Session verlieren.
+Zwei parallele `add_turn()`-Aufrufe derselben Session können jeweils veraltete
+Objekte schreiben und einen Turn verlieren. Ungültiges JSON und nicht lesbare
+Dateien werden als leer behandelt; einzelne ungültige Records werden
+übersprungen. Seit Paket 3A waren Fehler redigiert sichtbar, Schreibfehler wurden
+aber noch bis zum Nutzerrequest weitergereicht. Paket 4 ersetzt genau diesen
+Pfad durch den nachfolgend beschriebenen Lock-, Recovery- und Atomic-Write-Vertrag.
+
+**Architekturentscheidung:** JSON genügt bei kleinem Bestand und genau einem
+Anwendungsprozess. Ein pro absolutem Pfad gemeinsam registriertes
+`threading.RLock` schützt auch mehrere `SessionStore`-Instanzen im selben
+Prozess. Jeder mutierende Pfad hält es über Lesen, TTL-Pruning,
+Kapazitätspruning, Mutation, Pydantic-Validierung und Replace. `add_turn()` lädt
+unter dem Lock die neueste persistierte Version derselben Session und hängt den
+Turn in Abschlussreihenfolge an; damit gehen parallele Updates derselben Session
+nicht verloren. Die Sperre schützt keine getrennten Prozesse oder mehrere
+Uvicorn-Worker. Dafür wäre später eine prozessübergreifende Sperre oder
+Datenbankmigration erforderlich; Paket 4 behauptet diese Sicherheit nicht.
+
+**Atomarer Write:** Der vollständig serialisierte und validierte Zustand wird
+über `tempfile.NamedTemporaryFile(delete=False, dir=Zielverzeichnis)` in eine
+eindeutige Datei desselben Dateisystems geschrieben. Nach `flush()` und
+`os.fsync()` ersetzt `os.replace()` atomar die Hauptdatei. Ein `finally` entfernt
+ein verbliebenes Temp-Artefakt. Die Hauptdatei wird vor erfolgreichem Replace
+nicht geöffnet oder geleert. Verzeichnis-`fsync` wird plattformübergreifend nicht
+zugesagt; Dateidaten und atomarer Namenswechsel werden abgesichert.
+
+**TTL und Begrenzung:** Die bestehende fachliche TTL bleibt
+`SESSION_TIMEOUT_SECONDS=180`; exakt an der Grenze bleibt eine Session wie
+bisher aktiv, erst `>` gilt als abgelaufen. Opportunistische Bereinigung erfolgt
+bei Sessionzugriffen, weil die JSON-Map ohnehin vollständig gelesen werden muss;
+geschrieben wird nur bei Mutation oder tatsächlicher Bereinigung. Nach der
+TTL-Bereinigung begrenzt `SESSION_MAX_ENTRIES=500` den Zustand. Entfernt werden
+deterministisch die ältesten Sessions nach `last_activity_at`, dann
+`created_at`, dann `session_id`. Es gibt kein separates Dateigrößenlimit, weil
+maximal acht begrenzte Query-/Antwortpaare je Session und die Eintragsgrenze das
+Wachstum bereits nachvollziehbar begrenzen.
+
+**Beschädigte Persistenz und Recovery:** Ungültiges JSON oder ein falsches
+Root-Format wird nicht still überschrieben. Die Datei wird unter demselben
+ignorierten Runtime-Pfad per atomarem `os.replace()` nach
+`sessions.corrupt.<UTC-Zeit>.<UUID>.json` verschoben; anschließend beginnt ein
+leerer Zustand. Das Umbenennen vervielfältigt sensible Daten nicht. Scheitert
+Lesen oder Quarantäne, bleibt die Hauptdatei unangetastet und der aktuelle
+Request arbeitet nur mit leerem/In-Memory-Zustand ohne Persistenzerfolg.
+Ungültige einzelne Records werden redigiert als
+`session.validation.failed` gezählt, aus dem aktiven Zustand ausgeschlossen und
+bei der nächsten erfolgreichen Mutation entfernt. Recovery-Dateien bleiben
+unter `runtime/`, werden weder versioniert noch automatisch gelöscht.
+
+**Fehler- und Loggingvertrag:** `SessionStore` fängt erwartbare
+Dateisystemfehler an der Persistenzgrenze. `create`, `resolve`, `save` und
+`add_turn` liefern weiterhin ein gültiges In-Memory-Modell, sodass
+`QueryService` Antwort und Session-ID ausgeben und danach das unabhängige JSONL
+schreiben kann. Ereignisse sind `session.load.failed`,
+`session.validation.failed`, `session.corrupt_file.detected`,
+`session.write.failed`, `session.write.completed`,
+`session.cleanup.completed` und `session.capacity.enforced`. Logs enthalten nur
+Zähler, Dauer und Fehlerklasse, niemals Session-ID, Frage, Antwort oder
+Dateiinhalt. Es gibt keine falsche API-Erfolgsaussage über Persistenz; der
+öffentliche Vertrag kennt weiterhin keinen Persistenzstatus.
+
+**Wiederverwendung und betroffene Dateien:**
+
+| Datei | Änderung | Begründung/Risiko |
+|---|---|---|
+| `app/sessions.py` | zentraler Lock, Cleanup/Capacity, Quarantäne und atomarer Writer | Kern des Pakets; Fehler dürfen nicht propagieren |
+| `app/config.py` | positive zentrale `session_max_entries`; bestehende TTL-Validierung | alternative Testwerte ohne Hardcoding |
+| `app/service.py` | neue Kapazität an bestehenden Store übergeben | keine zweite Sessionarchitektur |
+| `.env.example` | TTL und Maximalzahl erläutern | sichere Prototypstandards |
+| `tests/test_session_persistence.py`, bestehende Session-/Observabilitytests | Konkurrenz, Fault Injection, Recovery und API-Fallback | reale Read–Modify–Write-Pfade |
+| README und bestehende Architektur-/Datenfluss-/Setup-/Testdokumentation | Betriebsmodell und Grenzen | keine parallele Dokumentation |
+
+**Dead Ends und Mitigation:**
+
+| Dead End | Auswirkung | Mitigation | Verifikation |
+|---|---|---|---|
+| Lock nur um Write | verlorene Read–Modify–Write-Updates | gemeinsames Pfad-RLock um gesamten Zyklus | parallele Erstellung und Updates |
+| Lock nur pro Store | zwei App-/Store-Instanzen kollidieren im Prozess | Registry nach absolutem Pfad | parallele Stores auf einer Datei |
+| feste Temp-Datei | Kollision und fremdes Cleanup | eindeutiges NamedTemporaryFile im Zielordner | Temp-Pfad- und Paralleltest |
+| Hauptdatei vor Replace verändern | Absturz hinterlässt Teil-JSON | nur Temp öffnen, flush/fsync, `os.replace` | Fault Injection vor Replace |
+| Kapazität vor TTL | aktive Einträge werden unnötig verdrängt | zuerst TTL, danach ältestes `last_activity_at` | kombinierter Test |
+| Cleanup schreibt bei jedem Read | unnötige IO und Lockdauer | nur bei tatsächlicher Entfernung schreiben | Write-Spion |
+| beschädigtes Root still überschreiben | Recovery unmöglich | atomar umbenennen oder Persistenz für Zugriff sperren | JSON-/Root-/Quarantänefehler |
+| Writefehler blockiert Antwort | fachlicher Request schlägt fehl | In-Memory-Session zurückgeben, redigiert loggen | API und Interaktions-JSONL |
+| RLock als Worker-Sicherheit | falsches Betriebsversprechen | Einzelprozessgrenze überall dokumentieren | Doku- und Startpfadreview |
+| Sessioncleanup berührt JSONL | Forschungsprotokoll wird unbeabsichtigt gelöscht | ausschließlich `sessions.json` und eigene Recovery-/Tempdateien anfassen | Sentinel-Interaktionsdatei |
+| reale Sleeps in Zeit-/Concurrencytests | flakige Suite | injizierbares `utc_now`, Barriers und Events | schnelle fokussierte Suite |
+
+**Teststrategie:** Atomtests prüfen vollständiges parsebares JSON, Tempdatei im
+Zielordner, `flush`/`fsync`/Replace, unveränderte Hauptdatei und Temp-Cleanup bei
+Fault Injection. Kontrollierte Threads/Barriers prüfen parallele Erstellungen,
+verschiedene und gleiche Sessionupdates, gemeinsame Locks mehrerer Stores,
+Exceptionfreigabe und parsebare Enddatei. Zeitinjektion prüft aktive,
+abgelaufene und exakt an der TTL liegende Sessions sowie persistiertes Cleanup.
+Kapazitätstests prüfen Reihenfolge, alternative Limits und TTL vor Capacity.
+Recoverytests decken ungültiges JSON, falsches Root, ungültige Records,
+Quarantäne- und Lesefehler sowie redigierte Events ab. Ein realer FastAPI-Test
+simuliert Writefehler und belegt Nutzerantwort, Session-ID, genau ein korrektes
+Interaktionspaar und keine Inhalte im technischen Log. Die vorhandenen Session-,
+Safety-, Request-, Timeout- und Observabilitytests bleiben Regressionstor.
+
+**Verifikationsergebnis:** 26 fokussierte Session-, Persistenz- und
+Observabilitytests sowie die Gesamtsuite mit 138 Tests bestanden in jeweils
+unter fünf Sekunden. `python -m compileall -q app`, `python -m app --help` und
+`git diff --check` waren erfolgreich. Fault Injection belegte unveränderte
+Hauptdateien und Temp-Cleanup bei Replace-Fehlern, Recovery beziehungsweise
+bewussten In-Memory-Betrieb bei beschädigter Persistenz sowie die Freigabe des
+Locks nach Fehlern. Kontrollierte parallele Store-Zugriffe hinterließen eine
+parsebare Map ohne verlorene Sessions oder Turns. TTL-Grenze, Cleanup vor
+Kapazitätsbegrenzung, ein API-Writefehler mit weiterhin genau einem
+Interaktionsdatensatz und die Trennung vom Interaktions-JSONL sind getestet.
+`git check-ignore -v` bestätigt den Ausschluss von Session-, Recovery- und
+Interaktionsdateien durch `runtime/`; der Diff enthält keine Runtime-Dateien,
+Secrets oder Abhängigkeitsänderungen.
+
+**Rollback und Wiederherstellung:** Das JSON-Rootformat und alle Sessionfelder
+bleiben unverändert; es gibt keine Datenmigration. Die lokalen Implementierungs-,
+Test- und Dokumentationscommits können unabhängig revertiert werden. Vorhandene
+`sessions.corrupt.*.json` werden bei Rollback nicht automatisch gelöscht oder
+wieder eingespielt. Eine bewusste Wiederherstellung erfolgt offline nach Prüfung
+des Inhalts durch Zurückbenennen bei gestoppter Anwendung. Bei dauerhaftem
+Schreibfehler kann LENA mit kurzlebigen In-Memory-Sessions weiterantworten, ohne
+Persistenzerfolg zu behaupten.
+
+**Fortschritt:**
+
+- [x] sauberer Paket-3B-Stand und neuer lokaler Branch geprüft.
+- [x] Dokumentation, Modelle, Query-/Resetpfade, Logging und Tests geprüft.
+- [x] Race Conditions, JSON-Entscheidung, Recovery und Grenzen geplant.
+- [x] Implementierung und fokussierte Tests abgeschlossen (26 Session-/Observabilitytests).
+- [x] Gesamtsuite (138 Tests) und manueller Persistence-/Concurrency-Review erfolgreich.
+- [x] `code-documentation` angewendet und bestehende Dokumentation gegengeprüft.
+- [x] Paket 4 nach vollständiger Verifikation abgeschlossen.
 
 ### Paket 5 (P1): WFS-Releasevertrag
 
