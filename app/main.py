@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from contextlib import asynccontextmanager, suppress
 from pathlib import Path
+from time import perf_counter
 
 from fastapi import FastAPI, HTTPException, Query, Request
 from fastapi.responses import FileResponse, Response
@@ -12,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .config import Settings, load_settings
 from .i18n import load_translation_store, translation_summary
+from .interactions import InteractionRecord, InteractionWriter
 from .kb_loader import KnowledgeBase, KnowledgeBaseError, load_knowledge_base
 from .models import Language, QueryRequest, QueryResponse, SpeechSynthesisRequest
 from .service import NO_RESULTS, QueryService
@@ -27,6 +30,7 @@ SUPPORTED_AUDIO_MEDIA_TYPES = {
     "audio/webm",
     "audio/x-wav",
 }
+LOGGER = logging.getLogger(__name__)
 
 
 async def _read_limited_body(request: Request, maximum_bytes: int) -> bytes:
@@ -71,6 +75,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         Synchronisation während des Lifecycles einen WFS-Hintergrundtask.
     """
     settings = settings or load_settings()
+    logging.basicConfig(
+        level=getattr(logging, settings.technical_log_level, logging.INFO),
+        format="%(asctime)s %(levelname)s %(name)s %(message)s",
+    )
     kb: KnowledgeBase | None = None
     kb_error = False
     try:
@@ -81,11 +89,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     service = QueryService(settings, kb) if kb else None
     speech_transcriber = SpeechTranscriber(settings)
     speech_synthesizer = SpeechSynthesizer(settings)
+    interaction_writer = InteractionWriter(
+        settings.interaction_log_path or settings.app_root / "runtime" / "logs" / "interactions.jsonl",
+        enabled=settings.interaction_logging_enabled,
+    )
 
     async def wfs_loop(app: FastAPI) -> None:
         while True:
             try:
                 result = await sync_wfs(settings, promote=settings.wfs_auto_promote)
+                LOGGER.info(
+                    "wfs.sync.completed",
+                    extra={"changed": result.changed, "promoted": result.promoted},
+                )
                 app.state.last_wfs_check = {
                     "status": "ok",
                     "checked_at": result.checked_at,
@@ -97,7 +113,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                     app.state.kb = refreshed
                     app.state.service = QueryService(settings, refreshed)
                     app.state.kb_error = False
-            except Exception:  # pragma: no cover - network/runtime dependent
+            except Exception as exc:  # pragma: no cover - network/runtime dependent
+                LOGGER.warning("wfs.sync.failed", extra={"error_type": type(exc).__name__})
                 app.state.last_wfs_check = {"status": "error"}
             await asyncio.sleep(settings.wfs_check_interval_hours * 3600)
 
@@ -119,13 +136,37 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.service = service
     app.state.speech_transcriber = speech_transcriber
     app.state.speech_synthesizer = speech_synthesizer
+    app.state.interaction_writer = interaction_writer
     app.state.last_wfs_check = None
 
     @app.middleware("http")
     async def prevent_dev_cache(request, call_next):
-        response = await call_next(request)
+        started_at = perf_counter()
+        LOGGER.info("request.started", extra={"method": request.method, "path": request.url.path})
+        try:
+            response = await call_next(request)
+        except Exception as exc:
+            LOGGER.error(
+                "request.failed",
+                extra={
+                    "method": request.method,
+                    "path": request.url.path,
+                    "duration_ms": round((perf_counter() - started_at) * 1000, 2),
+                    "error_type": type(exc).__name__,
+                },
+            )
+            raise
         if request.url.path == "/" or request.url.path.startswith("/static/"):
             response.headers["Cache-Control"] = "no-store, max-age=0"
+        LOGGER.info(
+            "request.completed",
+            extra={
+                "method": request.method,
+                "path": request.url.path,
+                "status_code": response.status_code,
+                "duration_ms": round((perf_counter() - started_at) * 1000, 2),
+            },
+        )
         return response
 
     static_root = Path(__file__).resolve().parent / "static"
@@ -196,6 +237,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         audio = await _read_limited_body(request, settings.speech_transcription_max_bytes)
         if not audio:
             raise HTTPException(status_code=422, detail="Audio body must not be empty")
+        started_at = perf_counter()
         try:
             text = await app.state.speech_transcriber.transcribe(
                 audio,
@@ -203,20 +245,37 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 language=language,
             )
         except SpeechTranscriptionError as exc:
+            LOGGER.warning(
+                "stt.failed",
+                extra={"duration_ms": round((perf_counter() - started_at) * 1000, 2)},
+            )
             raise HTTPException(status_code=503, detail="Speech transcription failed") from exc
+        LOGGER.info(
+            "stt.completed",
+            extra={"duration_ms": round((perf_counter() - started_at) * 1000, 2)},
+        )
         return {"text": text}
 
     @app.post("/api/speech/synthesize")
     async def synthesize_speech(payload: SpeechSynthesisRequest) -> Response:
         if len(payload.text) > settings.speech_synthesis_max_chars:
             raise HTTPException(status_code=422, detail="Speech synthesis text too long")
+        started_at = perf_counter()
         try:
             audio = await app.state.speech_synthesizer.synthesize(
                 payload.text,
                 language=payload.language,
             )
         except SpeechSynthesisError as exc:
+            LOGGER.warning(
+                "tts.failed",
+                extra={"duration_ms": round((perf_counter() - started_at) * 1000, 2)},
+            )
             raise HTTPException(status_code=503, detail="Speech synthesis failed") from exc
+        LOGGER.info(
+            "tts.completed",
+            extra={"duration_ms": round((perf_counter() - started_at) * 1000, 2)},
+        )
         return Response(content=audio, media_type=app.state.speech_synthesizer.media_type)
 
     @app.post("/api/query", response_model=QueryResponse)
@@ -225,12 +284,29 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise HTTPException(status_code=422, detail="Query text too long")
         active_service = app.state.service
         if not active_service:
-            return QueryResponse(
+            response = QueryResponse(
                 answer=NO_RESULTS.get(payload.language, NO_RESULTS[Language.DE]),
                 language=payload.language,
                 provider="template",
                 status="error",
             )
-        return await active_service.query(payload)
+        else:
+            response = await active_service.query(payload)
+        trace = response.interaction
+        app.state.interaction_writer.write(
+            InteractionRecord(
+                session_id=response.session_id,
+                language=payload.language,
+                input_mode=payload.input_mode,
+                user_query=payload.query,
+                assistant_answer=response.answer,
+                route=trace.route,
+                source_ids=trace.source_ids,
+                retrieval_result_count=trace.retrieval_result_count,
+                acute_risk_detected=trace.acute_risk_detected,
+                fallback_used=trace.fallback_used,
+            )
+        )
+        return response
 
     return app

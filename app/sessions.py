@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -11,6 +12,9 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 
 from .models import ChatTurn, Language
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 def utc_now() -> datetime:
@@ -93,7 +97,8 @@ class SessionStore:
             return {}
         try:
             payload = json.loads(self.path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
+        except (OSError, json.JSONDecodeError) as exc:
+            LOGGER.warning("session.read.failed", extra={"error_type": type(exc).__name__})
             return {}
         sessions: dict[str, ConversationSession] = {}
         if not isinstance(payload, dict):
@@ -101,12 +106,21 @@ class SessionStore:
         for session_id, value in payload.items():
             try:
                 sessions[session_id] = ConversationSession.model_validate(value)
-            except Exception:
+            except Exception as exc:
+                LOGGER.warning("session.read.failed", extra={"error_type": type(exc).__name__})
                 continue
         return sessions
 
     def _dump_all(self, sessions: dict[str, ConversationSession]) -> None:
-        self.path.write_text(
-            json.dumps({key: value.model_dump(mode="json") for key, value in sessions.items()}, ensure_ascii=False, indent=2),
-            encoding="utf-8",
-        )
+        try:
+            self.path.write_text(
+                json.dumps(
+                    {key: value.model_dump(mode="json") for key, value in sessions.items()},
+                    ensure_ascii=False,
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+        except OSError as exc:
+            LOGGER.error("session.write.failed", extra={"error_type": type(exc).__name__})
+            raise

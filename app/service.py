@@ -2,16 +2,21 @@
 
 from __future__ import annotations
 
+import logging
+
 from .config import Settings
 from .i18n import load_manual_overrides, load_translation_store, localize_offer_card
 from .kb_loader import KnowledgeBase
 from .maps import build_map_data
-from .models import Category, ChatTurn, Language, OfferCard, OfferRecord, QueryRequest, QueryResponse
+from .models import Category, ChatTurn, Language, OfferCard, OfferRecord, QueryInteraction, QueryRequest, QueryResponse
 from .offer_roles import sleep_roles
 from .providers.llm import BlabladorProvider, ProviderError
 from .retrieval import detect_target, has_domain_signal, is_vague_query, normalize_text, retrieve, select_card_offers
 from .sessions import SessionStore
 from .temporal import apply_temporal_policy, build_temporal_context, prepend_temporal_notes
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 SELF_DESCRIPTION = {
@@ -253,7 +258,8 @@ class QueryService:
         if settings.blablador_configured:
             try:
                 self.blablador = BlabladorProvider(settings)
-            except ProviderError:
+            except ProviderError as exc:
+                LOGGER.warning("query.provider.init_failed", extra={"error_type": type(exc).__name__})
                 self.blablador = None
 
     @property
@@ -278,7 +284,8 @@ class QueryService:
         """
         session = self.sessions.resolve(payload.session_id, payload.language)
         conversation_history = list(session.turns)
-        response = await self._query_core(payload, conversation_history)
+        interaction = QueryInteraction()
+        response = await self._query_core(payload, conversation_history, interaction)
         selected_offers = [self.kb.by_id()[card.id] for card in response.cards if card.id in self.kb.by_id()]
         map_data = build_map_data(selected_offers)
         if map_data:
@@ -300,19 +307,29 @@ class QueryService:
         response.question = payload.query
         response.history = updated_session.turns
         response.map_data = map_data
+        interaction.source_ids = [card.id for card in response.cards]
+        response.interaction = interaction
         return response
 
-    async def _query_core(self, payload: QueryRequest, conversation_history: list[ChatTurn]) -> QueryResponse:
+    async def _query_core(
+        self,
+        payload: QueryRequest,
+        conversation_history: list[ChatTurn],
+        interaction: QueryInteraction,
+    ) -> QueryResponse:
         language = payload.language
         query = payload.query
         effective_query = _query_with_session_context(query, conversation_history)
         temporal_context = build_temporal_context(effective_query)
 
         if _matches_phrase(query, SELF_PATTERNS):
+            interaction.route = "self_description"
             return QueryResponse(answer=SELF_DESCRIPTION[language], language=language, provider="template", status="ok")
         if not query and payload.category is None:
+            interaction.route = "clarification"
             return QueryResponse(answer=CLARIFY[language], language=language, provider="template", status="no_results")
         if payload.category is None and is_vague_query(query) and not conversation_history:
+            interaction.route = "clarification"
             hilfebus = _hilfebus_offer(self.kb.offers)
             return QueryResponse(
                 answer=CLARIFY_HILFEBUS[language],
@@ -337,7 +354,11 @@ class QueryService:
                     offers=self.kb.offers,
                     conversation_history=conversation_history,
                 )
+                LOGGER.info("query.router.completed")
                 if route.acute_risk_detected:
+                    interaction.route = "acute_risk"
+                    interaction.acute_risk_detected = True
+                    LOGGER.warning("safety.acute_risk_detected")
                     return QueryResponse(
                         answer=_acute_risk_response(language),
                         language=language,
@@ -345,10 +366,12 @@ class QueryService:
                         status="no_results",
                     )
                 if route.out_of_scope:
+                    interaction.route = "out_of_scope"
                     return QueryResponse(
                         answer=OUT_OF_SCOPE[language], language=language, provider="template", status="no_results"
                     )
                 if route.needs_clarification:
+                    interaction.route = "clarification"
                     return QueryResponse(
                         answer=CLARIFY[language], language=language, provider="template", status="no_results"
                     )
@@ -383,12 +406,14 @@ class QueryService:
                         routing_context=routing_context,
                         conversation_history=conversation_history,
                     )
+                    LOGGER.info("query.formulation.completed")
                     selected = [by_id[card_id] for card_id in result.card_ids]
                     if routed_category == Category.SLEEP and selected:
                         selected = _sleep_policy_offers(selected, routed_offers, effective_query)
                         target = detect_target(effective_query)
                         if selected and target in {None, "men"} and "ruckmarsdorfer" not in normalize_text(result.answer):
                             raise ProviderError("Sleep answer omitted the Rückmarsdorfer priority")
+                    interaction.route = "llm_formulation"
                     return QueryResponse(
                         answer=prepend_temporal_notes(result.answer, temporal_notes, language),
                         cards=[_card(offer, language, self.translation_store, self.manual_overrides) for offer in selected],
@@ -396,7 +421,11 @@ class QueryService:
                         provider="blablador",
                         status="ok",
                     )
-            except ProviderError:
+            except ProviderError as exc:
+                event = "query.formulation.failed" if routed_offers else "query.router.failed"
+                LOGGER.warning(event, extra={"error_type": type(exc).__name__})
+                interaction.fallback_used = True
+                LOGGER.info("query.fallback.used", extra={"stage": event})
                 if routed_offers:
                     routed_offers, temporal_notes = apply_temporal_policy(
                         routed_offers,
@@ -405,6 +434,7 @@ class QueryService:
                         temporal_context,
                     )
                     if routed_offers:
+                        interaction.route = "template_fallback"
                         return QueryResponse(
                             answer=prepend_temporal_notes(
                                 _template_for_offers(language, routed_category, effective_query, routed_offers),
@@ -418,7 +448,13 @@ class QueryService:
                         )
 
         outcome = retrieve(self.kb.offers, effective_query, payload.category)
+        interaction.retrieval_result_count = len(outcome.results)
+        LOGGER.info(
+            "query.retrieval.completed",
+            extra={"result_count": interaction.retrieval_result_count},
+        )
         if not outcome.in_scope:
+            interaction.route = "out_of_scope"
             return QueryResponse(answer=OUT_OF_SCOPE[language], language=language, provider="template", status="no_results")
 
         template_offers = select_card_offers(outcome, effective_query)
@@ -473,6 +509,7 @@ class QueryService:
                     routing_context=routing_context,
                     conversation_history=conversation_history,
                 )
+                LOGGER.info("query.formulation.completed")
                 by_id = self.kb.by_id()
                 selected = [by_id[card_id] for card_id in result.card_ids]
                 if outcome.selected_category == Category.SLEEP:
@@ -480,6 +517,7 @@ class QueryService:
                     only_hilfebus = all("hilfebus" in normalize_text(offer.name) for offer in selected)
                     if selected and direct_available and only_hilfebus:
                         raise ProviderError("Hilfebus cannot replace direct sleep offers")
+                interaction.route = "llm_formulation"
                 return QueryResponse(
                     answer=prepend_temporal_notes(result.answer, llm_temporal_notes, language),
                     cards=[_card(offer, language, self.translation_store, self.manual_overrides) for offer in selected],
@@ -487,10 +525,13 @@ class QueryService:
                     provider="blablador",
                     status="ok",
                 )
-            except ProviderError:
-                pass
+            except ProviderError as exc:
+                LOGGER.warning("query.formulation.failed", extra={"error_type": type(exc).__name__})
+                interaction.fallback_used = True
+                LOGGER.info("query.fallback.used", extra={"stage": "query.formulation.failed"})
 
         if template_offers:
+            interaction.route = "template_fallback" if interaction.fallback_used else "template_retrieval"
             return QueryResponse(
                 answer=prepend_temporal_notes(
                     _template_for_offers(language, outcome.selected_category, effective_query, template_offers),
@@ -502,4 +543,5 @@ class QueryService:
                 provider="template",
                 status="ok",
             )
+        interaction.route = "no_results"
         return QueryResponse(answer=NO_RESULTS[language], language=language, provider="template", status="no_results")

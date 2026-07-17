@@ -42,6 +42,9 @@ class Settings:
     wfs_auto_sync: bool = False
     wfs_auto_promote: bool = False
     wfs_check_interval_hours: float = 24.0
+    technical_log_level: str = "INFO"
+    interaction_logging_enabled: bool = True
+    interaction_log_path: Path | None = None
 
     @property
     def blablador_configured(self) -> bool:
@@ -207,6 +210,10 @@ def load_settings() -> Settings:
     ).lower()
     if synthesis_provider not in {"edge", "openai"}:
         synthesis_provider = "edge"
+    technical_log_level = (_optional_env("TECHNICAL_LOG_LEVEL") or "INFO").upper()
+    if technical_log_level not in {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}:
+        technical_log_level = "INFO"
+    configured_interaction_path = _optional_env("INTERACTION_LOG_PATH")
 
     return Settings(
         app_root=app_root,
@@ -261,4 +268,11 @@ def load_settings() -> Settings:
         wfs_auto_sync=_env_bool("WFS_AUTO_SYNC", True),
         wfs_auto_promote=_env_bool("WFS_AUTO_PROMOTE", False),
         wfs_check_interval_hours=_env_float("WFS_CHECK_INTERVAL_HOURS", 24.0, 1.0),
+        technical_log_level=technical_log_level,
+        interaction_logging_enabled=_env_bool("INTERACTION_LOGGING_ENABLED", True),
+        interaction_log_path=(
+            Path(configured_interaction_path)
+            if configured_interaction_path and Path(configured_interaction_path).is_absolute()
+            else app_root / (configured_interaction_path or "runtime/logs/interactions.jsonl")
+        ),
     )

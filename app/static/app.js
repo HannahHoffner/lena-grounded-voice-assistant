@@ -224,7 +224,8 @@ const state = {
   listeningMode: null,
   serverSynthesisAvailable: false,
   currentSpeechAudio: null,
-  lastAnswer: ""
+  lastAnswer: "",
+  queryInputMode: "text"
 };
 
 const SESSION_TIMEOUT_MS = 3 * 60 * 1000;
@@ -373,6 +374,7 @@ function renderCategories() {
     button.addEventListener("click", () => {
       resetSessionTimeout();
       state.category = category;
+      state.queryInputMode = "text";
       stopListening();
       renderCategories();
       void submitQuery("");
@@ -384,6 +386,7 @@ function renderCategories() {
 function resetView() {
   resetSessionTimeout();
   state.category = null;
+  state.queryInputMode = "text";
   state.keepRecognizedStatus = false;
   state.sessionId = null;
   byId("queryInput").value = "";
@@ -599,7 +602,13 @@ async function submitQuery(query) {
     const response = await fetch("/api/query", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, language: state.language, category: state.category, session_id: state.sessionId })
+      body: JSON.stringify({
+        query,
+        language: state.language,
+        category: state.category,
+        session_id: state.sessionId,
+        input_mode: state.queryInputMode
+      })
     });
     if (!response.ok) throw new Error("request failed");
     const data = await response.json();
@@ -618,6 +627,7 @@ async function submitQuery(query) {
     state.category = null;
     renderCategories();
     byId("queryInput").value = "";
+    state.queryInputMode = "text";
     updateVoiceStatusReady();
   } catch (_) {
     byId("statusLine").textContent = "";
@@ -788,6 +798,7 @@ function ensureRecognition() {
     state.keepRecognizedStatus = true;
     if (transcript) {
       byId("queryInput").value = transcript;
+      state.queryInputMode = "speech";
       byId("voiceStatus").textContent = text().voiceHeard.replace("{text}", transcript);
       byId("submitButton").focus();
     } else {
@@ -833,6 +844,7 @@ async function transcribeRecordedAudio(blob) {
     state.keepRecognizedStatus = true;
     if (transcript) {
       byId("queryInput").value = transcript;
+      state.queryInputMode = "speech";
       byId("voiceStatus").textContent = text().voiceHeard.replace("{text}", transcript);
       byId("submitButton").focus();
     } else {
@@ -949,7 +961,10 @@ byId("queryForm").addEventListener("submit", (event) => {
   if (query || state.category) void submitQuery(query);
 });
 
-byId("queryInput").addEventListener("input", resetSessionTimeout);
+byId("queryInput").addEventListener("input", () => {
+  state.queryInputMode = "text";
+  resetSessionTimeout();
+});
 
 byId("replayAnswerButton").addEventListener("click", () => {
   resetSessionTimeout();

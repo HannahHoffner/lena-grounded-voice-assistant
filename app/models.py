@@ -103,6 +103,7 @@ class QueryRequest(BaseModel):
     language: Language = Language.DE
     category: Category | None = None
     session_id: str | None = Field(default=None, max_length=80)
+    input_mode: Literal["text", "speech"] = "text"
 
     @model_validator(mode="after")
     def clean_query(self) -> "QueryRequest":
@@ -124,6 +125,16 @@ class SpeechSynthesisRequest(BaseModel):
         return value
 
 
+class QueryInteraction(BaseModel):
+    """Interne Laufzeitmetadaten für das lokale Interaktionsprotokoll."""
+
+    route: str = "unknown"
+    source_ids: list[str] = Field(default_factory=list)
+    retrieval_result_count: int = Field(default=0, ge=0)
+    acute_risk_detected: bool = False
+    fallback_used: bool = False
+
+
 class QueryResponse(BaseModel):
     """Öffentliche Antwort mit Text, Karten, Session- und Kartendaten."""
     answer: str
@@ -135,6 +146,7 @@ class QueryResponse(BaseModel):
     question: str = ""
     history: list[ChatTurn] = Field(default_factory=list)
     map_data: MapData | None = None
+    interaction: QueryInteraction = Field(default_factory=QueryInteraction, exclude=True)
 
 
 class LLMAnswer(BaseModel):
