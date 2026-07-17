@@ -18,12 +18,16 @@ LLM-Verfügbarkeit und -Bewertung abhängig. Die Übersetzungsentwürfe für
 Englisch, Polnisch, Rumänisch und Russisch sind noch menschlich zu prüfen.
 
 Der Git-/CI-Befund wurde am 2026-07-17 mit Modernisierungspaket 1 geschlossen.
-Der geprüfte Stand liegt auf dem lokalen Branch
-`modernization/code3-baseline` des bestehenden GitHub-Repositories
-`lena-grounded-voice-assistant`. Der Commit `43b88bc` bildet die Code3-Baseline
-auf Basis der erhaltenen v1/v2-Historie ab. Eine minimale GitHub-Actions-Datei
-führt Pytest und `compileall` aus; ein Remote-CI-Lauf wurde noch nicht
-ausgeführt. Historische Aussagen dieses Reviews zur fehlenden Git-Baseline
+Der geprüfte Stand wurde über PR #1 in `main` des GitHub-Repositories
+`lena-grounded-voice-assistant` übernommen. Der Commit `43b88bc` bildet die
+Code3-Baseline auf Basis der erhaltenen v1/v2-Historie ab. GitHub Actions führt
+Pytest, `compileall` und einen Clean-Wheel-Smoke aus; die Remote-Läufe des
+Baseline-PRs waren erfolgreich. Das Wheel enthält Frontend und aktive Daten.
+
+Modernisierungspaket 2 schließt am 2026-07-17 die Request- und
+Expositionsbefunde: Query, STT und TTS besitzen serverseitige Grenzen; STT wird
+begrenzt gestreamt, TTS nutzt einen typisierten Vertrag, und nicht lokale Hosts
+benötigen zusätzlich `--allow-public`. Historische Aussagen dieses Reviews
 bleiben als Ausgangsbefund lesbar, sind aber nicht mehr der aktuelle Stand.
 
 ## 1. Executive Summary
@@ -39,10 +43,10 @@ Basis für die weitere Entwicklung.
 Der aktuelle Stand ist jedoch noch kein belastbarer Entwicklungs- oder
 Produktionsstand. Die wichtigsten Ursachen sind:
 
-- Die Code3-Baseline ist nun im bestehenden LENA-Repository versioniert; der
-  lokale Baseline-Branch ist noch nicht gepusht oder per Remote-CI geprüft.
-- Das gebaute Wheel enthält weder Frontend noch Laufzeitdaten und kann die
-  Anwendung deshalb nicht vollständig ausliefern.
+- Die Code3-Baseline ist im bestehenden LENA-Repository versioniert, remote
+  geprüft und über PR #1 in `main` übernommen.
+- Das gebaute Wheel enthält Frontend und aktive Laufzeitdaten und wird in CI aus
+  einer frischen Umgebung geprüft.
 - Der im Review bestätigte Stored-XSS-Pfad in Leaflet-Popups ist durch Paket 0A
   geschlossen; ein Browser-E2E-Sicherheitsnetz fehlt noch.
 - Ein validiertes LLM-Akutgefahr-Signal führt zu einem kontrollierten Hinweis
@@ -285,8 +289,7 @@ Policies sollten aber getrennt und getestet werden.
   mit rund 271 KiB vor.
 - Ein Mehrprozess-Uvicorn-Betrieb kann Updates verlieren oder JSON beschädigen.
 - WFS-Promotion ist nur pro Datei atomar.
-- STT lädt den vollständigen Audio-Body in den Speicher; TTS-Text ist im
-  Endpunkt nicht begrenzt.
+- STT und TTS besitzen seit Paket 2 explizite, getestete Request-Grenzen.
 - HTTP-Clients werden pro Aufruf neu erzeugt; bei der kleinen Last ist dies kein
   akutes Problem, sollte aber bei einem Betriebsziel neu bewertet werden.
 
@@ -294,8 +297,10 @@ Policies sollten aber getrennt und getestet werden.
 
 - Direkte Abhängigkeiten sind begrenzt und mit Major-Version-Obergrenzen
   versehen.
-- Es gibt keinen Lock- oder Constraints-Stand für reproduzierbare Installationen.
-- Das Wheel ist unvollständig und damit ein bestätigter Packaging-Dead-End.
+- Python-3.11-Constraints fixieren die getestete Auflösung, enthalten jedoch
+  noch keine Artefakthashes.
+- Das Wheel enthält Frontend und aktive Daten; der frühere Packaging-Dead-End
+  ist technisch geschlossen.
 - Es gibt inzwischen minimale Python-CI, aber weiterhin keine Container-,
   Service-, TLS- oder Deploymentkonfiguration.
 - `pyproject.toml` beschreibt den Stand noch als „Markdown-grounded“.
@@ -333,7 +338,7 @@ kein P0, sollte aber vor einem Mehrnutzerbetrieb adressiert werden.
 | P1 | Sessionablage verliert oder beschädigt Daten | `SessionStore._dump_all()` schreibt direkt; Read-modify-write ohne Lock | parallele Requests/Worker überschreiben sich; Prozessabbruch kann JSON beschädigen | zunächst atomarer Write + Pruning + In-Prozess-Lock; Betriebsgrenze dokumentieren | Parallelitäts- und Abbruchtest | hoch |
 | P1 | Abgelaufene Sessions werden nie entfernt | Timeout nur in `resolve()`; Datei enthält 453 Sessions | unbegrenztes Wachstum und unnötige Speicherung personenbezogener Texte | Retention/Pruning beim Laden oder Schreiben; Datenschutzvorgabe | Test mit abgelaufenen Sessions und Größenlimit | hoch |
 | P1 | Fallbacks maskieren Betriebsfehler | pauschale/lautlose `except`-Pfade in `main.py`, `service.py`, `sessions.py`, `speech.py` | Health kann eingeschränkt bleiben, Ursache fehlt; Fehler wiederholen sich unbemerkt | strukturiertes, redigiertes Logging und Health-Fehlercodes | Tests mit `caplog`; Smoke-Test bei Provider-/WFS-Ausfall | hoch |
-| P1 | Unbegrenzte Speech-Requests | `request.body()` in `main.py`; kein Audio-/Textlimit | Speicher-/Kostenmissbrauch bei externer Bindung | Limits vor Provideraufruf, Proxy-Limits, 413/422-Vertrag | API-Tests knapp unter/über Grenze | hoch |
+| P1 | Unbegrenzte Speech-Requests (geschlossen in Paket 2) | historisch `request.body()` in `main.py`; kein Audio-/Textlimit | Speicher-/Kostenmissbrauch bei externer Bindung | begrenztes Streaming, typisierter TTS-Vertrag und 413/415/422-Vertrag implementiert; Proxy-Limits bleiben Betriebsaufgabe | `tests/test_request_boundaries.py` knapp unter/über Grenze und chunked | hoch |
 | P2 | Übersetzungs-CLI aktualisiert laufenden Dienst nicht | Stores nur in `QueryService.__init__()` geladen | Wartung wirkt erst nach nicht dokumentiertem Neustart | expliziter Reload/Versionwatch oder dokumentierter Restart | Integrationstest Translation vor/nach Reload | hoch |
 | P2 | `full_context_recommended` ist wirkungslos | nur in `retrieval.py` gesetzt, nirgends gelesen | irreführendes Architekturversprechen | entfernen oder in klaren Routingentscheid integrieren | Referenzsuche und Verhaltenstest | hoch |
 | P2 | `kb_error`-State ist wirkungslos | in `main.py` gesetzt, nicht gelesen | tote Zustandsvariable, erschwert Diagnose | Health explizit nutzen oder entfernen | Referenzsuche/API-Test | hoch |
@@ -359,7 +364,8 @@ HTML/JavaScript-ID-Abgleich waren erfolgreich.
 
 - Review/Promote-Identität und Recovery der WFS-Daten.
 - Session-Datenintegrität, Retention und mögliche personenbezogene Inhalte.
-- fehlende Request-Limits bei Speech.
+- Request-Limits bei Speech sind seit Paket 2 implementiert; Proxy-Limits und
+  Rate-Limiting bleiben Betriebsaufgaben.
 - unvollständiges Distributionsartefakt.
 - fehlende beobachtbare Fehler- und Fallbackereignisse.
 - der neue Baseline-Branch ist noch nicht remote geteilt oder durch einen Pull
@@ -367,8 +373,9 @@ HTML/JavaScript-ID-Abgleich waren erfolgreich.
 
 ### Weitere Sicherheitsbeobachtungen
 
-- Standardbindung ist lokal (`127.0.0.1`), aber `--host` erlaubt öffentliche
-  Bindung ohne Authentifizierung, Rate-Limit, Trusted-Host- oder TLS-Schutz.
+- Standardbindung ist lokal (`127.0.0.1`). Seit Paket 2 erfordert ein nicht
+  lokaler `--host` zusätzlich `--allow-public`; das Flag stellt weiterhin weder
+  Authentifizierung, Rate-Limiting, Trusted-Host-Prüfung noch TLS bereit.
 - `/api/health` gibt keine Secrets aus; das ist positiv.
 - `.env` und `.env.local` wurden bewusst nicht gelesen.
 - Im ursprünglichen Review konnte mangels Code3-Historie nicht geprüft werden,
@@ -402,19 +409,19 @@ Alle Tests bestanden. `compileall` und Import-Smoke-Test waren erfolgreich.
   `translate_offers.py` und reale Speech-Fehlerverträge außerhalb API-Mocks
 - kein Check/Promote-Identitätstest und keine Fault-Injection für Promotion
 - keine Parallelitäts-, Retention- oder Korruptionstests für Sessions
-- kein Wheel-Installations-/Packaging-Smoke-Test
+- Wheel-Installations-/Packaging-Smoke-Test ist in GitHub Actions vorhanden
 - keine Accessibility-Automation
 - keine Coverage-Messung, kein Linter, Formatter oder Type-Checker
-- kein bestätigter Remote-CI-Lauf; lokal sind Workflowbefehle verifiziert
+- Remote-CI ist für die Baseline bestätigt
 
 Die Provider-Tests prüfen sinnvoll Prompt, IDs und Grounding, ersetzen aber den
 realen externen Dienst. Contract-/Sandbox-Tests gegen einen kontrollierten
 OpenAI-kompatiblen Stub wären belastbarer als Tests gegen Live-Dienste.
 
 Die vorhandene Dokumentation ist deutlich besser als der ursprüngliche Stand.
-Noch unvollständig oder ungenau sind Packaging, Neustart nach Translation,
-Review/Promote-Semantik, Sicherheitsgrenzen und die unterschiedliche Versions-
-angabe.
+Noch unvollständig oder ungenau sind Neustart nach Translation,
+Review/Promote-Semantik, das öffentliche Betriebsprofil und die unterschiedliche
+Versionsangabe.
 
 ## 9. Empfohlenes Zielbild
 
@@ -517,8 +524,8 @@ profitieren und Importzyklen vermieden werden.
 |---|---|---:|---:|---:|---|---|
 | P0 | Popup-Rendering ohne HTML-Interpolation | sehr hoch | niedrig | klein | DOM-Testfixture | Popup-Formatierung |
 | P0 | Akutgefahr-Pfad betreiben und Sprachentwürfe freigeben | sehr hoch | niedrig | klein | menschliches Übersetzungsreview, Providerbeobachtung | LLM-Falschpositive/-negative |
-| P1 | Baseline-Branch per Pull Request reviewen und remote absichern | sehr hoch | niedrig | klein | Push-Freigabe | Remote-Checks oder Mergekonflikte |
-| P1 | Speech-Größenlimits und Expositionsgrenze | hoch | niedrig | klein | Grenzwerte definieren | große legitime Audios |
+| P1 | Baseline-Branch per Pull Request reviewen und remote absichern (geschlossen) | sehr hoch | niedrig | klein | Push-Freigabe | Remote-Checks oder Mergekonflikte |
+| P1 | Speech-Größenlimits und Expositionsgrenze (geschlossen in Paket 2) | hoch | niedrig | klein | Grenzwerte definieren | große legitime Audios |
 | P1 | strukturiertes redigiertes Logging | hoch | niedrig | mittel | Event-/Datenschutzschema | Lograuschen |
 | P1 | Session-Write, Lock und Retention absichern | hoch | mittel | mittel | Retention festlegen | Sessionverlust bei Migration |
 | P1 | hashgebundene transaktionale WFS-Promotion | sehr hoch | mittel–hoch | mittel | Releasevertrag | Update-/Recoverypfad |
@@ -533,8 +540,6 @@ profitieren und Importzyklen vermieden werden.
 
 ## 11. Offene Fragen und Unsicherheiten
 
-- Wann soll `modernization/code3-baseline` nach gesonderter Freigabe gepusht und
-  als Pull Request gegen den gewünschten Zielbranch geprüft werden?
 - Ist LENA ausschließlich ein lokaler Einzelprozess-Prototyp oder künftig ein
   öffentlich erreichbarer Mehrnutzer-Dienst?
 - Wer prüft und genehmigt die vorhandenen Entwürfe des 112-Hinweises für

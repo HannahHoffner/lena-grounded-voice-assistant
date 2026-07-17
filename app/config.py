@@ -24,6 +24,9 @@ class Settings:
     blablador_max_context_chars: int
     blablador_max_tokens: int = 1200
     session_timeout_seconds: int = 180
+    query_max_chars: int = 1000
+    speech_transcription_max_bytes: int = 10 * 1024 * 1024
+    speech_synthesis_max_chars: int = 4000
     speech_transcription_base_url: str | None = None
     speech_transcription_api_key: str | None = None
     speech_transcription_model: str | None = None
@@ -106,6 +109,15 @@ def _env_float(name: str, default: float, minimum: float) -> float:
         return max(minimum, float(os.getenv(name, str(default))))
     except ValueError:
         return default
+
+
+def _env_int(name: str, default: int, minimum: int, maximum: int) -> int:
+    """Liest einen Integer und begrenzt ihn auf den sicheren Betriebsbereich."""
+    try:
+        value = int(os.getenv(name, str(default)))
+    except ValueError:
+        return default
+    return min(maximum, max(minimum, value))
 
 
 def _resolve_app_root() -> Path:
@@ -210,6 +222,19 @@ def load_settings() -> Settings:
         blablador_max_context_chars=max_context_chars,
         blablador_max_tokens=max_tokens,
         session_timeout_seconds=session_timeout_seconds,
+        query_max_chars=_env_int("QUERY_MAX_CHARS", 1000, 1, 10_000),
+        speech_transcription_max_bytes=_env_int(
+            "SPEECH_TRANSCRIPTION_MAX_BYTES",
+            10 * 1024 * 1024,
+            1024,
+            25 * 1024 * 1024,
+        ),
+        speech_synthesis_max_chars=_env_int(
+            "SPEECH_SYNTHESIS_MAX_CHARS",
+            4000,
+            1,
+            20_000,
+        ),
         speech_transcription_base_url=speech_base_url or _optional_env("BLABLADOR_BASE_URL", "LENA_LLM_BASE_URL"),
         speech_transcription_api_key=speech_api_key or _optional_env("BLABLADOR_API_KEY", "LENA_LLM_API_KEY"),
         speech_transcription_model=speech_model or "whisper-large-v3",

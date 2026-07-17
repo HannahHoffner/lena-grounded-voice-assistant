@@ -626,11 +626,124 @@ ausdrücklicher Nutzerentscheidung.
 **Ziel:** Query-, STT- und TTS-Eingaben sowie öffentlich bindbare Serverprofile
 haben explizite Grenzen.
 
+- Status: Completed (2026-07-17).
 - Erwartete Dateien: `app/config.py`, `app/main.py`, `app/models.py`, API-Tests,
-  `docs/configuration.md`.
+  `app/__main__.py`, `.env.example`, `docs/configuration.md` und dieser ExecPlan.
 - Tests: Grenzwerte, 413/422, ungültige Formate, lokale Standardbindung.
 - Nutzen: hoch. Aufwand: klein–mittel. Risiko: niedrig.
 - Regressionen: lange legitime Aufnahme; Grenzwerte müssen realistisch sein.
+
+#### Paket-2-Review vor Implementierung
+
+**Aktuelle Laufzeitpfade:**
+
+- `POST /api/query` validiert `QueryRequest` in `app/models.py` und ruft danach
+  unmittelbar `QueryService.query()` auf. `query` besitzt bereits ein statisches
+  Pydantic-Limit von 1.000 Zeichen; die Grenze ist weder konfigurierbar noch in
+  der Konfigurationsreferenz sichtbar.
+- `POST /api/speech/transcribe` liest mit `await request.body()` den gesamten
+  Body vor Größen- oder Formatprüfung in den Speicher und reicht ihn danach an
+  den vorhandenen `SpeechTranscriber` weiter.
+- `POST /api/speech/synthesize` akzeptiert ein untypisiertes Dictionary. Text
+  ist unbegrenzt; unbekannte Sprachwerte fallen still auf Deutsch zurück.
+- `python -m app` bindet standardmäßig sicher an `127.0.0.1`, erlaubt über
+  `--host` aber jede öffentliche Adresse ohne explizites Sicherheits-Gate.
+
+**Bestehende Strukturen zur Wiederverwendung:** `Settings` und die vorhandenen
+`_env_*`-Parser bleiben die einzige Konfigurationsquelle. Pydantic-Modelle in
+`app/models.py` bleiben der JSON-Vertrag. Die vorhandenen Speech-Adapter werden
+nicht dupliziert; Größen- und Medientypprüfung erfolgen davor am HTTP-Rand.
+`argparse`/`uvicorn.run()` bleiben der einzige Serverstartpfad.
+
+**Vorgesehene Grenzen und Verträge:**
+
+| Eingabe | Standard | absolute Obergrenze | Verhalten |
+|---|---:|---:|---|
+| Query-Text | 1.000 Zeichen | 10.000 Zeichen | konfigurierbare Überschreitung: 422 |
+| STT-Audio | 10 MiB | 25 MiB | früh und während Streaming: 413 |
+| TTS-Text | 4.000 Zeichen | 20.000 Zeichen | leer/ungültig/zu lang: 422 |
+
+STT akzeptiert die tatsächlich vom Frontend angebotenen Audiofamilien WebM,
+Ogg, MP4, MPEG/MP3 und WAV. Fehlender `Content-Type` behält aus
+Kompatibilitätsgründen den bisherigen WebM-Standard; explizit nicht erlaubte
+Typen erhalten 415. Die Grenzwerte werden über
+`QUERY_MAX_CHARS`, `SPEECH_TRANSCRIPTION_MAX_BYTES` und
+`SPEECH_SYNTHESIS_MAX_CHARS` gesetzt und sicher auf ihre absoluten Grenzen
+beschränkt.
+
+**Öffentliche Bindung:** Loopback-Adressen und `localhost` bleiben ohne Zusatz
+zulässig. Jede andere Adresse benötigt neben `--host` zusätzlich
+`--allow-public`. Das Gate behauptet keine Produktionsreife und ersetzt weder
+TLS, Authentifizierung, Proxy-Limits noch ein Datenschutzkonzept.
+
+**Akzeptanzkriterien:**
+
+- [x] Query-Grenze wirkt im realen `/api/query`-Pfad; normale und kategoriebasierte
+      leere Anfragen bleiben kompatibel.
+- [x] STT prüft `Content-Length` früh und zählt auch chunked empfangene Bytes;
+      Oversize erreicht den Provider nicht.
+- [x] Leeres Audio ergibt 422, nicht erlaubtes Audio 415, Oversize 413.
+- [x] TTS verwendet ein Pydantic-Modell; leere, zu lange und unbekanntsprachige
+      Payloads ergeben 422 statt Provideraufruf oder Sprach-Fallback.
+- [x] Normale Query-, STT- und TTS-Anfragen bleiben unverändert erfolgreich.
+- [x] Öffentliche Hosts werden ohne `--allow-public` abgewiesen; Loopback bleibt
+      der Standard und funktioniert ohne Flag.
+- [x] Limits sind dokumentiert und `.env.example` enthält nur sichere Werte.
+- [x] Keine Anfrageinhalte oder Secrets werden zusätzlich protokolliert.
+
+**Teststrategie:** API-Tests verwenden `TestClient` am realen FastAPI-Routing
+und mocken ausschließlich die bestehende Speech-Providergrenze. Grenzwert-1,
+Grenzwert und Grenzwert+1 werden für relevante Eingaben geprüft. Ein Request
+ohne `Content-Length` prüft den Streaming-Zähler. CLI-Tests prüfen die reine
+Hostvalidierung und die Parser-Defaults; Uvicorn wird nicht gestartet.
+
+**Dead-End-Prüfung:**
+
+| Dead End | Auswirkung | Mitigation | Verifikation |
+|---|---|---|---|
+| nur `Content-Length` prüfen | chunked Requests umgehen das Limit | Bytes aus `request.stream()` mitzählen | Test ohne Header |
+| erst nach `request.body()` prüfen | Speichergrenze wirkt zu spät | begrenztes Streaming vor Provider | Oversize-Provider bleibt ungerufen |
+| zweite Speech-Pipeline bauen | divergente Provider-/TTS-Regeln | vorhandene Adapter nur nach Validierung aufrufen | Monkeypatch an Adaptergrenze |
+| TTS-Dictionary manuell weiter parsen | unbekannte Sprache fällt weiter still zurück | Pydantic-Vertragsmodell mit `Language` | 422-Test |
+| nur Frontend begrenzen | direkte API-Aufrufe bleiben offen | serverseitige Grenzen sind autoritativ | API-Tests |
+| `0.0.0.0` pauschal verbieten | bewusster Proxy-/LAN-Betrieb unmöglich | explizites `--allow-public` | CLI-Tests |
+| Public-Flag als Produktionsschutz darstellen | falsches Sicherheitsgefühl | Dokumentation nennt verbleibende TLS/Auth-/Proxy-Pflichten | Doku-Review |
+
+**Rollback:** Änderungen sind auf Modelle, HTTP-Adapter, Settings und CLI-Gate
+begrenzt und besitzen keine Datenmigration. Ein Revert stellt die bisherigen
+Verträge wieder her; bei zu engen Betriebswerten werden zunächst nur die
+konfigurierbaren Standards innerhalb der dokumentierten absoluten Grenzen
+angepasst, nicht die Schutzlogik entfernt.
+
+**Geplante Verifikation:**
+
+- `python -m pytest tests/test_request_boundaries.py -q`
+- `python -m pytest`
+- `python -m compileall -q app`
+- `python -m app --help`
+- `git diff --check` und finaler Secret-/Scope-Review
+
+#### Paket-2-Verifikation
+
+- `tests/test_request_boundaries.py`: 20 Tests bestanden. Geprüft sind
+  Grenze/Überschreitung, kategoriebasierte Leeranfrage, früher und gestreamter
+  STT-Abbruch, 413/415/422, typisierte TTS-Sprache, Konfigurations-Clamping und
+  lokale/öffentliche Hostprofile.
+- `python -m pytest`: 103 Tests bestanden.
+- `python -m compileall -q app`: erfolgreich.
+- `python -m app --help`: `--allow-public` sichtbar; realer Aufruf mit
+  `--host 0.0.0.0` ohne Freigabe endet vor Uvicorn mit Exit-Code 2.
+- Referenzsuche bestätigt je einen produktiven Query-, STT-, TTS- und
+  `uvicorn.run()`-Pfad. Der frühere `request.body()`-Pfad ist entfernt.
+- `$code-documentation` wurde auf README, Setup, Konfiguration, Datenfluss,
+  Architekturreview und diesen ExecPlan angewendet.
+- `git diff --check`: erfolgreich; keine Secrets, Daten- oder Provideränderung.
+
+**Verbleibende Grenzen:** Das Public-Gate verhindert versehentliche Bindung,
+ist aber kein Zugriffsschutz. Rate-Limiting, TLS, Trusted-Host-Prüfung und
+Reverse-Proxy-Limits bleiben Teil eines später festzulegenden Betriebsprofils.
+Die 10-MiB-STT-Vorgabe ist ein sicherer Ausgangswert, muss aber mit realen
+langen Aufnahmen beobachtet werden.
 
 ### Paket 3 (P1): Beobachtbarkeit und Fehlerverträge
 

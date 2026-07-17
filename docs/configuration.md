@@ -19,6 +19,7 @@ und Sessionvariablen weiterhin akzeptiert.
 | `BLABLADOR_MAX_CONTEXT_CHARS` | nein | `50000` | maximale Kontextgröße, mindestens 10000 |
 | `BLABLADOR_MAX_TOKENS` | nein | `1200` | Ausgabelimit, mindestens 200 |
 | `SESSION_TIMEOUT_SECONDS` | nein | `180` | Sessionablauf, mindestens 30 s |
+| `QUERY_MAX_CHARS` | nein | `1000` | maximales Query-Feld; Bereich 1–10000 Zeichen |
 
 ## Speech
 
@@ -28,6 +29,7 @@ und Sessionvariablen weiterhin akzeptiert.
 | `SPEECH_TRANSCRIPTION_API_KEY` | für STT | Blablador-Key | Zugangstoken |
 | `SPEECH_TRANSCRIPTION_MODEL` | nein | `whisper-large-v3` | STT-Modell |
 | `SPEECH_TRANSCRIPTION_TIMEOUT_SECONDS` | nein | `45` | Timeout, mindestens 5 s |
+| `SPEECH_TRANSCRIPTION_MAX_BYTES` | nein | `10485760` | maximales Audio; Bereich 1024–26214400 Bytes |
 | `SPEECH_SYNTHESIS_PROVIDER` | nein | `edge` oder automatisch `openai` | `edge`/`openai` |
 | `SPEECH_SYNTHESIS_BASE_URL` | für OpenAI-TTS | – | TTS-Endpunkt-Basis |
 | `SPEECH_SYNTHESIS_API_KEY` | für OpenAI-TTS | – | Zugangstoken |
@@ -35,6 +37,7 @@ und Sessionvariablen weiterhin akzeptiert.
 | `SPEECH_SYNTHESIS_VOICE` | nein | `alloy` | Voice-Name |
 | `SPEECH_SYNTHESIS_RESPONSE_FORMAT` | nein | `mp3` | Antwortformat |
 | `SPEECH_SYNTHESIS_TIMEOUT_SECONDS` | nein | `45` | Timeout, mindestens 5 s |
+| `SPEECH_SYNTHESIS_MAX_CHARS` | nein | `4000` | maximaler TTS-Text; Bereich 1–20000 Zeichen |
 
 ## WFS
 
@@ -47,6 +50,27 @@ und Sessionvariablen weiterhin akzeptiert.
 
 Booleans akzeptieren `1`, `true`, `yes` oder `on` als wahr. Ungültige numerische
 Werte fallen auf die im Code definierten Standards zurück.
+
+Die API lehnt zu große Query- und TTS-Texte mit HTTP 422 ab. STT-Audio über
+dem konfigurierten Limit erhält HTTP 413; geprüft werden sowohl ein vorhandener
+`Content-Length`-Header als auch die tatsächlich gestreamten Bytes. Unterstützt
+sind WebM, Ogg, MP4, MPEG/MP3 und WAV. Ein ausdrücklich anderer Medientyp erhält
+HTTP 415, ein leerer Audiobody HTTP 422. Diese Anwendungsgrenzen ergänzen, aber
+ersetzen keine engeren Reverse-Proxy-Limits.
+
+## Serverbindung
+
+`python -m app` bindet standardmäßig an `127.0.0.1`. Loopback-Adressen und
+`localhost` dürfen ohne weitere Option verwendet werden. Eine LAN- oder
+öffentliche Bindung erfordert eine doppelte, ausdrückliche Angabe:
+
+```powershell
+python -m app --host 0.0.0.0 --allow-public
+```
+
+`--allow-public` fügt weder TLS noch Authentifizierung, Rate-Limiting oder einen
+Produktionsserver hinzu. Eine nicht lokale Exposition benötigt weiterhin einen
+geeigneten Reverse Proxy sowie ein Datenschutz- und Betriebskonzept.
 
 ## Sicherheitsregeln
 

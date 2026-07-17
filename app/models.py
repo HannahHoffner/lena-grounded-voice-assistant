@@ -5,7 +5,11 @@ from __future__ import annotations
 from enum import Enum
 from typing import Literal
 
-from pydantic import BaseModel, Field, StrictBool, model_validator
+from pydantic import BaseModel, Field, StrictBool, field_validator, model_validator
+
+
+MAX_QUERY_CHARS = 10_000
+MAX_TTS_CHARS = 20_000
 
 
 class Language(str, Enum):
@@ -95,7 +99,7 @@ class MapData(BaseModel):
 
 class QueryRequest(BaseModel):
     """Validierte Anfrage des Frontends an den zentralen Query-Endpunkt."""
-    query: str = Field(default="", max_length=1000)
+    query: str = Field(default="", max_length=MAX_QUERY_CHARS)
     language: Language = Language.DE
     category: Category | None = None
     session_id: str | None = Field(default=None, max_length=80)
@@ -104,6 +108,20 @@ class QueryRequest(BaseModel):
     def clean_query(self) -> "QueryRequest":
         self.query = " ".join(self.query.split())
         return self
+
+
+class SpeechSynthesisRequest(BaseModel):
+    """Validierter Text- und Sprachvertrag für die Sprachsynthese."""
+
+    text: str = Field(min_length=1, max_length=MAX_TTS_CHARS)
+    language: Language = Language.DE
+
+    @field_validator("text")
+    @classmethod
+    def reject_blank_text(cls, value: str) -> str:
+        if not value.strip():
+            raise ValueError("text must not be blank")
+        return value
 
 
 class QueryResponse(BaseModel):

@@ -59,16 +59,25 @@ aus.
 
 ## Speech
 
-`POST /api/speech/transcribe?language=de` erwartet rohe Audiobytes; der
-Content-Type bestimmt die temporäre Dateiendung. Der Server sendet Audio an
-einen konfigurierten OpenAI-kompatiblen Transkriptionsendpunkt.
+`POST /api/speech/transcribe?language=de` erwartet rohe Audiobytes. Der
+HTTP-Adapter erlaubt WebM, Ogg, MP4, MPEG/MP3 und WAV, prüft das konfigurierte
+Byte-Limit vor und während des Streamings und ruft erst danach
+`SpeechTranscriber` auf. Zu große Bodies ergeben 413, explizit nicht erlaubte
+Medientypen 415 und leere Bodies 422. Gültiges Audio wird an einen
+konfigurierten OpenAI-kompatiblen Transkriptionsendpunkt gesendet.
 
-`POST /api/speech/synthesize` erwartet JSON mit `text` und `language`. Je nach
-Konfiguration wird ein OpenAI-kompatibler Endpunkt oder `edge-tts` genutzt. Bei
-Providerfehlern antworten beide Endpunkte mit HTTP 503 und geben keine internen
-Zugangsdaten aus. Unmittelbar vor beiden Syntheseprovidern ersetzt
-`normalize_tts_text()` das Token `112` durch sprachabhängig einzeln gesprochene
-Ziffern; im Browser und in `QueryResponse` bleibt `112` sichtbar.
+`POST /api/speech/synthesize` erwartet den Pydantic-Vertrag mit `text` und einer
+unterstützten `language`. Leere, unbekanntsprachige oder zu lange Payloads
+enden mit 422 vor dem Provider. Je nach Konfiguration wird ein
+OpenAI-kompatibler Endpunkt oder `edge-tts` genutzt. Bei Providerfehlern
+antworten beide Endpunkte mit HTTP 503 und geben keine internen Zugangsdaten
+aus. Unmittelbar vor beiden Syntheseprovidern ersetzt `normalize_tts_text()`
+das Token `112` durch sprachabhängig einzeln gesprochene Ziffern; im Browser
+und in `QueryResponse` bleibt `112` sichtbar.
+
+`POST /api/query` prüft nach dem absoluten Pydantic-Limit zusätzlich
+`QUERY_MAX_CHARS`. Kategorieanfragen mit leerem Query bleiben zulässig; zu
+lange Texte erreichen `QueryService` nicht und ergeben 422.
 
 ## Persistenz und Datenschutz
 

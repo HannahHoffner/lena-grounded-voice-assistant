@@ -19,8 +19,11 @@ Copy-Item .env.example .env
 python -m app --port 8002
 ```
 
-`python -m app --help` zeigt `--host`, `--port`, `--reload` und
-`--rewrite-provider`. Standardmäßig bindet der Server an `127.0.0.1:8002`.
+`python -m app --help` zeigt `--host`, `--allow-public`, `--port`, `--reload`
+und `--rewrite-provider`. Standardmäßig bindet der Server an
+`127.0.0.1:8002`. Nicht lokale Hosts werden ohne das zusätzliche
+`--allow-public` abgewiesen. Dieses Flag schützt gegen versehentliche
+Exposition, ersetzt aber weder TLS, Authentifizierung noch einen Reverse Proxy.
 `--reload` ist nur für lokale Entwicklung vorgesehen.
 
 ## Sicherer Offline-naher Start

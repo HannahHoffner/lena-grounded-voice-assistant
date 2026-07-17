@@ -13,10 +13,48 @@ from fastapi.staticfiles import StaticFiles
 from .config import Settings, load_settings
 from .i18n import load_translation_store, translation_summary
 from .kb_loader import KnowledgeBase, KnowledgeBaseError, load_knowledge_base
-from .models import Language, QueryRequest, QueryResponse
+from .models import Language, QueryRequest, QueryResponse, SpeechSynthesisRequest
 from .service import NO_RESULTS, QueryService
 from .speech import SpeechSynthesizer, SpeechSynthesisError, SpeechTranscriber, SpeechTranscriptionError
 from .wfs_sync import load_wfs_state, sync_wfs
+
+
+SUPPORTED_AUDIO_MEDIA_TYPES = {
+    "audio/mp4",
+    "audio/mpeg",
+    "audio/ogg",
+    "audio/wav",
+    "audio/webm",
+    "audio/x-wav",
+}
+
+
+async def _read_limited_body(request: Request, maximum_bytes: int) -> bytes:
+    """Liest einen Request-Body, ohne die konfigurierte Speichergrenze zu umgehen.
+
+    Die Prüfung des Headers ermöglicht eine frühe Ablehnung. Das zusätzliche
+    Zählen der tatsächlich empfangenen Chunks schützt auch Requests ohne
+    vertrauenswürdigen ``Content-Length``-Header.
+    """
+    content_length = request.headers.get("content-length")
+    if content_length is not None:
+        try:
+            declared_length = int(content_length)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail="Invalid Content-Length") from exc
+        if declared_length < 0:
+            raise HTTPException(status_code=400, detail="Invalid Content-Length")
+        if declared_length > maximum_bytes:
+            raise HTTPException(status_code=413, detail="Request body too large")
+
+    chunks: list[bytes] = []
+    received = 0
+    async for chunk in request.stream():
+        received += len(chunk)
+        if received > maximum_bytes:
+            raise HTTPException(status_code=413, detail="Request body too large")
+        chunks.append(chunk)
+    return b"".join(chunks)
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -151,8 +189,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         request: Request,
         language: Language = Query(default=Language.DE),
     ) -> dict[str, str]:
-        audio = await request.body()
         content_type = request.headers.get("content-type", "audio/webm").split(";", 1)[0]
+        content_type = content_type.strip().casefold() or "audio/webm"
+        if content_type not in SUPPORTED_AUDIO_MEDIA_TYPES:
+            raise HTTPException(status_code=415, detail="Unsupported audio media type")
+        audio = await _read_limited_body(request, settings.speech_transcription_max_bytes)
+        if not audio:
+            raise HTTPException(status_code=422, detail="Audio body must not be empty")
         try:
             text = await app.state.speech_transcriber.transcribe(
                 audio,
@@ -164,20 +207,22 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return {"text": text}
 
     @app.post("/api/speech/synthesize")
-    async def synthesize_speech(payload: dict[str, object]) -> Response:
-        text = str(payload.get("text") or "")
+    async def synthesize_speech(payload: SpeechSynthesisRequest) -> Response:
+        if len(payload.text) > settings.speech_synthesis_max_chars:
+            raise HTTPException(status_code=422, detail="Speech synthesis text too long")
         try:
-            language = Language(str(payload.get("language") or Language.DE.value))
-        except ValueError:
-            language = Language.DE
-        try:
-            audio = await app.state.speech_synthesizer.synthesize(text, language=language)
+            audio = await app.state.speech_synthesizer.synthesize(
+                payload.text,
+                language=payload.language,
+            )
         except SpeechSynthesisError as exc:
             raise HTTPException(status_code=503, detail="Speech synthesis failed") from exc
         return Response(content=audio, media_type=app.state.speech_synthesizer.media_type)
 
     @app.post("/api/query", response_model=QueryResponse)
     async def answer_query(payload: QueryRequest) -> QueryResponse:
+        if len(payload.query) > settings.query_max_chars:
+            raise HTTPException(status_code=422, detail="Query text too long")
         active_service = app.state.service
         if not active_service:
             return QueryResponse(

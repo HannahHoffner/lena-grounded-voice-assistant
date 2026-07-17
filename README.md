@@ -41,6 +41,11 @@ python -m app --port 8002
 Öffne `http://127.0.0.1:8002`. Die Beispielkonfiguration startet ohne
 Blablador-Zugang im deterministischen Modus.
 
+Der Server bindet standardmäßig nur lokal. Nicht lokale Hosts erfordern
+zusätzlich `--allow-public`; dieses Flag ersetzt keine TLS-, Authentifizierungs-
+oder Reverse-Proxy-Konfiguration. Query-, STT- und TTS-Eingaben besitzen
+serverseitige, in `docs/configuration.md` beschriebene Grenzen.
+
 Unter Linux oder macOS lautet die Aktivierung `source .venv/bin/activate`; das
 Kopieren der Konfiguration erfolgt mit `cp .env.example .env`.
 
