@@ -1,2 +1,0 @@
-"""Scraper and publisher pipeline."""
-

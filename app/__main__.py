@@ -1,3 +1,5 @@
+"""Kommandozeileneinstieg für den lokalen Uvicorn-Server."""
+
 from __future__ import annotations
 
 import argparse
@@ -7,68 +9,18 @@ import uvicorn
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Run the LENA local service.")
-    parser.add_argument("--host", default="127.0.0.1", help="Host to bind the service to.")
-    parser.add_argument("--port", type=int, default=8000, help="Port to bind the service to.")
-    parser.add_argument(
-        "--reload",
-        dest="reload",
-        action="store_true",
-        default=True,
-        help="Enable auto-reload for local development.",
-    )
-    parser.add_argument(
-        "--no-reload",
-        dest="reload",
-        action="store_false",
-        help="Disable auto-reload.",
-    )
-    parser.add_argument(
-        "--rewrite-provider",
-        choices=["template", "ollama", "openai_compatible", "blablador"],
-        help="Override the configured rewrite provider for this run.",
-    )
-    parser.add_argument(
-        "--stt-provider",
-        choices=["mock", "faster_whisper"],
-        help="Override the configured speech-to-text provider for this run.",
-    )
-    parser.add_argument(
-        "--tts-provider",
-        choices=["mock", "piper"],
-        help="Override the configured text-to-speech provider for this run.",
-    )
-    parser.add_argument(
-        "--ollama-model",
-        help="Override the configured Ollama model for this run.",
-    )
-    parser.add_argument(
-        "--llm-model",
-        help="Override the configured OpenAI-compatible or Blablador model alias for this run.",
-    )
-    parser.add_argument(
-        "--llm-base-url",
-        help="Override the configured OpenAI-compatible base URL for this run.",
-    )
+    parser = argparse.ArgumentParser(description="Run the minimal LENA service.")
+    parser.add_argument("--host", default="127.0.0.1")
+    parser.add_argument("--port", type=int, default=8002)
+    parser.add_argument("--reload", action="store_true", help="Enable development auto-reload.")
+    parser.add_argument("--rewrite-provider", choices=["template", "blablador"])
     return parser
 
 
 def main() -> None:
     args = build_parser().parse_args()
-
     if args.rewrite_provider:
-        os.environ["LENA_REWRITE_PROVIDER"] = args.rewrite_provider
-    if args.stt_provider:
-        os.environ["LENA_STT_PROVIDER"] = args.stt_provider
-    if args.tts_provider:
-        os.environ["LENA_TTS_PROVIDER"] = args.tts_provider
-    if args.ollama_model:
-        os.environ["LENA_OLLAMA_MODEL"] = args.ollama_model
-    if args.llm_model:
-        os.environ["LENA_LLM_MODEL"] = args.llm_model
-    if args.llm_base_url:
-        os.environ["LENA_LLM_BASE_URL"] = args.llm_base_url
-
+        os.environ["REWRITE_PROVIDER"] = args.rewrite_provider
     uvicorn.run(
         "app.main:create_app",
         factory=True,

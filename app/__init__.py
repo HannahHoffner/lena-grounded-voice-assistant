@@ -1,2 +1,1 @@
-"""LENA prototype application."""
-
+"""Minimal WFS-grounded LENA application."""

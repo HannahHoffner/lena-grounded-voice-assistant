@@ -4,185 +4,141 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>LENA</title>
-    <link rel="stylesheet" href="/static/vendor/leaflet/leaflet.css">
-    <link rel="stylesheet" href="/static/styles.css?v=20260610-kb-maintenance-2">
+    <link rel="stylesheet" href="/static/vendor/leaflet/leaflet.css?v=20260709-server-tts-2">
+    <link rel="stylesheet" href="/static/styles.css?v=20260709-server-tts-2">
   </head>
   <body>
-    <main class="app-shell">
-      <section id="languageScreen" class="screen screen-language" data-screen="language">
-        <section class="hero">
-          <p id="brandEyebrow" class="eyebrow">Lokaler Wegweiser</p>
-          <h1 id="appTitle" class="app-title">LENA</h1>
-          <p id="appSubtitle" class="hero-text">Bitte zuerst Sprache wählen.</p>
-        </section>
-
-        <section class="panel panel-language" aria-labelledby="languageLabel">
-          <div class="section-head">
-            <p id="languageLabel" class="section-label">Sprache</p>
-            <p id="languageHint" class="section-hint">Diese Sprache gilt für Bildschirm, Spracheingabe und Sprachausgabe.</p>
-          </div>
-          <div id="languageSwitcher" class="language-switcher" role="group" aria-label="Language selection">
-            <button class="flag-button" type="button" data-lang="de" aria-pressed="false">
-              <span class="flag-icon flag-icon--de" aria-hidden="true"></span>
-              <span class="flag-caption">Deutsch</span>
-            </button>
-            <button class="flag-button" type="button" data-lang="en" aria-pressed="false">
-              <span class="flag-icon flag-icon--gb" aria-hidden="true"></span>
-              <span class="flag-caption">English</span>
-            </button>
-            <button class="flag-button" type="button" data-lang="pl" aria-pressed="false">
-              <span class="flag-icon flag-icon--pl" aria-hidden="true"></span>
-              <span class="flag-caption">Polski</span>
-            </button>
-            <button class="flag-button" type="button" data-lang="ro" aria-pressed="false">
-              <span class="flag-icon flag-icon--ro" aria-hidden="true"></span>
-              <span class="flag-caption">Română</span>
-            </button>
-            <button class="flag-button" type="button" data-lang="ru" aria-pressed="false">
-              <span class="flag-icon flag-icon--ru" aria-hidden="true"></span>
-              <span class="flag-caption">Русский</span>
-            </button>
-          </div>
-        </section>
+    <main class="shell">
+      <section id="languageView" class="screen language-view">
+        <p class="eyebrow">LENA · Leipzig</p>
+        <h1 id="languageTitle">Sprache wählen</h1>
+        <p id="languageIntro" class="intro">Wähle die Sprache für die Anwendung.</p>
+        <div class="language-grid" aria-label="Language selection">
+          <button type="button" data-language="de"><span aria-hidden="true">🇩🇪</span> Deutsch</button>
+          <button type="button" data-language="en"><span aria-hidden="true">🇬🇧</span> English</button>
+          <button type="button" data-language="pl"><span aria-hidden="true">🇵🇱</span> Polski</button>
+          <button type="button" data-language="ro"><span aria-hidden="true">🇷🇴</span> Română</button>
+          <button type="button" data-language="ru"><span aria-hidden="true">🇷🇺</span> Русский</button>
+        </div>
       </section>
 
-      <nav id="globalNav" class="global-nav" aria-label="Navigation" hidden>
-        <button id="backButton" class="nav-button" type="button"></button>
-        <button id="homeButton" class="nav-button" type="button"></button>
-        <button id="changeLanguageButton" class="nav-button" type="button"></button>
-        <button id="cancelRequestButton" class="nav-button" type="button"></button>
-        <button id="helpButton" class="nav-button" type="button"></button>
-        <button id="emergencyNavButton" class="nav-button nav-button--emergency" type="button"></button>
-        <button id="endConversationButton" class="nav-button nav-button--quiet" type="button"></button>
-      </nav>
-
-      <section id="homeScreen" class="screen" data-screen="home" hidden>
-        <section class="panel home-panel" aria-labelledby="homeTitle">
-          <div class="section-head">
-            <p id="homeTitle" class="section-label">Start</p>
-            <p id="homeHint" class="section-hint">Wie möchten Sie Hilfe suchen?</p>
-          </div>
-          <div class="home-actions">
-            <button id="voiceTextModeButton" class="mode-tile" type="button">
-              <span class="mode-tile__icon" data-icon="mic" aria-hidden="true"></span>
-              <span id="voiceTextModeLabel">Sprechen / Tippen</span>
-            </button>
-            <button id="textModeButton" class="mode-tile" type="button">
-              <span class="mode-tile__icon" data-icon="keyboard" aria-hidden="true"></span>
-              <span id="textModeLabel">Tippen</span>
-            </button>
-            <button id="symbolModeButton" class="mode-tile" type="button">
-              <span class="mode-tile__icon" data-icon="grid" aria-hidden="true"></span>
-              <span id="symbolModeLabel">Symbole</span>
-            </button>
-            <button id="emergencyModeButton" class="mode-tile mode-tile--emergency" type="button">
-              <span class="mode-tile__icon" data-icon="alert" aria-hidden="true"></span>
-              <span id="emergencyModeLabel">Notfall</span>
-            </button>
-          </div>
-        </section>
-      </section>
-
-      <section id="voiceScreen" class="screen" data-screen="voice" hidden>
-        <section class="panel panel-interaction" aria-labelledby="interactionLabel">
-          <div class="section-head">
-            <p id="interactionLabel" class="section-label">Frage stellen</p>
-            <p id="interactionHint" class="section-hint">Sprechen Sie, oder tippen Sie eine kurze Frage.</p>
-          </div>
-
-          <div class="session-bar">
-            <p id="sessionState" class="session-state" aria-live="polite">Kein aktives Gespräch</p>
-          </div>
-
-          <button id="recordButton" class="record-button" type="button">
-            <span class="record-button__signal" aria-hidden="true"></span>
-            <span id="recordButtonText">Sprechen</span>
+      <section id="appView" class="screen" hidden>
+        <nav class="navigation" aria-label="Navigation">
+          <button id="startButton" class="icon-button" type="button">
+            <span class="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M4 11.5 12 5l8 6.5"></path>
+                <path d="M6.5 10.5V20h11v-9.5"></path>
+                <path d="M10 20v-5h4v5"></path>
+              </svg>
+            </span>
+            <span class="sr-only"></span>
           </button>
+          <button id="backButton" class="icon-button" type="button">
+            <span class="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M19 12H5"></path>
+                <path d="m12 5-7 7 7 7"></path>
+              </svg>
+            </span>
+            <span class="sr-only"></span>
+          </button>
+          <button id="languageButton" class="icon-button" type="button">
+            <span class="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="M3 12h18"></path>
+                <path d="M12 3a14 14 0 0 1 0 18"></path>
+                <path d="M12 3a14 14 0 0 0 0 18"></path>
+              </svg>
+            </span>
+            <span class="sr-only"></span>
+          </button>
+        </nav>
 
-          <p id="status" class="status-pill" aria-live="polite">Bereit</p>
+        <header class="hero">
+          <p class="eyebrow">LENA · Leipzig</p>
+          <h1 id="mainTitle"></h1>
+          <p id="mainIntro" class="intro"></p>
+        </header>
 
-          <form id="manualQuestionForm" class="manual-form">
-            <label id="manualQuestionLabel" class="manual-label" for="manualQuestion">Oder tippen</label>
-            <div class="manual-input-row">
-              <input
-                id="manualQuestion"
-                class="manual-input"
-                name="manualQuestion"
-                type="text"
-                placeholder="Kurze Frage eingeben"
-                autocomplete="off"
-              >
-              <button id="manualSubmitButton" class="manual-submit" type="submit">Senden</button>
+        <section id="searchView">
+          <section class="voice-panel" aria-live="polite">
+            <button id="micButton" class="mic-button" type="button">
+              <span class="mic-pulse" aria-hidden="true"></span>
+              <span class="mic-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <rect x="9" y="3" width="6" height="11" rx="3"></rect>
+                  <path d="M5 11a7 7 0 0 0 14 0"></path>
+                  <path d="M12 18v3"></path>
+                  <path d="M8 21h8"></path>
+                </svg>
+              </span>
+              <span id="micButtonLabel" class="mic-label"></span>
+            </button>
+            <p id="voiceStatus" class="voice-status"></p>
+          </section>
+          <div id="categoryGrid" class="category-grid"></div>
+          <form id="queryForm" class="query-form">
+            <label id="queryLabel" for="queryInput"></label>
+            <div class="input-row">
+              <input id="queryInput" type="text" maxlength="1000" autocomplete="off">
+              <button id="submitButton" class="submit-button" type="submit">
+                <span class="submit-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" focusable="false">
+                    <path d="M4 12 20 5l-7 16-2-7Z"></path>
+                    <path d="m20 5-9 9"></path>
+                  </svg>
+                </span>
+                <span id="submitButtonLabel" class="sr-only"></span>
+              </button>
             </div>
           </form>
         </section>
 
-        <section class="panel panel-answer" aria-labelledby="answerLabel">
-          <div class="section-head">
-            <p id="answerLabel" class="section-label">Antwort</p>
-            <p id="answerHint" class="section-hint">LENA antwortet kurz und mit lokalen Informationen.</p>
+        <section id="resultView" class="results" hidden aria-live="polite">
+          <p id="statusLine" class="status"></p>
+          <section id="questionEcho" class="question-echo" hidden>
+            <strong id="questionEchoLabel"></strong>
+            <p id="questionEchoText"></p>
+          </section>
+          <div class="answer-heading">
+            <h2 id="answerTitle"></h2>
+            <button id="replayAnswerButton" class="icon-button replay-button" type="button" hidden>
+              <span class="replay-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path d="M4 9v6h4l5 4V5L8 9Z"></path>
+                  <path d="M16 9.5a4 4 0 0 1 0 5"></path>
+                  <path d="M18.5 7a7 7 0 0 1 0 10"></path>
+                </svg>
+              </span>
+              <span id="replayAnswerLabel" class="sr-only"></span>
+            </button>
           </div>
-          <p id="answerState" class="answer-state" hidden></p>
-          <p id="answerText" class="answer-text" data-state="placeholder">Die Antwort erscheint hier.</p>
-        </section>
-      </section>
-
-      <section id="symbolScreen" class="screen" data-screen="symbols" hidden>
-        <section class="panel symbol-panel" aria-labelledby="symbolTitle">
-          <div class="section-head">
-            <p id="symbolTitle" class="section-label">Symbole</p>
-            <p id="symbolHint" class="section-hint">Wählen Sie, was Sie brauchen.</p>
-          </div>
-          <div id="primarySymbolGrid" class="symbol-grid" role="list"></div>
-          <details id="moreHelpDetails" class="more-help">
-            <summary id="moreHelpSummary">Weitere Hilfe</summary>
-            <div id="secondarySymbolGrid" class="symbol-grid symbol-grid--secondary" role="list"></div>
+          <p id="answerText" class="answer"></p>
+          <details id="historyPanel" class="history-panel" hidden>
+            <summary id="historyTitle"></summary>
+            <div id="historyList" class="history-list"></div>
           </details>
+          <section id="mapPanel" class="map-panel" hidden>
+            <div class="map-head">
+              <h2 id="mapTitle"></h2>
+              <p id="mapHint"></p>
+            </div>
+            <div id="answerMap" class="answer-map" aria-label="Karte mit passenden Orten"></div>
+            <div id="mapList" class="map-list"></div>
+          </section>
+          <div id="cardList" class="card-list"></div>
         </section>
       </section>
-
-      <section id="symbolSubstepScreen" class="screen" data-screen="symbol-substep" hidden>
-        <section class="panel symbol-panel" aria-labelledby="symbolSubstepTitle">
-          <div class="section-head">
-            <p id="symbolSubstepTitle" class="section-label">Auswahl</p>
-            <p id="symbolSubstepHint" class="section-hint">Bitte eine Möglichkeit wählen.</p>
-          </div>
-          <div id="symbolSubstepGrid" class="symbol-grid" role="list"></div>
-        </section>
-      </section>
-
-      <section id="symbolResultsScreen" class="screen" data-screen="symbol-results" hidden>
-        <section class="panel panel-answer symbol-results-panel" aria-labelledby="symbolResultsTitle">
-          <div class="section-head">
-            <p id="symbolResultsTitle" class="section-label">Ergebnis</p>
-            <p id="symbolResultsHint" class="section-hint">Kurze Hinweise und passende Orte.</p>
-          </div>
-          <p id="symbolAnswerText" class="answer-text" data-state="answer"></p>
-          <p id="symbolNoMapReason" class="symbol-no-map" hidden></p>
-          <div id="symbolResultList" class="symbol-result-list" role="list"></div>
-        </section>
-      </section>
-
-      <section id="mapPanel" class="panel map-panel" hidden aria-labelledby="mapLabel">
-        <div class="map-panel__head">
-          <p id="mapLabel" class="section-label">Karte</p>
-          <p id="mapHint" class="section-hint">Relevante Orte ab Leipzig Hauptbahnhof.</p>
-        </div>
-        <div id="mapCanvasWrap" class="map-canvas-wrap">
-          <div id="answerMap" class="answer-map" role="img" aria-label="Map with relevant places"></div>
-          <p id="mapFallback" class="map-fallback" hidden></p>
-        </div>
-        <div class="map-meta">
-          <div class="map-meta__column">
-            <p id="mapListLabel" class="map-meta__label">Orte</p>
-            <div id="mapDestinationList" class="map-destination-list" role="list"></div>
-          </div>
-          <article id="mapDetailCard" class="map-detail-card" aria-live="polite"></article>
-        </div>
-      </section>
+      <footer class="source-footer">
+        Quelle: Stadt Leipzig,
+        <a href="https://geodienste.leipzig.de/l3/OpenData/wohnungslosenhilfe/wfs?REQUEST=GetCapabilities&amp;SERVICE=WFS" target="_blank" rel="noopener noreferrer">WFS Wohnungslosenhilfe</a>,
+        <a href="https://www.govdata.de/dl-de/by-2-0" target="_blank" rel="noopener noreferrer">dl-de/by-2-0</a>.
+        Daten automatisiert strukturiert und für LENA aufbereitet.
+      </footer>
     </main>
-
-    <script src="/static/vendor/leaflet/leaflet.js"></script>
-    <script src="/static/app.js?v=20260610-kb-maintenance-2" type="module"></script>
+    <script src="/static/vendor/leaflet/leaflet.js?v=20260709-server-tts-2"></script>
+    <script src="/static/app.js?v=20260709-server-tts-2" defer></script>
   </body>
 </html>
