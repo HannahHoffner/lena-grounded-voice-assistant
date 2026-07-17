@@ -16,6 +16,7 @@ flowchart LR
     R --> K[(data/canonical/offers.json)]
     S --> I[Übersetzungen]
     S --> X[Sessions]
+    A --> O[(lokales Interaktions-JSONL)]
     A --> P[Speech-Dienste]
     A --> M[Kartendaten]
     W[Stadt Leipzig WFS] -->|nur Sync| Y[Validierung und Staging]
@@ -64,6 +65,23 @@ Vor der Synthese ersetzt der Adapter das eigenständige Token `112`
 sprachabhängig durch einzeln gesprochene Ziffern. Die visuelle API-Antwort bleibt
 unverändert.
 
+`app/interactions.py` trennt das lokale Forschungsprotokoll vom technischen
+Logging. Der HTTP-Adapter schreibt nach dem finalen `QueryService`-Ergebnis
+genau eine validierte UTF-8-JSONL-Zeile nach
+`runtime/logs/interactions.jsonl`. Sie enthält die tatsächlich verarbeitete
+Anfrage, die tatsächlich sichtbare Antwort, kurzlebige Session-ID, Sprache,
+Eingabemodus, Antwortpfad, Quellen-IDs, Retrieval-Trefferzahl sowie Safety- und
+Fallbackstatus. Eine kleine Sperre schützt parallele Threads desselben
+Prozesses; Schreibfehler werden redigiert geloggt und verändern die Antwort
+nicht. Mehrprozesssynchronisierung, Rotation und ein Forschungsdaten-Backend
+sind nicht implementiert.
+
+Das technische Logging verwendet stabile Ereignisnamen für HTTP-Laufzeiten,
+Router, Retrieval, Formulator, Fallback, Akutgefahr, Speech, Sessions, WFS und
+Interaktions-Schreibfehler. Diese Logs enthalten absichtlich keine vollständigen
+Anfragen oder Antworten. Das vollständige Interaktionsprotokoll ist davon
+konfigurations- und dateiseitig getrennt.
+
 Das Frontend baut Leaflet-Popups in `app/static/app.js` als DOM-Knoten auf.
 Dynamische Labels und Adressen gelangen ausschließlich über `textContent` und
 `createTextNode()` in diese Knoten. Die vendorte Leaflet-Version übernimmt
@@ -96,6 +114,8 @@ Links nur nach expliziter Protokollprüfung.
 
 - keine Kapazitäts-, Aufnahme- oder Echtzeitverfügbarkeitsdaten
 - keine grafische Review-/Administrationsoberfläche für WFS und Übersetzungen
+- kein produktionsreifes Einwilligungs-, Zugriffs-, Aufbewahrungs-, Lösch-,
+  Pseudonymisierungs- oder Anonymisierungskonzept für Interaktionsprotokolle
 - keine Mehrbenutzer- oder Datenbank-Persistenz für Sessions
 - keine dokumentierte produktive Deployment-Orchestrierung, Authentifizierung,
   Rate-Limits oder TLS-Terminierung

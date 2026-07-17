@@ -745,16 +745,141 @@ Reverse-Proxy-Limits bleiben Teil eines später festzulegenden Betriebsprofils.
 Die 10-MiB-STT-Vorgabe ist ein sicherer Ausgangswert, muss aber mit realen
 langen Aufnahmen beobachtet werden.
 
-### Paket 3 (P1): Beobachtbarkeit und Fehlerverträge
+### Paket 3A (P1): Nachvollziehbares technisches Logging und Interaktionsprotokoll
 
-**Ziel:** WFS-, LLM-, Speech-, Session- und Fallbackfehler sind redigiert
-diagnostizierbar.
+**Status:** Abgeschlossen und lokal verifiziert auf
+`modernization/prototype-logging` (Stand 2026-07-17).
 
-- Erwartete Dateien: `app/main.py`, `app/service.py`, Provider/Stores,
-  Logging-Konfiguration, Tests.
-- Tests: `caplog`, kein Secret/Fragetext im Standardlog, degraded Health.
-- Nutzen: hoch. Aufwand: mittel. Risiko: niedrig.
-- Regressionen: Lograuschen oder versehentliche personenbezogene Daten.
+**Ziel und Akzeptanzvertrag:** Der lokale wissenschaftliche Prototyp erzeugt
+redigierte technische Ereignisse für HTTP-, Query-, Retrieval-, LLM-, Speech-
+und Sessionpfade. Zusätzlich schreibt genau der HTTP-Adapter von `/api/query`
+nach der vollständig abgeschlossenen Serviceverarbeitung ein validiertes
+Anfrage-Antwort-Paar nach `runtime/logs/interactions.jsonl`. Schreibfehler des
+Interaktionsprotokolls verändern die Nutzerantwort nicht. Runtime-Daten bleiben
+außerhalb von Git, CI und Wheel. Eine produktive Consent-, Forschungsdaten- oder
+Datenschutzarchitektur ist ausdrücklich nicht Teil dieses Pakets.
+
+**Repository-Review und tatsächlicher Antwortpfad:** `app/main.py:answer_query`
+validiert die Requestgrenze und ruft `QueryService.query()` auf.
+`app/service.py:QueryService.query` löst die kurzlebige Session auf, delegiert an
+`_query_core`, erzeugt anschließend Karten-/Sessiondaten und liefert damit erst
+den final sichtbaren `QueryResponse`. `_query_core` kann über Selbstbeschreibung,
+Klärung, LLM-Router, kontrollierten Akutgefahrtext, LLM-Formulator,
+deterministisches Retrieval oder Template-Fallback zurückkehren. Providerfehler
+werden derzeit überwiegend ohne Ereignis auf Template-Logik abgebildet;
+`SessionStore` verwirft Lesefehler still; STT/TTS übersetzen Providerfehler nur
+in HTTP 503. Allein `app/providers/llm.py` protokolliert ungültige strukturierte
+Routerantworten bereits redigiert.
+
+**Wiederverwendete Strukturen:** Die zentrale `Settings`-Dataclass und
+`.env.example` bleiben der einzige Konfigurationspfad. `QueryRequest` und
+`QueryResponse` bleiben der API-Vertrag; interne Pfadmetadaten werden vom
+öffentlichen Response-Dump ausgeschlossen. Die vorhandene Session-ID dient nur
+als kurzlebige Zuordnung. Das bereits vollständig ignorierte `runtime/` ist der
+Speicherort. Python `logging`, Pydantic, eine pro Writer geltende
+`threading.Lock`-Sperre und append-basiertes UTF-8-JSONL genügen ohne neue
+Abhängigkeit oder Infrastruktur.
+
+**Gespeicherte Felder:** Schema-Version 1, UTC-Zeitstempel, Session-ID, Sprache,
+`input_mode` (`text`/`speech`), vollständige tatsächlich verarbeitete
+`user_query`, vollständige sichtbare `assistant_answer`, Antwortpfad,
+Quellen-IDs, Retrieval-Trefferzahl, Akutgefahr- und Fallbackstatus sowie die
+Version aus den installierten Projektmetadaten. Nicht gespeichert werden
+Header, Cookies, IP-Adressen, Schlüssel/Tokens, Systemprompts, rohe Provider-
+Requests/-Responses, interne Begründungen, Credential-Pfade, Stacktraces oder
+Audioartefakte.
+
+**Eingriffspunkte und erwartete Dateien:**
+
+| Datei | Änderung | Begründung/Risiko |
+|---|---|---|
+| `app/interactions.py` | typisiertes Modell und synchronisierter JSONL-Writer | eine kohärente Persistenz; Fehler dürfen Antwort nicht blockieren |
+| `app/models.py` | `input_mode` und intern ausgeschlossene Laufzeitmetadaten | tatsächlichen Sprachpfad und finalen Route-/Fallbackstatus transportieren, ohne öffentlichen Response zu erweitern |
+| `app/config.py` | Aktivierung, fester Pfad und technischer Log-Level | zentrale, testbare Konfiguration |
+| `app/main.py` | Request-/Speech-Events und genau ein Interaktions-Schreibpunkt | finale sichtbare Antwort liegt hier vollständig vor |
+| `app/service.py` | stabile Router-, Retrieval-, Formulator-, Fallback- und Safety-Events sowie Pfadmetadaten | bisher stille kontrollierte Pfade sichtbar machen |
+| `app/sessions.py` | redigierte Lese-/Schreibfehler | keine Sessioninhalte im technischen Log |
+| `app/static/app.js` | `input_mode` nach erkannter/transkribierter Spracheingabe mitsenden | realen Browserpfad korrekt kennzeichnen |
+| `.env.example` | sichere Standardkonfiguration erläutern | Prototypverhalten explizit machen |
+| `tests/test_observability.py` und bestehende Test-Fixtures | reale Pfade, Fehler, Parallelität und Ausschlüsse | Integration statt Prompt-only-Tests |
+| bestehende Architektur-, Datenfluss-, Konfigurations-, Setup- und Testdokumentation | Prototypgrenzen und Masterarbeitsformulierungen | keine parallele Dokumentation |
+
+**Technische Events:** `request.started`, `request.completed`,
+`request.failed`, `query.router.completed`, `query.router.failed`,
+`query.retrieval.completed`, `query.formulation.completed`,
+`query.formulation.failed`, `query.fallback.used`,
+`safety.acute_risk_detected`, `stt.completed`, `stt.failed`, `tts.completed`,
+`tts.failed`, `session.read.failed`, `session.write.failed` und
+`interaction.write.failed`. Metadaten beschränken sich auf Pfad, Methode,
+Status, Laufzeit, Provider-/Pfadstatus und Zähler; vollständige Interaktionstexte
+erscheinen ausschließlich in JSONL.
+
+**Dead Ends und Mitigation:**
+
+| Dead End | Beleg/Auswirkung | Mitigation | Verifikation |
+|---|---|---|---|
+| Speicherung in Route und Service | würde dasselbe Paar doppelt schreiben | ausschließlich `answer_query` schreibt nach `QueryService.query()` | Zeilenzahl je Request |
+| Speicherung innerhalb `_query_core` | Antwort kann danach durch Safety, Übersetzung, Session/Map ergänzt sein | interner Trace wird nur transportiert; Schreibpunkt nach finalem Service-Return | Safety-/Fallback-Integrationstests |
+| technische Logs mit Freitext | Anfrage/Antwort können besonders sensible Inhalte enthalten | Ereignisse verwenden nur stabile Namen und nicht-inhaltliche Metadaten | `caplog` mit eindeutigen Geheimtestwerten |
+| Interaktionsfehler blockiert Antwort | lokales Dateisystem kann fehlen oder schreibgeschützt sein | Writer fängt erwartbare Schreibfehler, loggt ohne Datensatzinhalt und liefert Status | absichtlich fehlerhafter Zielpfad |
+| parallele Appends beschädigen JSONL | synchrone Requests können gleichzeitig schreiben | kleine pro Writer geltende Sperre und ein Write pro kompletter Zeile; Mehrprozessbetrieb bleibt ausgeschlossen | parallele Schreibtests und JSON-Parsing jeder Zeile |
+| Browser-STT bleibt als Text markiert | bisher kennt `QueryRequest` keinen Eingabemodus | UI setzt `speech` nach Browser- oder Servertranskription, danach Rücksetzen auf `text` | Frontend-Vertrag und API-Test |
+| Runtime-/Testdaten gelangen in Git/Packaging | JSONL enthält vollständige sensible Freitexte | Pfad unter bereits ignoriertem `runtime/`; Tests verwenden `tmp_path` | `git status`, `git check-ignore`, Wheel-Inhalt |
+| produktive Datenschutzreife wird suggeriert | einfacher lokaler Prototyp besitzt keine Einwilligung/Löschung | Dokumentation nennt Zweck, Sensibilität und offene Produktivanforderungen ausdrücklich | Dokumentationsreview |
+
+**Alternativen verworfen:** Separate Anfrage-/Antwortdateien verlieren die
+Transaktionsbeziehung. Session-Datei als Forschungsprotokoll vermischt Zustände
+und besitzt andere Lebensdauer. Datenbank, Queue, Cloudtelemetrie, dauerhafte
+Nutzerkennung und Consent-Backend überschreiten den Prototypumfang. Allgemeines
+Log-Level als Aktivierungsschalter koppelt zwei bewusst getrennte Protokollarten.
+
+**Teststrategie und geplante Verifikation:** Fokussierte Tests ersetzen LLM und
+Speech ausschließlich an bestehenden Providergrenzen und rufen den realen
+FastAPI-/Query-Pfad auf. Abgedeckt werden Retrieval-, Formulator-, Fallback-,
+Akutgefahr-, Kein-Treffer- und Speech-markierte Anfragen; exakt eine valide
+JSONL-Zeile mit finaler Antwort; deaktivierter Writer; fehlendes Verzeichnis;
+Schreibfehler; parallele Appends; Eventnamen und Redaktionsgrenzen; Session-,
+STT- und TTS-Fehler. Danach laufen `python -m pytest`,
+`python -m compileall -q app`, `python -m app --help`, `git diff --check`,
+`git status`, eine Prüfung ignorierter Runtime-Daten sowie der finale Diff- und
+Secret-Review. Der Code-Dokumentationsskill prüft anschließend Plan, bestehende
+Dokumente, Konfigurationsnamen, Pfade und Prototypgrenzen; betroffene Checks
+werden erneut ausgeführt.
+
+**Rollback:** Die lokalen, thematisch getrennten Commits können ohne Datenmigration
+revertiert werden. Das Entfernen der zwei Konfigurationswerte und des Writers
+beendet neue Interaktionseinträge; vorhandene lokale JSONL-Dateien werden bei
+einem Rollback nicht automatisch gelöscht. Der Schalter
+`INTERACTION_LOGGING_ENABLED=false` deaktiviert Schreibvorgänge sofort, ohne den
+Query-Pfad zu verändern.
+
+**Fortschritt:**
+
+- [x] Git-Ausgangslage und kanonischen Branch geprüft; Arbeitsbaum war sauber.
+- [x] Verbindliche Dokumentation, Runtime-Pfade und bestehende Tests geprüft.
+- [x] Antwortpfad, Wiederverwendung, Dead Ends und Dateiauswirkungen geplant.
+- [x] Implementierung und fokussierte Tests abgeschlossen: 12 Tests bestanden.
+- [x] Gesamtsuite (115 Tests), Compile-/CLI-Checks und Grenzprüfungen erfolgreich.
+- [x] `code-documentation` angewendet und bestehende Dokumentation gegengeprüft.
+- [x] Paket 3A nach finalem Diff-, Secret- und Runtime-Review abgeschlossen.
+
+**Verifikationsergebnis:** `python -m pytest tests/test_observability.py -q`
+meldete 12 bestandene Tests; `python -m pytest` meldete 115 bestandene Tests.
+`python -m compileall -q app`, `python -m app --help` und
+`git diff --check` waren erfolgreich. `git check-ignore -v
+runtime/logs/interactions.jsonl` bestätigt die bestehende `runtime/`-Regel.
+Manuell über den realen TestClient-Pfad geprüft wurden normale Retrieval- und
+Formulatorantwort, kontrollierter Provider-Fallback, Akutgefahrtext,
+Kein-Treffer-Pfad, Speech-Markierung, deaktivierte Speicherung, nicht blockierender
+Schreibfehler und redigierte technische Logs. Vierzig parallele Appends ergaben
+vierzig einzeln parsebare JSON-Zeilen. Es fand kein Remote-Lauf statt.
+
+**Bekannte Grenzen:** Die Sperre schützt nur Threads desselben Prozesses, nicht
+mehrere Uvicorn-Worker. JSONL besitzt noch keine Rotation, Verschlüsselung,
+Zugriffskontrolle, Aufbewahrungs- oder Löschautomatik. Volltexte einschließlich
+Kriseninhalten sind nicht anonym und müssen vor produktiver oder institutioneller
+Forschungsnutzung neu bewertet werden. Paket 3B kann die übrigen Health- und
+Fehlerverträge behandeln, ohne diese lokale Prototyppersistenz auszuweiten.
 
 ### Paket 4 (P1): Sessions atomar und begrenzt speichern
 

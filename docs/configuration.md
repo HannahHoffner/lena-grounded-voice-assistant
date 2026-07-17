@@ -20,6 +20,9 @@ und Sessionvariablen weiterhin akzeptiert.
 | `BLABLADOR_MAX_TOKENS` | nein | `1200` | Ausgabelimit, mindestens 200 |
 | `SESSION_TIMEOUT_SECONDS` | nein | `180` | Sessionablauf, mindestens 30 s |
 | `QUERY_MAX_CHARS` | nein | `1000` | maximales Query-Feld; Bereich 1–10000 Zeichen |
+| `TECHNICAL_LOG_LEVEL` | nein | `INFO` | Level der redigierten technischen Ereignisse |
+| `INTERACTION_LOGGING_ENABLED` | nein | `true` | lokales vollständiges Prototyp-Interaktionsprotokoll aktivieren |
+| `INTERACTION_LOG_PATH` | nein | `runtime/logs/interactions.jsonl` | lokale append-basierte UTF-8-JSONL-Datei |
 
 ## Speech
 
@@ -51,6 +54,13 @@ und Sessionvariablen weiterhin akzeptiert.
 Booleans akzeptieren `1`, `true`, `yes` oder `on` als wahr. Ungültige numerische
 Werte fallen auf die im Code definierten Standards zurück.
 
+`INTERACTION_LOGGING_ENABLED` ist bewusst unabhängig vom technischen Log-Level.
+Für Tests oder Betriebsformen ohne Volltextspeicherung kann der Schalter auf
+`false` gesetzt werden. Relative Interaktionspfade werden gegen den ermittelten
+Projekt-Root aufgelöst. Der Standardpfad liegt unter dem von Git und Packaging
+ausgeschlossenen `runtime/`. Konfiguriere keinen versionierten Pfad und keine
+Cloud-Synchronisation für diese Datei.
+
 Die API lehnt zu große Query- und TTS-Texte mit HTTP 422 ab. STT-Audio über
 dem konfigurierten Limit erhält HTTP 413; geprüft werden sowohl ein vorhandener
 `Content-Length`-Header als auch die tatsächlich gestreamten Bytes. Unterstützt
@@ -79,3 +89,6 @@ geeigneten Reverse Proxy sowie ein Datenschutz- und Betriebskonzept.
 - `.env.local` hat absichtlich höchste Priorität; prüfe diese Datei bei schwer
   erklärbaren lokalen Abweichungen, ohne ihren Inhalt zu veröffentlichen.
 - `/api/health` meldet Verfügbarkeit, aber keine geheimen Werte.
+- Technische Logs enthalten keine vollständigen Anfrage-/Antworttexte. Das
+  getrennte Interaktions-JSONL enthält diese Volltexte absichtlich und ist daher
+  als besonders schützenswerte lokale Forschungsdatei zu behandeln.

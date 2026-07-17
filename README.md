@@ -68,13 +68,14 @@ Kopieren der Konfiguration erfolgt mit `cp .env.example .env`.
 | `app/wfs_sync.py` | WFS-Validierung, Normalisierung, Diff und Promotion |
 | `app/i18n.py`, `app/translate_offers.py` | gespeicherte Übersetzungen und Overrides |
 | `app/sessions.py` | lokale, zeitlich begrenzte Gesprächszustände |
+| `app/interactions.py` | lokales, vollständiges JSONL-Interaktionsprotokoll des Prototyps |
 | `app/maps.py`, `app/temporal.py` | Kartendaten und vorsichtige Zeitlogik |
 | `app/speech.py` | serverseitige Transkription und Sprachsynthese |
 | `app/static/` | Browser-Frontend und vendored Leaflet-Dateien |
 | `data/canonical/` | aktivierter normalisierter Laufzeitdatenbestand |
 | `data/wfs/` | aktivierte Rohdaten, Snapshots und Änderungsbericht |
 | `data/i18n/` | maschinelle Übersetzungen und manuelle Korrekturen |
-| `runtime/` | generierte Sessions und ausstehende WFS-Prüfdaten |
+| `runtime/` | ignorierte Sessions, Interaktionsprotokolle und WFS-Prüfdaten |
 | `tests/` | lokale Pytest-Suite und WFS-Testfixture |
 
 ## Häufige Befehle
@@ -132,6 +133,10 @@ Quelle: Stadt Leipzig, WFS Wohnungslosenhilfe,
 - WFS-Promotion und Übersetzungsprüfung besitzen keine Admin-Oberfläche.
 - `runtime/sessions.json` kann Nutzereingaben enthalten und ist nicht für eine
   gemeinsame oder öffentliche Ablage bestimmt.
+- `runtime/logs/interactions.jsonl` enthält bei Standardkonfiguration vollständige
+  Anfrage-Antwort-Paare für Evaluation und Verbesserung. Diese Daten sind nicht
+  anonym und die einfache lokale Speicherung ist nicht produktionsreif; Details
+  und offene Datenschutzanforderungen stehen in [Installation und Betrieb](docs/setup.md).
 - Das Wheel enthält Frontend, vendorte Leaflet-Dateien und den versionierten
   aktiven Datenstand. Für lokale Entwicklung bleibt die editable Installation
   aus dem Checkout der einfachste Weg.

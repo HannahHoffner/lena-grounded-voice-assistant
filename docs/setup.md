@@ -34,8 +34,9 @@ Speech und Kartenkacheln können ohne Netzwerk eingeschränkt sein.
 
 ## Zustandsdateien
 
-`runtime/` enthält generierte WFS-Stagingdaten und Sessions. Das Verzeichnis ist
-laut `.gitignore` lokal. `data/canonical/offers.json` und die Dateien unter
+`runtime/` enthält generierte WFS-Stagingdaten, Sessions und bei aktivierter
+Prototyp-Protokollierung `logs/interactions.jsonl`. Das Verzeichnis ist laut
+`.gitignore` lokal. `data/canonical/offers.json` und die Dateien unter
 `data/wfs/` sind dagegen der aktivierte, nachvollziehbare Datenstand.
 
 ## Git-Arbeitsweise und lokale Daten
@@ -103,6 +104,26 @@ Der lokale Ordner `Code3-archive-pre-git-20260717` ist die reversible
 Archivierung der unversionierten Vorläuferkopie. Arbeite ausschließlich in
 `code/`. Das Archiv enthält lokale Konfigurations- und Laufzeitdateien und darf
 nicht veröffentlicht oder als zweite Codebasis gepflegt werden.
+
+## Prototyp-Protokollierung und Masterarbeitsbezug
+
+LENA protokolliert im aktuellen Entwicklungs- und Forschungsprototyp vollständige
+verarbeitete Anfragen gemeinsam mit den tatsächlich ausgegebenen Antworten
+lokal. Antwortpfad, Sprache, Quellen sowie Safety- und Fallbackstatus ergänzen
+das Paar. Diese bewusst einfache Umsetzung unterstützt technische
+Nachvollziehbarkeit, Fehleranalyse, Evaluation und iterative Verbesserung; sie
+benötigt weder Datenbank noch Cloudübertragung. Die Dateien sind wegen möglicher
+personenbezogener und sensibler Inhalte kein Teil des versionierten Repositorys.
+
+Diese Umsetzung ist kein fertiges Datenschutzkonzept und die Daten sind nicht
+anonym. Vor einem produktiven Einsatz oder einer institutionell geregelten
+Forschungsnutzung sind mindestens informierte Einwilligung, Zweckbindung,
+Trennung von Forschungs- und Betriebsdaten, differenzierte Zugriffskontrolle,
+definierte Aufbewahrungs- und Löschfristen, Pseudonymisierung beziehungsweise
+Anonymisierung, kontrollierter Forschungsexport und die besondere Behandlung
+von Kriseninhalten neu zu konzipieren. Zusätzlich sind die rechtlichen und
+institutionellen Anforderungen zu prüfen; eine Freigabe wird hier nicht
+behauptet.
 
 ## Deployment-Stand
 

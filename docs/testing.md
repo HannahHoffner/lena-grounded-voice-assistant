@@ -23,6 +23,7 @@ ersetzt beziehungsweise über lokale Testantworten geprüft.
 | `tests/test_wfs_sync.py` | Validierung, Normalisierung, Diff und Promotion |
 | `tests/test_frontend_security.py` | statische Absicherung der Leaflet-Popup-Sinks |
 | `tests/test_safety.py` | Akutgefahr-Vertrag, kontrollierte Antwort und TTS |
+| `tests/test_observability.py` | technische Events, finale JSONL-Paare, Redaktionsgrenzen und Schreibfehler |
 
 ## Continuous Integration
 
@@ -50,6 +51,14 @@ werden; die lokale Ausführung prüft nur Befehle und Workflowstruktur.
 3. Stelle je eine Frage zu Essen, Schlafen, Medizin und Beratung.
 4. Prüfe Karten, Kartendarstellung, Sprachwechsel und eine Folgefrage.
 5. Prüfe Speech nur mit bewusst konfiguriertem externem Dienst.
+6. Prüfe bei bewusst aktivierter Prototyp-Protokollierung eine erzeugte
+   `runtime/logs/interactions.jsonl` und lösche lokale Testdaten anschließend.
+
+Fokussierte Prüfung des Protokollpfads:
+
+```powershell
+python -m pytest tests/test_observability.py -q
+```
 
 ## Fehlende automatisierte Prüfungen
 

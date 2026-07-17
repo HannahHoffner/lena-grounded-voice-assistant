@@ -9,6 +9,7 @@ sequenceDiagram
     participant S as QueryService
     participant K as lokale KB
     participant L as Blablador optional
+    participant J as lokales JSONL
     B->>A: POST /api/query
     A->>S: QueryRequest
     S->>K: Retrieval und Kartenfelder
@@ -24,11 +25,13 @@ sequenceDiagram
         end
     end
     S-->>A: QueryResponse oder Template-Fallback
+    A->>A: finales Interaktionsmodell validieren
+    A->>J: eine JSONL-Zeile lokal anhängen
     A-->>B: Antwort, Karten, Session, MapData
 ```
 
-`QueryRequest` enthält `query`, `language`, optional `category` und
-`session_id`. `QueryResponse` enthält Antwort, Karten, Providerstatus,
+`QueryRequest` enthält `query`, `language`, `input_mode` sowie optional
+`category` und `session_id`. `QueryResponse` enthält Antwort, Karten, Providerstatus,
 Sitzungsverlauf und optionale Kartendaten. Pydantic begrenzt die Frage auf 1000
 Zeichen und normalisiert Whitespace.
 
@@ -85,3 +88,18 @@ Sessions werden als JSON gespeichert, enthalten Fragen und Antworten und laufen
 konfigurierbar ab. Die Speicherung ist dateibasiert und nicht gegen parallele
 Schreibzugriffe mehrerer Prozesse abgesichert. `runtime/` sollte daher lokal,
 zugriffsgeschützt und gemäß dem Datenschutzkonzept regelmäßig bereinigt werden.
+
+Nach einer vollständig bearbeiteten `/api/query`-Anfrage schreibt ausschließlich
+der HTTP-Adapter ein zusammenhängendes Paar nach
+`runtime/logs/interactions.jsonl`. Dieser Zeitpunkt liegt nach Formulierung,
+Template-Fallback, kontrollierter Safety-Ersetzung und Sessionverarbeitung. Bei
+Akutgefahr wird deshalb der feste sichtbare 112-Text und keine verworfene freie
+LLM-Antwort gespeichert. Ein Schreibfehler erzeugt nur
+`interaction.write.failed`; Anfrage und Antwort werden dabei nicht in das
+technische Log kopiert und die API-Antwort bleibt erhalten.
+
+Das JSONL enthält keine HTTP-Header, Cookies, IP-Adressen, Zugangsdaten,
+Systemprompts, Provider-Rohdaten, internen Modellbegründungen oder Audiodateien.
+Die enthaltenen Freitexte sind dennoch weder anonym noch automatisch
+pseudonymisiert und können personenbezogene, gesundheitliche oder krisenbezogene
+Informationen enthalten. Es gibt keinen automatischen Upload.
