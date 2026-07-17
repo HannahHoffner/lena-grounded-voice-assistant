@@ -1199,17 +1199,151 @@ Persistenzerfolg zu behaupten.
 
 ### Paket 5 (P1): WFS-Releasevertrag
 
-**Ziel:** Review und Promotion beziehen sich auf denselben Hash; Aktivierung ist
-als Release recoverbar.
+**Status:** Abgeschlossen auf `modernization/wfs-release-contract`
+(2026-07-17); lokale Commits, nicht gepusht.
 
-- Erwartete Dateien: `app/wfs_sync.py`, eventuell kleines Release-/Store-Modul,
-  `tests/test_wfs_sync.py`, Datenflussdokumentation.
-- Tests: Quelle ändert sich zwischen Check/Promote; Hash-Mismatch; Fault-
-  Injection je Schritt; Neustart-Recovery; idempotente Promotion.
-- Nutzen: sehr hoch. Aufwand: mittel–hoch. Risiko: mittel–hoch.
-- Rollback: bisherige Snapshots/Canonical-Datei unangetastet halten, bis neuer
-  Manifestzeiger erfolgreich geschrieben ist.
-- Abbruchkriterium: fehlender Recovery-Nachweis oder unklare Datenmigration.
+**Ziel und Scope:** Ein WFS-Abruf erzeugt genau einen unveränderlichen,
+vollständig validierten Pending-Release. Eine spätere Promotion aktiviert exakt
+diesen Stand ohne erneuten Download. Anwendung und Rollback bestimmen alle
+zusammengehörigen Daten durch einen kleinen atomaren Pointer. Datenbanken,
+verteilte Locks, automatische Freigabe und Admin-Oberfläche sind nicht Teil des
+Pakets.
+
+**Aktueller Datenfluss:** `fetch_wfs()` lädt genau eine GeoJSON-
+FeatureCollection per HTTPX. `validate_feature_collection()` prüft
+Vollständigkeit, Feldvertrag, Pflichtwerte, IDs und Geometrien;
+`canonical_payload()` erzeugt sortierte `OfferRecord`s und den Dataset-Hash.
+`diff_canonical()` vergleicht mit `settings.kb_path`. Ein Check schreibt aktuell
+drei feste Dateien unter `runtime/wfs/`. `--promote` lädt erneut vom Live-WFS
+und ersetzt danach einzeln `data/wfs/current.geojson`,
+`data/canonical/offers.json` und `data/wfs/last_change_report.json`. Die
+Anwendung lädt den festen kanonischen Pfad beim Start und nach Auto-Promotion.
+
+**Bestätigte Dead Ends:** Check und Promotion können verschiedene Downloads
+verwenden. Ein Fehler zwischen den aktiven Einzeldatei-Writes erzeugt einen
+Mischstand. Die feste Tempdatei von `_atomic_json()` kann bei Parallelität
+kollidieren. Pending-Artefakte besitzen weder Manifest noch Bindung an
+Basisrelease, Dateigröße oder gespeicherte Bytes; ihre Hashes werden vor
+Promotion nicht geprüft. Ein Pointer nur im Wartungscode wäre wirkungslos,
+solange `main.py` weiter den festen Pfad lädt. Übersetzungen bleiben außerhalb
+des atomaren Release: Ihre bestehende Offer-Hashprüfung verwirft veraltete
+Einträge bereits sicher, ein zusätzlicher unabhängiger Write würde den
+Gesamtvertrag dagegen wieder mehrteilig machen.
+
+**Releaseformat und ID:** `app/wfs_releases.py` kapselt Manifest, Persistenz,
+Verifikation, Pointer und lokalen Lock. Aktive Releases liegen unter
+`data/wfs/releases/<release-id>/`, Pending-Releases unter
+`runtime/wfs/pending/<release-id>/`. Jeder enthält exakt `offers.json`,
+`snapshot.geojson`, `diff.json` und `manifest.json`. `WfsReleaseManifest`
+(Pydantic, `schema_version=1`, Extra-Felder verboten) enthält Release-ID,
+UTC-Erstellung, kontrollierte Quellenkennung/-URL, Datensatzanzahl,
+Basisrelease, Validierungsstatus sowie SHA-256 und Bytezahl aller drei
+Nutzdateien. Der deterministische Manifesthash umfasst alle Manifestfelder außer
+`manifest_sha256` und ist nicht selbstreferenziell. IDs bestehen aus
+kontrolliertem UTC-Zeitstempel, zwölf Zeichen Content-Hash und acht zufälligen
+UUID-Hexzeichen; WFS-Werte gelangen nicht in Pfade.
+
+**Erstellung, Unveränderlichkeit und Verifikation:** Der Check lädt einmal,
+normalisiert einmal und serialisiert die drei Nutzdateien in einen eindeutigen
+`.tmp-<UUID>`-Ordner. Manifest und Hashes beziehen sich auf exakt diese Bytes.
+Erst nach vollständiger Verifikation wird der Ordner per `os.replace()` unter
+der Pending-ID sichtbar; bestehende IDs werden nie überschrieben.
+`verify_release()` akzeptiert nur kontrollierte IDs und Wurzeln, prüft exakte
+Dateimenge, Verzeichnis-/Manifest-ID, Pydantic-Vertrag, Manifesthash, alle
+Dateihashes/-größen, GeoJSON-Grundstruktur, kanonische `OfferRecord`s,
+Datensatzanzahl, Content-Hash und `diff.base_release_id`.
+
+**Atomare Aktivierung und Lesen:** Promotion verschiebt einen verifizierten
+Pending-Ordner in die unveränderliche Releasewurzel, validiert erneut und
+ersetzt zuletzt genau einen Pointer `data/wfs/active_release.json`. Der Pointer
+bindet Release-ID und Manifesthash und wird über eindeutige Tempdatei,
+`flush()`, `fsync()` und `os.replace()` aktiviert. Ein Fehler lässt den alten
+Pointer unverändert; höchstens ein vollständiger inaktiver Release bleibt.
+`load_active_knowledge_base()` liest den Pointer einmal, verifiziert den
+Release und lädt nur dessen `offers.json`. Bei noch fehlendem Pointer gilt der
+bisherige `settings.kb_path` als dokumentierter Legacy-Fallback; ein
+beschädigter Pointer fällt niemals auf Pending-Daten zurück.
+
+**Migration, Rollback und Aufbewahrung:** Der vorhandene validierte aktive Stand
+kann vor dem ersten Check ohne Netzwerkzugriff idempotent als
+`legacy-<content-hash>` übernommen und per Pointer aktiviert werden. Die festen
+Dateien bleiben zunächst als Fallback bestehen. Rollback akzeptiert nur eine
+kontrollierte ID aus `data/wfs/releases`, verifiziert vollständig und wechselt
+nur den Pointer; kein Download und keine Einzeldateikopie. Aktiver und
+unmittelbarer Vorgänger werden nicht automatisch gelöscht. Rotation bleibt
+Betriebsfolgearbeit.
+
+**Nebenläufigkeit und Logging:** Ein prozessweiter `threading.RLock` schützt
+Finalisierung, Migration, Promotion, Rollback und Pointerwechsel, bietet aber
+keinen Mehrprozessschutz. Ereignisse sind `wfs.release.created`,
+`wfs.release.validation_failed`, `wfs.release.verified`,
+`wfs.promotion.started/completed/failed`, `wfs.rollback.completed` und
+`wfs.active_release.loaded`. Keine Payloads, Adressen oder Credentials werden
+geloggt.
+
+**Interaktionsmetadaten:** `KnowledgeBase` erhält die einmal geladene optionale
+`release_id`. `QueryService` übernimmt sie zu Anfragebeginn in
+`QueryInteraction`; der zentrale HTTP-Schreibpunkt persistiert sie als
+`data_release_id`. Ein späterer Pointerwechsel etikettiert bestehende Antworten
+nicht um. Im Legacy-Fallback bleibt das Feld `null`.
+
+**Betroffene Dateien:**
+
+| Datei | Änderung | Grund |
+|---|---|---|
+| `app/wfs_releases.py` | Manifest, Verify, Release-/Pointerwrites, Rollback | neue kohärente Verantwortung statt weiteres Wachstum von `wfs_sync.py` |
+| `app/wfs_sync.py` | einmaliger Check, Migration, releasebasierte CLI/Auto-Promotion | bestehende Normalisierung und Timeouts wiederverwenden |
+| `app/kb_loader.py`, `app/main.py` | zentraler pointerbasierter Ladeweg | Pointer im produktiven Start-/Reloadpfad wirksam machen |
+| `app/models.py`, `app/service.py`, `app/interactions.py` | tatsächliche Release-ID pro Interaktion | wissenschaftliche Nachvollziehbarkeit |
+| `tests/test_wfs_releases.py`, bestehende WFS-/Timeout-/Observabilitytests | Manipulation, Fault Injection, Race, Migration, Rollback, Integration | reale Grenzen statt nur Helpertests |
+| bestehende README-/Architektur-/Datenfluss-/Setup-/Testdokumente | Betriebsvertrag und Grenzen | keine parallele Dokumentation |
+
+**Teststrategie:** Fixtures prüfen einen Fetch je Check, Manifestbytes, Hashes,
+Counts, Basisrelease und unsichtbare Tempstände. Manipulationen an Nutzdatei,
+Manifest, ID und Pointer müssen scheitern. Fault Injection vor/beim
+Pointer-Replace belegt den unveränderten aktiven Stand. Threads prüfen eindeutige
+IDs, serialisierte Promotion und Lockfreigabe. Pointerwechsel während eines
+Ladevorgangs darf keinen Mischstand erzeugen. Migration und Rollback laufen ohne
+Fetch. Ein API-/JSONL-Test bindet die tatsächlich geladene Release-ID an die
+Antwort. Bestehende Normalisierungs-, Timeout-, Query-, Karten-, Session- und
+Packagingtests bleiben Regressionstor.
+
+**Rollbackstrategie:** Implementierungs-, Test- und Dokumentationscommits sind
+getrennt revertierbar. Solange die Legacy-Dateien bestehen, kann der Pointer-
+Ladeweg ohne Datenmigration zurückgenommen werden. Releaseordner werden nicht
+automatisch gelöscht. Operativer Rollback validiert einen früheren Release und
+wechselt atomar nur den Pointer.
+
+**Verifikationsergebnis:** 43 fokussierte WFS-Release-, WFS-Sync-, Timeout- und
+Observabilitytests sowie die Gesamtsuite mit 153 Tests bestanden in rund fünf
+Sekunden. `python -m compileall -q app`, `python -m app --help`,
+`python -m app.wfs_sync --help`, der read-only `--list`-Smoke und
+`git diff --check` waren erfolgreich. Fault Injection belegte unveränderten
+Pointer bei Replace-Fehler und wiederholbare Promotion des bereits vollständig
+verschobenen Releases. Manipulationen an Manifest und jeder Nutzdatei,
+unkontrollierte IDs, Zusatzdateien und beschädigte Pointer wurden abgewiesen.
+Migration, Rollback, eindeutige parallele Erstellung, einmaliges Pointerlesen
+und `data_release_id` im tatsächlichen API-/JSONL-Pfad sind getestet. Timeout-
+Tests bestätigen den unveränderten aktiven Stand ohne Runtime-Artefakte im Diff;
+`git check-ignore` deckt Pending-Releases und Interaktionsdaten ab.
+
+**Strukturentscheidung:** `app/wfs_releases.py` bleibt mit weniger als 400
+Zeilen auf die neue Persistenzverantwortung begrenzt. `app/wfs_sync.py` liegt
+weiter über 400 Zeilen, enthält aber weiterhin nur Transport, fachliche
+Validierung/Normalisierung, Migration und die bestehende Wartungs-CLI. Eine
+weitere Aufteilung wäre ein allgemeines Refactoring außerhalb des
+Releasevertrags; die transaktionale Verantwortung wurde bereits kohärent
+extrahiert.
+
+**Fortschritt:**
+
+- [x] sauberer Paket-4-Stand und neuer lokaler Branch geprüft.
+- [x] Dokumentation, Datenpfade, Loader, CLI, Tests, Hashes und Timeouts geprüft.
+- [x] Race Conditions, Releaseformat, Migration, Pointer und Rollback geplant.
+- [x] Releasevertrag und produktiver Ladeweg implementiert.
+- [x] fokussierte und vollständige Verifikation erfolgreich (153 Tests).
+- [x] `code-documentation` angewendet und Dokumentation gegengeprüft.
+- [x] Paket 5 abgeschlossen.
 
 ### Paket 6 (P1): Packaging und Versionsführung
 

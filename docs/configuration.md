@@ -79,6 +79,11 @@ STT- und TTS-Timeouts ergeben generische HTTP-503-Antworten. WFS trennt
 Verbindungs- und Lesetimeout; vor vollständigem Download und Validierung wird
 kein aktiver Datenstand verändert.
 
+`WFS_AUTO_PROMOTE=true` aktiviert nur den Release, der aus demselben einzelnen
+Hintergrundabruf vollständig erstellt und verifiziert wurde. Der manuelle
+`--promote <release-id>`-Befehl führt keinen Netzwerkabruf aus. Automatische und
+manuelle Vorgänge sind nur innerhalb eines Prozesses gesperrt.
+
 `INTERACTION_LOGGING_ENABLED` ist bewusst unabhängig vom technischen Log-Level.
 Für Tests oder Betriebsformen ohne Volltextspeicherung kann der Schalter auf
 `false` gesetzt werden. Relative Interaktionspfade werden gegen den ermittelten

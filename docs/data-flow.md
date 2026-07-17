@@ -53,14 +53,21 @@ Interaktionsdatensatz.
 
 ## WFS-Aktualisierung
 
-`sync_wfs()` ruft WFS 2.0 `GetFeature` als GeoJSON ab. Die Pipeline validiert
-Typ, erforderliche Properties, eindeutige `lnr`-IDs und Point-Geometrien. Danach
-entstehen normalisierte `OfferRecord`s und stabile Feature-/Dataset-Hashes.
-`--check` schreibt ausstehende Daten unter `runtime/wfs/`; `--promote` ersetzt
-den kanonischen Stand atomar und aktualisiert Snapshot und Änderungsbericht.
-Der HTTPX-Client begrenzt Verbindungsaufbau und Lesen getrennt. Connect- oder
-Read-Timeouts enden vor Normalisierung, Staging und Promotion; der vorhandene
-aktive Datenstand bleibt dabei unverändert.
+`sync_wfs()` ruft WFS 2.0 `GetFeature` pro Check genau einmal als GeoJSON ab.
+Die Pipeline validiert Typ, Properties, eindeutige `lnr`-IDs und Geometrien und
+erzeugt normalisierte `OfferRecord`s sowie stabile Feature-/Dataset-Hashes. Ein
+zunächst unsichtbarer Tempordner enthält Snapshot, Canonical-Daten und Diff.
+Erst nach Manifest-, Hash-, Größen-, Schema- und Basisreleaseprüfung wird er als
+`runtime/wfs/pending/<release-id>/` sichtbar.
+
+`--promote <release-id>` führt keinen WFS-Abruf aus. Es validiert exakt den
+geprüften Pending-Ordner, verschiebt ihn in `data/wfs/releases/` und ersetzt
+zuletzt atomar `data/wfs/active_release.json`. Bis zu diesem Pointerwechsel
+bleibt der alte Release vollständig aktiv. Anwendung und Übersetzungswartung
+lesen den Pointer einmal und verwenden anschließend ausschließlich den darin
+bezeichneten Ordner. `--rollback <release-id>` validiert einen vorhandenen
+früheren Release und wechselt nur denselben Pointer. Connect-/Read-Timeouts und
+alle Fehler vor dem Pointerwechsel lassen den aktiven Stand unverändert.
 
 ## Übersetzungen
 

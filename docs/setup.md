@@ -40,10 +40,12 @@ Datenstand.
 
 ## Zustandsdateien
 
-`runtime/` enthält generierte WFS-Stagingdaten, Sessions und bei aktivierter
+`runtime/` enthält WFS-Pending-Releases, Sessions und bei aktivierter
 Prototyp-Protokollierung `logs/interactions.jsonl`. Das Verzeichnis ist laut
-`.gitignore` lokal. `data/canonical/offers.json` und die Dateien unter
-`data/wfs/` sind dagegen der aktivierte, nachvollziehbare Datenstand.
+`.gitignore` lokal. Neue aktive WFS-Stände liegen unveränderlich unter
+`data/wfs/releases/`; `data/wfs/active_release.json` wählt genau einen davon.
+`data/canonical/offers.json` und die bisherigen WFS-Dateien bleiben während der
+Migration als Legacy-Fallback erhalten.
 
 ## Git-Arbeitsweise und lokale Daten
 
@@ -72,13 +74,28 @@ Issues, Logs oder CI-Konfigurationen.
 # Abrufen, validieren und nur bereitstellen
 python -m app.wfs_sync --check
 
-# Abrufen, validieren und aktivieren
-python -m app.wfs_sync --promote
+# aktive und ausstehende Release-IDs anzeigen
+python -m app.wfs_sync --list
+
+# einen Pending-Release ohne neuen Download prüfen
+python -m app.wfs_sync --verify <release-id>
+
+# exakt diesen geprüften Release aktivieren
+python -m app.wfs_sync --promote <release-id>
+
+# atomar auf einen früheren Release zurückwechseln
+python -m app.wfs_sync --rollback <release-id>
 ```
 
-Promotion verändert fachliche Laufzeitdaten. Prüfe vorher den ausstehenden Diff
-und sichere den bisher aktivierten Stand über Versionskontrolle. Während einer
-Nutzeranfrage findet kein WFS-Zugriff statt.
+Der erste Check übernimmt einen vorhandenen konsistenten Legacy-Stand
+idempotent als `legacy-<hash>` und setzt dafür den ersten Pointer; dafür ist kein
+WFS-Neuabruf erforderlich. Prüfe vor Promotion Manifest und `diff.json` des
+ausstehenden Releases. Promotion lädt niemals erneut und verändert keine
+Einzeldateien des bisherigen Releases. Ein fehlgeschlagener Pointerwechsel kann
+einen vollständigen, aber inaktiven Releaseordner hinterlassen; derselbe Befehl
+ist danach wiederholbar. Während einer Nutzeranfrage findet kein WFS-Zugriff
+statt. Die lokale Sperre schützt nur einen Prozess; starte Wartungsbefehle nicht
+parallel aus mehreren Prozessen.
 
 ## Übersetzungswartung
 

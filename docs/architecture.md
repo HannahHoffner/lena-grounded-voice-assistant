@@ -13,14 +13,15 @@ flowchart LR
     A --> S[QueryService]
     S --> R[Deterministisches Retrieval]
     S -. optional .-> L[Blablador]
-    R --> K[(data/canonical/offers.json)]
+    R --> C[Active-Pointer einmal lesen]
+    C --> K[(data/wfs/releases/ID/offers.json)]
     S --> I[Übersetzungen]
     S --> X[Sessions]
     A --> O[(lokales Interaktions-JSONL)]
     A --> P[Speech-Dienste]
     A --> M[Kartendaten]
-    W[Stadt Leipzig WFS] -->|nur Sync| Y[Validierung und Staging]
-    Y -->|explizite/konfigurierte Promotion| K
+    W[Stadt Leipzig WFS] -->|genau ein Abruf je Check| Y[Validierung und Pending-Release]
+    Y -->|Manifest- und Hashprüfung| C
 ```
 
 ## Komponenten
@@ -56,9 +57,14 @@ wiederholt. Bei Timeout greift derselbe kontrollierte deterministische
 beziehungsweise Template-Fallback wie bei anderen Providerfehlern.
 
 `app/wfs_sync.py` validiert eine vollständige GeoJSON-FeatureCollection,
-normalisiert Features, berechnet stabile Hashes und schreibt Änderungen atomar.
-`app/kb_loader.py` lädt primär das kanonische JSON; der Markdown-Parser bleibt
-als unterstützter Importpfad und wird in Tests verwendet.
+normalisiert Features und berechnet stabile Hashes. `app/wfs_releases.py`
+schreibt daraus einen unveränderlichen Ordner mit `offers.json`,
+`snapshot.geojson`, `diff.json` und typisiertem `manifest.json`. Promotion lädt
+nicht erneut vom WFS, sondern prüft alle gespeicherten Bytes und ersetzt zuletzt
+genau den kleinen Pointer `data/wfs/active_release.json` atomar. Rollback nutzt
+denselben validierten Pointerwechsel. `app/kb_loader.py` liest den Pointer pro
+Ladevorgang einmal und verwendet danach nur diesen Release; solange noch kein
+Pointer existiert, bleibt `data/canonical/offers.json` ein Legacy-Fallback.
 
 `app/i18n.py` führt deutsche Quelldaten, gespeicherte Übersetzungen und manuelle
 Overrides zu Karten zusammen. `app/translate_offers.py` aktualisiert den Store
@@ -93,7 +99,9 @@ genau eine validierte UTF-8-JSONL-Zeile nach
 `runtime/logs/interactions.jsonl`. Sie enthält die tatsächlich verarbeitete
 Anfrage, die tatsächlich sichtbare Antwort, kurzlebige Session-ID, Sprache,
 Eingabemodus, Antwortpfad, Quellen-IDs, Retrieval-Trefferzahl sowie Safety- und
-Fallbackstatus. Eine kleine Sperre schützt parallele Threads desselben
+Fallbackstatus und – bei pointerbasierten WFS-Daten – die tatsächlich für die
+Antwort geladene `data_release_id`. Das Interaktionsschema besitzt deshalb
+Version 2. Eine kleine Sperre schützt parallele Threads desselben
 Prozesses; Schreibfehler werden redigiert geloggt und verändern die Antwort
 nicht. Mehrprozesssynchronisierung, Rotation und ein Forschungsdaten-Backend
 sind nicht implementiert.
@@ -139,6 +147,8 @@ Links nur nach expliziter Protokollprüfung.
 
 - keine Kapazitäts-, Aufnahme- oder Echtzeitverfügbarkeitsdaten
 - keine grafische Review-/Administrationsoberfläche für WFS und Übersetzungen
+- keine prozessübergreifende Sperre für parallele WFS-Checks oder Promotionen;
+  alte und verwaiste vollständige Releases werden nicht automatisch rotiert
 - kein produktionsreifes Einwilligungs-, Zugriffs-, Aufbewahrungs-, Lösch-,
   Pseudonymisierungs- oder Anonymisierungskonzept für Interaktionsprotokolle
 - keine prozessübergreifende Provider-Nebenläufigkeitsbegrenzung; mangels lokaler

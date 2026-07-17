@@ -19,7 +19,7 @@ fachlichen Leitplanken weiterentwickeln.
 - Karten und Kartenansicht für Angebote mit verwertbaren Koordinaten
 - lokale Sitzungsverläufe für kurze Folgefragen
 - serverseitige Speech-to-Text- und Text-to-Speech-Schnittstellen
-- geprüfte WFS-Synchronisation mit Staging, Diff und atomarer Aktivierung
+- unveränderliche WFS-Releases mit Manifest, Diff, atomarer Aktivierung und Rollback
 - persistierte Kartenübersetzungen mit manuellen Overrides
 
 LENA ersetzt keine Notfallversorgung, medizinische oder soziale Beratung und
@@ -65,15 +65,15 @@ Kopieren der Konfiguration erfolgt mit `cp .env.example .env`.
 | `app/service.py` | Anfrageorchestrierung, Sicherheits- und Fallbackpfade |
 | `app/retrieval.py` | deterministisches Ranking der Angebote |
 | `app/providers/llm.py` | Blablador-Router, Formulierung und Grounding-Prüfung |
-| `app/wfs_sync.py` | WFS-Validierung, Normalisierung, Diff und Promotion |
+| `app/wfs_sync.py`, `app/wfs_releases.py` | WFS-Validierung, Releasevertrag, Promotion und Rollback |
 | `app/i18n.py`, `app/translate_offers.py` | gespeicherte Übersetzungen und Overrides |
 | `app/sessions.py` | lokale, zeitlich begrenzte Gesprächszustände |
 | `app/interactions.py` | lokales, vollständiges JSONL-Interaktionsprotokoll des Prototyps |
 | `app/maps.py`, `app/temporal.py` | Kartendaten und vorsichtige Zeitlogik |
 | `app/speech.py` | serverseitige Transkription und Sprachsynthese |
 | `app/static/` | Browser-Frontend und vendored Leaflet-Dateien |
-| `data/canonical/` | aktivierter normalisierter Laufzeitdatenbestand |
-| `data/wfs/` | aktivierte Rohdaten, Snapshots und Änderungsbericht |
+| `data/canonical/` | Legacy-Fallback des normalisierten Datenstands |
+| `data/wfs/releases/`, `data/wfs/active_release.json` | unveränderliche Releases und atomarer Active-Pointer |
 | `data/i18n/` | maschinelle Übersetzungen und manuelle Korrekturen |
 | `runtime/` | ignorierte Sessions, Interaktionsprotokolle und WFS-Prüfdaten |
 | `tests/` | lokale Pytest-Suite und WFS-Testfixture |
@@ -90,8 +90,14 @@ python -m pytest
 # WFS nur prüfen und Änderungen bereitstellen
 python -m app.wfs_sync --check
 
-# bereitgestellte WFS-Daten validieren und aktivieren
-python -m app.wfs_sync --promote
+# aktive und ausstehende Releases anzeigen
+python -m app.wfs_sync --list
+
+# bereitgestellten Release erneut validieren und aktivieren
+python -m app.wfs_sync --promote <release-id>
+
+# auf einen früheren validen Release zurückschalten
+python -m app.wfs_sync --rollback <release-id>
 
 # fehlende Kartenübersetzungen erzeugen
 python -m app.translate_offers --provider blablador
@@ -133,6 +139,8 @@ Quelle: Stadt Leipzig, WFS Wohnungslosenhilfe,
 - Externe Provider sind zeitlich begrenzt. Bei Edge-TTS beendet Cancellation den
   lokalen Stream, garantiert aber keinen Abbruch bereits gestarteter externer Arbeit.
 - WFS-Promotion und Übersetzungsprüfung besitzen keine Admin-Oberfläche.
+- WFS-Promotionen sind nur innerhalb eines Prozesses synchronisiert; mehrere
+  parallele Wartungsprozesse benötigen weiterhin operative Koordination.
 - `runtime/sessions.json` kann Nutzereingaben enthalten und ist nicht für eine
   gemeinsame oder öffentliche Ablage bestimmt. Der Einzelprozess-Store entfernt
   abgelaufene und überzählige Sessions bei Zugriffen und ersetzt die JSON-Datei
@@ -144,6 +152,8 @@ Quelle: Stadt Leipzig, WFS Wohnungslosenhilfe,
 - Das Wheel enthält Frontend, vendorte Leaflet-Dateien und den versionierten
   aktiven Datenstand. Für lokale Entwicklung bleibt die editable Installation
   aus dem Checkout der einfachste Weg.
+- Nachträglich erzeugte Releaseordner und der Active-Pointer sind noch nicht Teil
+  des statischen Wheel-Dateninventars; die Packaging-Migration bleibt Paket 6.
 
 ## Versionskontrolle und CI
 

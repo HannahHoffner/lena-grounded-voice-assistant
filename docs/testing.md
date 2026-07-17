@@ -22,6 +22,7 @@ ersetzt beziehungsweise über lokale Testantworten geprüft.
 | `tests/test_sessions.py` | Session-Lebenszyklus und Folgefragen |
 | `tests/test_session_persistence.py` | atomare Writes, Parallelzugriffe, TTL/Kapazität, Recovery und API-Fehlerrobustheit |
 | `tests/test_wfs_sync.py` | Validierung, Normalisierung, Diff und Promotion |
+| `tests/test_wfs_releases.py` | Manifest, Manipulationsschutz, atomarer Pointer, Migration, Konkurrenz und Rollback |
 | `tests/test_frontend_security.py` | statische Absicherung der Leaflet-Popup-Sinks |
 | `tests/test_safety.py` | Akutgefahr-Vertrag, kontrollierte Antwort und TTS |
 | `tests/test_observability.py` | technische Events, finale JSONL-Paare, Redaktionsgrenzen und Schreibfehler |
@@ -62,6 +63,7 @@ Fokussierte Prüfung des Protokollpfads:
 python -m pytest tests/test_observability.py -q
 python -m pytest tests/test_provider_timeouts.py -q
 python -m pytest tests/test_session_persistence.py -q
+python -m pytest tests/test_wfs_releases.py tests/test_wfs_sync.py -q
 ```
 
 ## Fehlende automatisierte Prüfungen

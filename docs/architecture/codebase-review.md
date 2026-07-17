@@ -51,8 +51,8 @@ Produktionsstand. Die wichtigsten Ursachen sind:
   geschlossen; ein Browser-E2E-Sicherheitsnetz fehlt noch.
 - Ein validiertes LLM-Akutgefahr-Signal führt zu einem kontrollierten Hinweis
   auf 112; LLM-Erkennungsfehler und ungeprüfte Übersetzungsentwürfe bleiben.
-- WFS-Review und Promotion beziehen sich nicht zwingend auf denselben Payload;
-  die Aktivierung mehrerer Dateien ist nicht als Gesamtvorgang atomar.
+- WFS-Review und Promotion verwenden seit Paket 5 denselben unveränderlichen
+  Release; die Aktivierung erfolgt durch genau einen atomaren Pointerwechsel.
 - Sessionwachstum, direkte Writes und Parallelzugriffe innerhalb eines Prozesses
   sind durch Paket 4 begrenzt; mehrere Prozesse bleiben ausdrücklich unkoordiniert.
 - Fehler und Fallbacks sind mangels strukturiertem Logging betrieblich kaum
@@ -99,10 +99,11 @@ flowchart LR
     Q --> I[i18n.py]
     Q --> S[sessions.py]
     Q --> M[maps.py]
-    R --> K[(data/canonical/offers.json)]
+    R --> C[Active-Pointer]
+    C --> K[(data/wfs/releases/ID/offers.json)]
     W[Leipzig WFS] --> Y[wfs_sync.py]
-    Y --> P[(runtime/wfs pending)]
-    Y --> K
+    Y --> P[(runtime/wfs/pending/ID)]
+    P --> C
     O[translate_offers.py] --> I18N[(data/i18n)]
     A --> SP[speech.py]
 ```
@@ -114,10 +115,10 @@ flowchart LR
 | `app/retrieval.py` | mehrsprachiges deterministisches Ranking | direkt wiederverwendbar |
 | `app/temporal.py` | eng begrenzte Zeitregeln | fachlich sinnvoll abgegrenzt |
 | `app/providers/llm.py` | Router, Formulator, HTTP, Validierung | gutes Sicherheitskonzept, zu viele Ebenen in einer Klasse |
-| `app/wfs_sync.py` | Fetch, Validierung, Normalisierung, Diff, Staging, Promotion | wertvoll, aber transaktional unvollständig |
+| `app/wfs_sync.py`, `app/wfs_releases.py` | Fetch/Normalisierung sowie Manifest, Verify, Promotion und Rollback | für Einzelprozess kohärent; Mehrprozess-Lock offen |
 | `app/i18n.py` | Translation-Store, Hashstatus, Overrides | direkt wiederverwendbar |
 | `app/translate_offers.py` | Übersetzungs-CLI und Provideraufruf | sinnvoll erweiterbar |
-| `app/sessions.py` | JSON-Sessions | problematisch für Parallelität und Wachstum |
+| `app/sessions.py` | atomare begrenzte JSON-Sessions | für Einzelprozess abgesichert; Mehrprozessbetrieb offen |
 | `app/maps.py` | EPSG-Transformation und Kartenziele | wiederverwendbar, mathematisch isoliert |
 | `app/speech.py` | STT- und TTS-Adapter | klein genug, aber ohne Eingabegrenzen |
 | `app/static/app.js` | gesamter Browserzustand und alle UI-Adapter | funktionsfähig, stark überladen |
@@ -129,8 +130,8 @@ flowchart LR
 1. `python -m app` ruft `app.__main__.main()` auf.
 2. Uvicorn verwendet `app.main:create_app` als Factory.
 3. `load_settings()` liest `.env`, danach `.env.local` mit Override-Priorität.
-4. `create_app()` lädt `settings.kb_path`, standardmäßig
-   `data/canonical/offers.json`.
+4. `create_app()` liest einmal den optionalen Active-Pointer und lädt den
+   bezeichneten Release; ohne Pointer gilt `settings.kb_path` als Legacy-Fallback.
 5. `QueryService`, Speech-Adapter und optional der WFS-Hintergrundtask werden
    erzeugt.
 6. `app/static/` wird unter `/static` gemountet; `/` liefert `index.html`.
@@ -162,15 +163,12 @@ Frontend-Verbraucher. Es gibt keinen bestätigten verwaisten HTTP-Endpunkt.
 
 ### 3.3 WFS-Prüfung und Promotion
 
-`sync_wfs()` ruft bei jedem Lauf den Live-WFS ab. Es validiert die komplette
-FeatureCollection, normalisiert Records und berechnet Diff und Hashes. `--check`
-schreibt Pending-Dateien. `--promote` ruft den WFS erneut ab und aktiviert diesen
-neu abgerufenen Stand; es übernimmt nicht den zuvor geprüften Pending-Payload.
-
-Die einzelnen JSON-Schreibvorgänge nutzen temporäre Dateien und `replace()`.
-Die Gruppe aus Raw-GeoJSON, Canonical-JSON, Report, Snapshot,
-Übersetzungsstatus und State besitzt jedoch keine Transaktion. Ein Fehler nach
-dem Canonical-Write kann einen gemischten Datenstand hinterlassen.
+`sync_wfs()` ruft pro Check einmal den Live-WFS ab, validiert und normalisiert
+den Stand und finalisiert ein manifestgebundenes Pending-Release. Seit Paket 5
+aktiviert `--promote <release-id>` ohne weiteren Abruf exakt diesen Ordner durch
+einen atomaren Active-Pointer. Der Loader liest diesen Pointer einmal und bindet
+Canonical-Daten und Manifest damit an dieselbe Release-ID. Rollback verwendet
+denselben Vertrag; Übersetzungen bleiben ein getrennt hashvalidierter Store.
 
 ### 3.4 Übersetzungen
 
@@ -334,8 +332,8 @@ kein P0, sollte aber vor einem Mehrnutzerbetrieb adressiert werden.
 |---|---|---|---|---|---|---|
 | P0 | Stored-XSS in Karten-Popups | `app/static/app.js:renderMap()` interpoliert `origin.label`, `origin.address`, `destination.label` und `destination.address` in `bindPopup()`-HTML | Externe WFS-/Übersetzungswerte können HTML/Script in den Browser bringen | DOM-Nodes oder konsequentes Escaping; CSP ergänzend prüfen | Browser-/DOM-Test mit `<img onerror=...>` als Datenwert | hoch |
 | P0 | Akutgefahr endete ohne Eskalationsinformation (durch Paket 0B technisch geschlossen) | `LLMRoute.acute_risk_detected`, früher Return in `QueryService._query_core()`, `tests/test_safety.py` | LLM kann Gefahr weiter übersehen oder fälschlich melden; vier Sprachfassungen sind Entwürfe | Übersetzungen menschlich prüfen und Providerqualität beobachten | parametrisierte API-, Vertrags- und TTS-Tests; kontrollierter Provider-Smoke | hoch für Implementierung, LLM-Qualität extern |
-| P1 | Geprüfter WFS-Stand ist nicht der promotete Stand | `sync_wfs()` ruft sowohl bei `--check` als auch `--promote` `fetch_wfs()` auf | Daten können sich zwischen Review und Aktivierung ändern | Promotion anhand Content-Hash eines Pending-Artefakts; neuer Check bei Abweichung | Test: Quelle ändert sich zwischen Check und Promote | hoch |
-| P1 | Multi-Datei-Promotion kann Mischstand erzeugen | sequenzielle `_atomic_json()`-Aufrufe, danach Translation-Update und Cleanup | Neustart oder laufender Prozess kann inkonsistente Artefakte sehen | Release-Verzeichnis/Manifest und atomarer Zeigerwechsel oder Recovery-Protokoll | Fault-Injection nach jedem Promotionsschritt | hoch |
+| P1 | Geprüfter WFS-Stand ist nicht der promotete Stand (in Paket 5 geschlossen) | Promotion akzeptiert nur kontrollierte Pending-ID, prüft Manifest/Bytes und ruft `fetch_wfs()` nicht auf | geprüfter und aktivierter Payload sind identisch | mehrere Wartungsprozesse weiterhin operativ serialisieren | Providergrenz- und Manipulationstests | hoch |
+| P1 | Multi-Datei-Promotion kann Mischstand erzeugen (in Paket 5 geschlossen) | unveränderlicher Releaseordner plus einzelner atomarer Active-Pointer | Leser sehen vollständig alten oder neuen Release | Pointer-/Release-Retention überwachen | Fault Injection vor und beim Pointer-Replace | hoch |
 | P1 | Gebautes Wheel ist nicht lauffähig | Test-Wheel enthält weder `app/static/` noch `data/` | Installation funktioniert nur editable aus Checkout | Paketdatenstrategie festlegen; Datenpfade über Resources/externes Datenverzeichnis | Wheel in leerer Umgebung installieren und App/Frontend starten | hoch |
 | P1 | Sessionablage verliert oder beschädigt Daten (für Einzelprozess in Paket 4 geschlossen) | `SessionStore` sperrt den vollständigen Zyklus und aktiviert per `os.replace()`; kein Mehrprozess-Lock | parallele Requests eines Prozesses sind geschützt, mehrere Worker können sich weiterhin überschreiben | Einzelprozessbetrieb beibehalten oder vor Mehrprozessbetrieb koordinierten Store einführen | `tests/test_session_persistence.py`; später Mehrprozess-Integrationstest | hoch für Einzelprozess, offene Mehrprozessgrenze |
 | P1 | Abgelaufene Sessions werden nie entfernt (in Paket 4 geschlossen) | opportunistisches TTL-Pruning und `SESSION_MAX_ENTRIES` im produktiven Store | aktive JSON-Map ist begrenzt; Recovery-Dateien werden nicht automatisch gelöscht | lokale Recovery-Aufbewahrung betrieblich festlegen | TTL-, Kapazitäts- und Recoverytests | hoch |
@@ -348,7 +346,7 @@ kein P0, sollte aber vor einem Mehrnutzerbetrieb adressiert werden.
 | P2 | Markdown- und WFS-Pfade können dauerhafte Parallelarchitektur werden | `load_knowledge_base()` unterstützt beide, Standard ist WFS | doppelte Datenverträge und Pflegeaufwand | Status als Importadapter festlegen; Deprecation erst nach Migrationsentscheidung | Tests und Konfigurationsinventar | mittel |
 | P2 | Frontend-Monolith blockiert sichere Erweiterung | `app/static/app.js` 972 Zeilen | Speech, Zustand, Rendering und Karte beeinflussen sich | ohne Frameworkzwang in kohäsive ES-Module teilen | Browser-Smoke-/E2E-Tests vor und nach Teilung | hoch |
 | P3 | Gesundheitsfelder sind redundant | `llm_router_available` und `full_context_fallback_available` erhalten denselben Wert | unklarer Vertrag | Semantik dokumentieren oder einen Alias deprecaten | Contract-Test | hoch |
-| P3 | `--check` wird geparst, aber nicht ausgewertet | Default ist ohnehin `promote=False` | geringe CLI-Irritation | expliziten Modusvertrag vereinfachen | CLI-Test | hoch |
+| P3 | `--check` wird geparst, aber nicht ausgewertet (in Paket 5 geschlossen) | CLI trennt Check, List, Verify, Promote und Rollback | eindeutiger Wartungsvertrag | CLI-Smokes beibehalten | Parser-/Release-Tests | hoch |
 
 Nicht als Dead End bestätigt wurden unregistrierte Python-Module, fehlende HTML-
 IDs oder unverdrahtete nutzerbezogene Endpunkte. Import-Smoke-Test und
