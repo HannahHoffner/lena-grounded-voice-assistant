@@ -25,6 +25,7 @@ class Settings:
     blablador_max_context_chars: int
     blablador_max_tokens: int = 1200
     session_timeout_seconds: int = 180
+    session_max_entries: int = 500
     query_max_chars: int = 1000
     speech_transcription_max_bytes: int = 10 * 1024 * 1024
     speech_synthesis_max_chars: int = 4000
@@ -70,6 +71,10 @@ class Settings:
                 valid = False
             if not valid:
                 raise ValueError(f"{field_name} must be a positive finite number")
+        for field_name in ("session_timeout_seconds", "session_max_entries"):
+            value = getattr(self, field_name)
+            if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
+                raise ValueError(f"{field_name} must be a positive integer")
 
     @property
     def blablador_configured(self) -> bool:
@@ -217,7 +222,7 @@ def load_settings() -> Settings:
         max_tokens = 1200
     try:
         session_timeout_seconds = max(
-            30,
+            1,
             int(_optional_env("SESSION_TIMEOUT_SECONDS", "LENA_SESSION_TIMEOUT_SECONDS") or "180"),
         )
     except ValueError:
@@ -271,6 +276,7 @@ def load_settings() -> Settings:
         blablador_max_context_chars=max_context_chars,
         blablador_max_tokens=max_tokens,
         session_timeout_seconds=session_timeout_seconds,
+        session_max_entries=_env_int("SESSION_MAX_ENTRIES", 500, 1, 100_000),
         query_max_chars=_env_int("QUERY_MAX_CHARS", 1000, 1, 10_000),
         speech_transcription_max_bytes=_env_int(
             "SPEECH_TRANSCRIPTION_MAX_BYTES",

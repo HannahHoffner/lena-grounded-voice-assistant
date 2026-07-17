@@ -253,6 +253,7 @@ class QueryService:
         self.sessions = SessionStore(
             settings.app_root / "runtime" / "sessions.json",
             timeout_seconds=settings.session_timeout_seconds,
+            max_sessions=settings.session_max_entries,
         )
         self.blablador: BlabladorProvider | None = None
         if settings.blablador_configured:

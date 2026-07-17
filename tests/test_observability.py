@@ -305,14 +305,15 @@ def test_session_read_and_write_failures_are_redacted(
     store = SessionStore(invalid_json)
     with caplog.at_level(logging.WARNING):
         assert store.get("session-id") is None
-    assert "session.read.failed" in caplog.text
+    assert "session.corrupt_file.detected" in caplog.text
     assert "private-session-content" not in caplog.text
 
     unwritable_target = tmp_path / "session-directory"
     unwritable_target.mkdir()
     caplog.clear()
-    with caplog.at_level(logging.ERROR), pytest.raises(OSError):
-        SessionStore(unwritable_target).create(Language.DE)
+    with caplog.at_level(logging.ERROR):
+        session = SessionStore(unwritable_target).create(Language.DE)
+    assert session.session_id
     assert "session.write.failed" in caplog.text
 
 
