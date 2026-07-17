@@ -33,7 +33,7 @@ Voraussetzung ist Python 3.11 oder neuer.
 cd code
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-python -m pip install -e ".[dev]"
+python -m pip install -c requirements/constraints-py311.txt -e ".[dev]"
 Copy-Item .env.example .env
 python -m app --port 8002
 ```
@@ -127,9 +127,9 @@ Quelle: Stadt Leipzig, WFS Wohnungslosenhilfe,
 - WFS-Promotion und Übersetzungsprüfung besitzen keine Admin-Oberfläche.
 - `runtime/sessions.json` kann Nutzereingaben enthalten und ist nicht für eine
   gemeinsame oder öffentliche Ablage bestimmt.
-- Das Wheel enthält derzeit nicht alle statischen und fachlichen Laufzeitdaten;
-  bis zur Packaging-Modernisierung ist die editable Installation aus dem
-  Checkout der nachgewiesene Betriebsweg.
+- Das Wheel enthält Frontend, vendorte Leaflet-Dateien und den versionierten
+  aktiven Datenstand. Für lokale Entwicklung bleibt die editable Installation
+  aus dem Checkout der einfachste Weg.
 
 ## Versionskontrolle und CI
 
@@ -151,9 +151,15 @@ git diff --check
 ```
 
 `.github/workflows/test.yml` führt die beiden Python-Prüfungen bei Pushes und
-Pull Requests auf GitHub aus. Ein vorhandener Workflow ist noch kein Nachweis
-eines erfolgreichen Remote-Laufs; maßgeblich ist der jeweilige Checkstatus auf
-GitHub.
+Pull Requests auf GitHub aus. Zusätzlich baut er das Wheel, prüft dessen Inhalt
+und startet eine clean installierte App. `requirements/constraints-py311.txt`
+fixiert die direkte und transitive Auflösung für CPython 3.11. Ein vorhandener
+Workflow ist noch kein Nachweis eines erfolgreichen Remote-Laufs; maßgeblich ist
+der jeweilige Checkstatus auf GitHub.
+
+Der frühere unversionierte Arbeitsordner wurde nach Datei- und Secret-Prüfung in
+`Code3-archive-pre-git-20260717` umbenannt. Er ist nur ein lokales, sensibles
+Herkunftsarchiv und kein zweiter Checkout.
 
 ## Weiterentwicklung und Wartung
 

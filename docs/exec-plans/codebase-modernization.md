@@ -25,7 +25,7 @@ eigenen Pull Request entsprechen.
       nachvollziehbar verarbeitet.
 - [ ] Fallbacks sind redigiert beobachtbar, ohne Secrets oder Nutzerdaten zu
       protokollieren.
-- [ ] Ein gebautes Artefakt enthält alle benötigten statischen Ressourcen und
+- [x] Ein gebautes Artefakt enthält alle benötigten statischen Ressourcen und
       hat eine definierte Datenstrategie.
 - [ ] Handgeschriebene Dateien bleiben möglichst unter 400 Zeilen oder enthalten
       eine dokumentierte Kohäsionsbegründung.
@@ -936,6 +936,11 @@ Ein Arbeitspaket wird gestoppt und nicht „fertig“ erklärt, wenn:
 - 2026-07-17 — `$code-documentation` auf README, Setup, Testing,
   Architekturreview und ExecPlan angewendet; kein Remote verändert, kein Push
   oder Merge ausgeführt.
+- 2026-07-17 — Python-3.11-Constraints ergänzt, Wheel um Frontend und aktive
+  Daten vervollständigt und per Clean-Install-/Health-Smoke geprüft. Die
+  unversionierte Vorläuferkopie wurde nach Vergleich reversibel in
+  `Code3-archive-pre-git-20260717` umbenannt. Push, Draft-PR und Remote-CI sind
+  weiterhin durch die lokal fehlende GitHub CLI blockiert.
 
 ## Decision Log
 
@@ -983,7 +988,8 @@ Ein Arbeitspaket wird gestoppt und nicht „fertig“ erklärt, wenn:
 - `full_context_recommended`, `kb_error` und `pending_clarification` haben keine
   nachgelagerte Verhaltenswirkung.
 - WFS-Promotion verwendet einen neuen Fetch statt des Pending-Artefakts.
-- Der Wheel-Build ist formal erfolgreich, aber funktional unvollständig.
+- Der Wheel-Build enthält Frontend, Leaflet und aktive fachliche Daten; eine
+  frische Installation findet ihren Daten-Root unter dem Umgebungspräfix.
 - UTF-8-Dateien sind intakt; fehlerhafte Anzeige stammte aus der Konsole.
 
 ## Final Verification Summary
@@ -997,7 +1003,8 @@ Ein Arbeitspaket wird gestoppt und nicht „fertig“ erklärt, wenn:
 - Tests: `python -m pytest tests/test_frontend_security.py -q` — 2 passed;
   `python -m pytest tests/test_safety.py -q` — 21 passed;
   `python -m pytest` — 81 passed.
-- Build: Wheel gebaut; bestätigter negativer Packaging-Befund.
+- Build: Wheel gebaut, Inhalt geprüft und aus einer frischen virtuellen
+  Umgebung gegen Startseite und Health-Endpunkt erfolgreich getestet.
 - Manual verification: Popup-Aufrufpfade und Leaflets DOM-Node-Behandlung sowie
   alle Router-/Formulatoraufrufe, Pydantic-Verträge, früher Safety-Return,
   Sprachabdeckung und beide TTS-Providerpfade statisch nachvollzogen; keine
@@ -1010,5 +1017,5 @@ Ein Arbeitspaket wird gestoppt und nicht „fertig“ erklärt, wenn:
   abgeglichen.
 - Residual risks: fehlender Browser-E2E-Test für Paket 0A, LLM-Falschpositive
   und -negative sowie vier ungeprüfte Übersetzungsentwürfe in Paket 0B,
-  fehlender Remote-CI-/PR-Nachweis, Session-/WFS-Integrität, unvollständiges
-  Wheel, nicht fixierte Abhängigkeiten und nicht live geprüfte externe Dienste.
+  fehlender Remote-CI-/PR-Nachweis, Session-/WFS-Integrität, Constraints ohne
+  Artefakthashes und nicht live geprüfte externe Dienste.

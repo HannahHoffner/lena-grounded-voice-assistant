@@ -14,7 +14,7 @@ cd code
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip
-python -m pip install -e ".[dev]"
+python -m pip install -c requirements/constraints-py311.txt -e ".[dev]"
 Copy-Item .env.example .env
 python -m app --port 8002
 ```
@@ -80,6 +80,26 @@ python -m app.translate_offers --provider blablador
 Mit `--provider copy` werden deutsche Inhalte kopiert; dies ist ein technischer
 Fallback, keine fachlich geprüfte Übersetzung. Manuelle Korrekturen gehören in
 `data/i18n/manual_overrides.json` und überschreiben maschinelle Werte.
+
+## Wheel-Installation
+
+Ein gebautes Wheel enthält das Frontend, die vendorten Leaflet-Dateien sowie den
+versionierten aktiven Datenstand:
+
+```powershell
+python -m pip wheel . --no-deps --wheel-dir dist
+python -m pip install -c requirements/constraints-py311.txt dist\lena_code3-0.1.0-py3-none-any.whl
+```
+
+Bei einer Wheel-Installation liegen veränderliche Fachdateien unter `data/` im
+Präfix der virtuellen Umgebung. Im Checkout verwendet LENA weiterhin das
+projektlokale `data/`. Die Constraints gelten für CPython 3.11; sie enthalten
+noch keine Artefakthashes.
+
+Der lokale Ordner `Code3-archive-pre-git-20260717` ist die reversible
+Archivierung der unversionierten Vorläuferkopie. Arbeite ausschließlich in
+`code/`. Das Archiv enthält lokale Konfigurations- und Laufzeitdateien und darf
+nicht veröffentlicht oder als zweite Codebasis gepflegt werden.
 
 ## Deployment-Stand
 

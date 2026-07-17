@@ -7,6 +7,7 @@ Lokale Werte werden aus ``.env`` und anschließend mit höherer Priorität aus
 from __future__ import annotations
 
 import os
+import sys
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -107,6 +108,25 @@ def _env_float(name: str, default: float, minimum: float) -> float:
         return default
 
 
+def _resolve_app_root() -> Path:
+    """Ermittelt den Root für Konfiguration und versionierte Laufzeitdaten.
+
+    Im Checkout liegen Paket und ``data`` unter demselben Projekt-Root. Ein
+    Wheel installiert das Paket dagegen nach ``site-packages`` und die bewusst
+    veränderbaren Fachdateien unter das Präfix der virtuellen Umgebung. Der
+    Präfix-Fallback wird nur verwendet, wenn dort die kanonische Wissensbasis
+    tatsächlich vorhanden ist.
+    """
+    checkout_root = Path(__file__).resolve().parents[1]
+    if (checkout_root / "data" / "canonical" / "offers.json").is_file():
+        return checkout_root
+
+    installed_root = Path(sys.prefix).resolve()
+    if (installed_root / "data" / "canonical" / "offers.json").is_file():
+        return installed_root
+    return checkout_root
+
+
 def load_settings() -> Settings:
     """Lädt Einstellungen und wendet sichere Standards und Untergrenzen an.
 
@@ -116,7 +136,7 @@ def load_settings() -> Settings:
     Side Effects:
         Lädt Werte aus ``.env`` und ``.env.local`` in ``os.environ``.
     """
-    app_root = Path(__file__).resolve().parents[1]
+    app_root = _resolve_app_root()
     _load_env_file(app_root / ".env")
     _load_env_file(app_root / ".env.local", override=True)
 

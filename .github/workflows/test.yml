@@ -22,10 +22,48 @@ jobs:
           python-version: "3.11"
 
       - name: Abhängigkeiten installieren
-        run: python -m pip install -e ".[dev]"
+        run: python -m pip install -c requirements/constraints-py311.txt -e ".[dev]"
 
       - name: Tests ausführen
         run: python -m pytest
 
       - name: Python-Module kompilieren
         run: python -m compileall -q app
+
+      - name: Wheel bauen
+        run: python -m pip wheel . --no-deps --wheel-dir dist
+
+      - name: Wheel-Inhalt und Clean-Install prüfen
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile
+
+          wheel = next(Path("dist").glob("lena_code3-*.whl"))
+          names = set(ZipFile(wheel).namelist())
+          required = (
+              "app/static/index.html",
+              "app/static/app.js",
+              ".data/data/data/canonical/offers.json",
+              ".data/data/data/i18n/offer_translations.json",
+              ".data/data/data/wfs/current.geojson",
+          )
+          missing = sorted(path for path in required if not any(name.endswith(path) for name in names))
+          assert not missing, f"Wheel-Dateien fehlen: {missing}"
+          PY
+          python -m venv /tmp/lena-wheel-smoke
+          /tmp/lena-wheel-smoke/bin/python -m pip install \
+            -c requirements/constraints-py311.txt dist/lena_code3-*.whl
+          cd /tmp
+          /tmp/lena-wheel-smoke/bin/python - <<'PY'
+          from fastapi.testclient import TestClient
+          from app.config import load_settings
+          from app.main import create_app
+
+          settings = load_settings()
+          assert settings.kb_path.is_file(), settings.kb_path
+          with TestClient(create_app(settings)) as client:
+              assert client.get("/").status_code == 200
+              assert client.get("/api/health").status_code == 200
+          PY
