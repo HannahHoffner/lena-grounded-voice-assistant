@@ -34,6 +34,7 @@ def settings(provider: str = "template", *, max_chars: int = 50000) -> Settings:
         speech_synthesis_base_url="https://example.invalid/v1" if provider == "blablador" else None,
         speech_synthesis_api_key="test-token" if provider == "blablador" else None,
         speech_synthesis_model="gpt-4o-mini-tts" if provider == "blablador" else None,
+        interaction_logging_enabled=False,
     )
 
 

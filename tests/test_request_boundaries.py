@@ -32,6 +32,7 @@ def _settings(**overrides: object) -> Settings:
         speech_transcription_base_url="https://example.invalid/v1",
         speech_transcription_api_key="test-token",
         speech_transcription_model="test-model",
+        interaction_logging_enabled=False,
     )
     return replace(settings, **overrides)
 

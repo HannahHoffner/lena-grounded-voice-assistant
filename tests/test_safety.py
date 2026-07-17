@@ -29,6 +29,7 @@ def _settings(provider: str = "template") -> Settings:
         blablador_model="test-model" if provider == "blablador" else None,
         blablador_timeout_seconds=1,
         blablador_max_context_chars=50000,
+        interaction_logging_enabled=False,
     )
 
 
