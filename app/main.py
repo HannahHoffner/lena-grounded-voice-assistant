@@ -18,7 +18,14 @@ from .interactions import InteractionRecord, InteractionWriter
 from .kb_loader import KnowledgeBase, KnowledgeBaseError, load_knowledge_base
 from .models import Language, QueryRequest, QueryResponse, SpeechSynthesisRequest
 from .service import NO_RESULTS, QueryService
-from .speech import SpeechSynthesizer, SpeechSynthesisError, SpeechTranscriber, SpeechTranscriptionError
+from .speech import (
+    SpeechSynthesizer,
+    SpeechSynthesisError,
+    SpeechSynthesisTimeoutError,
+    SpeechTranscriber,
+    SpeechTranscriptionError,
+    SpeechTranscriptionTimeoutError,
+)
 from .wfs_sync import load_wfs_state, sync_wfs
 
 
@@ -245,8 +252,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 language=language,
             )
         except SpeechTranscriptionError as exc:
+            event = "stt.timeout" if isinstance(exc, SpeechTranscriptionTimeoutError) else "stt.failed"
             LOGGER.warning(
-                "stt.failed",
+                event,
                 extra={"duration_ms": round((perf_counter() - started_at) * 1000, 2)},
             )
             raise HTTPException(status_code=503, detail="Speech transcription failed") from exc
@@ -267,8 +275,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 language=payload.language,
             )
         except SpeechSynthesisError as exc:
+            event = "tts.timeout" if isinstance(exc, SpeechSynthesisTimeoutError) else "tts.failed"
             LOGGER.warning(
-                "tts.failed",
+                event,
                 extra={"duration_ms": round((perf_counter() - started_at) * 1000, 2)},
             )
             raise HTTPException(status_code=503, detail="Speech synthesis failed") from exc

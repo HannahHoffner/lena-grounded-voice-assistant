@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import importlib.util
 import re
 from dataclasses import dataclass
@@ -64,8 +65,16 @@ class SpeechTranscriptionError(RuntimeError):
     pass
 
 
+class SpeechTranscriptionTimeoutError(SpeechTranscriptionError):
+    """Kennzeichnet eine abgelaufene STT-Gesamtgrenze."""
+
+
 class SpeechSynthesisError(RuntimeError):
     pass
+
+
+class SpeechSynthesisTimeoutError(SpeechSynthesisError):
+    """Kennzeichnet eine abgelaufene TTS-Gesamtgrenze."""
 
 
 @dataclass(frozen=True)
@@ -78,7 +87,7 @@ class SpeechTranscriber:
         return self.settings.speech_transcription_configured
 
     async def transcribe(self, audio: bytes, *, content_type: str, language: Language) -> str:
-        """Transkribiert Audio und entfernt die temporäre Datei anschließend.
+        """Transkribiert die ausschließlich im Speicher gehaltenen Audiodaten.
 
         Raises:
             SpeechTranscriptionError: Bei fehlender Konfiguration oder Providerfehlern.
@@ -100,9 +109,14 @@ class SpeechTranscriber:
         url = f"{(self.settings.speech_transcription_base_url or '').rstrip('/')}/audio/transcriptions"
 
         try:
-            async with httpx.AsyncClient(timeout=self.settings.speech_transcription_timeout_seconds) as client:
-                response = await client.post(url, headers=headers, data=data, files=files)
-                response.raise_for_status()
+            async with asyncio.timeout(self.settings.speech_transcription_timeout_seconds):
+                async with httpx.AsyncClient(
+                    timeout=httpx.Timeout(self.settings.speech_transcription_timeout_seconds)
+                ) as client:
+                    response = await client.post(url, headers=headers, data=data, files=files)
+                    response.raise_for_status()
+        except (TimeoutError, httpx.TimeoutException) as exc:
+            raise SpeechTranscriptionTimeoutError("Speech transcription timed out") from exc
         except httpx.HTTPError as exc:
             raise SpeechTranscriptionError("Speech transcription request failed") from exc
 
@@ -144,12 +158,20 @@ class SpeechSynthesizer:
         if not normalized:
             raise SpeechSynthesisError("No text was supplied")
 
-        if self.settings.speech_synthesis_provider == "edge":
-            return await self._synthesize_edge(normalized, language=language)
+        try:
+            async with asyncio.timeout(self.settings.speech_synthesis_timeout_seconds):
+                if self.settings.speech_synthesis_provider == "edge":
+                    return await self._synthesize_edge(normalized, language=language)
+                return await self._synthesize_openai(normalized, language=language)
+        except TimeoutError as exc:
+            raise SpeechSynthesisTimeoutError("Speech synthesis timed out") from exc
+
+    async def _synthesize_openai(self, text: str, *, language: Language) -> bytes:
+        """Ruft den OpenAI-kompatiblen TTS-Endpunkt innerhalb der Gesamtgrenze auf."""
 
         payload = {
             "model": self.settings.speech_synthesis_model or "",
-            "input": normalized,
+            "input": text,
             "voice": self.settings.speech_synthesis_voice,
             "response_format": self.settings.speech_synthesis_response_format,
         }
@@ -162,9 +184,13 @@ class SpeechSynthesizer:
         url = f"{(self.settings.speech_synthesis_base_url or '').rstrip('/')}/audio/speech"
 
         try:
-            async with httpx.AsyncClient(timeout=self.settings.speech_synthesis_timeout_seconds) as client:
+            async with httpx.AsyncClient(
+                timeout=httpx.Timeout(self.settings.speech_synthesis_timeout_seconds)
+            ) as client:
                 response = await client.post(url, headers=headers, json=payload)
                 response.raise_for_status()
+        except httpx.TimeoutException as exc:
+            raise SpeechSynthesisTimeoutError("Speech synthesis timed out") from exc
         except httpx.HTTPError as exc:
             raise SpeechSynthesisError("Speech synthesis request failed") from exc
 

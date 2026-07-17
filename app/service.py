@@ -10,7 +10,7 @@ from .kb_loader import KnowledgeBase
 from .maps import build_map_data
 from .models import Category, ChatTurn, Language, OfferCard, OfferRecord, QueryInteraction, QueryRequest, QueryResponse
 from .offer_roles import sleep_roles
-from .providers.llm import BlabladorProvider, ProviderError
+from .providers.llm import BlabladorProvider, ProviderError, ProviderTimeoutError
 from .retrieval import detect_target, has_domain_signal, is_vague_query, normalize_text, retrieve, select_card_offers
 from .sessions import SessionStore
 from .temporal import apply_temporal_policy, build_temporal_context, prepend_temporal_notes
@@ -422,7 +422,10 @@ class QueryService:
                         status="ok",
                     )
             except ProviderError as exc:
-                event = "query.formulation.failed" if routed_offers else "query.router.failed"
+                if isinstance(exc, ProviderTimeoutError):
+                    event = "query.formulation.timeout" if routed_offers else "query.router.timeout"
+                else:
+                    event = "query.formulation.failed" if routed_offers else "query.router.failed"
                 LOGGER.warning(event, extra={"error_type": type(exc).__name__})
                 interaction.fallback_used = True
                 LOGGER.info("query.fallback.used", extra={"stage": event})
@@ -526,9 +529,10 @@ class QueryService:
                     status="ok",
                 )
             except ProviderError as exc:
-                LOGGER.warning("query.formulation.failed", extra={"error_type": type(exc).__name__})
+                event = "query.formulation.timeout" if isinstance(exc, ProviderTimeoutError) else "query.formulation.failed"
+                LOGGER.warning(event, extra={"error_type": type(exc).__name__})
                 interaction.fallback_used = True
-                LOGGER.info("query.fallback.used", extra={"stage": "query.formulation.failed"})
+                LOGGER.info("query.fallback.used", extra={"stage": event})
 
         if template_offers:
             interaction.route = "template_fallback" if interaction.fallback_used else "template_retrieval"

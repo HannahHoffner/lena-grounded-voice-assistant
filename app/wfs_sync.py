@@ -47,6 +47,10 @@ class WfsSyncError(RuntimeError):
     pass
 
 
+class WfsTimeoutError(WfsSyncError):
+    """Kennzeichnet einen Verbindungs- oder Lesetimeout der WFS-Quelle."""
+
+
 @dataclass(frozen=True)
 class WfsPaths:
     canonical: Path
@@ -314,10 +318,18 @@ async def fetch_wfs(settings: Settings) -> dict[str, Any]:
         "OUTPUTFORMAT": "application/json",
     }
     try:
-        async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
+        timeout = httpx.Timeout(
+            connect=settings.wfs_connect_timeout_seconds,
+            read=settings.wfs_read_timeout_seconds,
+            write=settings.wfs_read_timeout_seconds,
+            pool=settings.wfs_connect_timeout_seconds,
+        )
+        async with httpx.AsyncClient(timeout=timeout, follow_redirects=True) as client:
             response = await client.get(settings.wfs_url, params=params)
             response.raise_for_status()
             payload = response.json()
+    except httpx.TimeoutException as exc:
+        raise WfsTimeoutError("WFS request timed out") from exc
     except (httpx.HTTPError, json.JSONDecodeError, ValueError) as exc:
         raise WfsSyncError("WFS request failed") from exc
     if not isinstance(payload, dict):

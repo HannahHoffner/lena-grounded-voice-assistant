@@ -6,6 +6,7 @@ Lokale Werte werden aus ``.env`` und anschließend mit höherer Priorität aus
 
 from __future__ import annotations
 
+import math
 import os
 import sys
 from dataclasses import dataclass
@@ -42,9 +43,33 @@ class Settings:
     wfs_auto_sync: bool = False
     wfs_auto_promote: bool = False
     wfs_check_interval_hours: float = 24.0
+    llm_router_timeout_seconds: float = 15.0
+    llm_formulator_timeout_seconds: float = 30.0
+    wfs_connect_timeout_seconds: float = 10.0
+    wfs_read_timeout_seconds: float = 30.0
     technical_log_level: str = "INFO"
     interaction_logging_enabled: bool = True
     interaction_log_path: Path | None = None
+
+    def __post_init__(self) -> None:
+        """Verhindert nicht positive oder nicht endliche Laufzeitgrenzen."""
+        timeout_fields = (
+            "blablador_timeout_seconds",
+            "speech_transcription_timeout_seconds",
+            "speech_synthesis_timeout_seconds",
+            "llm_router_timeout_seconds",
+            "llm_formulator_timeout_seconds",
+            "wfs_connect_timeout_seconds",
+            "wfs_read_timeout_seconds",
+        )
+        for field_name in timeout_fields:
+            value = getattr(self, field_name)
+            try:
+                valid = math.isfinite(value) and value > 0
+            except TypeError:
+                valid = False
+            if not valid:
+                raise ValueError(f"{field_name} must be a positive finite number")
 
     @property
     def blablador_configured(self) -> bool:
@@ -109,9 +134,12 @@ def _env_bool(name: str, default: bool) -> bool:
 
 def _env_float(name: str, default: float, minimum: float) -> float:
     try:
-        return max(minimum, float(os.getenv(name, str(default))))
+        value = float(os.getenv(name, str(default)))
     except ValueError:
         return default
+    if not math.isfinite(value) or value < minimum:
+        return default
+    return value
 
 
 def _env_int(name: str, default: int, minimum: int, maximum: int) -> int:
@@ -159,13 +187,23 @@ def load_settings() -> Settings:
     if provider not in {"template", "blablador"}:
         provider = "template"
 
+    legacy_llm_timeout = _optional_env("BLABLADOR_TIMEOUT_SECONDS", "LENA_LLM_TIMEOUT_SECONDS")
     try:
-        timeout = max(
-            1.0,
-            float(_optional_env("BLABLADOR_TIMEOUT_SECONDS", "LENA_LLM_TIMEOUT_SECONDS") or "30"),
-        )
+        timeout = float(legacy_llm_timeout or "30")
+        if not math.isfinite(timeout) or timeout < 1.0:
+            raise ValueError
     except ValueError:
         timeout = 30.0
+    llm_router_timeout = _env_float(
+        "LLM_ROUTER_TIMEOUT_SECONDS",
+        timeout if legacy_llm_timeout else 15.0,
+        0.1,
+    )
+    llm_formulator_timeout = _env_float(
+        "LLM_FORMULATOR_TIMEOUT_SECONDS",
+        timeout if legacy_llm_timeout else 30.0,
+        0.1,
+    )
     try:
         max_context_chars = max(10000, int(os.getenv("BLABLADOR_MAX_CONTEXT_CHARS", "50000")))
     except ValueError:
@@ -185,20 +223,24 @@ def load_settings() -> Settings:
     except ValueError:
         session_timeout_seconds = 180
     try:
-        speech_timeout = max(
-            5.0,
-            float(_optional_env("SPEECH_TRANSCRIPTION_TIMEOUT_SECONDS", "LENA_STT_TIMEOUT_SECONDS") or "45"),
+        speech_timeout = float(
+            _optional_env("STT_TIMEOUT_SECONDS", "SPEECH_TRANSCRIPTION_TIMEOUT_SECONDS", "LENA_STT_TIMEOUT_SECONDS")
+            or "45"
         )
+        if not math.isfinite(speech_timeout) or speech_timeout < 0.1:
+            raise ValueError
     except ValueError:
         speech_timeout = 45.0
     speech_base_url = _optional_env("SPEECH_TRANSCRIPTION_BASE_URL", "LENA_STT_BASE_URL")
     speech_api_key = _optional_env("SPEECH_TRANSCRIPTION_API_KEY", "LENA_STT_API_KEY")
     speech_model = _optional_env("SPEECH_TRANSCRIPTION_MODEL", "LENA_STT_MODEL")
     try:
-        synthesis_timeout = max(
-            5.0,
-            float(_optional_env("SPEECH_SYNTHESIS_TIMEOUT_SECONDS", "LENA_TTS_TIMEOUT_SECONDS") or "45"),
+        synthesis_timeout = float(
+            _optional_env("TTS_TIMEOUT_SECONDS", "SPEECH_SYNTHESIS_TIMEOUT_SECONDS", "LENA_TTS_TIMEOUT_SECONDS")
+            or "45"
         )
+        if not math.isfinite(synthesis_timeout) or synthesis_timeout < 0.1:
+            raise ValueError
     except ValueError:
         synthesis_timeout = 45.0
     synthesis_base_url = _optional_env("SPEECH_SYNTHESIS_BASE_URL", "LENA_TTS_BASE_URL")
@@ -268,6 +310,10 @@ def load_settings() -> Settings:
         wfs_auto_sync=_env_bool("WFS_AUTO_SYNC", True),
         wfs_auto_promote=_env_bool("WFS_AUTO_PROMOTE", False),
         wfs_check_interval_hours=_env_float("WFS_CHECK_INTERVAL_HOURS", 24.0, 1.0),
+        llm_router_timeout_seconds=llm_router_timeout,
+        llm_formulator_timeout_seconds=llm_formulator_timeout,
+        wfs_connect_timeout_seconds=_env_float("WFS_CONNECT_TIMEOUT_SECONDS", 10.0, 0.1),
+        wfs_read_timeout_seconds=_env_float("WFS_READ_TIMEOUT_SECONDS", 30.0, 0.1),
         technical_log_level=technical_log_level,
         interaction_logging_enabled=_env_bool("INTERACTION_LOGGING_ENABLED", True),
         interaction_log_path=(

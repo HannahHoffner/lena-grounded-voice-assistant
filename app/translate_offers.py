@@ -65,14 +65,20 @@ async def _post_blablador(settings: Settings, payload: dict[str, Any]) -> dict[s
     if not settings.blablador_base_url or not settings.blablador_api_key or not settings.blablador_model:
         raise TranslationError("Blablador is not configured")
     headers = {"Authorization": f"Bearer {settings.blablador_api_key}", "Content-Type": "application/json"}
-    async with httpx.AsyncClient(timeout=settings.blablador_timeout_seconds) as client:
-        response = await client.post(
-            f"{settings.blablador_base_url.rstrip('/')}/chat/completions",
-            headers=headers,
-            json=payload,
-        )
-        response.raise_for_status()
-        value = response.json()
+    try:
+        async with asyncio.timeout(settings.llm_formulator_timeout_seconds):
+            async with httpx.AsyncClient(timeout=httpx.Timeout(settings.llm_formulator_timeout_seconds)) as client:
+                response = await client.post(
+                    f"{settings.blablador_base_url.rstrip('/')}/chat/completions",
+                    headers=headers,
+                    json=payload,
+                )
+                response.raise_for_status()
+                value = response.json()
+    except (TimeoutError, httpx.TimeoutException) as exc:
+        raise TranslationError("Blablador translation timed out") from exc
+    except httpx.HTTPError as exc:
+        raise TranslationError("Blablador translation request failed") from exc
     if not isinstance(value, dict):
         raise TranslationError("Blablador returned invalid JSON")
     return value

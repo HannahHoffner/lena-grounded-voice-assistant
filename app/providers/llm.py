@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import logging
 import re
@@ -37,6 +38,10 @@ LOGGER = logging.getLogger(__name__)
 class ProviderError(RuntimeError):
     """Kennzeichnet einen sicher auf Templates zurückfallenden Providerfehler."""
     pass
+
+
+class ProviderTimeoutError(ProviderError):
+    """Kennzeichnet eine abgelaufene Gesamtgrenze eines LLM-Schritts."""
 
 
 @dataclass(frozen=True)
@@ -183,6 +188,8 @@ class BlabladorProvider:
         self.api_key = settings.blablador_api_key or ""
         self.model = settings.blablador_model or ""
         self.timeout = settings.blablador_timeout_seconds
+        self.router_timeout = settings.llm_router_timeout_seconds
+        self.formulator_timeout = settings.llm_formulator_timeout_seconds
         self.max_context_chars = settings.blablador_max_context_chars
         self.max_tokens = settings.blablador_max_tokens
 
@@ -194,20 +201,28 @@ class BlabladorProvider:
 
     async def _post(self, payload: dict[str, Any]) -> dict[str, Any]:
         headers = {"Authorization": f"Bearer {self.api_key}", "Content-Type": "application/json"}
-        last_error: httpx.TransportError | None = None
-        for _ in range(2):
-            try:
-                async with httpx.AsyncClient(timeout=self.timeout) as client:
-                    response = await client.post(
-                        f"{self.base_url.rstrip('/')}/chat/completions",
-                        headers=headers,
-                        json=payload,
-                    )
-                    response.raise_for_status()
-                    return response.json()
-            except httpx.TransportError as exc:
-                last_error = exc
-        raise last_error or ProviderError("Blablador transport failed")
+        async with httpx.AsyncClient(timeout=httpx.Timeout(self.timeout)) as client:
+            response = await client.post(
+                f"{self.base_url.rstrip('/')}/chat/completions",
+                headers=headers,
+                json=payload,
+            )
+            response.raise_for_status()
+            return response.json()
+
+    async def _request_with_timeout(
+        self,
+        payload: dict[str, Any],
+        *,
+        timeout_seconds: float,
+        stage: str,
+    ) -> dict[str, Any]:
+        """Begrenzt einen asynchronen Provideraufruf auf eine Gesamtdauer."""
+        try:
+            async with asyncio.timeout(timeout_seconds):
+                return await self._post(payload)
+        except (TimeoutError, httpx.TimeoutException) as exc:
+            raise ProviderTimeoutError(f"Blablador {stage} timed out") from exc
 
     async def route(
         self,
@@ -280,7 +295,12 @@ class BlabladorProvider:
             ],
         }
         try:
-            parsed = LLMRoute.model_validate_json(_response_content(await self._post(payload)))
+            response = await self._request_with_timeout(
+                payload,
+                timeout_seconds=self.router_timeout,
+                stage="router",
+            )
+            parsed = LLMRoute.model_validate_json(_response_content(response))
         except (httpx.HTTPError, KeyError, IndexError, TypeError, ValueError, ValidationError) as exc:
             LOGGER.warning(
                 "llm_route_response_invalid",
@@ -387,7 +407,12 @@ class BlabladorProvider:
             ],
         }
         try:
-            parsed = LLMAnswer.model_validate_json(_response_content(await self._post(payload)))
+            response = await self._request_with_timeout(
+                payload,
+                timeout_seconds=self.formulator_timeout,
+                stage="formulator",
+            )
+            parsed = LLMAnswer.model_validate_json(_response_content(response))
         except (httpx.HTTPError, KeyError, IndexError, TypeError, ValueError, ValidationError) as exc:
             raise ProviderError("Blablador returned an unusable response") from exc
 
