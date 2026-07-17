@@ -86,10 +86,27 @@ manuelle Vorgänge sind nur innerhalb eines Prozesses gesperrt.
 
 `INTERACTION_LOGGING_ENABLED` ist bewusst unabhängig vom technischen Log-Level.
 Für Tests oder Betriebsformen ohne Volltextspeicherung kann der Schalter auf
-`false` gesetzt werden. Relative Interaktionspfade werden gegen den ermittelten
-Projekt-Root aufgelöst. Der Standardpfad liegt unter dem von Git und Packaging
-ausgeschlossenen `runtime/`. Konfiguriere keinen versionierten Pfad und keine
-Cloud-Synchronisation für diese Datei.
+`false` gesetzt werden. Relative Interaktionspfade werden gegen
+`LENA_RUNTIME_DIR` beziehungsweise dessen Standard aufgelöst; ein führendes
+`runtime/` bleibt zur bestehenden Beispielkonfiguration kompatibel. Der Pfad
+liegt außerhalb von Git und Packaging. Konfiguriere keinen versionierten Pfad
+und keine Cloud-Synchronisation für diese Datei.
+
+## Paket-, Daten- und Runtimepfade
+
+`LENA_DATA_DIR` bezeichnet die veränderliche externe Datenwurzel für aktivierte
+WFS-Releases, Active-Pointer und Übersetzungswartung. `LENA_RUNTIME_DIR`
+bezeichnet die externe Wurzel für Sessions, Interaktionsprotokolle, WFS-Pending
+und Statusdateien. Im Source-Checkout sind die Standards `data/` und `runtime/`;
+in einer Wheel-Installation liegen beide außerhalb von `site-packages` im
+Benutzer-Datenverzeichnis. Absolute Pfade sind für Dienstinstallationen am
+eindeutigsten. `LENA_KB_PATH` kann den lesbaren Bootstrap explizit ersetzen,
+sollte aber nicht auf ein veränderliches Pending-Release zeigen.
+
+Das Wheel selbst enthält nur den unveränderlichen Bootstrap. Existiert ein
+valider externer Active-Pointer, wird exakt dessen verifiziertes Release
+verwendet; ein beschädigter Pointer wird als Fehler behandelt und nicht still
+durch ein Pending-Release ersetzt.
 
 Die API lehnt zu große Query- und TTS-Texte mit HTTP 422 ab. STT-Audio über
 dem konfigurierten Limit erhält HTTP 413; geprüft werden sowohl ein vorhandener

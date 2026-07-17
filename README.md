@@ -149,11 +149,13 @@ Quelle: Stadt Leipzig, WFS Wohnungslosenhilfe,
   Anfrage-Antwort-Paare für Evaluation und Verbesserung. Diese Daten sind nicht
   anonym und die einfache lokale Speicherung ist nicht produktionsreif; Details
   und offene Datenschutzanforderungen stehen in [Installation und Betrieb](docs/setup.md).
-- Das Wheel enthält Frontend, vendorte Leaflet-Dateien und den versionierten
-  aktiven Datenstand. Für lokale Entwicklung bleibt die editable Installation
-  aus dem Checkout der einfachste Weg.
-- Nachträglich erzeugte Releaseordner und der Active-Pointer sind noch nicht Teil
-  des statischen Wheel-Dateninventars; die Packaging-Migration bleibt Paket 6.
+- Das Wheel enthält Frontend, alle referenzierten vendorten Leaflet-Dateien und
+  genau einen unveränderlichen Bootstrap-Datenstand. Externe WFS-Releases,
+  Active-Pointer, Sessions, Interaktionsprotokolle und andere Runtime-Daten sind
+  bewusst ausgeschlossen.
+- Wheel-Installationen schreiben in eine externe Benutzer-Daten- und
+  Runtimewurzel, niemals nach `site-packages`. Mehrere Prozesse sowie ein
+  produktives Deployment bleiben weiterhin operativ zu konzipieren.
 
 ## Versionskontrolle und CI
 
@@ -171,12 +173,14 @@ folgende Befehle erfolgreich sein:
 ```powershell
 python -m pytest
 python -m compileall -q app
+python -m build
 git diff --check
 ```
 
-`.github/workflows/test.yml` führt die beiden Python-Prüfungen bei Pushes und
-Pull Requests auf GitHub aus. Zusätzlich baut er das Wheel, prüft dessen Inhalt
-und startet eine clean installierte App. `requirements/constraints-py311.txt`
+`.github/workflows/test.yml` führt diese Python-Prüfungen bei Pushes und Pull
+Requests auf GitHub aus. Die Tests bauen Wheel und Source Distribution, prüfen
+deren Inventar, bauen das Wheel erneut aus dem Source-Archiv und starten eine
+frisch installierte App außerhalb des Checkouts. `requirements/constraints-py311.txt`
 fixiert die direkte und transitive Auflösung für CPython 3.11. Ein vorhandener
 Workflow ist noch kein Nachweis eines erfolgreichen Remote-Laufs; maßgeblich ist
 der jeweilige Checkstatus auf GitHub.

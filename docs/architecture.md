@@ -17,6 +17,9 @@ flowchart LR
     C --> K[(data/wfs/releases/ID/offers.json)]
     S --> I[Übersetzungen]
     S --> X[Sessions]
+    B[(Read-only Bootstrap im Wheel)] --> K
+    D[(externe Datenwurzel)] --> C
+    X --> T[(externe Runtimewurzel)]
     A --> O[(lokales Interaktions-JSONL)]
     A --> P[Speech-Dienste]
     A --> M[Kartendaten]
@@ -56,6 +59,18 @@ zusätzlich seine Transportphasen. Transportfehler werden nicht automatisch
 wiederholt. Bei Timeout greift derselbe kontrollierte deterministische
 beziehungsweise Template-Fallback wie bei anderen Providerfehlern.
 
+`app/resources.py` löst statische Paketressourcen und den rein lesbaren
+Bootstrap unabhängig vom aktuellen Arbeitsverzeichnis auf. Im Source-Checkout
+bleiben `data/` und `runtime/` kompatible Standards. Eine Wheel-Installation
+verwendet externe, konfigurierbare Daten- und Runtimewurzeln und schreibt nie in
+`site-packages`. Der Bootstrap ist der einzige paketierte Startstand; ein
+externer valider Active-Pointer hat Vorrang, Pending-Releases niemals.
+
+`app/version.py` liest die kanonische Version aus den Paketmetadaten. Wheel,
+FastAPI, CLI und Interaktionsprotokoll verwenden diesen Wert; nur ein nicht
+installierter Source-Baum ohne Metadaten erhält die eindeutige Kennzeichnung
+`0+unknown`. Interaktions- und WFS-Schema-Versionen bleiben getrennte Verträge.
+
 `app/wfs_sync.py` validiert eine vollständige GeoJSON-FeatureCollection,
 normalisiert Features und berechnet stabile Hashes. `app/wfs_releases.py`
 schreibt daraus einen unveränderlichen Ordner mit `offers.json`,
@@ -67,8 +82,10 @@ Ladevorgang einmal und verwendet danach nur diesen Release; solange noch kein
 Pointer existiert, bleibt `data/canonical/offers.json` ein Legacy-Fallback.
 
 `app/i18n.py` führt deutsche Quelldaten, gespeicherte Übersetzungen und manuelle
-Overrides zu Karten zusammen. `app/translate_offers.py` aktualisiert den Store
-explizit als Wartungsschritt, nicht während einer Nutzeranfrage.
+Overrides zu Karten zusammen. Es liest einen vorhandenen externen Store oder
+sonst den paketierten Bootstrap. `app/translate_offers.py` schreibt ausschließlich
+in die externe Datenwurzel und aktualisiert den Store explizit als
+Wartungsschritt, nicht während einer Nutzeranfrage.
 
 `app/sessions.py` speichert eine begrenzte Anzahl kurzer Frage-/Antwortpaare in
 `runtime/sessions.json`. Ein nach absolutem Pfad geteilter `RLock` umfasst im
@@ -159,6 +176,8 @@ Links nur nach expliziter Protokollprüfung.
 - keine dokumentierte produktive Deployment-Orchestrierung, Authentifizierung,
   Rate-Limits oder TLS-Terminierung
 - kein konfiguriertes Linter-, Type-Checker- oder Dokumentations-Buildsystem
+- keine bitidentische Buildgarantie und kein plattformübergreifender Hash-Lock;
+  Wheel/sdist-Inventar und Clean-Installation sind reproduzierbar geprüft
 - keine Garantie, dass das LLM jede akute Gefahr erkennt oder Falschpositive
   vollständig vermeidet; die Übersetzungsentwürfe für Englisch, Polnisch,
   Rumänisch und Russisch benötigen noch menschliche Prüfung

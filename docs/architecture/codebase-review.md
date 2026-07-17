@@ -45,7 +45,7 @@ Produktionsstand. Die wichtigsten Ursachen sind:
 
 - Die Code3-Baseline ist im bestehenden LENA-Repository versioniert, remote
   geprüft und über PR #1 in `main` übernommen.
-- Das gebaute Wheel enthält Frontend und aktive Laufzeitdaten und wird in CI aus
+- Das gebaute Wheel enthält Frontend und einen rein lesbaren Bootstrap-Stand und wird in CI aus
   einer frischen Umgebung geprüft.
 - Der im Review bestätigte Stored-XSS-Pfad in Leaflet-Popups ist durch Paket 0A
   geschlossen; ein Browser-E2E-Sicherheitsnetz fehlt noch.
@@ -82,8 +82,8 @@ geteilt werden.
 | Build | setuptools über `pyproject.toml` |
 | Persistenz | JSON/GeoJSON unter `data/` und `runtime/` |
 
-`pyproject.toml` deklariert `lena-code3` 0.1.0. Die FastAPI-Anwendung meldet
-0.2.0. Ein Test-Wheel ließ sich bauen, enthielt aber ausschließlich Python-
+Historischer Befund vor Paket 6: `pyproject.toml` deklarierte `lena-code3`
+0.1.0, während FastAPI 0.2.0 meldete. Ein damaliges Test-Wheel enthielt ausschließlich Python-
 Module und Metadaten. `app/static/` und alle Daten unter `data/` fehlten. Die
 editable Installation aus dem Arbeitsverzeichnis verdeckt dieses Problem.
 
@@ -304,7 +304,8 @@ Policies sollten aber getrennt und getestet werden.
 - Es gibt inzwischen minimale Python-CI, aber weiterhin keine Container-,
   Service-, TLS- oder Deploymentkonfiguration.
 - `pyproject.toml` beschreibt den Stand noch als „Markdown-grounded“.
-- Paketversion 0.1.0 und API-Version 0.2.0 sind inkonsistent.
+- Paket 6 hat Paketversion 0.1.0, API, CLI, `app.__version__` und
+  Interaktionsprotokoll auf eine kanonische Metadatenquelle vereinheitlicht.
 
 ### 5.7 Barrierefreiheit und Lokalisierung
 
@@ -334,7 +335,7 @@ kein P0, sollte aber vor einem Mehrnutzerbetrieb adressiert werden.
 | P0 | Akutgefahr endete ohne Eskalationsinformation (durch Paket 0B technisch geschlossen) | `LLMRoute.acute_risk_detected`, früher Return in `QueryService._query_core()`, `tests/test_safety.py` | LLM kann Gefahr weiter übersehen oder fälschlich melden; vier Sprachfassungen sind Entwürfe | Übersetzungen menschlich prüfen und Providerqualität beobachten | parametrisierte API-, Vertrags- und TTS-Tests; kontrollierter Provider-Smoke | hoch für Implementierung, LLM-Qualität extern |
 | P1 | Geprüfter WFS-Stand ist nicht der promotete Stand (in Paket 5 geschlossen) | Promotion akzeptiert nur kontrollierte Pending-ID, prüft Manifest/Bytes und ruft `fetch_wfs()` nicht auf | geprüfter und aktivierter Payload sind identisch | mehrere Wartungsprozesse weiterhin operativ serialisieren | Providergrenz- und Manipulationstests | hoch |
 | P1 | Multi-Datei-Promotion kann Mischstand erzeugen (in Paket 5 geschlossen) | unveränderlicher Releaseordner plus einzelner atomarer Active-Pointer | Leser sehen vollständig alten oder neuen Release | Pointer-/Release-Retention überwachen | Fault Injection vor und beim Pointer-Replace | hoch |
-| P1 | Gebautes Wheel ist nicht lauffähig | Test-Wheel enthält weder `app/static/` noch `data/` | Installation funktioniert nur editable aus Checkout | Paketdatenstrategie festlegen; Datenpfade über Resources/externes Datenverzeichnis | Wheel in leerer Umgebung installieren und App/Frontend starten | hoch |
+| P1 (durch Paket 6 geschlossen) | Gebautes Wheel war nicht eigenständig lauffähig | historisches Test-Wheel beziehungsweise Pfadmodell war vom Checkout abhängig | Installation konnte nur zufällig aus dem Checkout funktionieren | Bootstrap-Ressourcen im Package; veränderliche Daten extern | Wheel in frischer venv außerhalb des Checkouts installiert, App/Frontend/Query geprüft | hoch |
 | P1 | Sessionablage verliert oder beschädigt Daten (für Einzelprozess in Paket 4 geschlossen) | `SessionStore` sperrt den vollständigen Zyklus und aktiviert per `os.replace()`; kein Mehrprozess-Lock | parallele Requests eines Prozesses sind geschützt, mehrere Worker können sich weiterhin überschreiben | Einzelprozessbetrieb beibehalten oder vor Mehrprozessbetrieb koordinierten Store einführen | `tests/test_session_persistence.py`; später Mehrprozess-Integrationstest | hoch für Einzelprozess, offene Mehrprozessgrenze |
 | P1 | Abgelaufene Sessions werden nie entfernt (in Paket 4 geschlossen) | opportunistisches TTL-Pruning und `SESSION_MAX_ENTRIES` im produktiven Store | aktive JSON-Map ist begrenzt; Recovery-Dateien werden nicht automatisch gelöscht | lokale Recovery-Aufbewahrung betrieblich festlegen | TTL-, Kapazitäts- und Recoverytests | hoch |
 | P1 | Fallbacks maskieren Betriebsfehler | pauschale/lautlose `except`-Pfade in `main.py`, `service.py`, `sessions.py`, `speech.py` | Health kann eingeschränkt bleiben, Ursache fehlt; Fehler wiederholen sich unbemerkt | strukturiertes, redigiertes Logging und Health-Fehlercodes | Tests mit `caplog`; Smoke-Test bei Provider-/WFS-Ausfall | hoch |

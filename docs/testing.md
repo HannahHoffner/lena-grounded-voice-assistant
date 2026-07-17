@@ -27,6 +27,7 @@ ersetzt beziehungsweise über lokale Testantworten geprüft.
 | `tests/test_safety.py` | Akutgefahr-Vertrag, kontrollierte Antwort und TTS |
 | `tests/test_observability.py` | technische Events, finale JSONL-Paare, Redaktionsgrenzen und Schreibfehler |
 | `tests/test_provider_timeouts.py` | LLM-, Speech-, WFS- und Übersetzungs-Timeouts sowie Fallbacks |
+| `tests/test_packaging.py` | Version, Wheel-/sdist-Inventar, Ressourcenreferenzen, sdist-Rebuild und echte Clean-Installation außerhalb des Checkouts |
 
 ## Continuous Integration
 
@@ -36,12 +37,16 @@ dieselben nachgewiesenen Befehle wie lokal aus:
 ```powershell
 python -m pytest
 python -m compileall -q app
+python -m build
 ```
 
 Der Workflow besitzt nur Leserechte auf Repository-Inhalte und benötigt keine
-Secrets. Er baut außerdem ein Wheel, prüft die erforderlichen Dateien und
-installiert es in eine frische virtuelle Umgebung. Der Smoke-Test lädt
-Startseite, Wissensbasis und Health-Endpunkt aus einem fremden Arbeitsverzeichnis.
+Secrets. `tests/test_packaging.py` baut Wheel und Source Distribution, prüft
+explizite Ein- und Ausschlüsse, baut aus dem Source-Archiv erneut ein Wheel und
+installiert das Artefakt in eine frische virtuelle Umgebung. Der Smoke-Test
+entfernt `PYTHONPATH`, wechselt in ein fremdes Arbeitsverzeichnis, verifiziert
+`app.__file__` unter `site-packages` und prüft Version, Startseite, Static Asset,
+Wissensbasis, Templatequery sowie externe Runtime-Schreibpfade.
 Der Workflow enthält bewusst kein Deployment, keinen Node-/Browser-Schritt und
 keine noch unkonfigurierten Linter, Type-Checker oder Security-Scanner. Ein
 Remote-CI-Lauf kann erst nach Push beziehungsweise Pull Request bestätigt

@@ -110,18 +110,42 @@ Fallback, keine fachlich geprüfte Übersetzung. Manuelle Korrekturen gehören i
 
 ## Wheel-Installation
 
-Ein gebautes Wheel enthält das Frontend, die vendorten Leaflet-Dateien sowie den
-versionierten aktiven Datenstand:
+Die kanonische Softwareversion steht in `pyproject.toml`; derzeit ist dies die
+Prototypversion `0.1.0`. Wheel, API, `python -m app --version` und neue
+Interaktionsdatensätze lesen dieselbe Version. Interaktionsschema 2 und
+WFS-Manifestschema 1 sind davon unabhängige Datenverträge.
+
+Ein Distributionsbuild erzeugt Wheel und Source Distribution:
 
 ```powershell
-python -m pip wheel . --no-deps --wheel-dir dist
+python -m build
 python -m pip install -c requirements/constraints-py311.txt dist\lena_code3-0.1.0-py3-none-any.whl
+python -m app --version
 ```
 
-Bei einer Wheel-Installation liegen veränderliche Fachdateien unter `data/` im
-Präfix der virtuellen Umgebung. Im Checkout verwendet LENA weiterhin das
-projektlokale `data/`. Die Constraints gelten für CPython 3.11; sie enthalten
-noch keine Artefakthashes.
+Das Wheel enthält Pythonmodule, das vollständige Frontend einschließlich der
+Leaflet-Bilder und einen rein lesbaren Bootstrap-Stand aus kanonischen
+Angeboten, Übersetzungen, Overrides sowie WFS-Rohdaten und letztem Bericht. Es
+enthält keine Tests, Dokumentation, `.env*`, Sessions, Interaktionsprotokolle,
+Pending-Releases, extern aktivierte Releases, Pointer, Logs oder Audiodaten. Das
+Source-Archiv enthält zusätzlich Tests, Dokumentation, Beispielkonfiguration und
+Constraints, damit daraus erneut ein Wheel gebaut werden kann.
+
+Im Checkout liest LENA weiterhin aus `data/` und schreibt nach `runtime/`. Eine
+normale Wheel-Installation liest den unveränderlichen Bootstrap aus dem Paket
+und schreibt Daten beziehungsweise Runtime-Zustand in das betriebsspezifische
+Benutzerverzeichnis (`%LOCALAPPDATA%\LENA` unter Windows beziehungsweise
+`~/.local/share/lena` ohne `LOCALAPPDATA`). `LENA_DATA_DIR` und
+`LENA_RUNTIME_DIR` setzen diese externen Wurzeln explizit. WFS-Promotionen
+erzeugen Releases und den Active-Pointer nur dort; der Bootstrap wird niemals
+überschrieben. Ein ungültiger externer Pointer oder ein fehlender Bootstrap
+ergibt einen sichtbaren Knowledge-Base-Fehler und fällt nicht auf Pending-Daten
+oder einen versteckten Netzwerkabruf zurück.
+
+Die Constraints gelten für CPython 3.11 und enthalten noch keine
+Artefakthashes. Der Build ist hinsichtlich Name, Version und Dateiinventar
+reproduzierbar getestet; eine Bitidentität der Archive wird wegen möglicher
+ZIP-/Tar-Zeitstempel nicht behauptet.
 
 Der lokale Ordner `Code3-archive-pre-git-20260717` ist die reversible
 Archivierung der unversionierten Vorläuferkopie. Arbeite ausschließlich in

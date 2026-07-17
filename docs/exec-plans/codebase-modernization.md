@@ -1347,15 +1347,172 @@ extrahiert.
 
 ### Paket 6 (P1): Packaging und Versionsführung
 
-**Ziel:** Ein Wheel startet in einer leeren Umgebung mit Frontend und klarer
-Runtime-Datenquelle; eine Version gilt für Paket und API.
+**Status:** Abgeschlossen auf `modernization/packaging-versioning` (2026-07-17).
 
-- Erwartete Dateien: `pyproject.toml`, Ressourcen-/Pfadauflösung, Packagingtests,
-  README/Setup.
-- Tests: Wheel bauen, in temporärer Umgebung installieren, `/` und `/api/health`
-  testen, fehlende/externe Daten bewusst behandeln.
-- Nutzen: hoch. Aufwand: mittel. Risiko: mittel.
-- Abbruchkriterium: keine Entscheidung eingebetteter versus externer Datenstand.
+**Ziel und Scope:** Ein PEP-517-Wheel und das zugehörige Source-Archiv enthalten
+einen eindeutig definierten, rein lesbaren Bootstrap-Stand und alle
+Frontendressourcen. Eine normale Installation startet außerhalb des Checkouts,
+schreibt ausschließlich in eine externe Runtime-/Datenwurzel und verwendet
+dieselbe Softwareversion in Metadaten, API, CLI und Interaktionsprotokoll.
+Container, Systemdienst, Windows-Installer, automatische Updates,
+Dependency-Locking und allgemeine Deployment-Orchestrierung bleiben außerhalb
+dieses Pakets.
+
+**Bestätigter Build- und Versionsstand:** `setuptools.build_meta` mit
+`setuptools>=75` baut `lena-code3` als Wheel `0.1.0`; Package Discovery umfasst
+`app*`, `app/static/**/*` ist Package Data. Legacy-Daten werden als
+`data_files` nach `<prefix>/data` installiert. Ein isolierter
+`python -m pip wheel . --no-deps` war erfolgreich und enthielt Pythonmodule,
+HTML/CSS/JavaScript, die damals vorhandenen Leaflet-Dateien, Canonical-, i18n-,
+Raw-, Report- und Snapshotdaten. Der spätere Referenztest deckte zwei fehlende,
+von Leaflet 1.9.4 referenzierte Layer-Bilder auf. Vor der Umsetzung war
+`python -m build` nicht ausführbar, weil das standardisierte Build-Frontend
+nicht als Dev-Abhängigkeit installiert war. Versionsquellen waren
+widersprüchlich: `pyproject.toml` und der
+Interaktionsfallback verwenden `0.1.0`, FastAPI meldet `0.2.0`, CLI und
+`app.__version__` fehlen. `0.1.0` ist die am stärksten etablierte veröffentlichte
+Paketversion und wird ohne behauptete neue fachliche Freigabe vereinheitlicht.
+
+**Laufzeit- und Pfadreview:** `app/main.py` findet statische Dateien relativ zum
+installierten Pythonpaket und ist bereits CWD-unabhängig. `_resolve_app_root()`
+in `app/config.py` erkennt dagegen Checkout oder `sys.prefix` anhand
+`data/canonical/offers.json` und verwendet denselben Root sowohl für lesende
+Bootstrapdaten als auch Sessions, Interaktionslogs, WFS-Pending, aktive
+WFS-Releases und Übersetzungswrites. Ein installiertes Wheel kann dadurch in
+seine verwaltete Präfix-Datenablage schreiben. `i18n.py`, `sessions.py` und
+`wfs_releases.py` leiten Schreibpfade weiterhin aus `app_root` ab. Bestehende
+Packagingtests simulieren Pfade, bauen und installieren aber kein Wheel.
+
+**Dateninventar und Distribution:**
+
+| Kategorie | Beispiele | Wheel | sdist | Laufzeitbehandlung |
+|---|---|---:|---:|---|
+| Quellcode | `app/*.py`, Provider | ja | ja | unveränderlich |
+| Frontend | HTML, CSS, JS, Leaflet JS/CSS/Bilder | ja, explizites `app/static/**/*` | ja | direkt aus Paket gelesen |
+| Bootstrap-Fachdaten | Canonical-Angebote, Übersetzungen, Overrides, Legacy-Raw und -Report | ja unter `app/resources/bootstrap/` | ja | ausschließlich lesend; eine kanonische Startstrategie |
+| lokale aktive Daten | WFS-Releases, Active-Pointer, gewartete Übersetzungen | nein | nein | externe Datenwurzel, bei Bedarf erzeugt |
+| Runtime/Forschung | Sessions, JSONL-Interaktionen, Pending-Releases, State, Logs, Audio | nein | nein | externe Runtimewurzel |
+| Entwicklung | Tests, Fixtures, Docs, README, `.env.example`, Constraints | nicht im Wheel | bewusst im sdist | Build/Test, nicht Laufzeit |
+| lokal/geheim | `.env`, `.env.local`, Credentials, Caches, Buildausgaben | nein | nein | ausdrücklich ausgeschlossen |
+
+**Distributionsentscheidung:** Strategie B bleibt der einzige Bootstrapvertrag:
+Das Wheel enthält den geprüften Legacy-Datenstand als Paketressource, aber
+keinen Entwickler-Active-Pointer und keine lokal aktivierten Releases. Der
+Bootstrap umfasst `canonical/offers.json`, `i18n/offer_translations.json`,
+`i18n/manual_overrides.json`, `wfs/current.geojson` und
+`wfs/last_change_report.json`. Die Anwendung liest ihn unverändert. Ein späterer
+WFS-Check kann ihn idempotent in einen externen Release migrieren; Pointer und
+Releaseordner liegen nie im Package. Fehlt oder ist der Bootstrap beschädigt,
+startet die Anwendung kontrolliert mit bestehendem KB-Fehlerstatus und führt
+keinen versteckten Download aus.
+
+**Ressourcen- und Runtimearchitektur:** Ein kleines `app/resources.py` löst
+Paketroot, `app/static/` und `app/resources/bootstrap/` mit
+`importlib.resources.files("app")` auf. Das unterstützte pip-Wheel-Modell
+installiert Ressourcen entpackt; es wird kein kurzlebiger `as_file()`-Pfad über
+seinen Kontext hinaus gespeichert. `Settings` trennt künftig
+`bootstrap_data_dir`, `data_dir` und `runtime_dir`. Explizit konstruierte
+Test-/Checkout-Settings behalten kompatible Defaults unter `app_root`. Bei
+`load_settings()` verwendet der Checkout weiterhin `<repo>/data` und
+`<repo>/runtime`; eine normale Wheel-Installation liest Bootstrapressourcen und
+schreibt standardmäßig nach einer benutzerspezifischen externen LENA-Wurzel
+(`LOCALAPPDATA/LENA` unter Windows, sonst `~/.local/share/lena`).
+`LENA_RUNTIME_DIR` und `LENA_DATA_DIR` überschreiben diese Wurzeln; relative
+Werte werden kontrolliert gegen das aktuelle Arbeitsverzeichnis aufgelöst.
+
+Sessions, Interaktionslogs und WFS-Pending/State verwenden `runtime_dir`.
+Externe WFS-Releases und Pointer verwenden `data_dir`. i18n liest zuerst einen
+vorhandenen externen Store/Override und sonst den Bootstrap, schreibt Wartungs-
+ergebnisse aber ausschließlich extern. Ein ungültiger externer WFS-Pointer wird
+weiterhin nicht auf Pending oder Bootstrap zurückgestuft. Der paketierte
+Bootstrap erhält eine stabile Releasekennung `bootstrap-<content-hash>` nur als
+Interaktionsmetadatum; er ist kein WFS-Manifestrelease und wird nicht mit dessen
+Schema verwechselt.
+
+**Einheitliche Version:** `pyproject.toml` bleibt die einzige Produktionsquelle
+mit `0.1.0`. `app/version.py` liest `importlib.metadata.version("lena-code3")`;
+wenn Metadaten in einem nicht installierten Source-Baum wirklich fehlen, lautet
+der eindeutig nicht veröffentlichbare Entwicklungsfallback `0+unknown`.
+`app.__version__`, FastAPI `version`, CLI `python -m app --version` und
+`InteractionRecord.software_version` verwenden ausschließlich diesen Helper.
+Interaktionsschema 2 und WFS-Manifestschema 1 bleiben unabhängige
+Vertragsversionen. SemVer bleibt in der 0.x-Prototypphase: Minor für sichtbare
+Funktion/Vertrag, Patch für kompatible Korrektur, Major erst für stabilisierten
+öffentlichen Vertrag.
+
+**Buildkonfiguration:** `data_files` entfällt zugunsten begrenzter Package-Data-
+Muster für `static/**/*` und `resources/bootstrap/**/*.json|geojson`.
+`build>=1.2,<2` wird ausschließlich Dev-Abhängigkeit, nicht Runtimeabhängigkeit.
+Ein explizites `MANIFEST.in` nimmt nur die zum Neubau nötigen Projektdateien,
+Tests, Fixtures, Docs, Constraints, Frontend und Bootstrapressourcen ins sdist
+und schließt Runtime, Secrets, Caches und Buildartefakte aus. CI und Tests bauen
+über `python -m build`, nicht über einen Checkout-Import als Beleg.
+
+**Betroffene Dateien:**
+
+| Datei | Änderung | Risiko/Mitigation |
+|---|---|---|
+| `pyproject.toml`, `MANIFEST.in` | Package Data, sdist, Dev-Buildtool | explizites Inventar statt breiter Runtime-Wildcards |
+| `app/resources.py`, `app/resources/bootstrap/**` | paketfähige Read-only-Ressourcen | Bootstrap mechanisch aus versioniertem Stand, keine Runtimekopien |
+| `app/config.py` | getrennte Bootstrap-/Daten-/Runtimewurzeln | explizite Settings bleiben kompatibel |
+| `app/sessions.py`, `app/wfs_releases.py`, `app/i18n.py`, `app/main.py` | Schreib- und Ressourcenpfade verdrahten | niemals Packagepfad als Write-Fallback |
+| `app/version.py`, `app/__init__.py`, `app/__main__.py`, `app/interactions.py` | eine Versionsauflösung | Schema- und Softwareversion getrennt |
+| `tests/test_packaging.py`, CI | echtes Wheel/sdist-Inventar und Clean-Install | fremdes CWD, bereinigtes `PYTHONPATH`, `app.__file__` in venv |
+| bestehende README-/Setup-/Architektur-/Testingdokumente | Betriebs- und Buildvertrag | keine parallele Dokumentation |
+
+**Dead Ends und Verifikation:** Ein Wheel-Inventartest prüft alle Frontend- und
+Bootstrapdateien sowie den Ausschluss von Tests, Docs, `.env*`, Runtime,
+Sessions, Interaktionen und Pending im Wheel. HTML-`src`/`href`, CSS-`url()` und
+lokale JS-Pfade werden gegen Paketdateien aufgelöst. Ein sdist-Test prüft das
+bewusste Entwicklungsinventar und baut daraus erneut ein Wheel. Zwei Builds
+werden hinsichtlich Name, Version und Dateiliste verglichen; Bitidentität wird
+wegen ZIP-Zeitstempeln nur behauptet, falls der Hash tatsächlich gleich ist.
+Der Installations-Smoke erzeugt eine frische venv, installiert das Wheel, wechselt
+in ein fremdes temporäres CWD, entfernt Checkout/PYTHONPATH, bestätigt
+`app.__file__` in der venv, Versionen, Frontend, Leaflet-Asset, Health,
+Bootstrap-KB und eine Templatequery. Ein temporär gesetztes
+`LENA_RUNTIME_DIR`/`LENA_DATA_DIR` belegt Writes außerhalb von `site-packages`.
+Fehlende/beschädigte Bootstrapdaten und beschädigter externer Pointer starten
+nicht still mit leerer KB oder Pending und lösen keinen Netzwerkfallback aus.
+
+Explizit verworfen werden Präfix-`data_files` als beschreibbare Pseudoruntime,
+ein paketierter Active-Pointer auf nicht paketierte Releases, CWD-relative
+Ressourcen, permanentes Halten eines temporären `as_file()`-Pfads, editable
+Install als Packagingnachweis, eine zweite hart codierte Version und breite
+Package-Wildcards. Bestehende normale Tests plus `python -m compileall -q app`,
+CLI-Version, `python -m build`, Inventare, Clean-Install, `git diff --check`,
+Secret-/Runtime-Diff und Commitchecks bilden das Abschlussgate.
+
+**Rollback:** Bootstrapkopien und neue Resolver sind additiv; Legacy-Quelldaten
+im Repository bleiben bestehen. Die Ressourcen-/Versions-, Test- und
+Dokumentationscommits sind getrennt revertierbar. Externe Runtime-/Datenwurzeln
+werden bei Rollback nicht gelöscht. Rückkehr zu `data_files` erfordert keine
+Datenmigration, solange die bisherigen Repositorydaten unverändert bleiben.
+
+**Fortschritt:**
+
+- [x] sauberer Paket-5-Stand und neuer lokaler Branch geprüft.
+- [x] Buildsystem, reales Wheel, Ressourcen, Loader, Writes und Versionen geprüft.
+- [x] Dateninventar, Bootstrap-/Runtimeentscheidung und Dead Ends geplant.
+- [x] Ressourcen-, Runtime- und Versionsarchitektur implementiert.
+- [x] Wheel/sdist- und Clean-Install-Tests erfolgreich (7 Tests).
+- [x] Gesamtsuite (158 Tests), Compile-, CLI- und Buildverifikation erfolgreich.
+- [x] `code-documentation` angewendet und Paket 6 abgeschlossen.
+
+**Abschlussevidenz:** Das Wheel enthält 22 Pythonmodule, fünf Bootstrapdateien,
+HTML/CSS/JavaScript sowie Leaflet JS/CSS und fünf Bilder. Tests, Docs, `.env*`,
+Sessions, Interaktionen, Pending-Releases und andere Runtime-Daten fehlen im
+Wheel. Das Source-Archiv enthält die dokumentierten Entwicklungsdateien, aber
+keine Root-`data/`-Duplikate; daraus entsteht ein Wheel mit identischem Namen
+und Inventar. Eine frische temporäre venv importierte `app` nach entferntem
+`PYTHONPATH` und fremdem CWD nachweislich aus `site-packages`; Version, API,
+Startseite, Static Asset, Bootstrap-KB, Templatequery, externe Writes sowie
+Fehler bei fehlendem Bootstrap und beschädigtem externem Pointer wurden geprüft.
+Die fehlenden Leaflet-Layerbilder wurden aus dem verwendeten offiziellen
+Leaflet-1.9.4-Stand ergänzt. `tzdata` ist als Runtime-Abhängigkeit aufgenommen,
+weil der Windows-Clean-Install sonst `Europe/Berlin` nicht auflösen konnte.
+Bitidentische Archive und einen universellen Plattform-Lock behauptet Paket 6
+nicht. Es wurde keine Remote-CI ausgeführt und nichts gepusht.
 
 ### Paket 7 (P2): Testnetz und Quality-Gates
 
