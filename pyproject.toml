@@ -12,29 +12,25 @@ dependencies = [
   "edge-tts>=7,<8",
   "httpx>=0.28,<1",
   "pydantic>=2.9,<3",
+  "tzdata>=2025.2",
   "uvicorn>=0.32,<1",
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8.3,<9"]
+dev = [
+  "build>=1.2,<2",
+  "pytest>=8.3,<9",
+]
 
 [tool.setuptools.packages.find]
 include = ["app*"]
 
 [tool.setuptools.package-data]
-app = ["static/**/*"]
-
-[tool.setuptools.data-files]
-"data/canonical" = ["data/canonical/offers.json"]
-"data/i18n" = [
-  "data/i18n/manual_overrides.json",
-  "data/i18n/offer_translations.json",
+app = [
+  "static/**/*",
+  "resources/bootstrap/**/*.json",
+  "resources/bootstrap/**/*.geojson",
 ]
-"data/wfs" = [
-  "data/wfs/current.geojson",
-  "data/wfs/last_change_report.json",
-]
-"data/wfs/snapshots" = ["data/wfs/snapshots/*.geojson"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

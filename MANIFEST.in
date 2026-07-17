@@ -1,0 +1,13 @@
+include README.md
+include .env.example
+include pyproject.toml
+recursive-include app *.py *.html *.css *.js *.png *.json *.geojson
+recursive-include docs *.md
+recursive-include requirements *.txt
+recursive-include tests *.py *.md
+prune data
+prune runtime
+prune build
+prune dist
+exclude .env .env.local
+global-exclude *.py[cod] __pycache__ .pytest_cache

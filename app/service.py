@@ -251,7 +251,7 @@ class QueryService:
         self.translation_store = load_translation_store(settings)
         self.manual_overrides = load_manual_overrides(settings)
         self.sessions = SessionStore(
-            settings.app_root / "runtime" / "sessions.json",
+            (settings.runtime_dir or settings.app_root / "runtime") / "sessions.json",
             timeout_seconds=settings.session_timeout_seconds,
             max_sessions=settings.session_max_entries,
         )

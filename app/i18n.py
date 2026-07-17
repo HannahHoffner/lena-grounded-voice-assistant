@@ -25,11 +25,24 @@ TARGET_LANGUAGES = (Language.EN, Language.PL, Language.RO, Language.RU)
 
 
 def translation_store_path(settings: Settings) -> Path:
-    return settings.app_root / "data" / "i18n" / "offer_translations.json"
+    external = (settings.data_dir or settings.app_root / "data") / "i18n" / "offer_translations.json"
+    bootstrap = (
+        settings.bootstrap_data_dir or settings.app_root / "data"
+    ) / "i18n" / "offer_translations.json"
+    return external if external.is_file() else bootstrap
+
+
+def translation_store_write_path(settings: Settings) -> Path:
+    """Liefert ausschließlich den externen, veränderlichen Übersetzungspfad."""
+    return (settings.data_dir or settings.app_root / "data") / "i18n" / "offer_translations.json"
 
 
 def manual_overrides_path(settings: Settings) -> Path:
-    return settings.app_root / "data" / "i18n" / "manual_overrides.json"
+    external = (settings.data_dir or settings.app_root / "data") / "i18n" / "manual_overrides.json"
+    bootstrap = (
+        settings.bootstrap_data_dir or settings.app_root / "data"
+    ) / "i18n" / "manual_overrides.json"
+    return external if external.is_file() else bootstrap
 
 
 def now_utc() -> str:
@@ -193,8 +206,9 @@ def mark_translation_state_for_offers(
     store["generated_at"] = now_utc()
     if dataset_hash:
         store["source_dataset_hash"] = dataset_hash
-    if changed or not translation_store_path(settings).is_file():
-        write_json(translation_store_path(settings), store)
+    target = translation_store_write_path(settings)
+    if changed or not target.is_file():
+        write_json(target, store)
     return store
 
 

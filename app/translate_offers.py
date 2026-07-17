@@ -17,6 +17,7 @@ from .i18n import (
     now_utc,
     offer_translation_hash,
     translation_store_path,
+    translation_store_write_path,
     write_json,
 )
 from .kb_loader import load_active_knowledge_base
@@ -249,17 +250,17 @@ async def update_translations(
         translated += 1
         if not dry_run:
             store["generated_at"] = now_utc()
-            write_json(translation_store_path(settings), store)
+            write_json(translation_store_write_path(settings), store)
 
     if not dry_run:
         store["generated_at"] = now_utc()
-        write_json(translation_store_path(settings), store)
+        write_json(translation_store_write_path(settings), store)
     return {
         "translated": translated,
         "failed": len(failures),
         "skipped_reviewed": skipped_reviewed,
         "failures": failures,
-        "path": str(translation_store_path(settings)),
+        "path": str(translation_store_write_path(settings)),
     }
 
 

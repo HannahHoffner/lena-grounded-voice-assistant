@@ -8,6 +8,8 @@ import os
 
 import uvicorn
 
+from .version import software_version
+
 
 def is_loopback_host(host: str) -> bool:
     """Prüft, ob ein Bind-Host ausschließlich den lokalen Rechner adressiert."""
@@ -29,6 +31,7 @@ def validate_bind_host(host: str, *, allow_public: bool) -> str:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="Run the minimal LENA service.")
+    parser.add_argument("--version", action="version", version=software_version())
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument(
         "--allow-public",

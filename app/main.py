@@ -27,6 +27,8 @@ from .speech import (
     SpeechTranscriptionTimeoutError,
 )
 from .wfs_sync import load_wfs_state, sync_wfs
+from .resources import static_root as package_static_root
+from .version import software_version
 
 
 SUPPORTED_AUDIO_MEDIA_TYPES = {
@@ -97,7 +99,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     speech_transcriber = SpeechTranscriber(settings)
     speech_synthesizer = SpeechSynthesizer(settings)
     interaction_writer = InteractionWriter(
-        settings.interaction_log_path or settings.app_root / "runtime" / "logs" / "interactions.jsonl",
+        settings.interaction_log_path
+        or (settings.runtime_dir or settings.app_root / "runtime") / "logs" / "interactions.jsonl",
         enabled=settings.interaction_logging_enabled,
     )
 
@@ -136,7 +139,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 with suppress(asyncio.CancelledError):
                     await task
 
-    app = FastAPI(title="LENA", version="0.2.0", lifespan=lifespan)
+    app = FastAPI(title="LENA", version=software_version(), lifespan=lifespan)
     app.state.settings = settings
     app.state.kb = kb
     app.state.kb_error = kb_error
@@ -176,7 +179,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         )
         return response
 
-    static_root = Path(__file__).resolve().parent / "static"
+    static_root = package_static_root()
     app.mount("/static", StaticFiles(directory=static_root), name="static")
 
     @app.get("/")

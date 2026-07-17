@@ -6,24 +6,16 @@ import json
 import logging
 import threading
 from datetime import UTC, datetime
-from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Literal
 
 from pydantic import BaseModel, Field
 
 from .models import Language
+from .version import software_version
 
 
 LOGGER = logging.getLogger(__name__)
-
-
-def software_version() -> str:
-    """Liefert die installierte Paketversion ohne zusätzliche Laufzeitabfrage."""
-    try:
-        return version("lena-code3")
-    except PackageNotFoundError:
-        return "0.1.0"
 
 
 class InteractionRecord(BaseModel):

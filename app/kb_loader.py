@@ -199,7 +199,15 @@ def load_active_knowledge_base(settings: Settings) -> KnowledgeBase:
     except WfsReleaseError as exc:
         raise KnowledgeBaseError("Active WFS release is invalid") from exc
     if release is None:
-        return load_knowledge_base(settings.kb_path)
+        knowledge_base = load_knowledge_base(settings.kb_path)
+        return KnowledgeBase(
+            path=knowledge_base.path,
+            source_hash=knowledge_base.source_hash,
+            offers=knowledge_base.offers,
+            source_kind=knowledge_base.source_kind,
+            metadata=knowledge_base.metadata,
+            release_id=f"bootstrap-{knowledge_base.source_hash[:12]}",
+        )
     knowledge_base = load_knowledge_base(release.offers_path)
     return KnowledgeBase(
         path=knowledge_base.path,

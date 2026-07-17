@@ -99,15 +99,17 @@ class WfsReleasePaths:
 
     @classmethod
     def from_settings(cls, settings: Settings) -> "WfsReleasePaths":
-        data_wfs = settings.app_root / "data" / "wfs"
+        data_wfs = (settings.data_dir or settings.app_root / "data") / "wfs"
+        bootstrap_wfs = (settings.bootstrap_data_dir or settings.app_root / "data") / "wfs"
+        runtime = settings.runtime_dir or settings.app_root / "runtime"
         return cls(
             legacy_canonical=settings.kb_path,
-            legacy_snapshot=data_wfs / "current.geojson",
-            legacy_diff=data_wfs / "last_change_report.json",
+            legacy_snapshot=bootstrap_wfs / "current.geojson",
+            legacy_diff=bootstrap_wfs / "last_change_report.json",
             releases=data_wfs / "releases",
-            pending=settings.app_root / "runtime" / "wfs" / "pending",
+            pending=runtime / "wfs" / "pending",
             pointer=data_wfs / "active_release.json",
-            state=settings.app_root / "runtime" / "wfs" / "state.json",
+            state=runtime / "wfs" / "state.json",
         )
 
 

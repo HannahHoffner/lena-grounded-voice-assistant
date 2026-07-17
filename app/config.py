@@ -8,9 +8,10 @@ from __future__ import annotations
 
 import math
 import os
-import sys
 from dataclasses import dataclass
 from pathlib import Path
+
+from .resources import bootstrap_data_root, checkout_root
 
 @dataclass(frozen=True)
 class Settings:
@@ -51,9 +52,15 @@ class Settings:
     technical_log_level: str = "INFO"
     interaction_logging_enabled: bool = True
     interaction_log_path: Path | None = None
+    bootstrap_data_dir: Path | None = None
+    data_dir: Path | None = None
+    runtime_dir: Path | None = None
 
     def __post_init__(self) -> None:
         """Verhindert nicht positive oder nicht endliche Laufzeitgrenzen."""
+        object.__setattr__(self, "bootstrap_data_dir", self.bootstrap_data_dir or self.app_root / "data")
+        object.__setattr__(self, "data_dir", self.data_dir or self.app_root / "data")
+        object.__setattr__(self, "runtime_dir", self.runtime_dir or self.app_root / "runtime")
         timeout_fields = (
             "blablador_timeout_seconds",
             "speech_transcription_timeout_seconds",
@@ -156,23 +163,20 @@ def _env_int(name: str, default: int, minimum: int, maximum: int) -> int:
     return min(maximum, max(minimum, value))
 
 
-def _resolve_app_root() -> Path:
-    """Ermittelt den Root für Konfiguration und versionierte Laufzeitdaten.
+def _default_external_root() -> Path:
+    """Bestimmt ohne Zusatzabhängigkeit eine benutzerspezifische Datenwurzel."""
+    local_app_data = os.getenv("LOCALAPPDATA")
+    if local_app_data:
+        return Path(local_app_data).expanduser().resolve() / "LENA"
+    return Path.home().resolve() / ".local" / "share" / "lena"
 
-    Im Checkout liegen Paket und ``data`` unter demselben Projekt-Root. Ein
-    Wheel installiert das Paket dagegen nach ``site-packages`` und die bewusst
-    veränderbaren Fachdateien unter das Präfix der virtuellen Umgebung. Der
-    Präfix-Fallback wird nur verwendet, wenn dort die kanonische Wissensbasis
-    tatsächlich vorhanden ist.
-    """
-    checkout_root = Path(__file__).resolve().parents[1]
-    if (checkout_root / "data" / "canonical" / "offers.json").is_file():
-        return checkout_root
 
-    installed_root = Path(sys.prefix).resolve()
-    if (installed_root / "data" / "canonical" / "offers.json").is_file():
-        return installed_root
-    return checkout_root
+def _configured_path(name: str, default: Path) -> Path:
+    value = os.getenv(name, "").strip()
+    if not value:
+        return default.resolve()
+    path = Path(value).expanduser()
+    return (path if path.is_absolute() else Path.cwd() / path).resolve()
 
 
 def load_settings() -> Settings:
@@ -184,9 +188,14 @@ def load_settings() -> Settings:
     Side Effects:
         Lädt Werte aus ``.env`` und ``.env.local`` in ``os.environ``.
     """
-    app_root = _resolve_app_root()
+    checkout = checkout_root()
+    external_root = checkout or _default_external_root()
+    app_root = external_root.resolve()
     _load_env_file(app_root / ".env")
     _load_env_file(app_root / ".env.local", override=True)
+    bootstrap_root = bootstrap_data_root()
+    runtime_dir = _configured_path("LENA_RUNTIME_DIR", app_root / "runtime")
+    data_dir = _configured_path("LENA_DATA_DIR", app_root / "data")
 
     provider = (_optional_env("REWRITE_PROVIDER", "LENA_REWRITE_PROVIDER") or "template").lower()
     if provider not in {"template", "blablador"}:
@@ -266,7 +275,7 @@ def load_settings() -> Settings:
         app_root=app_root,
         kb_path=Path(
             _optional_env("LENA_KB_PATH")
-            or app_root / "data" / "canonical" / "offers.json"
+            or bootstrap_root / "canonical" / "offers.json"
         ),
         rewrite_provider=provider,
         blablador_base_url=_optional_env("BLABLADOR_BASE_URL", "LENA_LLM_BASE_URL"),
@@ -325,6 +334,14 @@ def load_settings() -> Settings:
         interaction_log_path=(
             Path(configured_interaction_path)
             if configured_interaction_path and Path(configured_interaction_path).is_absolute()
-            else app_root / (configured_interaction_path or "runtime/logs/interactions.jsonl")
+            else runtime_dir
+            / (
+                configured_interaction_path.removeprefix("runtime/").removeprefix("runtime\\")
+                if configured_interaction_path
+                else "logs/interactions.jsonl"
+            )
         ),
+        bootstrap_data_dir=bootstrap_root,
+        data_dir=data_dir,
+        runtime_dir=runtime_dir,
     )
