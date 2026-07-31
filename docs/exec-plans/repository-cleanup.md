@@ -2,7 +2,7 @@
 
 ## Status
 
-- State: Verified
+- State: Complete
 - Owner: Codex
 - Created: 2026-07-31
 - Last updated: 2026-07-31
@@ -262,12 +262,13 @@ erzeugten Gruppe-A-Artefakte wurden anschließend erneut entfernt.
 ### Milestone 4: Documentation
 
 - [x] Invoke `code-documentation`.
-- [ ] Review documentation changes.
-- [ ] Rerun affected checks.
+- [x] Review documentation changes.
+- [x] Rerun affected checks.
 
 Evidence: `code-documentation` vollständig gelesen und für Genauigkeits-, Pfad-,
-Versions- und Konsistenzprüfung von Plan und Abschlussbericht angewendet;
-Abschlussbericht und finaler Dokumentationscheck noch ausstehend.
+Versions- und Konsistenzprüfung von Plan und Abschlussbericht angewendet. Alle
+dokumentierten geschützten Pfade und Version 0.1.0 wurden erneut geprüft;
+`git diff --check` und ein bytecodefreier Import waren erfolgreich.
 
 ## Validation plan
 
@@ -315,6 +316,8 @@ Abschlussbericht und finaler Dokumentationscheck noch ausstehend.
   Arbeitsverzeichnis erfolgreich.
 - 2026-07-31 — 39/39 fokussierte Session-, Logging- und WFS-Vertragstests
   erfolgreich; regenerierte Caches/Builds final erneut entfernt.
+- 2026-07-31 — Abschlussbericht nach `code-documentation`-Prüfung erstellt;
+  dokumentierte Pfade, Versionen, Kommandos und finaler Artefaktstatus verifiziert.
 
 ## Decision log
 
@@ -349,13 +352,13 @@ Abschlussbericht und finaler Dokumentationscheck noch ausstehend.
 
 ## Final verification summary
 
-- Acceptance requirements: technisch erfüllt; Abschlussbericht noch ausstehend.
+- Acceptance requirements: vollständig erfüllt.
 - Tests: Baseline 158 passed; Nachher 158 passed; zusätzlich 39 fokussierte
   Vertragsprüfungen bestanden.
 - Build: vorher und nachher erfolgreich; Wheel-/sdist-Inventar unverändert.
 - Manual verification: vorher und nachher erfolgreich; Health, Frontend, Asset,
   Query, Karten, Folgefrage, Out-of-scope- und 422-Fehlerpfad geprüft.
-- Documentation: Plan aktualisiert; `code-documentation` angewendet;
-  Abschlussbericht noch ausstehend.
+- Documentation: Plan und Abschlussbericht aktualisiert, mit
+  `code-documentation` geprüft und durch Pfad-/Versions-/Diff-Checks verifiziert.
 - Residual risks: Pending-WFS und Aufbewahrung realer Forschungslogs bleiben
   absichtlich ungelöste fachliche Entscheidungen.
