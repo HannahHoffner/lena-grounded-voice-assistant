@@ -2,7 +2,7 @@
 
 ## Status
 
-- State: Reviewed
+- State: Verified
 - Owner: Codex
 - Created: 2026-07-31
 - Last updated: 2026-07-31
@@ -23,10 +23,10 @@ Forschungsverträge bleiben funktional unverändert.
 - [x] GitHub bestätigt `HannahHoffner/lena-grounded-voice-assistant` als `PRIVATE`.
 - [x] Der zuvor unversionierte aktive WFS-Stand wurde vor der Bereinigung im
   Sicherungscommit `de6ff13` erfasst.
-- [ ] Nur Kandidaten der Gruppe A werden entfernt.
-- [ ] Anwendung, Tests, Build, Paketierung, Installation, Start, KB, Frontend,
+- [x] Nur Kandidaten der Gruppe A werden entfernt.
+- [x] Anwendung, Tests, Build, Paketierung, Installation, Start, KB, Frontend,
   Karten, Retrieval, Sessions, Logging und WFS-Verträge bleiben unverändert.
-- [ ] Vorher-/Nachher-Evidenz und finaler Git-Status werden dokumentiert.
+- [x] Vorher-/Nachher-Evidenz und finaler Git-Status werden dokumentiert.
 
 ## Scope
 
@@ -70,7 +70,7 @@ Forschungsverträge bleiben funktional unverändert.
 | Tests und Fixtures | 13 Testmodule und `tests/fixtures/wissensbasis_hilfsangebote_leipzig.md`; 158 Tests; erhalten |
 | Statische Ressourcen | `index.html`, `app.js`, `styles.css`, vendortes Leaflet und fünf von Leaflet/CSS referenzierte Bilder; im Wheel-Inventartest gefordert; erhalten |
 | Bootstrap-/Laufzeitdaten | kanonische Angebote, Übersetzungen, Overrides, WFS-Rohdaten und Report unter `app/resources/bootstrap/`; paketiert und getestet; erhalten |
-| Generierte/temporäre Artefakte | `.pytest_cache/`, `__pycache__/`, `build/`, `dist/`, `lena_code3.egg-info/`, alte `runtime/wheel-smoke/`; Gruppe A |
+| Generierte/temporäre Artefakte | `.pytest_cache/`, `__pycache__/`, `build/`, `dist/`, alte `runtime/wheel-smoke/`; Gruppe A. `lena_code3.egg-info/` bleibt nach isoliert fehlgeschlagener Entfernung erhalten. |
 | Laufzeitprotokolle/Sessions | `runtime/sessions.json` und `runtime/logs/interactions.jsonl` vom 2026-07-29; unversioniert, möglicherweise Forschungsevidenz; Gruppe C |
 | Dokumentation | README, Architektur-, Setup-, Konfigurations-, Datenfluss-, Test- und ExecPlan-Dokumente; im sdist enthalten; erhalten |
 | Möglicherweise veraltet | `runtime/dependency-report.json` und `runtime/pr-body.md` vom 2026-07-17; abgeschlossenes Baseline-Arbeitspaket, null Referenzen; Gruppe A |
@@ -154,7 +154,6 @@ beabsichtigten Distributionsvertrag.
 | `app/**/__pycache__/`, `tests/__pycache__/` | Bytecode, 35 Dateien/ca. 820 KB | `.gitignore`, `compileall` regeneriert ihn | sehr niedrig | compileall + Suite |
 | `build/` | Setuptools-Buildbaum, 28 Dateien/428,811 Bytes | `.gitignore`, `python -m build` regeneriert ihn | sehr niedrig | Build wiederholen |
 | `dist/` | Wheel/sdist, 2 Dateien/496,902 Bytes | `.gitignore`, Baseline-Build erfolgreich reproduziert | sehr niedrig | Build wiederholen, danach final erneut räumen |
-| `lena_code3.egg-info/` | editable/build metadata, 5 Dateien/2,434 Bytes | `.gitignore`, Build/install regeneriert | sehr niedrig | Suite + Build |
 | `runtime/wheel-smoke/` | alte lokale venv vom 2026-07-17, 2,189 Dateien/36,760,220 Bytes | null Referenzen; aktuelle Packagingtests nutzen `tmp_path`; nicht paketiert | niedrig | volle Suite + neue Clean-Installation |
 | `runtime/dependency-report.json` | pip-inspect-artiges Abhängigkeitsinventar vom 2026-07-17, 525,970 Bytes | null Referenzen; Constraints/Build sind kanonisch; reproduzierbar | niedrig | Installation mit Constraints |
 | `runtime/pr-body.md` | Text für den bereits gemergten PR #1, 1,715 Bytes | null Referenzen; GitHub bestätigt PR #1 als merged | sehr niedrig | keine Runtimewirkung; Git-/Dokureview |
@@ -179,6 +178,7 @@ beabsichtigten Distributionsvertrag.
 | `runtime/wfs/state.json` | aktueller lokaler Sync-/Zeitstatus; Laufzeitvertrag |
 | `runtime/wfs/pending/...` | bis zur fachlichen Entscheidung geschützt (Gruppe B) |
 | `.env`, `.env.local` | lokale Secrets/Konfiguration; keine Bereinigungsartefakte |
+| `lena_code3.egg-info/` | die isolierte Entfernung änderte `python -m app --version` von `0.1.0` auf `0+unknown` und ließ 1/7 Packagingtests scheitern; über den vorgesehenen Editable-Installationsweg wiederhergestellt |
 | README, `docs/`, `.github/workflows/test.yml`, Constraints, `pyproject.toml`, `MANIFEST.in`, `.gitignore`, `.env.example` | Setup, CI, Build, Installation und Dokumentation |
 
 ## Dead-end analysis
@@ -235,28 +235,39 @@ geprüft, Historie `43b88bc` für leere Altordner ausgewertet.
 
 ### Milestone 2: Implementation
 
-- [ ] Implement bounded changes.
-- [ ] Keep source files cohesive and preferably below 400 lines.
-- [ ] Update this plan with discoveries.
+- [x] Implement bounded changes.
+- [x] Keep source files cohesive and preferably below 400 lines.
+- [x] Update this plan with discoveries.
 
-Evidence: ausstehend.
+Evidence: sichere Cache-/Buildausgaben, 2.189 Dateien der alten Wheel-Smoke-venv,
+zwei obsolete Runtime-Dokumente und neun leere Altordner entfernt. Keine
+versionierte Quellcodedatei geändert oder gelöscht. Die testweise Entfernung von
+`lena_code3.egg-info/` wurde wegen sichtbarer Versionsregression sofort durch den
+dokumentierten Editable-Installationsweg rückgängig gemacht; anschließend
+bestanden alle 7 Packagingtests wieder.
 
 ### Milestone 3: Verification
 
-- [ ] Run targeted tests.
-- [ ] Run integration/build checks where relevant.
-- [ ] Verify registration, imports, routes, configuration, and packaging.
-- [ ] Review final diff.
+- [x] Run targeted tests.
+- [x] Run integration/build checks where relevant.
+- [x] Verify registration, imports, routes, configuration, and packaging.
+- [x] Review final diff.
 
-Evidence: ausstehend.
+Evidence: vollständige Suite erneut mit 158/158 bestanden; 39/39 fokussierte
+Persistenz-, Logging- und WFS-Vertragstests bestanden; Compile, Build, CLI,
+WFS-Verify/List, echter Uvicorn-E2E-Smoke und korrigierter Clean-Wheel-Smoke aus
+einem fremden Arbeitsverzeichnis erfolgreich. Alle durch die Verifikation erneut
+erzeugten Gruppe-A-Artefakte wurden anschließend erneut entfernt.
 
 ### Milestone 4: Documentation
 
-- [ ] Invoke `code-documentation`.
+- [x] Invoke `code-documentation`.
 - [ ] Review documentation changes.
 - [ ] Rerun affected checks.
 
-Evidence: ausstehend.
+Evidence: `code-documentation` vollständig gelesen und für Genauigkeits-, Pfad-,
+Versions- und Konsistenzprüfung von Plan und Abschlussbericht angewendet;
+Abschlussbericht und finaler Dokumentationscheck noch ausstehend.
 
 ## Validation plan
 
@@ -294,6 +305,16 @@ Evidence: ausstehend.
 - 2026-07-31 — Baseline mit 158 Tests, Build, echtem Backend-Smoke, WFS-Verify
   und Clean-Wheel-Installation erfolgreich.
 - 2026-07-31 — Plan nach Review erstellt; Löschung noch nicht begonnen.
+- 2026-07-31 — Caches/Buildausgaben entfernt; `lena_code3.egg-info/` nach
+  isoliertem Versions-/Packagingfehler sofort wiederhergestellt und Gruppe C
+  zugeordnet.
+- 2026-07-31 — Alte Wheel-Smoke-venv, Dependency-Report, PR-Text und neun leere
+  historische Altordner entfernt; geschützte Runtime-/WFS-Dateien bestätigt.
+- 2026-07-31 — Nachher-Baseline mit 158/158 Tests, Compile, Build, echtem
+  Backend/E2E, WFS-Verifikation und echter Wheel-Installation aus fremdem
+  Arbeitsverzeichnis erfolgreich.
+- 2026-07-31 — 39/39 fokussierte Session-, Logging- und WFS-Vertragstests
+  erfolgreich; regenerierte Caches/Builds final erneut entfernt.
 
 ## Decision log
 
@@ -321,13 +342,20 @@ Evidence: ausstehend.
 - Die aktuelle Test- und Clean-Install-Logik verwendet temporäre Verzeichnisse;
   `runtime/wheel-smoke/` wird nirgendwo mehr referenziert.
 - `.gitignore` deckt alle sicheren generierten Artefakte bereits ab.
+- `lena_code3.egg-info/` ist trotz generierter Herkunft im aktuell editable
+  installierten Source-Checkout funktional relevant: ohne die Metadaten liefert
+  die Anwendung `0+unknown` und der Versionsvertrag scheitert. Der Kandidat wurde
+  deshalb nach isolierter Prüfung nicht endgültig gelöscht.
 
 ## Final verification summary
 
-- Acceptance requirements: ausstehend.
-- Tests: Baseline 158 passed; Nachher ausstehend.
-- Build: Baseline erfolgreich; Nachher ausstehend.
-- Manual verification: Baseline erfolgreich; Nachher ausstehend.
-- Documentation: Plan erstellt; Abschlussbericht/code-documentation ausstehend.
+- Acceptance requirements: technisch erfüllt; Abschlussbericht noch ausstehend.
+- Tests: Baseline 158 passed; Nachher 158 passed; zusätzlich 39 fokussierte
+  Vertragsprüfungen bestanden.
+- Build: vorher und nachher erfolgreich; Wheel-/sdist-Inventar unverändert.
+- Manual verification: vorher und nachher erfolgreich; Health, Frontend, Asset,
+  Query, Karten, Folgefrage, Out-of-scope- und 422-Fehlerpfad geprüft.
+- Documentation: Plan aktualisiert; `code-documentation` angewendet;
+  Abschlussbericht noch ausstehend.
 - Residual risks: Pending-WFS und Aufbewahrung realer Forschungslogs bleiben
   absichtlich ungelöste fachliche Entscheidungen.
