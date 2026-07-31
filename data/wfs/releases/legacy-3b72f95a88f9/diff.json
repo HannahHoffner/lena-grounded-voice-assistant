@@ -1,0 +1,133 @@
+{
+  "added": [
+    {
+      "id": "1",
+      "name": "Sozialamt - Abteilung Soziale Wohnhilfen"
+    },
+    {
+      "id": "2",
+      "name": "Sozialamt - Sachgebiet Wohnungsnotfallhilfe"
+    },
+    {
+      "id": "3",
+      "name": "Sozialamt - Sachgebiet Wohnen"
+    },
+    {
+      "id": "4",
+      "name": "Sozialamt - Sachgebiet Notunterbringung"
+    },
+    {
+      "id": "5",
+      "name": "Zentrum für Drogenhilfe Notschlafstelle für drogenkonsumierende Obdachlose Alternative III"
+    },
+    {
+      "id": "6",
+      "name": "Zentrum für Drogenhilfe Notschlafstelle für drogenkonsumierende Obdachlose Alternative I"
+    },
+    {
+      "id": "7",
+      "name": "Übernachtungshaus für wohnungslose Männer"
+    },
+    {
+      "id": "8",
+      "name": "Advent-Wohlfahrtswerk e. V. Übernachtungshaus für wohnungslose Frauen"
+    },
+    {
+      "id": "9",
+      "name": "SZL Suchtzentrum gGmbH Tagestreff Insel"
+    },
+    {
+      "id": "10",
+      "name": "Diakonisches Werk Innere Mission Leipzig e. V. Leipziger Oase"
+    },
+    {
+      "id": "11",
+      "name": "Zentrum für Drogenhilfe, Kontaktcafé, Alternative I"
+    },
+    {
+      "id": "12",
+      "name": "Safe-Straßensozialarbeit für Erwachsene - Team Konsum\nSZL Suchtzentrum gGmbH"
+    },
+    {
+      "id": "13",
+      "name": "Safe-Straßensozialarbeit für Erwachsene - Team Wohnen\nSZL Suchtzentrum gGmbH"
+    },
+    {
+      "id": "14",
+      "name": "Diakonisches Werk Innere Mission Leipzig e. V."
+    },
+    {
+      "id": "15",
+      "name": "Zentrum für Drogenhilfe, mobile Alternative"
+    },
+    {
+      "id": "16",
+      "name": "TiMMi ToHelp e. V. -  Projekt Care Bags"
+    },
+    {
+      "id": "17.1",
+      "name": "Straßensozialarbeit am Amt für Jugend und Familie - Streetwork Mitte"
+    },
+    {
+      "id": "17.2",
+      "name": "Straßensozialarbeit am Amt für Jugend und Familie - Streetwork Ost"
+    },
+    {
+      "id": "17.3",
+      "name": "Straßensozialarbeit am Amt für Jugend und Familie - Streetwork Nord"
+    },
+    {
+      "id": "18",
+      "name": "MachtLos e. V."
+    },
+    {
+      "id": "19.1",
+      "name": "Mobile Jugendarbeit Leipzig e. V. - Team Westen"
+    },
+    {
+      "id": "19.2",
+      "name": "Mobile Jugendarbeit Leipzig e. V. - Team Grünau"
+    },
+    {
+      "id": "19.3",
+      "name": "Mobile Jugendarbeit Leipzig e. V. - Team Südost"
+    },
+    {
+      "id": "20.1",
+      "name": "Jugendhaus Leipzig e.V. Projekt suedpol Mobile Jugendarbeit (Connewitz)"
+    },
+    {
+      "id": "20.2",
+      "name": "Jugendhaus Leipzig e.V. Projekt suedpol Mobile Jugendarbeit (Lößnig)"
+    },
+    {
+      "id": "21",
+      "name": "Safe-Straßensozialarbeit für Erwachsene - Hilfebus\nSZL Suchtzentrum gGmbH"
+    },
+    {
+      "id": "22",
+      "name": "Caritasverband Leipzig e.V. Ökumenische Bahnhofsmission Leipzig"
+    },
+    {
+      "id": "23",
+      "name": "Übernachtungshaus für wohnungslose Männer"
+    },
+    {
+      "id": "24",
+      "name": "CABL e. V. - Clearingstelle und anonymer Behandlungsschein Leipzig e. V."
+    },
+    {
+      "id": "25",
+      "name": "UVO - Umfeldnahe Versorgung von Menschen ohne festen Wohnsitz"
+    }
+  ],
+  "base_release_id": null,
+  "created_at": "2026-07-29T05:58:50.526254Z",
+  "current_hash": "3b72f95a88f98c57778f50beaa4c66af61b58493fe995feb1deb6f7756d7bf9c",
+  "current_schema_version": 2,
+  "modified": [],
+  "normalization_changed": true,
+  "previous_hash": null,
+  "previous_schema_version": null,
+  "removed": []
+}
