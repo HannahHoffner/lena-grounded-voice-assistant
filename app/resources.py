@@ -34,6 +34,12 @@ def bootstrap_data_root() -> Path:
     return checkout / "data" if checkout else package_root() / "resources" / "bootstrap"
 
 
+def packaged_bootstrap_data_root() -> Path:
+    """Liefert stets den unveraenderlichen, mit dem Paket ausgelieferten Bootstrap."""
+
+    return package_root() / "resources" / "bootstrap"
+
+
 def static_root() -> Path:
     """Liefert das vollständig paketierte Browser-Frontend."""
     return package_root() / "static"

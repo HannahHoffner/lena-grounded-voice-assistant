@@ -1,0 +1,42 @@
+{
+  "base_release_id": null,
+  "created_at": "2026-08-02T05:55:52.523492Z",
+  "files": {
+    "diff.json": {
+      "sha256": "c6ca12ed7ca4c0e7f0c6c5936b695f2b305fa581ada42b697b15d32694e89d19",
+      "size_bytes": 481
+    },
+    "records.json": {
+      "sha256": "eb4251252a05142a0cb8a9d3dc691bbecc34ddb555f5fd552798f6e9ab085f78",
+      "size_bytes": 27465
+    },
+    "snapshot.csv": {
+      "sha256": "fce215d4e7bd928bd44963b0adb7e0b73f4e042d123e940dc96e8cdddc2b13f4",
+      "size_bytes": 4737
+    }
+  },
+  "manifest_sha256": "ef5c3190645bdd52c6cb8e81fa1aff3b92848b750069298cac7f29c8a98c743a",
+  "normalization_version": "1",
+  "normalized_sha256": "5978e729e789dab34e8ffe040b44c38850c66524ec98c22d515bae4e81c15f54",
+  "record_count": 21,
+  "release_id": "20260802T055552Z-fce215d4e7bd",
+  "schema_version": "1",
+  "source": {
+    "attribution": "Stadt Leipzig",
+    "content_type": "text/csv",
+    "dataset_page": "https://opendata.leipzig.de/dataset/offentliche-toiletten-stadt-leipzig1",
+    "delimiter": ",",
+    "encoding": "utf-8-sig",
+    "fetched_at": "2026-08-02T05:55:52.523492Z",
+    "license_name": "Datenlizenz Deutschland – Namensnennung – Version 2.0",
+    "license_url": "https://www.govdata.de/dl-de/by-2-0",
+    "publisher": "Stadt Leipzig",
+    "resource_url": "https://geodaten.leipzig.de/open_data/organisationseinheit/Amt_fuer_Geoinformation_und_Bodenordnung/Toilettenstandorte/Oeffentliche_Toiletten_Stadt_Leipzig.csv",
+    "sha256": "fce215d4e7bd928bd44963b0adb7e0b73f4e042d123e940dc96e8cdddc2b13f4",
+    "size_bytes": 4737,
+    "source_last_modified": "Wed, 14 Jan 2026 06:44:49 GMT",
+    "title": "Öffentliche Toiletten, Stadt Leipzig"
+  },
+  "source_sha256": "fce215d4e7bd928bd44963b0adb7e0b73f4e042d123e940dc96e8cdddc2b13f4",
+  "validation_status": "validated"
+}

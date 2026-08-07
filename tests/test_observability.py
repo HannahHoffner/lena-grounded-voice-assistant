@@ -6,22 +6,57 @@ import json
 import logging
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app.config import Settings
+from app.application_texts import application_text
+from app.interpreter import AcuteRiskStatus, Need, QueryInterpretation, ScopeStatus
 from app.interactions import InteractionRecord, InteractionWriter
+from app.llm_selection import CandidateSelectionResponse, SelectorError
 from app.main import create_app
 from app.models import Language
-from app.providers.llm import ProviderAnswer, ProviderError, ProviderRoute
-from app.service import ACUTE_RISK_RESPONSE
+from app.providers.llm import InterpreterError, ProviderAnswer
 from app.sessions import SessionStore
 from app.speech import SpeechSynthesisError, SpeechSynthesizer, SpeechTranscriber, SpeechTranscriptionError
+from app.safety import SafetyTextKind, safety_text
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def _interpretation(
+    need: Need = Need.UNKNOWN,
+    *,
+    scope: ScopeStatus = ScopeStatus.IN_SCOPE,
+    risk: AcuteRiskStatus = AcuteRiskStatus.NOT_DETECTED,
+) -> QueryInterpretation:
+    return QueryInterpretation.model_validate(
+        {
+            "contract_version": "3",
+            "need": need.value,
+            "explicit_service_requests": [],
+            "scope_status": scope.value,
+            "input_language": "de",
+            "explicit_facts": {
+                "age": None,
+                "gender": "unknown",
+                "drug_use": "unknown",
+                "no_social_benefit_entitlement": "unknown",
+                "district": None,
+                "requested_day": None,
+                "requested_time": None,
+            },
+            "uncertain_hints": [],
+            "potentially_missing_information": [],
+            "clarification_may_be_needed": False,
+            "acute_risk_status": risk.value,
+        }
+    )
 
 
 def _settings(tmp_path: Path, **overrides: object) -> Settings:
@@ -45,7 +80,7 @@ def _records(path: Path) -> list[dict[str, object]]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
 
 
-def test_template_query_writes_one_complete_final_interaction(tmp_path: Path) -> None:
+def test_unavailable_interpreter_writes_minimal_redacted_safety_interaction(tmp_path: Path) -> None:
     settings = _settings(tmp_path)
     response = TestClient(create_app(settings)).post(
         "/api/query",
@@ -54,17 +89,28 @@ def test_template_query_writes_one_complete_final_interaction(tmp_path: Path) ->
 
     assert response.status_code == 200
     record = _records(settings.interaction_log_path)[0]  # type: ignore[arg-type]
-    assert record["user_query"] == "Wo bekomme ich Essen?"
+    assert record["user_query"] == "[redacted_safety_input]"
     assert record["assistant_answer"] == response.json()["answer"]
     assert record["language"] == "de"
     assert record["input_mode"] == "text"
-    assert record["route"] == "template_retrieval"
-    assert record["source_ids"] == [card["id"] for card in response.json()["cards"]]
-    assert record["retrieval_result_count"] >= len(record["source_ids"])
+    assert record["route"] == "interpreter_error"
+    assert record["source_ids"] == []
+    assert record["candidate_result_count"] == 0
     assert record["acute_risk_detected"] is False
-    assert record["fallback_used"] is False
-    assert record["schema_version"] == 2
-    assert record["data_release_id"].startswith("bootstrap-")
+    assert record["fallback_used"] is True
+    assert record["safety_path"] == "interpreter_failure"
+    assert record["safety_fallback_used"] is True
+    assert record["schema_version"] == 11
+    assert record["selector_used"] is False
+    assert record["selector_bypass_reason"] == "interpreter_unavailable"
+    assert record["selector_eligible_count"] >= record["selector_final_count"]
+    assert record["selector_error_code"] is None
+    assert record["candidate_selection_status"] is None
+    assert record["formulator_used"] is False
+    assert record["formulator_fallback_used"] is False
+    assert record["formulator_error_code"] is None
+    assert record["llm_budget_status"] == "within_budget"
+    assert record["data_release_id"].startswith("curation-")
     assert record["software_version"]
     assert record["timestamp"].endswith("Z")
     assert len(_records(settings.interaction_log_path)) == 1  # type: ignore[arg-type]
@@ -89,7 +135,7 @@ def test_speech_mode_stores_processed_transcription_without_request_metadata(tmp
     raw = settings.interaction_log_path.read_text(encoding="utf-8")  # type: ignore[union-attr]
     record = json.loads(raw)
     assert record["input_mode"] == "speech"
-    assert record["user_query"] == "Wo bekomme ich Essen?"
+    assert record["user_query"] == "[redacted_safety_input]"
     assert secret not in raw
     assert "sid=private" not in raw
     assert "system_prompt" not in raw
@@ -98,19 +144,33 @@ def test_speech_mode_stores_processed_transcription_without_request_metadata(tmp
 
 def test_llm_formulator_path_stores_visible_answer_and_sources(tmp_path: Path) -> None:
     app = create_app(_settings(tmp_path))
+    # Eingefroren auf Montag 10:00, da die Food-Selektion ein geöffnetes
+    # Angebot voraussetzt; ohne feste Uhr hängt der Testerfolg von der realen
+    # Tageszeit ab (WP9C).
+    app.state.service.clock = lambda: datetime(2026, 8, 3, 10, 0, tzinfo=ZoneInfo("Europe/Berlin"))
 
     class FormulatorProvider:
-        def index_context_fits(self, offers) -> bool:
+        async def interpret_query(self, **kwargs) -> QueryInterpretation:
+            return _interpretation(Need.FOOD)
+
+        def context_fits(self, evidence) -> bool:
             return True
 
-        async def route(self, **kwargs) -> ProviderRoute:
-            return ProviderRoute(None, [], False, False)
+        async def select_candidates(self, **kwargs) -> CandidateSelectionResponse:
+            return CandidateSelectionResponse(
+                contract_version="1",
+                selection_status="selected",
+                selected_ids=[kwargs["decision"].selectable_candidates[0].offer_id],
+            )
 
-        def context_fits(self, offers) -> bool:
-            return True
-
-        async def answer(self, **kwargs) -> ProviderAnswer:
-            return ProviderAnswer("Final sichtbare Formulatorantwort.", [kwargs["offers"][0].id])
+        async def formulate_answer(self, **kwargs) -> ProviderAnswer:
+            evidence = kwargs["evidence"]
+            return ProviderAnswer(
+                "Final sichtbare Formulatorantwort.",
+                [evidence.selected_offers[0].offer_id],
+                sentence_count=1,
+                answer_type=evidence.answer_type,
+            )
 
     app.state.service.blablador = FormulatorProvider()
     response = TestClient(app).post("/api/query", json={"query": "Wo gibt es Essen?"})
@@ -120,6 +180,21 @@ def test_llm_formulator_path_stores_visible_answer_and_sources(tmp_path: Path) -
     assert record["assistant_answer"] == response.json()["answer"]
     assert record["route"] == "llm_formulation"
     assert record["source_ids"]
+    assert record["selector_used"] is True
+    assert record["selection_source"] == "llm_selector"
+    assert record["selector_final_count"] == 1
+    assert record["answer_type"] == "grounded_result"
+    assert record["formulator_used"] is True
+    assert record["formulator_fallback_used"] is False
+    assert record["formulator_error_code"] is None
+    assert record["formulator_sentence_count"] == 1
+    assert record["formulator_offer_count"] == 1
+    assert record["formulator_language"] == "de"
+    assert record["llm_budget_status"] == "within_budget"
+    assert "candidates" not in record
+    assert "prompt" not in record
+    assert "evidence" not in record
+    assert "fact_ids" not in record
 
 
 def test_provider_failure_stores_controlled_fallback_and_logs_event(
@@ -130,11 +205,8 @@ def test_provider_failure_stores_controlled_fallback_and_logs_event(
     sensitive_query = "Wo bekomme ich private fallback Mahlzeiten?"
 
     class FailedProvider:
-        def index_context_fits(self, offers) -> bool:
-            return True
-
-        async def route(self, **kwargs) -> ProviderRoute:
-            raise ProviderError("provider unavailable")
+        async def interpret_query(self, **kwargs) -> QueryInterpretation:
+            raise InterpreterError("interpreter_http_error")
 
         def context_fits(self, offers) -> bool:
             return False
@@ -148,25 +220,54 @@ def test_provider_failure_stores_controlled_fallback_and_logs_event(
     assert response.status_code == 200
     assert record["assistant_answer"] == response.json()["answer"]
     assert record["fallback_used"] is True
-    assert record["route"] == "template_fallback"
-    assert "query.router.failed" in app_logs
+    assert record["route"] == "interpreter_error"
+    assert record["interpreter_error_code"] == "interpreter_http_error"
+    assert record["selector_bypass_reason"] == "interpreter_unavailable"
+    assert record["source_ids"] == []
+    assert "query.interpreter.failed" in app_logs
     assert "query.fallback.used" in app_logs
     assert "request.completed" in app_logs
     assert sensitive_query not in app_logs
     assert response.json()["answer"] not in app_logs
 
 
+def test_selector_failure_logging_is_redacted_and_skips_formulator(tmp_path: Path) -> None:
+    app = create_app(_settings(tmp_path))
+
+    class FailedSelectorProvider:
+        async def interpret_query(self, **kwargs) -> QueryInterpretation:
+            return _interpretation(Need.MEDICAL)
+
+        async def select_candidates(self, **kwargs) -> CandidateSelectionResponse:
+            raise SelectorError("selector_invalid_id")
+
+        def context_fits(self, offers) -> bool:
+            return True
+
+        async def formulate_answer(self, **kwargs) -> ProviderAnswer:
+            raise AssertionError("same provider must be skipped after selector failure")
+
+    app.state.service.blablador = FailedSelectorProvider()
+    response = TestClient(app).post("/api/query", json={"query": "medizinische Hilfe"})
+    record = _records(app.state.interaction_writer.path)[0]
+    raw = app.state.interaction_writer.path.read_text(encoding="utf-8")
+
+    assert response.json()["provider"] == "template"
+    assert record["selection_source"] == "deterministic_selector_fallback"
+    assert record["selector_fallback_used"] is True
+    assert record["selector_error_code"] == "selector_invalid_id"
+    assert "candidates" not in record
+    assert "prompt" not in raw
+
+
 def test_acute_risk_stores_only_controlled_visible_answer(tmp_path: Path) -> None:
     app = create_app(_settings(tmp_path))
 
     class RiskProvider:
-        def index_context_fits(self, offers) -> bool:
-            return True
+        async def interpret_query(self, **kwargs) -> QueryInterpretation:
+            return _interpretation(risk=AcuteRiskStatus.DETECTED)
 
-        async def route(self, **kwargs) -> ProviderRoute:
-            return ProviderRoute(None, [], False, False, acute_risk_detected=True)
-
-        async def answer(self, **kwargs) -> ProviderAnswer:
+        async def formulate_answer(self, **kwargs) -> ProviderAnswer:
             raise AssertionError("Formulator must not run")
 
     app.state.service.blablador = RiskProvider()
@@ -176,12 +277,12 @@ def test_acute_risk_stores_only_controlled_visible_answer(tmp_path: Path) -> Non
     )
     record = _records(app.state.interaction_writer.path)[0]
 
-    assert response.json()["answer"] == ACUTE_RISK_RESPONSE[Language.DE]
-    assert record["assistant_answer"] == ACUTE_RISK_RESPONSE[Language.DE]
+    assert response.json()["answer"] == safety_text(Language.DE, SafetyTextKind.DETECTED)
+    assert record["assistant_answer"] == safety_text(Language.DE, SafetyTextKind.DETECTED)
     assert record["acute_risk_detected"] is True
     assert record["route"] == "acute_risk"
     assert record["source_ids"] == []
-    assert record["retrieval_result_count"] == 0
+    assert record["candidate_result_count"] == 0
 
 
 def test_no_results_path_stores_final_response(tmp_path: Path) -> None:
@@ -190,7 +291,7 @@ def test_no_results_path_stores_final_response(tmp_path: Path) -> None:
     record = _records(app.state.interaction_writer.path)[0]
 
     assert record["assistant_answer"] == response.json()["answer"]
-    assert record["route"] in {"no_results", "out_of_scope"}
+    assert record["route"] == "interpreter_error"
     assert record["source_ids"] == []
 
 
@@ -259,6 +360,9 @@ def test_stt_and_tts_success_and_failure_events_are_visible(
 
     monkeypatch.setattr(SpeechTranscriber, "transcribe", transcribe_ok)
     monkeypatch.setattr(SpeechSynthesizer, "synthesize", synthesize_ok)
+    service = app.state.service
+    session = service.sessions.resolve(None, Language.DE, service.kb.runtime_kb_fingerprint or "")
+    session = service.sessions.add_turn(session, question="test", answer="Antwort")
     with caplog.at_level(logging.INFO):
         client = TestClient(app)
         assert client.post(
@@ -268,7 +372,7 @@ def test_stt_and_tts_success_and_failure_events_are_visible(
         ).status_code == 200
         assert client.post(
             "/api/speech/synthesize",
-            json={"text": "Antwort", "language": "de"},
+            json={"text": "Antwort", "language": "de", "session_id": session.session_id},
         ).status_code == 200
     assert "stt.completed" in caplog.text
     assert "tts.completed" in caplog.text
@@ -290,7 +394,7 @@ def test_stt_and_tts_success_and_failure_events_are_visible(
         ).status_code == 503
         assert client.post(
             "/api/speech/synthesize",
-            json={"text": "Antwort", "language": "de"},
+            json={"text": "Antwort", "language": "de", "session_id": session.session_id},
         ).status_code == 503
     assert "stt.failed" in caplog.text
     assert "tts.failed" in caplog.text
@@ -313,7 +417,7 @@ def test_session_read_and_write_failures_are_redacted(
     unwritable_target.mkdir()
     caplog.clear()
     with caplog.at_level(logging.ERROR):
-        session = SessionStore(unwritable_target).create(Language.DE)
+        session = SessionStore(unwritable_target).create(Language.DE, "kb-v1")
     assert session.session_id
     assert "session.write.failed" in caplog.text
 

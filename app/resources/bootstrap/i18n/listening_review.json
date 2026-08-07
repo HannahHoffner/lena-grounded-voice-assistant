@@ -1,0 +1,11 @@
+{
+  "schema_version": "1",
+  "purpose": "Synthetic prompts for a later manual listening review; no acoustic quality is asserted.",
+  "items": [
+    {"item_id": "proper_names", "text": "Rücke, Scharni und Jugendstreetwork sind Namen von Angeboten."},
+    {"item_id": "hilfebus_contact", "text": "Rufe den Hilfebus unter {verified_phone} an. Die belegte Zeit ist {verified_time}."},
+    {"item_id": "emergency_number", "text": "Bitte rufe jetzt {emergency_number} an."}
+  ],
+  "languages": ["de", "en", "pl", "ro", "ru"],
+  "manual_review_status": "not_performed"
+}

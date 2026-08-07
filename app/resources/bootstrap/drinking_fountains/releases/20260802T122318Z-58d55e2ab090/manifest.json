@@ -1,0 +1,45 @@
+{
+  "base_release_id": null,
+  "boundary_sha256": "8914ae40b8e806d4d6210c9cab97f5d9f51a685a93670b23ff46a3ddf57452b1",
+  "boundary_url": "https://static.leipzig.de/fileadmin/mediendatenbank/leipzig-de/Stadt/02.1_Dez1_Allgemeine_Verwaltung/12_Statistik_und_Wahlen/Geodaten/StatistischeBezirke_Leipzig_UTM33N.json",
+  "created_at": "2026-08-02T12:23:18Z",
+  "evidence_sha256": "f84baa2f6a338f970c7dc142df9dc8b1e53b97851c30d3d5c4213d4238169515",
+  "files": {
+    "diff.json": {
+      "sha256": "97f066c49d9739c235e9c65c73c8cabf595f2be3c7993467911ad397c4d44b9b",
+      "size_bytes": 1705
+    },
+    "municipality_boundary.geojson": {
+      "sha256": "8914ae40b8e806d4d6210c9cab97f5d9f51a685a93670b23ff46a3ddf57452b1",
+      "size_bytes": 1817879
+    },
+    "records.json": {
+      "sha256": "7559c1c46e0d9f8fad7b586236f50a577c3ae8568c246799d6102cf4624bd165",
+      "size_bytes": 47964
+    },
+    "snapshot.kml": {
+      "sha256": "f7cef59936f4a8d5dbf801e4022670c396ffc8567a5163b4caaf39aa1d36adac",
+      "size_bytes": 12665
+    },
+    "source_evidence.json": {
+      "sha256": "f84baa2f6a338f970c7dc142df9dc8b1e53b97851c30d3d5c4213d4238169515",
+      "size_bytes": 604
+    }
+  },
+  "manifest_sha256": "fec2330427eeca78bd7ee9b833e811727ef5d4f88a30cb4c91d92dda0232b44a",
+  "material_sha256": "58d55e2ab090358156667e04309a8c39f5adda65b25081212309ead113f9cbce",
+  "mobile_excluded_count": 5,
+  "normalization_version": "1",
+  "normalized_sha256": "7559c1c46e0d9f8fad7b586236f50a577c3ae8568c246799d6102cf4624bd165",
+  "outside_leipzig_count": 9,
+  "record_count": 35,
+  "release_id": "20260802T122318Z-58d55e2ab090",
+  "review_status": "reviewed_for_prototype",
+  "runtime_eligible_count": 21,
+  "schema_version": "1",
+  "source_page_url": "https://www.l.de/wasserwerke/leipziger-wasser/trinkwasserbrunnen/",
+  "source_sha256": "f7cef59936f4a8d5dbf801e4022670c396ffc8567a5163b4caaf39aa1d36adac",
+  "source_url": "https://www.google.com/maps/d/kml?mid=1X3y_V9KdgtfsEucc4T-tmNV_hYe8rdEP&forcekml=1",
+  "valid_geometry_count": 35,
+  "validation_status": "validated"
+}

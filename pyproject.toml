@@ -30,6 +30,8 @@ app = [
   "static/**/*",
   "resources/bootstrap/**/*.json",
   "resources/bootstrap/**/*.geojson",
+  "resources/bootstrap/**/*.csv",
+  "resources/bootstrap/**/*.kml",
 ]
 
 [tool.pytest.ini_options]

@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "release_id": "legacy-3b72f95a88f9",
+  "source_hash": "3b72f95a88f98c57778f50beaa4c66af61b58493fe995feb1deb6f7756d7bf9c",
+  "files": {
+    "canonical/offers.json": {
+      "sha256": "fc6dced06ff8c9c724c109912f1548162a28ed2c17a6d71cfe66a930f0cc8739",
+      "size_bytes": 202948
+    }
+  }
+}

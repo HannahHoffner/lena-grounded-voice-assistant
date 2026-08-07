@@ -54,7 +54,9 @@ def test_category_only_query_remains_valid() -> None:
     )
 
     assert response.status_code == 200
-    assert response.json()["cards"]
+    assert response.json()["cards"] == []
+    assert response.json()["answer_type"] == "technical_fallback"
+    assert "112" in response.json()["answer"]
 
 
 def test_stt_accepts_exact_limit_and_calls_existing_provider(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -131,9 +133,16 @@ def test_tts_limit_accepts_boundary_and_uses_typed_language(monkeypatch: pytest.
         return b"audio"
 
     monkeypatch.setattr(SpeechSynthesizer, "synthesize", synthesize)
-    response = TestClient(create_app(_settings(speech_synthesis_max_chars=4))).post(
+    app = create_app(_settings(speech_synthesis_max_chars=4))
+    session = app.state.service.sessions.resolve(
+        None,
+        Language.EN,
+        app.state.service.kb.runtime_kb_fingerprint or "",
+    )
+    session = app.state.service.sessions.add_turn(session, question="test", answer="1234")
+    response = TestClient(app).post(
         "/api/speech/synthesize",
-        json={"text": "1234", "language": "en"},
+        json={"text": "1234", "language": "en", "session_id": session.session_id},
     )
 
     assert response.status_code == 200
@@ -195,3 +204,45 @@ def test_environment_limits_are_clamped_to_safe_absolute_bounds(
     assert loaded.query_max_chars == 10_000
     assert loaded.speech_transcription_max_bytes == 1024
     assert loaded.speech_synthesis_max_chars == 4000
+
+
+def test_hbf_coordinates_are_read_atomically_as_a_pair(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(config, "_load_env_file", lambda *args, **kwargs: None)
+    monkeypatch.setenv("HBF_LATITUDE", "51.28")
+    monkeypatch.setenv("HBF_LONGITUDE", "12.62")
+
+    loaded = config.load_settings()
+
+    assert loaded.hbf_latitude == 51.28
+    assert loaded.hbf_longitude == 12.62
+
+
+def test_hbf_coordinates_fall_back_to_default_when_pair_is_out_of_range(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(config, "_load_env_file", lambda *args, **kwargs: None)
+    monkeypatch.setenv("HBF_LATITUDE", "0.0")
+    monkeypatch.setenv("HBF_LONGITUDE", "0.0")
+
+    loaded = config.load_settings()
+
+    assert loaded.hbf_latitude == 51.34556
+    assert loaded.hbf_longitude == 12.38222
+
+
+def test_hbf_coordinates_fall_back_to_default_when_only_one_value_is_set(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(config, "_load_env_file", lambda *args, **kwargs: None)
+    monkeypatch.setenv("HBF_LATITUDE", "51.28")
+    monkeypatch.delenv("HBF_LONGITUDE", raising=False)
+
+    loaded = config.load_settings()
+
+    assert loaded.hbf_latitude == 51.34556
+    assert loaded.hbf_longitude == 12.38222
+
+
+def test_settings_rejects_an_explicit_out_of_range_hbf_coordinate() -> None:
+    with pytest.raises(ValueError, match="hbf_latitude"):
+        _settings(hbf_latitude=0.0, hbf_longitude=0.0)

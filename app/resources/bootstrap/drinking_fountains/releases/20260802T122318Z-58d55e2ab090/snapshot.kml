@@ -1,0 +1,430 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2">
+  <Document>
+    <name>Leipziger Trinkbrunnen</name>
+    <description/>
+    <Style id="icon-1899-DB4436-normal">
+      <IconStyle>
+        <color>ff3644db</color>
+        <scale>1</scale>
+        <Icon>
+          <href>https://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</href>
+        </Icon>
+        <hotSpot x="32" xunits="pixels" y="64" yunits="insetPixels"/>
+      </IconStyle>
+      <LabelStyle>
+        <scale>0</scale>
+      </LabelStyle>
+    </Style>
+    <Style id="icon-1899-DB4436-highlight">
+      <IconStyle>
+        <color>ff3644db</color>
+        <scale>1</scale>
+        <Icon>
+          <href>https://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</href>
+        </Icon>
+        <hotSpot x="32" xunits="pixels" y="64" yunits="insetPixels"/>
+      </IconStyle>
+      <LabelStyle>
+        <scale>1</scale>
+      </LabelStyle>
+    </Style>
+    <StyleMap id="icon-1899-DB4436">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#icon-1899-DB4436-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#icon-1899-DB4436-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Style id="icon-1899-DB4436-nodesc-normal">
+      <IconStyle>
+        <color>ff3644db</color>
+        <scale>1</scale>
+        <Icon>
+          <href>https://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</href>
+        </Icon>
+        <hotSpot x="32" xunits="pixels" y="64" yunits="insetPixels"/>
+      </IconStyle>
+      <LabelStyle>
+        <scale>0</scale>
+      </LabelStyle>
+      <BalloonStyle>
+        <text><![CDATA[<h3>$[name]</h3>]]></text>
+      </BalloonStyle>
+    </Style>
+    <Style id="icon-1899-DB4436-nodesc-highlight">
+      <IconStyle>
+        <color>ff3644db</color>
+        <scale>1</scale>
+        <Icon>
+          <href>https://www.gstatic.com/mapspro/images/stock/503-wht-blank_maps.png</href>
+        </Icon>
+        <hotSpot x="32" xunits="pixels" y="64" yunits="insetPixels"/>
+      </IconStyle>
+      <LabelStyle>
+        <scale>1</scale>
+      </LabelStyle>
+      <BalloonStyle>
+        <text><![CDATA[<h3>$[name]</h3>]]></text>
+      </BalloonStyle>
+    </Style>
+    <StyleMap id="icon-1899-DB4436-nodesc">
+      <Pair>
+        <key>normal</key>
+        <styleUrl>#icon-1899-DB4436-nodesc-normal</styleUrl>
+      </Pair>
+      <Pair>
+        <key>highlight</key>
+        <styleUrl>#icon-1899-DB4436-nodesc-highlight</styleUrl>
+      </Pair>
+    </StyleMap>
+    <Folder>
+      <name>Trinkbrunnen (stationär)</name>
+      <Placemark>
+        <name>Kurt-Masur-Platz</name>
+        <description>Gewandhaus</description>
+        <styleUrl>#icon-1899-DB4436</styleUrl>
+        <Point>
+          <coordinates>
+            12.3799126,51.3383275,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Katharinenstraße</name>
+        <description>Katharinenstraße</description>
+        <styleUrl>#icon-1899-DB4436</styleUrl>
+        <Point>
+          <coordinates>
+            12.3751626000001,51.34237,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Windorfer Straße</name>
+        <description>Höhe Taborkirche</description>
+        <styleUrl>#icon-1899-DB4436</styleUrl>
+        <Point>
+          <coordinates>
+            12.3277264,51.3146466,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Markranstädt: Am Eingang des Strandbades</name>
+        <styleUrl>#icon-1899-DB4436-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            12.242329,51.309587,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Petersstraße</name>
+        <description>Petersstraße</description>
+        <styleUrl>#icon-1899-DB4436</styleUrl>
+        <Point>
+          <coordinates>
+            12.374591,51.339025,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Karl-Heine-Platz</name>
+        <styleUrl>#icon-1899-DB4436-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            12.336354,51.3326943,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Lindenauer Markt</name>
+        <styleUrl>#icon-1899-DB4436-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            12.3343972,51.3372454,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Markt</name>
+        <styleUrl>#icon-1899-DB4436-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            12.5004706,51.3806512,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Arthur-Bretschneider-Park</name>
+        <styleUrl>#icon-1899-DB4436-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            12.381683,51.3674033,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Paunsdorf, Grüner Bogen, Nähe Kletterspielplatz, Zugang über Hainbuchenstraße</name>
+        <styleUrl>#icon-1899-DB4436-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            12.4571525,51.3579817,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Völkerschlachtdenkmal</name>
+        <description>Trinkbrunnen am Völkerschlachtdenkmal</description>
+        <styleUrl>#icon-1899-DB4436</styleUrl>
+        <Point>
+          <coordinates>
+            12.4103392,51.3141266,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Zwenkauer Markt
+</name>
+        <styleUrl>#icon-1899-DB4436-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            12.3241064,51.2175577,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Lene-Voigt-Park</name>
+        <description>Reichpietschstraße, 04317 Leipzig</description>
+        <styleUrl>#icon-1899-DB4436</styleUrl>
+        <Point>
+          <coordinates>
+            12.4027672,51.3337806,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Rathausstraße / Ecke Südstraße
+</name>
+        <description>Rathausstraße, 04416 Markkleeberg</description>
+        <styleUrl>#icon-1899-DB4436</styleUrl>
+        <Point>
+          <coordinates>
+            12.37346,51.279528,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name><![CDATA[Alte Salzstraße & Grünauer Allee]]></name>
+        <description>Zu folgenden Zeiten in Betrieb: täglich 10 – 13 Uhr sowie 15 – 20 Uhr.</description>
+        <styleUrl>#icon-1899-DB4436</styleUrl>
+        <Point>
+          <coordinates>
+            12.3023902,51.3218404,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Cospudener See
+</name>
+        <description>Nordstrand, Lauer 7</description>
+        <styleUrl>#icon-1899-DB4436</styleUrl>
+        <Point>
+          <coordinates>
+            12.3506751,51.2804761,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Schönefelder Allee, Höhe Heinkstraße</name>
+        <description>Mariannenpark</description>
+        <styleUrl>#icon-1899-DB4436</styleUrl>
+        <Point>
+          <coordinates>
+            12.4058614,51.3546915,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Park Möckern
+</name>
+        <styleUrl>#icon-1899-DB4436-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            12.3457964,51.3677311,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Gohliser Anger
+</name>
+        <styleUrl>#icon-1899-DB4436-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            12.3648349,51.3572601,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Alte Salzstraße 63</name>
+        <styleUrl>#icon-1899-DB4436-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            12.2993546,51.3203351,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Naunhof
+</name>
+        <description>Trinkbrunnen in der Ungibauerstraße am Stadtgut</description>
+        <styleUrl>#icon-1899-DB4436</styleUrl>
+        <Point>
+          <coordinates>
+            12.5888609,51.2783422,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Neustädter Markt/Kreuzkirche</name>
+        <styleUrl>#icon-1899-DB4436-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            12.4031765,51.3481002,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Generationenpark Großpösna</name>
+        <styleUrl>#icon-1899-DB4436-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            12.501568,51.2679317,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Borsdorf</name>
+        <styleUrl>#icon-1899-DB4436-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            12.540378,51.346191,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>EM-Brunnen</name>
+        <styleUrl>#icon-1899-DB4436-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            12.3719447817533,51.3435893782088,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Rathausplatz, Schkeuditz
+</name>
+        <styleUrl>#icon-1899-DB4436-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            12.2215628353347,51.3963710000569,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Rabet, Konradstraße
+</name>
+        <styleUrl>#icon-1899-DB4436-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            12.4039637117069,51.3447056621269,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Goetheplatz, Böhlitz-Ehrenberg</name>
+        <styleUrl>#icon-1899-DB4436-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            12.2862403074404,51.3554350837877,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Gorkistraße</name>
+        <styleUrl>#icon-1899-DB4436-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            12.41762814395,51.3584122131928,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Haus Auensee </name>
+        <styleUrl>#icon-1899-DB4436-nodesc</styleUrl>
+        <Point>
+          <coordinates>
+            12.3150875601685,51.3688007735188,0
+          </coordinates>
+        </Point>
+      </Placemark>
+    </Folder>
+    <Folder>
+      <name>Trinkbrunnen (mobil)</name>
+      <Placemark>
+        <name>Brunno on Tour</name>
+        <description><![CDATA[Mobiler Trinkbrunnen<br>15. Juni bis 09. August]]></description>
+        <styleUrl>#icon-1899-DB4436</styleUrl>
+        <Point>
+          <coordinates>
+            12.4029167,51.376973,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Brunno on Tour</name>
+        <description><![CDATA[Mobiler Trinkbrunnen<br>15. Juni bis 09. August]]></description>
+        <styleUrl>#icon-1899-DB4436</styleUrl>
+        <Point>
+          <coordinates>
+            12.4643611,51.2824175,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Brunno on Tour</name>
+        <description><![CDATA[Mobiler Trinkbrunnen<br>15. Juni bis 09. August]]></description>
+        <styleUrl>#icon-1899-DB4436</styleUrl>
+        <Point>
+          <coordinates>
+            12.330332,51.3305581,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Brunno on Tour</name>
+        <description><![CDATA[Mobiler Trinkbrunnen<br>30. Juni - 09. August]]></description>
+        <styleUrl>#icon-1899-DB4436</styleUrl>
+        <Point>
+          <coordinates>
+            12.2908889,51.3178353,0
+          </coordinates>
+        </Point>
+      </Placemark>
+      <Placemark>
+        <name>Brunno on Tour</name>
+        <description><![CDATA[Mobiler Trinkbrunnen<br>06. Juli bis 13. September]]></description>
+        <styleUrl>#icon-1899-DB4436</styleUrl>
+        <Point>
+          <coordinates>
+            12.3812341,51.3392633,0
+          </coordinates>
+        </Point>
+      </Placemark>
+    </Folder>
+  </Document>
+</kml>

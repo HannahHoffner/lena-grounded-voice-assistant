@@ -1,0 +1,17 @@
+{
+  "completeness_claimed": false,
+  "cost_status": "free",
+  "license_status": "not_explicitly_specified",
+  "operation_status": "unknown",
+  "potable_water_status": "verified",
+  "realtime_status_available": false,
+  "review_status": "reviewed_for_prototype",
+  "reviewed_at": "2026-08-02T12:23:18Z",
+  "reviewed_by_role": "technical source review",
+  "schema_version": "1",
+  "season_end": "october",
+  "season_start": "april",
+  "seasonal_status": "april_to_october",
+  "source_url": "https://www.l.de/wasserwerke/leipziger-wasser/trinkwasserbrunnen/",
+  "usage_scope": "reviewed_prototype_source"
+}

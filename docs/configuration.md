@@ -10,21 +10,25 @@ und Sessionvariablen weiterhin akzeptiert.
 
 | Variable | Pflicht | Standard | Zweck |
 |---|---:|---|---|
-| `LENA_KB_PATH` | nein | `data/canonical/offers.json` | Laufzeit-Wissensbasis |
-| `REWRITE_PROVIDER` | nein | `template` | `template` oder `blablador` |
+| `LENA_KB_PATH` | nein | `data/canonical/offers.json` | normalisierte Quelle für Wartung/Migration; keine ungefilterte Runtime-Wissensbasis |
+| `LENA_CURATION_PATH` | nein | externe Datei unter `LENA_DATA_DIR`, sonst paketierter Prototypkatalog | verpflichtender schema-validierter, hashgebundener Kurationskatalog; ungültige explizite Pfade stoppen den Nutzerbestand kontrolliert |
+| `REWRITE_PROVIDER` | nein | `template` | `blablador` aktiviert den Interpreter; `template` führt freie Anfragen fail-closed ohne Angebote aus |
 | `BLABLADOR_BASE_URL` | für Blablador | – | OpenAI-kompatible Basis-URL |
 | `BLABLADOR_API_KEY` | für Blablador | – | Zugangstoken; niemals committen |
 | `BLABLADOR_MODEL` | für Blablador | – | Modell-ID oder Alias |
-| `LLM_ROUTER_TIMEOUT_SECONDS` | nein | `15` | Gesamtgrenze für den kompakten LLM-Router, mindestens 0,1 s |
+| `LLM_INTERPRETER_TIMEOUT_SECONDS` | nein | `15` | Gesamtgrenze für den strukturierten LLM-Interpreter, mindestens 0,1 s |
+| `LLM_SELECTOR_TIMEOUT_SECONDS` | nein | `10` | Gesamtgrenze für die kontrollierte LLM-Auswahl, mindestens 0,1 s |
 | `LLM_FORMULATOR_TIMEOUT_SECONDS` | nein | `30` | Gesamtgrenze für Formulator und Übersetzungswartung, mindestens 0,1 s |
-| `BLABLADOR_TIMEOUT_SECONDS` | nein | – | Legacy-Fallback für beide LLM-Grenzen, wenn deren neue Variablen fehlen |
+| `LLM_REQUEST_BUDGET_SECONDS` | nein | `45` | kumulierte monotone Obergrenze der tatsächlichen Interpreter-, Selector- und Formulator-Providerwartezeit pro Nutzeranfrage, mindestens 0,1 s |
+| `BLABLADOR_TIMEOUT_SECONDS` | nein | – | Legacy-Fallback für Interpreter und Formulator, wenn deren eigene Variablen fehlen; nicht für den Selector |
 | `BLABLADOR_MAX_CONTEXT_CHARS` | nein | `50000` | maximale Kontextgröße, mindestens 10000 |
 | `BLABLADOR_MAX_TOKENS` | nein | `1200` | Ausgabelimit, mindestens 200 |
 | `SESSION_TIMEOUT_SECONDS` | nein | `180` | Sessionablauf in Sekunden; positive Ganzzahl |
 | `SESSION_MAX_ENTRIES` | nein | `500` | maximale Zahl lokal persistierter Sessions; Bereich 1–100000 |
 | `QUERY_MAX_CHARS` | nein | `1000` | maximales Query-Feld; Bereich 1–10000 Zeichen |
+| `TRANSLATION_RUNTIME_POLICY` | nein | `reviewed_or_machine` | `reviewed_only`, `reviewed_or_machine` oder `source_language_fallback`; ungültige Werte werden abgewiesen |
 | `TECHNICAL_LOG_LEVEL` | nein | `INFO` | Level der redigierten technischen Ereignisse |
-| `INTERACTION_LOGGING_ENABLED` | nein | `true` | lokales vollständiges Prototyp-Interaktionsprotokoll aktivieren |
+| `INTERACTION_LOGGING_ENABLED` | nein | `true` | lokales Prototyp-Interaktionsprotokoll aktivieren; Safety-Eingaben werden redigiert |
 | `INTERACTION_LOG_PATH` | nein | `runtime/logs/interactions.jsonl` | lokale append-basierte UTF-8-JSONL-Datei |
 
 ## Speech
@@ -58,6 +62,68 @@ und Sessionvariablen weiterhin akzeptiert.
 | `WFS_CONNECT_TIMEOUT_SECONDS` | nein | `10` | Verbindungs-/Poolgrenze des WFS-Clients, mindestens 0,1 s |
 | `WFS_READ_TIMEOUT_SECONDS` | nein | `30` | Lese-/Schreibgrenze des WFS-Clients, mindestens 0,1 s |
 
+`WFS_CHECK_INTERVAL_HOURS` steuert ausschließlich die technische Prüfung der
+Quelle. Es ist kein fachlicher Kurations-Prüfturnus. Der aktuelle Katalog setzt
+`review_interval` deshalb auf `null` und meldet
+`review_policy_status=not_yet_formally_defined` über `/api/health`.
+Der prototypische Reviewstatus ist ausdrücklich keine formale oder produktive
+Freigabe. `/api/health` weist dies als `formal_approval_status=not_granted`
+aus.
+
+## Öffentliche Toiletten
+
+| Variable | Pflicht | Standard | Zweck |
+|---|---:|---|---|
+| `TOILET_SOURCE_URL` | nein | amtliche Leipziger CSV-Ressource | separater Infrastrukturabruf |
+| `TOILET_AUTO_SYNC` | nein | `false` | periodisch prüfen und Änderungen als Pending bereitstellen |
+| `TOILET_AUTO_PROMOTE` | nein | `false` | reservierter Sicherheitsschalter; `true` wird im Prototyp abgewiesen |
+| `TOILET_SYNC_INTERVAL_SECONDS` | nein | `86400` | technisches Prüfintervall, mindestens 300 Sekunden |
+| `TOILET_CONNECT_TIMEOUT_SECONDS` | nein | `10` | Verbindungs-/Poolgrenze |
+| `TOILET_READ_TIMEOUT_SECONDS` | nein | `30` | Lese-/Schreibgrenze |
+
+Eine automatische Toiletten-Promotion ist im Prototyp absichtlich gesperrt;
+`TOILET_AUTO_PROMOTE=true` verhindert den Start mit einer klaren
+Konfigurationsfehlermeldung. `fetch` aktiviert keinen Datenstand. Nur
+`python -m app.toilet_sync promote <release-id>` ersetzt den Pointer nach einer
+erneuten vollständigen Manifest-, Datei- und Schemaprüfung.
+
+## Feste Trinkwasserbrunnen
+
+| Variable | Pflicht | Standard | Zweck |
+|---|---:|---|---|
+| `DRINKING_FOUNTAIN_SOURCE_URL` | nein | Wasserwerke-My-Maps-KML | strukturierter Standortabruf |
+| `DRINKING_FOUNTAIN_SOURCE_PAGE_URL` | nein | offizielle Wasserwerke-Seite | bindende Fachquellenidentität |
+| `DRINKING_FOUNTAIN_BOUNDARY_URL` | nein | amtliche Leipziger Bezirks-GeoJSON | lokale administrative Leipzig-Prüfung |
+| `DRINKING_FOUNTAIN_AUTO_SYNC` | nein | `false` | periodisch prüfen und Änderungen nur als Pending bereitstellen |
+| `DRINKING_FOUNTAIN_AUTO_PROMOTE` | nein | `false` | reserviert; `true` wird abgewiesen |
+| `DRINKING_FOUNTAIN_SYNC_INTERVAL_SECONDS` | nein | `86400` | technisches Prüfintervall |
+| `DRINKING_FOUNTAIN_CONNECT_TIMEOUT_SECONDS` | nein | `10` | Verbindungs-/Poolgrenze beider öffentlichen Abrufe |
+| `DRINKING_FOUNTAIN_READ_TIMEOUT_SECONDS` | nein | `30` | Lese-/Schreibgrenze beider öffentlichen Abrufe |
+
+Die drei Quell-URLs sind Bestandteil der Releaseidentität. Eine abweichende
+Konfiguration kann einen paketierten oder lokalen Stand daher nicht als
+quellgleich laden. `fetch` aktiviert nichts; nur
+`python -m app.drinking_fountain_sync activate <release-id>` wechselt nach
+erneuter vollständiger Prüfung den Active- und Last-Verified-Pointer. Ein
+automatischer Hintergrundcheck erzeugt ebenfalls höchstens Pending-Daten.
+
+## Räumliche Auswahl
+
+| Variable | Pflicht | Standard | Zweck |
+|---|---:|---|---|
+| `HBF_LATITUDE` | nein | `51.34556` | Breitengrad der Referenzkoordinate für Luftliniensortierung |
+| `HBF_LONGITUDE` | nein | `12.38222` | Längengrad der Referenzkoordinate für Luftliniensortierung |
+
+Beide Werte bilden gemeinsam den einzigen Ursprung, gegen den `app/spatial.py`
+für alle kuratierten sozialen/WFS-Angebote, öffentlichen Toiletten und
+Trinkbrunnen die Haversine-Luftlinie berechnet (`app/spatial.py::LEIPZIG_HBF`
+bleibt der eingebaute Standard- und Testwert). Räumliche Sortierung bleibt in
+jedem Fall nachgeordnet gegenüber fachlicher Eignung/Priorität. Ist nur eine
+der beiden Variablen gesetzt oder liegt das Paar außerhalb des Leipziger
+Umgebungsrahmens (51.1-51.6 / 12.0-12.8), wird das gesamte Paar verworfen und
+der Standard verwendet; es entsteht kein aus zwei unterschiedlichen Quellen
+gemischter Ursprung.
+
 Booleans akzeptieren `1`, `true`, `yes` oder `on` als wahr. Ungültige numerische
 Werte fallen auf die im Code definierten Standards zurück.
 
@@ -72,9 +138,29 @@ TTL-Cleanup werden bei Bedarf die ältesten Einträge bis
 `SESSION_MAX_ENTRIES` entfernt. Beide Grenzen gelten für den lokalen
 Einzelprozessbetrieb und sind keine prozessübergreifende Kapazitätssteuerung.
 
-Ein Router-Timeout führt in das deterministische Retrieval und gilt weder als
-erkannte noch als ausgeschlossene Akutgefahr. Ein Formulator-Timeout verwendet
-den vorhandenen Template-Fallback. Es gibt keinen automatischen LLM-Retry.
+Ein Interpreter-Timeout sowie HTTP-, JSON-, Schema-, Vertrags-, Budget- oder
+Verfügbarkeitsfehler führen fail-closed zum lokalisierten technischen Hinweis
+mit bedingter 112-Angabe. CandidateSelector, Infrastruktur, Selector und
+Formulator werden nicht gestartet. Ein Selector-Timeout verwirft die
+gesamte Modellantwort, verwendet nur die deterministische Kandidatenreihenfolge
+und sperrt denselben Provider für den Formulator dieser Anfrage. Ein
+Formulator-Timeout verwendet den vorhandenen Template-Fallback. Es gibt keinen
+automatischen LLM-Retry. Die drei Stufengrenzen summieren sich nominell auf 55
+Sekunden; `LLM_REQUEST_BUDGET_SECONDS` begrenzt die tatsächliche kumulierte
+Providerwartezeit standardmäßig auf 45 Sekunden. Jede Stufe erhält höchstens
+das Restbudget. Ist es erschöpft, wird die nächste Stufe nicht gestartet und
+der kontrollierte deterministische beziehungsweise Templatepfad verwendet.
+
+Für WP9B wird diese Konfiguration nicht verändert. Interpreter, Selector und
+Formulator verwenden derzeit gemeinsam `BLABLADOR_MODEL`; getrennte
+Stufenmodelle sind nicht konfigurierbar. Der providerfreie Evaluationsplan liest
+nur eine feste Positivliste nicht geheimer Planwerte und gibt von der Basis-URL
+nur den Hostnamen aus. `LENA_ALLOW_LIVE_SMOKE=true` ist keine dauerhafte
+Anwendungskonfiguration, sondern eine von mehreren jeweils neu zu setzenden
+Live-Freigaben. Ohne Stufe, Bestätigungsflag, erwartete Provideridentität und
+alle stufengebundenen Limits endet der Lauf vor Settings und Provider. Siehe
+[Kontrollierte Live-Provider-Evaluation](live-provider-evaluation.md).
+
 STT- und TTS-Timeouts ergeben generische HTTP-503-Antworten. WFS trennt
 Verbindungs- und Lesetimeout; vor vollständigem Download und Validierung wird
 kein aktiver Datenstand verändert.

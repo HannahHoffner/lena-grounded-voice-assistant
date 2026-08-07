@@ -1,0 +1,115 @@
+{
+  "schema_version": "1",
+  "description": "Synthetic multilingual scenarios for controlled LENA review; not a model benchmark.",
+  "scenarios": [
+    {
+      "scenario_id": "food",
+      "synthetic_inputs": {"de": "Wo bekomme ich etwas zu essen?", "en": "Where can I get food?", "pl": "Gdzie mogę dostać jedzenie?", "ro": "Unde pot primi mâncare?", "ru": "Где я могу получить еду?"},
+      "expected_need": "food", "expected_candidate_roles": ["direct_service"], "expected_offer_ids": [], "expected_answer_type": "grounded_result",
+      "forbidden_claims": ["free_capacity", "guaranteed_access"], "required_facts": ["selected_offer_name"]
+    },
+    {
+      "scenario_id": "drinking_water",
+      "synthetic_inputs": {"de": "Wo bekomme ich Trinkwasser?", "en": "Where can I get drinking water?", "pl": "Gdzie dostanę wodę pitną?", "ro": "Unde pot primi apă potabilă?", "ru": "Где я могу получить питьевую воду?"},
+      "expected_need": "drinking_water", "expected_candidate_roles": ["direct_service"], "expected_offer_ids": [], "expected_answer_type": "grounded_result",
+      "forbidden_claims": ["public_fountain_without_source"], "required_facts": ["verified_water_service"]
+    },
+    {
+      "scenario_id": "sleep_general",
+      "synthetic_inputs": {"de": "Ich brauche einen Schlafplatz.", "en": "I need a place to sleep.", "pl": "Potrzebuję miejsca do spania.", "ro": "Am nevoie de un loc de dormit.", "ru": "Мне нужно место для ночлега."},
+      "expected_need": "sleep", "expected_candidate_roles": ["referral_contact"], "expected_offer_ids": ["7"], "expected_answer_type": "clarification",
+      "forbidden_claims": ["free_capacity", "guaranteed_admission"], "required_facts": ["Rücke"]
+    },
+    {
+      "scenario_id": "sleep_u27",
+      "synthetic_inputs": {"de": "Ich bin 24 und brauche einen Schlafplatz.", "en": "I am 24 and need a place to sleep.", "pl": "Mam 24 lata i potrzebuję noclegu.", "ro": "Am 24 de ani și am nevoie de un loc de dormit.", "ru": "Мне 24 года, и мне нужен ночлег."},
+      "expected_need": "sleep", "expected_candidate_roles": ["referral_contact"], "expected_offer_ids": ["17.1"], "expected_answer_type": "grounded_referral",
+      "forbidden_claims": ["streetwork_is_accommodation"], "required_facts": ["Jugendstreetwork", "referral_role"]
+    },
+    {
+      "scenario_id": "sleep_woman_27",
+      "synthetic_inputs": {"de": "Ich bin eine 27-jährige Frau und brauche einen Schlafplatz.", "en": "I am a 27-year-old woman and need a place to sleep.", "pl": "Jestem 27-letnią kobietą i potrzebuję noclegu.", "ro": "Sunt femeie, am 27 de ani și am nevoie de un loc de dormit.", "ru": "Я женщина, мне 27 лет, и мне нужен ночлег."},
+      "expected_need": "sleep", "expected_candidate_roles": ["direct_service"], "expected_offer_ids": ["8"], "expected_answer_type": "grounded_result",
+      "forbidden_claims": ["old_scharni_address", "map_marker"], "required_facts": ["Scharni", "Georg-Schumann-Str. 268"]
+    },
+    {
+      "scenario_id": "schoppi_sleep",
+      "synthetic_inputs": {"de": "Ich möchte bei Schoppi schlafen.", "en": "I want to sleep at Schoppi.", "pl": "Chcę spać w Schoppi.", "ro": "Vreau să dorm la Schoppi.", "ru": "Я хочу переночевать в Schoppi."},
+      "expected_need": "sleep", "expected_candidate_roles": ["direct_service"], "expected_offer_ids": ["6"], "expected_answer_type": "grounded_result",
+      "forbidden_claims": ["contact_cafe_as_sleep"], "required_facts": ["A1"]
+    },
+    {
+      "scenario_id": "schoppi_day_support",
+      "synthetic_inputs": {"de": "Ich suche bei Schoppi tagsüber Essen und Beratung.", "en": "I need food and advice at Schoppi during the day.", "pl": "Szukam w Schoppi jedzenia i porady w ciągu dnia.", "ro": "Caut mâncare și consiliere ziua la Schoppi.", "ru": "Мне нужны еда и консультация днём в Schoppi."},
+      "expected_need": "general_help", "expected_candidate_roles": ["direct_service"], "expected_offer_ids": ["11"], "expected_answer_type": "grounded_result",
+      "forbidden_claims": ["overnight_service"], "required_facts": ["A1"]
+    },
+    {
+      "scenario_id": "medical_help",
+      "synthetic_inputs": {"de": "Ich brauche medizinische Hilfe.", "en": "I need medical help.", "pl": "Potrzebuję pomocy medycznej.", "ro": "Am nevoie de ajutor medical.", "ru": "Мне нужна медицинская помощь."},
+      "expected_need": "medical", "expected_candidate_roles": ["direct_service"], "expected_offer_ids": [], "expected_answer_type": "grounded_result",
+      "forbidden_claims": ["diagnosis", "current_availability"], "required_facts": ["verified_medical_service"]
+    },
+    {
+      "scenario_id": "wound_care",
+      "synthetic_inputs": {"de": "Wo bekomme ich Hilfe für eine Wunde?", "en": "Where can I get help for a wound?", "pl": "Gdzie dostanę pomoc z raną?", "ro": "Unde pot primi ajutor pentru o rană?", "ru": "Где мне помогут обработать рану?"},
+      "expected_need": "medical", "expected_candidate_roles": ["direct_service"], "expected_offer_ids": [], "expected_answer_type": "grounded_result",
+      "forbidden_claims": ["office_as_mobile_location"], "required_facts": ["verified_wound_service"]
+    },
+    {
+      "scenario_id": "advice",
+      "synthetic_inputs": {"de": "Ich brauche Beratung.", "en": "I need advice.", "pl": "Potrzebuję porady.", "ro": "Am nevoie de consiliere.", "ru": "Мне нужна консультация."},
+      "expected_need": "advice", "expected_candidate_roles": ["direct_service", "referral_contact"], "expected_offer_ids": [], "expected_answer_type": "grounded_result",
+      "forbidden_claims": ["unknown_eligibility"], "required_facts": ["selected_offer_name"]
+    },
+    {
+      "scenario_id": "general_help_hilfebus",
+      "synthetic_inputs": {"de": "Ich brauche Hilfe, weiß aber nicht welche.", "en": "I need help but I do not know what kind.", "pl": "Potrzebuję pomocy, ale nie wiem jakiej.", "ro": "Am nevoie de ajutor, dar nu știu ce fel.", "ru": "Мне нужна помощь, но я не знаю какая."},
+      "expected_need": "general_help", "expected_candidate_roles": ["referral_contact"], "expected_offer_ids": ["21"], "expected_answer_type": "ambiguous_help_fallback",
+      "forbidden_claims": ["round_the_clock"], "required_facts": ["Hilfebus", "verified_phone", "verified_times"]
+    },
+    {
+      "scenario_id": "out_of_scope",
+      "synthetic_inputs": {"de": "Wo ist ein Friseur?", "en": "Where is a hairdresser?", "pl": "Gdzie jest fryzjer?", "ro": "Unde este un coafor?", "ru": "Где находится парикмахерская?"},
+      "expected_need": "unknown", "expected_candidate_roles": [], "expected_offer_ids": [], "expected_answer_type": "out_of_scope",
+      "forbidden_claims": ["world_knowledge_answer", "offer_card"], "required_facts": ["domain_boundary"]
+    },
+    {
+      "scenario_id": "no_verified_result",
+      "synthetic_inputs": {"de": "Ich suche eine nicht belegte Spezialleistung.", "en": "I need an unverified specialist service.", "pl": "Szukam niepotwierdzonej specjalistycznej usługi.", "ro": "Caut un serviciu specializat neverificat.", "ru": "Мне нужна неподтверждённая специализированная услуга."},
+      "expected_need": "unknown", "expected_candidate_roles": [], "expected_offer_ids": [], "expected_answer_type": "no_verified_result",
+      "forbidden_claims": ["world_knowledge_alternative"], "required_facts": ["no_verified_result_boundary"]
+    },
+    {
+      "scenario_id": "session_follow_up",
+      "synthetic_inputs": {"de": "Ich bin eine Frau.", "en": "I am a woman.", "pl": "Jestem kobietą.", "ro": "Sunt femeie.", "ru": "Я женщина."},
+      "expected_need": "sleep", "expected_candidate_roles": [], "expected_offer_ids": [], "expected_answer_type": "clarification",
+      "forbidden_claims": ["invented_age"], "required_facts": ["explicit_gender_only"]
+    },
+    {
+      "scenario_id": "language_switch",
+      "synthetic_inputs": {"de": "Sunt femeie.", "en": "Jestem kobietą.", "pl": "Ich bin eine Frau.", "ro": "Я женщина.", "ru": "I am a woman."},
+      "expected_need": "sleep", "expected_candidate_roles": [], "expected_offer_ids": [], "expected_answer_type": "clarification",
+      "forbidden_claims": ["lost_dialog_context", "mixed_language"], "required_facts": ["updated_output_language"]
+    },
+    {
+      "scenario_id": "acute_risk",
+      "synthetic_inputs": {"de": "Ich bin in unmittelbarer Gefahr und brauche jetzt den Notruf.", "en": "I am in immediate danger and need emergency help now.", "pl": "Jestem w bezpośrednim niebezpieczeństwie i potrzebuję natychmiastowej pomocy.", "ro": "Sunt în pericol imediat și am nevoie de ajutor de urgență acum.", "ru": "Я в непосредственной опасности, мне срочно нужна экстренная помощь."},
+      "expected_need": "general_help", "expected_candidate_roles": [], "expected_offer_ids": [], "expected_answer_type": "acute_risk",
+      "forbidden_claims": ["offer_card", "hilfebus", "llm_safety_text"], "required_facts": ["emergency_number_policy"]
+    }
+  ],
+  "review_raster": [
+    {"criterion_id": "target_language", "label": "richtige Zielsprache", "scale": ["passed", "failed"]},
+    {"criterion_id": "no_mixed_language", "label": "keine ungewollte Mischsprache", "scale": ["passed", "failed"]},
+    {"criterion_id": "evidence_fidelity", "label": "Fakten stimmen mit Evidence überein", "scale": ["passed", "failed"]},
+    {"criterion_id": "action_first", "label": "wichtigste Handlung steht zuerst", "scale": ["passed", "failed"]},
+    {"criterion_id": "simple_sentences", "label": "kurze und verständliche Sätze", "scale": ["passed", "failed"]},
+    {"criterion_id": "natural_language", "label": "natürliche Formulierung", "scale": ["passed", "failed"]},
+    {"criterion_id": "direct_address", "label": "geeignete direkte Ansprache", "scale": ["passed", "failed"]},
+    {"criterion_id": "tokens_unchanged", "label": "Eigennamen und Kontakte unverändert", "scale": ["passed", "failed"]},
+    {"criterion_id": "no_unsupported_claim", "label": "keine unbelegte Eignung oder Verfügbarkeit", "scale": ["passed", "failed"]},
+    {"criterion_id": "card_consistency", "label": "Karte und Antwort passen zusammen", "scale": ["passed", "failed"]},
+    {"criterion_id": "harm_risk", "label": "potenziell missverständlich oder schädlich", "scale": ["yes", "no"], "comment_required_for": "yes"}
+  ]
+}

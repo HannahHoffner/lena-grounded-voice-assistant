@@ -30,7 +30,10 @@ Exposition, ersetzt aber weder TLS, Authentifizierung noch einen Reverse Proxy.
 
 Setze mindestens `REWRITE_PROVIDER=template` und `WFS_AUTO_SYNC=false`, wenn der
 Start keine Modell- oder WFS-Anfrage auslösen soll. Das Frontend bleibt nutzbar;
-Speech und Kartenkacheln können ohne Netzwerk eingeschränkt sein.
+freie Anfragen werden ohne Interpreter jedoch bewusst nicht fachlich
+klassifiziert. Sie erhalten einen technischen Hinweis mit bedingter 112-Angabe
+und keine Angebote oder Karten. Speech und Kartenkacheln können ohne Netzwerk
+zusätzlich eingeschränkt sein.
 
 Für langsame oder kontrolliert blockierte Provider können die Timeoutwerte aus
 [Konfiguration](configuration.md) angepasst werden. Sehr kleine Werte eignen
@@ -46,6 +49,19 @@ Prototyp-Protokollierung `logs/interactions.jsonl`. Das Verzeichnis ist laut
 `data/wfs/releases/`; `data/wfs/active_release.json` wählt genau einen davon.
 `data/canonical/offers.json` und die bisherigen WFS-Dateien bleiben während der
 Migration als Legacy-Fallback erhalten.
+
+Öffentliche Toiletten verwenden einen getrennten Releasepfad. Lokal aktivierte
+Stände liegen unter `data/toilets/releases/`, ausstehende Abrufe unter
+`runtime/toilets/pending/`. Ohne lokalen Stand verwendet die Anwendung den
+manifest- und hashgeprüften Paket-Bootstrap. Ein Abruf aktiviert nie automatisch
+einen neuen Stand.
+
+Feste Trinkwasserbrunnen verwenden entsprechend
+`data/drinking_fountains/releases/` und
+`runtime/drinking_fountains/pending/`. Active-, Last-Verified- und
+Previous-Verified-Pointer sind die einzigen lokalen Allowlist-Einstiege. Der
+Paket-Bootstrap ist der letzte sichere Fallback; mobile und außerhalb Leipzigs
+liegende Quellpunkte bleiben darin nachvollziehbar, sind aber nicht runtimefähig.
 
 ## Git-Arbeitsweise und lokale Daten
 
@@ -97,22 +113,96 @@ ist danach wiederholbar. Während einer Nutzeranfrage findet kein WFS-Zugriff
 statt. Die lokale Sperre schützt nur einen Prozess; starte Wartungsbefehle nicht
 parallel aus mehreren Prozessen.
 
+## Toilettenbetrieb
+
+```powershell
+# amtliche CSV abrufen, validieren und eine Änderung nur als Pending bereitstellen
+python -m app.toilet_sync fetch
+
+# aktuellen Quellenstand read-only vergleichen oder lokalen Status anzeigen
+python -m app.toilet_sync diff
+python -m app.toilet_sync status
+
+# einen Release prüfen, ausdrücklich aktivieren oder zurückrollen
+python -m app.toilet_sync validate <release-id> --pending
+python -m app.toilet_sync promote <release-id>
+python -m app.toilet_sync rollback <release-id>
+```
+
+`fetch` verändert den aktiven Pointer nicht. Vor `promote` müssen Manifest,
+Dateihashes, normalisierte Datensätze und Diff geprüft werden. Eine laufende
+Anwendung übernimmt einen ausdrücklich aktivierten Stand erst nach einem
+Neustart; Sessions werden dabei über den zusammengesetzten
+Wissensbasisfingerabdruck vom alten Datenstand getrennt.
+
+## Trinkbrunnenbetrieb
+
+```powershell
+# KML und amtliche Grenzquelle abrufen, validieren und nur bereitstellen
+python -m app.drinking_fountain_sync fetch
+
+# lokalen Status oder einen Live-Diff ohne Aktivierung anzeigen
+python -m app.drinking_fountain_sync status
+python -m app.drinking_fountain_sync diff
+
+# Pending-Release lokal prüfen und genau diesen Stand aktivieren
+python -m app.drinking_fountain_sync validate <release-id> --pending
+python -m app.drinking_fountain_sync activate <release-id>
+```
+
+Prüfe vor `activate` insbesondere hinzugefügte, entfernte und verschobene
+Punkte sowie die Zählungen für Leipzig, externe und mobile Standorte. Fetch und
+Diff übertragen nur die öffentlichen Quellabrufe; sie initialisieren keinen
+LLM-, STT- oder TTS-Provider. Eine laufende Anwendung übernimmt den neuen
+Fingerprint nach Neustart. Die Quelle belegt keinen aktuellen Funktionsstatus;
+ein technischer Abruf ersetzt keine fachliche Freigabe.
+
 ## Übersetzungswartung
 
 ```powershell
-python -m app.translate_offers --provider blablador --dry-run
-python -m app.translate_offers --provider blablador
+python -m app.translate_offers status
+python -m app.translate_offers validate
+python -m app.translate_offers generate --provider blablador --dry-run
+python -m app.translate_offers generate --provider blablador
+python -m app.translate_offers export-review --languages en,pl,ro,ru --output translation-review.json
+python -m app.translate_offers import-review --input translation-review.json
 ```
 
 Mit `--provider copy` werden deutsche Inhalte kopiert; dies ist ein technischer
-Fallback, keine fachlich geprüfte Übersetzung. Manuelle Korrekturen gehören in
-`data/i18n/manual_overrides.json` und überschreiben maschinelle Werte.
+Test-Double, keine Übersetzung oder Sprachprüfung. `generate` überschreibt keine
+dokumentiert geprüfte Fassung und schreibt erst nach lokaler Integritätsprüfung
+atomar. Der Dry-Run verändert weder Store noch Status oder temporäre
+Repositorydateien. Reviewentscheidungen werden nur für unveränderte Versionen
+mit Rolle, Zeitpunkt und Prüfumfang importiert. Eine Autorinnen-, fachliche,
+muttersprachliche und professionelle Prüfung sind getrennte Rollen.
+
+Ein providerfreies Szenario-Review wird so exportiert:
+
+```powershell
+python -m app.multilingual_review export --output multilingual-review.json
+```
+
+Die kontrollierte Live-Provider-Evaluation ist als `prepared_not_executed`
+vorbereitet. Ihr providerfreier Plan kann ohne `.env`- oder
+Providerinitialisierung geprüft werden:
+
+```powershell
+python -m app.multilingual_review live-dry-run --stage all
+```
+
+Ein späterer Live-Lauf verlangt zusätzlich zum Unterbefehl, `--confirm-live`
+und `LENA_ALLOW_LIVE_SMOKE=true` eine einzelne freigegebene Stufe, die erwartete
+Modellkennung und Providerdomain sowie sieben exakte harte Laufgrenzen. Stufen
+starten einander nie automatisch. Befehle, Dateninventar, Abbruchkriterien und
+Reportpfade stehen in [Kontrollierte Live-Provider-Evaluation](live-provider-evaluation.md).
+Ohne gesonderte Freigabe darf kein dort dokumentierter Live-Befehl ausgeführt
+werden. Pytest und CI führen ausschließlich providerfreie Prüfungen aus.
 
 ## Wheel-Installation
 
 Die kanonische Softwareversion steht in `pyproject.toml`; derzeit ist dies die
 Prototypversion `0.1.0`. Wheel, API, `python -m app --version` und neue
-Interaktionsdatensätze lesen dieselbe Version. Interaktionsschema 2 und
+Interaktionsdatensätze lesen dieselbe Version. Interaktionsschema 11 und
 WFS-Manifestschema 1 sind davon unabhängige Datenverträge.
 
 Ein Distributionsbuild erzeugt Wheel und Source Distribution:
@@ -125,7 +215,7 @@ python -m app --version
 
 Das Wheel enthält Pythonmodule, das vollständige Frontend einschließlich der
 Leaflet-Bilder und einen rein lesbaren Bootstrap-Stand aus kanonischen
-Angeboten, Übersetzungen, Overrides sowie WFS-Rohdaten und letztem Bericht. Es
+Angeboten, Übersetzungen, Anwendungs-/Reviewressourcen sowie WFS-Rohdaten und letztem Bericht. Es
 enthält keine Tests, Dokumentation, `.env*`, Sessions, Interaktionsprotokolle,
 Pending-Releases, extern aktivierte Releases, Pointer, Logs oder Audiodaten. Das
 Source-Archiv enthält zusätzlich Tests, Dokumentation, Beispielkonfiguration und
@@ -154,9 +244,11 @@ nicht veröffentlicht oder als zweite Codebasis gepflegt werden.
 
 ## Prototyp-Protokollierung und Masterarbeitsbezug
 
-LENA protokolliert im aktuellen Entwicklungs- und Forschungsprototyp vollständige
+LENA protokolliert im aktuellen Entwicklungs- und Forschungsprototyp grundsätzlich
 verarbeitete Anfragen gemeinsam mit den tatsächlich ausgegebenen Antworten
-lokal. Antwortpfad, Sprache, Quellen sowie Safety- und Fallbackstatus ergänzen
+lokal. Safety-Eingaben werden durch einen festen Redaktionstoken ersetzt;
+Gefahrenbeschreibung, Diagnose, Risikoscore und Modellbegründung werden nicht
+persistiert. Antwortpfad, Sprache, Quellen sowie minimale Safety- und Fallbackstatus ergänzen
 das Paar. Diese bewusst einfache Umsetzung unterstützt technische
 Nachvollziehbarkeit, Fehleranalyse, Evaluation und iterative Verbesserung; sie
 benötigt weder Datenbank noch Cloudübertragung. Die Dateien sind wegen möglicher

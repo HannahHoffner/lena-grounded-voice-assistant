@@ -8,7 +8,7 @@ from pathlib import Path
 import pytest
 
 from app.config import Settings
-from app.kb_loader import load_active_knowledge_base, load_knowledge_base
+from app.kb_loader import load_knowledge_base, load_normalized_source_release
 from app.wfs_sync import (
     LICENSE,
     WfsSyncError,
@@ -102,5 +102,5 @@ def test_sync_promotes_atomically_and_then_detects_no_change(
     assert first.changed is True
     assert first.promoted is True
     assert second.changed is False
-    assert load_active_knowledge_base(settings).source_kind == "wfs"
-    assert load_active_knowledge_base(settings).release_id == first.release_id
+    assert load_normalized_source_release(settings).source_kind == "wfs"
+    assert load_normalized_source_release(settings).release_id == first.release_id

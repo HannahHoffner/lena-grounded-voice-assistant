@@ -11,6 +11,7 @@ import httpx
 
 from .config import Settings
 from .models import Language
+from .policy_facts import EMERGENCY_NUMBER
 
 
 LANGUAGE_HINTS = {
@@ -58,7 +59,7 @@ EMERGENCY_NUMBER_SPEECH = {
 def normalize_tts_text(text: str, language: Language) -> str:
     """Spricht die Notrufnummer als einzelne Ziffern, ohne den Sichttext zu ändern."""
     normalized = " ".join(text.split())
-    return re.sub(r"\b112\b", EMERGENCY_NUMBER_SPEECH[language], normalized)
+    return re.sub(rf"\b{re.escape(EMERGENCY_NUMBER)}\b", EMERGENCY_NUMBER_SPEECH[language], normalized)
 
 
 class SpeechTranscriptionError(RuntimeError):

@@ -21,7 +21,7 @@ LOGGER = logging.getLogger(__name__)
 class InteractionRecord(BaseModel):
     """Validierter Datensatz einer vollständig sichtbaren Nutzerinteraktion."""
 
-    schema_version: Literal[2] = 2
+    schema_version: Literal[11] = 11
     timestamp: datetime = Field(default_factory=lambda: datetime.now(UTC))
     session_id: str | None
     language: Language
@@ -30,10 +30,45 @@ class InteractionRecord(BaseModel):
     assistant_answer: str
     route: str
     source_ids: list[str] = Field(default_factory=list)
-    retrieval_result_count: int = Field(default=0, ge=0)
+    candidate_result_count: int = Field(default=0, ge=0)
     acute_risk_detected: bool = False
+    acute_risk_status: Literal["not_assessed", "not_detected", "detected", "uncertain"] = "not_assessed"
+    safety_path: str = "none"
+    safety_dialogue_used: bool = False
+    safety_dialogue_result: str | None = None
+    safety_fallback_used: bool = False
+    safety_response_language: Language | None = None
     fallback_used: bool = False
+    interpreter_error_code: str | None = Field(default=None, max_length=60)
     data_release_id: str | None = None
+    candidate_selection_status: str | None = None
+    dialog_type: str | None = None
+    dialog_attempt_count: int | None = Field(default=None, ge=0, le=2)
+    dialog_result_status: str | None = None
+    selector_used: bool = False
+    selection_source: str | None = None
+    selector_bypass_reason: str | None = None
+    selector_eligible_count: int = Field(default=0, ge=0, le=26)
+    selector_final_count: int = Field(default=0, ge=0, le=4)
+    selector_fallback_used: bool = False
+    selector_error_code: str | None = None
+    answer_type: str | None = None
+    formulator_used: bool = False
+    formulator_fallback_used: bool = False
+    formulator_error_code: str | None = None
+    formulator_sentence_count: int = Field(default=0, ge=0, le=3)
+    formulator_offer_count: int = Field(default=0, ge=0, le=4)
+    formulator_language: Language | None = None
+    llm_budget_status: str = "within_budget"
+    infrastructure_source: str | None = None
+    infrastructure_result_count: int = Field(default=0, ge=0, le=500)
+    infrastructure_spoken_count: int = Field(default=0, ge=0, le=3)
+    infrastructure_card_count: int = Field(default=0, ge=0, le=3)
+    infrastructure_marker_count: int = Field(default=0, ge=0, le=500)
+    infrastructure_distance_ranking_used: bool = False
+    infrastructure_district_ranking_used: bool = False
+    infrastructure_error_code: str | None = None
+    infrastructure_distance_class: str | None = None
     software_version: str = Field(default_factory=software_version)
 
 

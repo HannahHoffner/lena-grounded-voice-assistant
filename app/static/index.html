@@ -11,8 +11,8 @@
     <main class="shell">
       <section id="languageView" class="screen language-view">
         <p class="eyebrow">LENA · Leipzig</p>
-        <h1 id="languageTitle">Sprache wählen</h1>
-        <p id="languageIntro" class="intro">Wähle die Sprache für die Anwendung.</p>
+        <h1 id="languageTitle"></h1>
+        <p id="languageIntro" class="intro"></p>
         <div class="language-grid" aria-label="Language selection">
           <button type="button" data-language="de"><span aria-hidden="true">🇩🇪</span> Deutsch</button>
           <button type="button" data-language="en"><span aria-hidden="true">🇬🇧</span> English</button>
@@ -116,6 +116,15 @@
             </button>
           </div>
           <p id="answerText" class="answer"></p>
+          <section id="clarificationPanel" class="clarification-panel" hidden aria-labelledby="clarificationPrompt">
+            <!-- Visually hidden: this text always duplicates the tail of #answerText (both read
+                 the same dialogue.prompts.<type> string). Kept in the DOM so aria-labelledby
+                 still gives the panel an accessible name for screen-reader users who tab in
+                 directly, without showing the same sentence twice on screen. -->
+            <p id="clarificationPrompt" class="clarification-prompt sr-only"></p>
+            <div id="clarificationChoices" class="clarification-choices" role="group"></div>
+            <button id="clarificationSubmit" class="clarification-submit" type="button" hidden></button>
+          </section>
           <details id="historyPanel" class="history-panel" hidden>
             <summary id="historyTitle"></summary>
             <div id="historyList" class="history-list"></div>
@@ -126,8 +135,11 @@
               <p id="mapHint"></p>
             </div>
             <div id="answerMap" class="answer-map" aria-label="Karte mit passenden Orten"></div>
-            <div id="mapList" class="map-list"></div>
           </section>
+          <!-- One tile per matched offer/place, independent of whether the map above is shown
+               (e.g. offers without usable coordinates). Each tile is a native <details> element:
+               collapsed by default (name/address/distance), expands on click to show full info.
+               Clicking a map marker expands and scrolls to the matching tile (see renderMap). -->
           <div id="cardList" class="card-list"></div>
         </section>
       </section>
@@ -135,10 +147,12 @@
         Quelle: Stadt Leipzig,
         <a href="https://geodienste.leipzig.de/l3/OpenData/wohnungslosenhilfe/wfs?REQUEST=GetCapabilities&amp;SERVICE=WFS" target="_blank" rel="noopener noreferrer">WFS Wohnungslosenhilfe</a>,
         <a href="https://www.govdata.de/dl-de/by-2-0" target="_blank" rel="noopener noreferrer">dl-de/by-2-0</a>.
+        Trinkbrunnen: <a href="https://www.l.de/wasserwerke/leipziger-wasser/trinkwasserbrunnen/" target="_blank" rel="noopener noreferrer">Leipziger Wasserwerke</a>; eine ausdrückliche Datensatzlizenz ist dort nicht ausgewiesen.
         Daten automatisiert strukturiert und für LENA aufbereitet.
       </footer>
     </main>
     <script src="/static/vendor/leaflet/leaflet.js?v=20260709-server-tts-2"></script>
-    <script src="/static/app.js?v=20260709-server-tts-2" defer></script>
+    <script src="/static/dialogue.js?v=20260801-dialogue-1" defer></script>
+    <script src="/static/app.js?v=20260801-dialogue-1" defer></script>
   </body>
 </html>

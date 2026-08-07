@@ -16,7 +16,9 @@ import pytest
 
 from app import __version__
 from app.main import create_app
-from app.resources import bootstrap_data_root, static_root
+from app.safety import load_safety_scenarios
+from app.config import load_settings
+from app.resources import bootstrap_data_root, packaged_bootstrap_data_root, static_root
 from app.version import software_version
 import app.version as version_module
 
@@ -25,14 +27,33 @@ ROOT = Path(__file__).resolve().parents[1]
 EXPECTED_VERSION = "0.1.0"
 BOOTSTRAP_FILES = {
     "app/resources/bootstrap/canonical/offers.json",
-    "app/resources/bootstrap/i18n/manual_overrides.json",
+    "app/resources/bootstrap/curation/runtime_manifest.json",
+    "app/resources/bootstrap/curation/social_offers.json",
+    "app/resources/bootstrap/evaluation/live_scenarios.json",
+    "app/resources/bootstrap/i18n/application_texts.json",
+    "app/resources/bootstrap/i18n/dynamic_scenarios.json",
+    "app/resources/bootstrap/i18n/listening_review.json",
     "app/resources/bootstrap/i18n/offer_translations.json",
+    "app/resources/bootstrap/safety/scenarios.json",
     "app/resources/bootstrap/wfs/current.geojson",
     "app/resources/bootstrap/wfs/last_change_report.json",
+    "app/resources/bootstrap/toilets/active_release.json",
+    "app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd/snapshot.csv",
+    "app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd/records.json",
+    "app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd/diff.json",
+    "app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd/manifest.json",
+    "app/resources/bootstrap/drinking_fountains/active_release.json",
+    "app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090/snapshot.kml",
+    "app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090/municipality_boundary.geojson",
+    "app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090/source_evidence.json",
+    "app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090/records.json",
+    "app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090/diff.json",
+    "app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090/manifest.json",
 }
 FRONTEND_FILES = {
     "app/static/index.html",
     "app/static/app.js",
+    "app/static/dialogue.js",
     "app/static/styles.css",
     "app/static/vendor/leaflet/leaflet.css",
     "app/static/vendor/leaflet/leaflet.js",
@@ -123,11 +144,22 @@ def test_bootstrap_resources_are_complete_and_cwd_independent(tmp_path: Path, mo
     for relative in (
         "canonical/offers.json",
         "i18n/offer_translations.json",
-        "i18n/manual_overrides.json",
         "wfs/current.geojson",
         "wfs/last_change_report.json",
     ):
         assert (root / relative).is_file()
+    packaged = packaged_bootstrap_data_root()
+    for relative in (
+        "i18n/application_texts.json",
+        "i18n/dynamic_scenarios.json",
+        "i18n/listening_review.json",
+        "evaluation/live_scenarios.json",
+        "toilets/active_release.json",
+        "drinking_fountains/active_release.json",
+    ):
+        assert (packaged / relative).is_file()
+    assert load_settings().curation_path is not None
+    assert load_settings().curation_path.is_file()
 
 
 def test_sdist_is_sufficient_and_excludes_local_state(distributions: tuple[Path, Path], tmp_path: Path) -> None:
@@ -171,7 +203,12 @@ def test_clean_wheel_install_starts_outside_checkout(
             "LENA_RUNTIME_DIR": str(runtime),
             "LENA_DATA_DIR": str(data),
             "WFS_AUTO_SYNC": "false",
+            "TOILET_AUTO_SYNC": "false",
+            "DRINKING_FOUNTAIN_AUTO_SYNC": "false",
             "REWRITE_PROVIDER": "template",
+            "SPEECH_SYNTHESIS_PROVIDER": "openai",
+            "LENA_ENV_FILE_MODE": "disabled",
+            "LENA_ALLOW_LIVE_SMOKE": "false",
         }
     )
     script = """
@@ -181,8 +218,10 @@ from fastapi.testclient import TestClient
 import app
 from app.config import load_settings
 from app.main import create_app
+from app.safety import load_safety_scenarios
 
 settings = load_settings()
+assert len(load_safety_scenarios().scenarios) == 19
 assert 'site-packages' in str(Path(app.__file__).resolve()).casefold(), app.__file__
 assert settings.kb_path.is_file()
 assert settings.runtime_dir == Path(__import__('os').environ['LENA_RUNTIME_DIR']).resolve()
@@ -191,13 +230,34 @@ with TestClient(create_app(settings)) as client:
     assert client.get('/').status_code == 200
     assert client.get('/static/styles.css').status_code == 200
     health = client.get('/api/health').json()
-    assert health['kb_loaded'] is True and health['data_release_id'].startswith('bootstrap-')
+    assert health['kb_loaded'] is True and health['data_release_id'].startswith('curation-')
+    assert health['offer_count'] == 26
+    assert health['public_toilets']['record_count'] == 21
+    assert health['public_toilets']['eligible_record_count'] == 20
+    assert health['drinking_fountain_record_count'] == 35
+    assert health['drinking_fountain_runtime_eligible_count'] == 21
+    assert health['translations']['active_runtime_policy'] == 'reviewed_or_machine'
+    assert health['application_texts']['resource_count_per_language'] > 0
+    assert health['safety_policy_version'] == '1'
+    assert health['technical_fallback_includes_emergency_guidance'] is True
+    copy = client.get('/api/i18n/copy?language=pl').json()
+    assert copy['copy_version'] == '5' and copy['language'] == 'pl' and copy['texts']
     response = client.post('/api/query', json={'query': 'Wo gibt es Essen?', 'language': 'de'})
-    assert response.status_code == 200 and response.json()['cards']
+    assert response.status_code == 200
+    assert response.json()['answer_type'] == 'technical_fallback'
+    assert response.json()['cards'] == [] and response.json()['map_data'] is None
+    assert '112' in response.json()['answer']
+    toilets = client.post('/api/query', json={'query': 'Wo ist eine Toilette?', 'language': 'de'}).json()
+    assert toilets['cards'] == [] and toilets['map_marker_ids'] == []
+    assert toilets['answer_type'] == 'technical_fallback' and '112' in toilets['answer']
+    fountains = client.post('/api/query', json={'query': 'Wo ist der nächste Trinkbrunnen?', 'language': 'de'}).json()
+    assert fountains['cards'] == [] and fountains['map_marker_ids'] == []
+    assert fountains['answer_type'] == 'technical_fallback' and '112' in fountains['answer']
 assert (settings.runtime_dir / 'sessions.json').is_file()
-record = json.loads((settings.runtime_dir / 'logs' / 'interactions.jsonl').read_text(encoding='utf-8'))
-assert record['software_version'] == app.__version__
-assert record['data_release_id'].startswith('bootstrap-')
+records = (settings.runtime_dir / 'logs' / 'interactions.jsonl').read_text(encoding='utf-8').splitlines()
+record = json.loads(records[-1])
+assert record['software_version'] == app.__version__ and record['schema_version'] == 11
+assert record['data_release_id'].startswith('curation-')
 package = Path(app.__file__).resolve().parent
 assert not (package / 'runtime').exists()
 print(json.dumps({'version': app.__version__, 'app_file': str(app.__file__)}))
@@ -230,7 +290,19 @@ with TestClient(create_app(settings)) as client:
     pointer = data / "wfs" / "active_release.json"
     pointer.parent.mkdir(parents=True, exist_ok=True)
     pointer.write_text("not-json", encoding="utf-8")
+    fallback_script = """
+from fastapi.testclient import TestClient
+from app.config import load_settings
+from app.main import create_app
+with TestClient(create_app(load_settings())) as client:
+    health = client.get('/api/health').json()
+    assert health['kb_loaded'] is True
+    assert health['runtime_kb_status'] == 'degraded'
+    assert health['source_status'] == 'pointer_error'
+    assert health['runtime_source'] == 'packaged_bootstrap'
+    assert health['offer_count'] == 26
+"""
     try:
-        _run(str(python), "-c", failure_script, cwd=outside, env=clean_env)
+        _run(str(python), "-c", fallback_script, cwd=outside, env=clean_env)
     finally:
         pointer.unlink()

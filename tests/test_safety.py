@@ -3,20 +3,54 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app.config import Settings
+from app.interpreter import AcuteRiskStatus, Need, QueryInterpretation, ScopeStatus
 from app.main import create_app
 from app.models import Category, Language
-from app.providers.llm import BlabladorProvider, ProviderAnswer, ProviderError, ProviderRoute
-from app.service import ACUTE_RISK_RESPONSE
+from app.providers.llm import BlabladorProvider, InterpreterError, ProviderAnswer
+from app.application_texts import application_text
+from app.safety import SafetyTextKind, safety_text
 from app.speech import EMERGENCY_NUMBER_SPEECH, SpeechSynthesizer, normalize_tts_text
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def _interpretation(
+    need: Need = Need.UNKNOWN,
+    *,
+    scope: ScopeStatus = ScopeStatus.IN_SCOPE,
+    risk: AcuteRiskStatus = AcuteRiskStatus.NOT_DETECTED,
+) -> QueryInterpretation:
+    return QueryInterpretation.model_validate(
+        {
+            "contract_version": "3",
+            "need": need.value,
+            "explicit_service_requests": [],
+            "scope_status": scope.value,
+            "input_language": "de",
+            "explicit_facts": {
+                "age": None,
+                "gender": "unknown",
+                "drug_use": "unknown",
+                "no_social_benefit_entitlement": "unknown",
+                "district": None,
+                "requested_day": None,
+                "requested_time": None,
+            },
+            "uncertain_hints": [],
+            "potentially_missing_information": [],
+            "clarification_may_be_needed": False,
+            "acute_risk_status": risk.value,
+        }
+    )
 
 
 def _settings(provider: str = "template") -> Settings:
@@ -46,18 +80,24 @@ def _settings(provider: str = "template") -> Settings:
 def test_acute_risk_signal_interrupts_query_before_answer_and_retrieval(
     language: Language,
     query: str,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Prüft den vom Interpreter signalisierten Fall isoliert vom separat getesteten Preflight.
+
+    Einige der hier verwendeten realistischen Formulierungen treffen zufällig
+    auch den engen Preflight-Regex; dieser leitet seit der Umstellung auf den
+    bestätigenden Safety-Dialog nicht mehr in einen Sofort-Stopp. Der Preflight
+    selbst wird bereits in test_safety_policy.py separat getestet.
+    """
+    monkeypatch.setattr("app.service.preflight_detects_immediate_danger", lambda _query: False)
     app = create_app(_settings())
 
     class RiskProvider:
-        def index_context_fits(self, offers) -> bool:
-            return True
-
-        async def route(self, **kwargs) -> ProviderRoute:
+        async def interpret_query(self, **kwargs) -> QueryInterpretation:
             assert kwargs["query"] == query
-            return ProviderRoute(None, [], False, False, acute_risk_detected=True)
+            return _interpretation(risk=AcuteRiskStatus.DETECTED)
 
-        async def answer(self, **kwargs) -> ProviderAnswer:
+        async def formulate_answer(self, **kwargs) -> ProviderAnswer:
             raise AssertionError("Der Formulator darf bei Akutgefahr nicht laufen")
 
     app.state.service.blablador = RiskProvider()
@@ -66,7 +106,7 @@ def test_acute_risk_signal_interrupts_query_before_answer_and_retrieval(
         json={"query": query, "language": language.value},
     ).json()
 
-    assert body["answer"] == ACUTE_RISK_RESPONSE[language]
+    assert body["answer"] == safety_text(language, SafetyTextKind.DETECTED)
     assert body["provider"] == "template"
     assert body["status"] == "no_results"
     assert body["cards"] == []
@@ -80,29 +120,21 @@ def test_provider_validates_true_acute_risk_signal(monkeypatch: pytest.MonkeyPat
 
     async def response(_: dict) -> dict:
         content = json.dumps(
-            {
-                "intent": "unknown",
-                "offer_ids": [],
-                "needs_clarification": False,
-                "out_of_scope": False,
-                "acute_risk_detected": True,
-            }
+            _interpretation(risk=AcuteRiskStatus.DETECTED).model_dump(mode="json")
         )
         return {"choices": [{"message": {"content": content}}]}
 
     monkeypatch.setattr(provider, "_post", response)
-    route = asyncio.run(
-        provider.route(
+    interpretation = asyncio.run(
+        provider.interpret_query(
             query="I am in immediate danger.",
             language=Language.EN,
             category=None,
-            offers=app.state.kb.offers,
+            aliases=app.state.service.interpreter_aliases,
         )
     )
 
-    assert route.acute_risk_detected is True
-    assert route.offer_ids == []
-    assert route.intent is None
+    assert interpretation.acute_risk_status == AcuteRiskStatus.DETECTED
 
 
 @pytest.mark.parametrize(
@@ -116,18 +148,28 @@ def test_provider_validates_true_acute_risk_signal(monkeypatch: pytest.MonkeyPat
 )
 def test_false_risk_signal_keeps_normal_llm_path(query: str) -> None:
     app = create_app(_settings())
+    # Fest verankerte Werktags-Uhrzeit, damit die Kandidatenauswahl unabhängig
+    # von der tatsächlichen Uhrzeit des Testlaufs ein offenes Essensangebot
+    # findet (Standzeiten-/Öffnungszeitenprüfung ist sonst reale Uhrzeit-
+    # abhängig und macht den Test sonst unabhängig von dieser Änderung flaky).
+    app.state.service.clock = lambda: datetime(2026, 8, 3, 10, 0, tzinfo=ZoneInfo("Europe/Berlin"))
     called = {"answer": 0}
 
     class NormalProvider:
-        def index_context_fits(self, offers) -> bool:
+        async def interpret_query(self, **kwargs) -> QueryInterpretation:
+            return _interpretation(Need.FOOD)
+
+        def context_fits(self, evidence) -> bool:
             return True
 
-        async def route(self, **kwargs) -> ProviderRoute:
-            return ProviderRoute(Category.FOOD, [kwargs["offers"][0].id], False, False)
-
-        async def answer(self, **kwargs) -> ProviderAnswer:
+        async def formulate_answer(self, **kwargs) -> ProviderAnswer:
             called["answer"] += 1
-            return ProviderAnswer("Die normale kontrollierte Testantwort.", [kwargs["offers"][0].id])
+            evidence = kwargs["evidence"]
+            return ProviderAnswer(
+                "Die normale kontrollierte Testantwort.",
+                [evidence.selected_offers[0].offer_id],
+                answer_type=evidence.answer_type,
+            )
 
     app.state.service.blablador = NormalProvider()
     body = TestClient(app).post("/api/query", json={"query": query, "language": "de"}).json()
@@ -139,7 +181,7 @@ def test_false_risk_signal_keeps_normal_llm_path(query: str) -> None:
 
 
 @pytest.mark.parametrize("invalid_value", [None, "true", 1])
-def test_router_rejects_missing_or_non_boolean_risk_signal(
+def test_interpreter_rejects_missing_or_invalid_risk_signal(
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
     invalid_value: object,
@@ -149,32 +191,28 @@ def test_router_rejects_missing_or_non_boolean_risk_signal(
     sensitive_query = "vertrauliche Krisenaussage"
 
     async def response(_: dict) -> dict:
-        route = {
-            "intent": "unknown",
-            "offer_ids": [],
-            "needs_clarification": False,
-            "out_of_scope": True,
-        }
+        route = _interpretation(scope=ScopeStatus.OUT_OF_SCOPE).model_dump(mode="json")
+        route.pop("acute_risk_status")
         if invalid_value is not None:
-            route["acute_risk_detected"] = invalid_value
+            route["acute_risk_status"] = invalid_value
         return {"choices": [{"message": {"content": json.dumps(route)}}]}
 
     monkeypatch.setattr(provider, "_post", response)
-    with caplog.at_level(logging.WARNING), pytest.raises(ProviderError):
+    with caplog.at_level(logging.WARNING), pytest.raises(InterpreterError):
         asyncio.run(
-            provider.route(
+            provider.interpret_query(
                 query=sensitive_query,
                 language=Language.DE,
                 category=None,
-                offers=app.state.kb.offers,
+                aliases=app.state.service.interpreter_aliases,
             )
         )
 
-    assert "llm_route_response_invalid" in caplog.text
+    assert "query.interpreter.schema_invalid" in caplog.text
     assert sensitive_query not in caplog.text
 
 
-def test_router_rejects_unparseable_response_without_logging_query(
+def test_interpreter_rejects_unparseable_response_without_logging_query(
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -186,29 +224,25 @@ def test_router_rejects_unparseable_response_without_logging_query(
         return {"choices": [{"message": {"content": "not-json"}}]}
 
     monkeypatch.setattr(provider, "_post", response)
-    with caplog.at_level(logging.WARNING), pytest.raises(ProviderError):
+    with caplog.at_level(logging.WARNING), pytest.raises(InterpreterError):
         asyncio.run(
-            provider.route(
+            provider.interpret_query(
                 query=sensitive_query,
                 language=Language.EN,
                 category=None,
-                offers=app.state.kb.offers,
+                aliases=app.state.service.interpreter_aliases,
             )
         )
 
-    assert "llm_route_response_invalid" in caplog.text
     assert sensitive_query not in caplog.text
 
 
-def test_llm_failure_keeps_existing_fallback_without_inventing_risk() -> None:
+def test_llm_failure_uses_conditional_safety_fallback_without_inventing_detected_risk() -> None:
     app = create_app(_settings())
 
     class FailedProvider:
-        def index_context_fits(self, offers) -> bool:
-            return True
-
-        async def route(self, **kwargs) -> ProviderRoute:
-            raise ProviderError("test failure")
+        async def interpret_query(self, **kwargs) -> QueryInterpretation:
+            raise InterpreterError("interpreter_http_error")
 
     app.state.service.blablador = FailedProvider()
     body = TestClient(app).post(
@@ -217,7 +251,8 @@ def test_llm_failure_keeps_existing_fallback_without_inventing_risk() -> None:
     ).json()
 
     assert body["provider"] == "template"
-    assert "112" not in body["answer"]
+    assert body["answer"] == safety_text(Language.EN, SafetyTextKind.TECHNICAL)
+    assert body["answer_type"] == "technical_fallback"
 
 
 def test_missing_localized_safety_text_uses_controlled_german_fallback(
@@ -226,20 +261,24 @@ def test_missing_localized_safety_text_uses_controlled_german_fallback(
     app = create_app(_settings())
 
     class RiskProvider:
-        def index_context_fits(self, offers) -> bool:
-            return True
+        async def interpret_query(self, **kwargs) -> QueryInterpretation:
+            return _interpretation(risk=AcuteRiskStatus.DETECTED)
 
-        async def route(self, **kwargs) -> ProviderRoute:
-            return ProviderRoute(None, [], False, False, acute_risk_detected=True)
+    real_application_text = application_text
 
-    monkeypatch.delitem(ACUTE_RISK_RESPONSE, Language.PL)
+    def missing_polish(language: Language, resource_id: str, **values: str) -> str:
+        if language == Language.PL and resource_id == "safety.detected":
+            raise RuntimeError("application_text_missing")
+        return real_application_text(language, resource_id, **values)
+
+    monkeypatch.setattr("app.safety.application_text", missing_polish)
     app.state.service.blablador = RiskProvider()
     body = TestClient(app).post(
         "/api/query",
         json={"query": "Pilne zagrożenie", "language": "pl"},
     ).json()
 
-    assert body["answer"] == ACUTE_RISK_RESPONSE[Language.DE]
+    assert body["answer"] == safety_text(Language.DE, SafetyTextKind.DETECTED)
     assert "112" in body["answer"]
 
 
@@ -260,4 +299,4 @@ def test_tts_normalizes_112_before_existing_synthesis_provider(
 
     assert result == b"audio"
     assert captured["text"] == f"Bitte {EMERGENCY_NUMBER_SPEECH[language]} anrufen."
-    assert "112" not in normalize_tts_text(ACUTE_RISK_RESPONSE[language], language)
+    assert "112" not in normalize_tts_text(safety_text(language, SafetyTextKind.DETECTED), language)

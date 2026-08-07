@@ -1,21 +1,77 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app.config import Settings
+from app.candidate_contract import CandidateRole
+from app.formulation import (
+    AnswerType,
+    ClaimType,
+    FactType,
+    FORMULATOR_PROMPT_VERSION,
+    FORMULATOR_SYSTEM_PROMPT,
+    FormulatorError,
+    build_formulator_evidence,
+)
+from app.interpreter import (
+    INTERPRETER_PROMPT_VERSION,
+    AcuteRiskStatus,
+    Need,
+    QueryInterpretation,
+    RequestedService,
+    ScopeStatus,
+)
+from app.llm_selection import SELECTOR_PROMPT_VERSION, CandidateSelectionResponse
 from app.main import create_app
 from app.models import Category, ChatTurn, Language
-from app.offer_roles import sleep_roles
-from app.providers.llm import BlabladorProvider, ProviderAnswer, ProviderError, ProviderRoute
+from app.providers.llm import BlabladorProvider, InterpreterError, ProviderAnswer, ProviderError
+from app.spatial import LEIPZIG_HBF, distance_from_hbf
 from app.speech import SpeechSynthesizer, SpeechTranscriber
 
 
 ROOT = Path(__file__).resolve().parents[1]
 KB_PATH = ROOT / "data" / "canonical" / "offers.json"
+
+
+def _interpretation(
+    need: Need = Need.UNKNOWN,
+    *,
+    scope: ScopeStatus = ScopeStatus.IN_SCOPE,
+    risk: AcuteRiskStatus = AcuteRiskStatus.NOT_DETECTED,
+    facts: dict[str, object] | None = None,
+    services: list[RequestedService] | None = None,
+) -> QueryInterpretation:
+    explicit_facts = {
+        "age": None,
+        "gender": "unknown",
+        "drug_use": "unknown",
+        "no_social_benefit_entitlement": "unknown",
+        "district": None,
+        "requested_day": None,
+        "requested_time": None,
+    }
+    explicit_facts.update(facts or {})
+    return QueryInterpretation.model_validate(
+        {
+            "contract_version": "3",
+            "need": need.value,
+            "explicit_service_requests": [item.value for item in services or []],
+            "scope_status": scope.value,
+            "input_language": "de",
+            "explicit_facts": explicit_facts,
+            "uncertain_hints": [],
+            "potentially_missing_information": [],
+            "clarification_may_be_needed": False,
+            "acute_risk_status": risk.value,
+        }
+    )
 
 
 def settings(provider: str = "template", *, max_chars: int = 50000) -> Settings:
@@ -38,14 +94,103 @@ def settings(provider: str = "template", *, max_chars: int = 50000) -> Settings:
     )
 
 
+class _InterpreterOnlyProvider:
+    async def interpret_query(self, **kwargs) -> QueryInterpretation:
+        query = kwargs["query"].casefold()
+        category = kwargs.get("category")
+        if category is not None:
+            need = Need(category.value)
+            return _interpretation(need)
+        if "who are you" in query:
+            return _interpretation(Need.UNKNOWN)
+        if "telescope" in query:
+            return _interpretation(Need.UNKNOWN, scope=ScopeStatus.OUT_OF_SCOPE)
+        if "übernacht" in query or "schlaf" in query:
+            return _interpretation(Need.SLEEP)
+        if "help" in query or "hilfe" in query:
+            return _interpretation(Need.GENERAL_HELP)
+        return _interpretation(Need.UNKNOWN)
+
+    def context_fits(self, _evidence) -> bool:
+        return False
+
+
+def _template_client_with_interpreter() -> TestClient:
+    app = create_app(settings())
+    app.state.service.blablador = _InterpreterOnlyProvider()
+    return TestClient(app)
+
+
+def _evidence_for(
+    app,
+    offer,
+    *,
+    query: str = "help",
+    language: Language = Language.EN,
+    answer_type: AnswerType = AnswerType.GROUNDED_RESULT,
+    role: CandidateRole = CandidateRole.DIRECT_SERVICE,
+):
+    return build_formulator_evidence(
+        query=query,
+        language=language,
+        answer_type=answer_type,
+        need=Need.ADVICE,
+        offers=[offer],
+        roles={offer.id: role},
+        mandatory_ids={offer.id},
+    )
+
+
+def _fact(evidence, fact_type: FactType):
+    return next(fact for fact in evidence.selected_offers[0].facts if fact.fact_type == fact_type)
+
+
+def _formulator_json(
+    evidence,
+    *,
+    text: str,
+    fact_types: tuple[FactType, ...] = (FactType.DISPLAY_NAME,),
+    claim_type: ClaimType = ClaimType.ACTION,
+    card_ids: list[str] | None = None,
+) -> str:
+    offer = evidence.selected_offers[0]
+    fact_ids = [_fact(evidence, fact_type).fact_id for fact_type in fact_types]
+    return json.dumps(
+        {
+            "contract_version": "2",
+            "language": evidence.requested_language.value,
+            "sentences": [
+                {
+                    "text": text,
+                    "claim_type": claim_type.value,
+                    "offer_id": offer.offer_id,
+                    "fact_ids": fact_ids,
+                    "policy_ids": [],
+                }
+            ],
+            "card_ids": card_ids if card_ids is not None else [offer.offer_id],
+        }
+    )
+
+
+def _seed_tts_session(app, *, answer: str, language: Language = Language.DE) -> str:
+    service = app.state.service
+    session = service.sessions.resolve(None, language, service.kb.runtime_kb_fingerprint or "")
+    session = service.sessions.add_turn(session, question="test", answer=answer)
+    return session.session_id
+
+
 def test_health_and_frontend_work() -> None:
     client = TestClient(create_app(settings()))
 
     health = client.get("/api/health")
     assert health.status_code == 200
     assert health.json()["kb_loaded"] is True
-    assert health.json()["offer_count"] == 30
+    assert health.json()["offer_count"] == 26
     assert health.json()["active_provider"] == "template"
+    assert health.json()["llm_selector_available"] is False
+    assert health.json()["selector_contract_version"] == "1"
+    assert health.json()["selector_prompt_version"] == SELECTOR_PROMPT_VERSION
     assert health.json()["speech"]["server_transcription_available"] is False
     assert health.json()["speech"]["server_synthesis_available"] is True
     assert client.get("/").status_code == 200
@@ -86,16 +231,18 @@ def test_speech_transcription_endpoint_uses_configured_transcriber(monkeypatch: 
 
 def test_speech_synthesis_endpoint_uses_configured_synthesizer(monkeypatch: pytest.MonkeyPatch) -> None:
     app = create_app(settings("blablador"))
+    answer = "Ich beantworte Fragen."
+    session_id = _seed_tts_session(app, answer=answer)
 
     async def synthesize(self: SpeechSynthesizer, text: str, *, language: Language) -> bytes:
-        assert text == "Ich beantworte Fragen."
+        assert text == answer
         assert language == Language.DE
         return b"fake-mp3"
 
     monkeypatch.setattr(SpeechSynthesizer, "synthesize", synthesize)
     response = TestClient(app).post(
         "/api/speech/synthesize",
-        json={"text": "Ich beantworte Fragen.", "language": "de"},
+        json={"text": answer, "language": "de", "session_id": session_id},
     )
 
     assert response.status_code == 200
@@ -122,7 +269,7 @@ def test_existing_lena_environment_names_are_supported(monkeypatch: pytest.Monke
 
 
 def test_template_query_returns_isolated_cards() -> None:
-    client = TestClient(create_app(settings()))
+    client = _template_client_with_interpreter()
     response = client.post("/api/query", json={"query": "", "language": "de", "category": "medical"})
 
     assert response.status_code == 200
@@ -130,23 +277,23 @@ def test_template_query_returns_isolated_cards() -> None:
     assert body["status"] == "ok"
     assert body["provider"] == "template"
     assert body["cards"]
-    assert body["cards"][0]["name"].startswith("UVO")
-    assert "Taubestr." in body["cards"][0]["address"]
+    assert {card["id"] for card in body["cards"]} == {"10", "24", "25"}
 
 
 def test_overnight_verb_query_is_not_rejected_as_out_of_scope() -> None:
-    client = TestClient(create_app(settings()))
+    client = _template_client_with_interpreter()
     body = client.post(
         "/api/query", json={"query": "Wo kann ich übernachten?", "language": "de", "category": None}
     ).json()
 
     assert body["status"] == "ok"
     assert body["cards"]
-    assert any("Übernachtung" in card["name"] or "Notschlafstelle" in card["name"] for card in body["cards"])
+    assert body["cards"][0]["id"] == "7"
+    assert {card["id"] for card in body["cards"]} <= {"7", "21"}
 
 
 def test_self_description_and_out_of_scope_are_deterministic() -> None:
-    client = TestClient(create_app(settings()))
+    client = _template_client_with_interpreter()
 
     self_response = client.post("/api/query", json={"query": "Who are you?", "language": "en", "category": None}).json()
     outside = client.post("/api/query", json={"query": "How do telescopes work?", "language": "en", "category": None}).json()
@@ -156,77 +303,139 @@ def test_self_description_and_out_of_scope_are_deterministic() -> None:
     assert self_response["cards"] == []
     assert self_response["answer"].startswith("I am LENA")
     assert outside["status"] == "no_results"
-    assert outside["answer"].startswith("I can’t help")
+    assert outside["cards"] == []
 
 
 def test_vague_help_request_asks_for_a_category() -> None:
-    client = TestClient(create_app(settings()))
+    client = _template_client_with_interpreter()
     body = client.post("/api/query", json={"query": "I need help", "language": "en", "category": None}).json()
 
     assert body["status"] == "no_results"
     assert body["session_id"]
     assert body["question"] == "I need help"
-    assert body["cards"]
-    assert "Hilfebus" in body["cards"][0]["name"]
-    assert body["map_data"]["origin"]["label"] == "Leipzig Hauptbahnhof"
-    assert body["map_data"]["destinations"]
-    assert body["answer"].startswith("What kind of help")
+    assert body["cards"] == []
+    assert body["clarification"]["type"] == "general_need"
+    assert body["map_data"] is None
+    assert body["answer"] == "What help do you need?"
 
 
 def test_session_follow_up_keeps_chat_history() -> None:
-    client = TestClient(create_app(settings()))
+    client = _template_client_with_interpreter()
     first = client.post("/api/query", json={"query": "Ich brauche Hilfe", "language": "de"}).json()
     second = client.post(
         "/api/query",
-        json={"query": "Essen", "language": "de", "session_id": first["session_id"]},
+        json={
+            "query": "",
+            "language": "de",
+            "session_id": first["session_id"],
+            "dialog_id": first["clarification"]["dialog_id"],
+            "choice_values": ["food"],
+        },
     ).json()
 
     assert second["session_id"] == first["session_id"]
     assert len(second["history"]) == 2
     assert second["history"][0]["question"] == "Ich brauche Hilfe"
-    assert second["history"][1]["question"] == "Essen"
+    assert second["history"][1]["question"] == "Essen und Grundversorgung"
     assert second["status"] == "ok"
 
 
 def test_tuesday_food_names_schwanenteich_stand_time() -> None:
-    client = TestClient(create_app(settings()))
+    app = create_app(settings())
+
+    class TuesdayProvider:
+        async def interpret_query(self, **kwargs) -> QueryInterpretation:
+            return _interpretation(
+                Need.FOOD,
+                facts={"age": 30, "requested_day": "tuesday"},
+                services=[RequestedService.FOOD],
+            )
+
+        def context_fits(self, evidence) -> bool:
+            return False
+
+    app.state.service.blablador = TuesdayProvider()
+    client = TestClient(app)
     body = client.post("/api/query", json={"query": "Wo bekomme ich Dienstag Essen?", "language": "de"}).json()
 
     card_ids = {card["id"] for card in body["cards"]}
     assert body["status"] == "ok"
     assert "14" in card_ids
-    assert "Schwanenteich" in body["answer"]
-    assert "17:00" in body["answer"]
-    assert "keine Essensausgabe" in body["answer"]
+    card = next(card for card in body["cards"] if card["id"] == "14")
+    assert "Schwanenteich" in json.dumps(card, ensure_ascii=False)
+    assert "17:00" in json.dumps(card, ensure_ascii=False)
+    assert len(body["spoken_result_ids"]) <= 3
+    assert len(body["card_ids"]) <= 3
+    assert body["map_marker_ids"] == [item["id"] for item in body["map_data"]["destinations"]]
+    assert "14:schwanenteich" in body["map_marker_ids"]
 
 
 def test_wednesday_food_does_not_use_tuesday_office_food_offer() -> None:
-    client = TestClient(create_app(settings()))
+    app = create_app(settings())
+
+    class WednesdayProvider:
+        async def interpret_query(self, **kwargs) -> QueryInterpretation:
+            return _interpretation(
+                Need.FOOD,
+                facts={"requested_day": "wednesday"},
+                services=[RequestedService.FOOD],
+            )
+
+        def context_fits(self, offers) -> bool:
+            return False
+
+    app.state.service.blablador = WednesdayProvider()
+    client = TestClient(app)
     body = client.post("/api/query", json={"query": "Wo bekomme ich Mittwoch Essen?", "language": "de"}).json()
     card_text = json.dumps(body["cards"], ensure_ascii=False)
 
     assert body["status"] == "ok"
     assert "14" not in {card["id"] for card in body["cards"]}
+    assert "14:schwanenteich" not in body["map_marker_ids"]
     assert "Schwanenteich" not in body["answer"]
     assert "Nürnberger Str. 37" not in card_text
 
 
 def test_sunday_food_names_hilfebus_soup_stand_time() -> None:
-    client = TestClient(create_app(settings()))
+    app = create_app(settings())
+
+    class SundayProvider:
+        async def interpret_query(self, **kwargs) -> QueryInterpretation:
+            return _interpretation(
+                Need.FOOD,
+                facts={"requested_day": "sunday"},
+                services=[RequestedService.FOOD],
+            )
+
+        def context_fits(self, offers) -> bool:
+            return False
+
+    app.state.service.blablador = SundayProvider()
+    client = TestClient(app)
     body = client.post("/api/query", json={"query": "Wo bekomme ich Sonntag Essen?", "language": "de"}).json()
 
     assert body["status"] == "ok"
     assert body["cards"][0]["id"] == "21"
-    assert "Hilfebus" in body["answer"]
-    assert "sonntags 20:00-21:00" in body["answer"]
-    assert "Hauptbahnhof" in body["answer"]
+    assert "Hilfebus" in body["cards"][0]["name"]
+    assert "20:00" in json.dumps(body["cards"][0], ensure_ascii=False)
     destinations = body["map_data"]["destinations"]
     assert any("Westseite" in destination["address"] for destination in destinations)
     assert all("Demmeringstr. 32" not in destination["address"] for destination in destinations)
+    assert body["map_marker_ids"] == [destination["id"] for destination in destinations]
 
 
 def test_wednesday_medical_names_mobile_medibus_places() -> None:
-    client = TestClient(create_app(settings()))
+    app = create_app(settings())
+
+    class WednesdayProvider:
+        async def interpret_query(self, **kwargs) -> QueryInterpretation:
+            return _interpretation(Need.MEDICAL, facts={"requested_day": "wednesday"})
+
+        def context_fits(self, offers) -> bool:
+            return False
+
+    app.state.service.blablador = WednesdayProvider()
+    client = TestClient(app)
     body = client.post(
         "/api/query",
         json={"query": "Wo bekomme ich Mittwoch medizinische Hilfe?", "language": "de"},
@@ -234,13 +443,16 @@ def test_wednesday_medical_names_mobile_medibus_places() -> None:
 
     assert body["status"] == "ok"
     assert body["cards"][0]["id"] == "25"
-    assert "Medibus" in body["answer"]
-    assert "Mittwoch Hauptbahnhof" in body["answer"]
+    assert "Hauptbahnhof" in json.dumps(body["cards"][0], ensure_ascii=False)
 
 
 @pytest.mark.parametrize("language", ["de", "en", "pl", "ro", "ru"])
 def test_template_answer_uses_selected_language(language: str) -> None:
-    client = TestClient(create_app(settings()))
+    client = _template_client_with_interpreter()
+    # Eingefroren auf Montag 10:00, da das Angebot mit "food"-Kategorie nur
+    # Montag-Freitag tagsüber geöffnet hat; ohne feste Uhr hängt der Testerfolg
+    # von der realen Tageszeit ab (WP9C).
+    client.app.state.service.clock = lambda: datetime(2026, 8, 3, 10, 0, tzinfo=ZoneInfo("Europe/Berlin"))
     body = client.post("/api/query", json={"query": "", "language": language, "category": "food"}).json()
 
     assert body["status"] == "ok"
@@ -248,10 +460,43 @@ def test_template_answer_uses_selected_language(language: str) -> None:
     assert body["answer"]
 
 
+def test_custom_hbf_settings_are_used_for_spatial_ordering_and_map_origin() -> None:
+    custom_latitude, custom_longitude = 51.28, 12.62
+    app = create_app(replace(settings(), hbf_latitude=custom_latitude, hbf_longitude=custom_longitude))
+    app.state.service.blablador = _InterpreterOnlyProvider()
+    client = TestClient(app)
+    # Eingefroren auf Montag 10:00 (WP9C), da die Food-Selektion ein
+    # geöffnetes Angebot voraussetzt.
+    client.app.state.service.clock = lambda: datetime(2026, 8, 3, 10, 0, tzinfo=ZoneInfo("Europe/Berlin"))
+
+    body = client.post("/api/query", json={"query": "", "language": "de", "category": "food"}).json()
+
+    assert body["status"] == "ok"
+    map_data = body["map_data"]
+    assert map_data is not None
+    assert map_data["origin"]["latitude"] == custom_latitude
+    assert map_data["origin"]["longitude"] == custom_longitude
+    assert (map_data["origin"]["latitude"], map_data["origin"]["longitude"]) != (
+        LEIPZIG_HBF.latitude,
+        LEIPZIG_HBF.longitude,
+    )
+    destination = map_data["destinations"][0]
+    custom_origin = app.state.service.hbf_origin
+    assert destination["distance_meters"] == distance_from_hbf(
+        destination["latitude"], destination["longitude"], origin=custom_origin
+    )
+    assert destination["distance_meters"] != distance_from_hbf(
+        destination["latitude"], destination["longitude"]
+    )
+
+
 def test_blablador_failure_falls_back_without_exposing_error(monkeypatch: pytest.MonkeyPatch) -> None:
     app = create_app(settings("blablador"))
+    calls = 0
 
     async def fail(_: dict) -> dict:
+        nonlocal calls
+        calls += 1
         raise ProviderError("secret provider detail")
 
     assert app.state.service.blablador is not None
@@ -260,10 +505,12 @@ def test_blablador_failure_falls_back_without_exposing_error(monkeypatch: pytest
         "/api/query", json={"query": "Where can I get food?", "language": "en", "category": None}
     ).json()
 
-    assert body["status"] == "ok"
+    assert body["status"] == "error"
     assert body["provider"] == "template"
     assert "secret" not in body["answer"]
-    assert body["cards"]
+    assert body["cards"] == []
+    assert body["map_data"] is None
+    assert calls == 1  # Interpreterfehler darf keinen Formulatoraufruf auslösen.
 
 
 def test_provider_rejects_unknown_card_ids(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -271,60 +518,80 @@ def test_provider_rejects_unknown_card_ids(monkeypatch: pytest.MonkeyPatch) -> N
     provider: BlabladorProvider = app.state.service.blablador
     offer = app.state.kb.offers[0]
 
+    evidence = _evidence_for(app, offer)
+
     async def response(_: dict) -> dict:
-        content = json.dumps({"answer": "A short grounded answer.", "card_ids": ["invented-offer"]})
+        content = _formulator_json(evidence, text=f"Contact {offer.display_name or offer.name}.", card_ids=["999"])
         return {"choices": [{"message": {"content": content}}]}
 
     monkeypatch.setattr(provider, "_post", response)
-    with pytest.raises(ProviderError):
+    with pytest.raises(FormulatorError, match="formulator_invalid_card"):
         import asyncio
-        asyncio.run(provider.answer(query="help", language=Language.EN, category=Category.ADVICE, offers=[offer]))
+        asyncio.run(provider.formulate_answer(evidence=evidence))
 
 
 def test_provider_treats_null_content_as_safe_failure(monkeypatch: pytest.MonkeyPatch) -> None:
     app = create_app(settings("blablador"))
     provider: BlabladorProvider = app.state.service.blablador
     offer = app.state.kb.offers[0]
+    evidence = _evidence_for(app, offer)
 
     async def response(_: dict) -> dict:
         return {"choices": [{"message": {"content": None}}]}
 
     monkeypatch.setattr(provider, "_post", response)
-    with pytest.raises(ProviderError):
+    with pytest.raises(FormulatorError, match="formulator_invalid_json"):
         import asyncio
-        asyncio.run(provider.answer(query="help", language=Language.EN, category=Category.ADVICE, offers=[offer]))
+        asyncio.run(provider.formulate_answer(evidence=evidence))
 
 
 def test_provider_rejects_unsupported_numbers(monkeypatch: pytest.MonkeyPatch) -> None:
     app = create_app(settings("blablador"))
     provider: BlabladorProvider = app.state.service.blablador
     offer = app.state.kb.offers[0]
+    evidence = _evidence_for(app, offer)
 
     async def response(_: dict) -> dict:
-        content = json.dumps({"answer": "Call 99999999.", "card_ids": [offer.id]})
+        content = _formulator_json(evidence, text="Call 99999999.")
         return {"choices": [{"message": {"content": content}}]}
 
     monkeypatch.setattr(provider, "_post", response)
-    with pytest.raises(ProviderError):
+    with pytest.raises(FormulatorError, match="formulator_ungrounded_claim"):
         import asyncio
-        asyncio.run(provider.answer(query="help", language=Language.EN, category=Category.ADVICE, offers=[offer]))
+        asyncio.run(provider.formulate_answer(evidence=evidence))
 
 
 def test_provider_accepts_source_time_with_different_range_wording(monkeypatch: pytest.MonkeyPatch) -> None:
     app = create_app(settings("blablador"))
     provider: BlabladorProvider = app.state.service.blablador
     offer = next(item for item in app.state.kb.offers if "Care Bags" in item.name)
+    evidence = _evidence_for(app, offer, query="food")
+    time_fact = next(
+        fact for fact in evidence.selected_offers[0].facts
+        if fact.fact_type in {FactType.OPENING_TIME, FactType.STAND_TIME, FactType.NOTE}
+        and "16:00" in fact.value
+        and "19:00" in fact.value
+    )
 
     async def response(_: dict) -> dict:
-        content = json.dumps(
-            {"answer": "Distribution is from 16:00 to 19:00.", "card_ids": [offer.id]}
-        )
+        content = json.dumps({
+            "contract_version": "2",
+            "language": "en",
+            "sentences": [{
+                "text": "Distribution is from 16:00 to 19:00.",
+                "claim_type": "action",
+                "offer_id": offer.id,
+                "fact_ids": [time_fact.fact_id],
+                "policy_ids": [],
+            }],
+            "card_ids": [offer.id],
+        })
         return {"choices": [{"message": {"content": content}}]}
 
     monkeypatch.setattr(provider, "_post", response)
     import asyncio
     result = asyncio.run(
-        provider.answer(query="food", language=Language.EN, category=Category.FOOD, offers=[offer])
+        provider.formulate_answer(evidence=evidence)
     )
 
     assert result.card_ids == [offer.id]
@@ -333,64 +600,72 @@ def test_provider_accepts_source_time_with_different_range_wording(monkeypatch: 
 def test_provider_accepts_no_card_ids_for_unsuitable_context(monkeypatch: pytest.MonkeyPatch) -> None:
     app = create_app(settings("blablador"))
     provider: BlabladorProvider = app.state.service.blablador
-    offer = next(item for item in app.state.kb.offers if item.source_index == 7)
+    evidence = build_formulator_evidence(
+        query="Ich bin erst 12.",
+        language=Language.DE,
+        answer_type=AnswerType.NO_VERIFIED_RESULT,
+        need=Need.SLEEP,
+        offers=[],
+        roles={},
+    )
+    no_result_policy = next(policy for policy in evidence.binding_policies if policy.policy_id.value == "no_verified_result")
 
     async def response(_: dict) -> dict:
-        content = json.dumps(
-            {
-                "answer": "LENA hat in diesen Daten keinen passenden Schlafplatz fuer Minderjaehrige.",
-                "card_ids": [],
-            }
-        )
+        content = json.dumps({
+            "contract_version": "2",
+            "language": "de",
+            "sentences": [{
+                "text": "LENA hat in den freigegebenen Daten kein passendes Angebot gefunden.",
+                "claim_type": "no_result",
+                "offer_id": None,
+                "fact_ids": [],
+                "policy_ids": [no_result_policy.policy_id.value],
+            }],
+            "card_ids": [],
+        })
         return {"choices": [{"message": {"content": content}}]}
 
     monkeypatch.setattr(provider, "_post", response)
     import asyncio
     result = asyncio.run(
-        provider.answer(
-            query="Ich bin erst 12.",
-            language=Language.DE,
-            category=Category.SLEEP,
-            offers=[offer],
-            conversation_history=[
-                ChatTurn(question="Wo kann ich schlafen?", answer="Du kannst in der Rueckmarsdorfer Strasse schlafen.")
-            ],
-        )
+        provider.formulate_answer(evidence=evidence)
     )
 
     assert result.card_ids == []
 
 
-def test_two_stage_pipeline_routes_all_offers_then_formulates_from_selected_records() -> None:
+def test_interpreter_then_candidate_selector_formulates_from_curated_records() -> None:
     app = create_app(settings())
     captured: dict[str, object] = {}
 
     class FakeProvider:
-        def index_context_fits(self, offers) -> bool:
-            return True
-
         def context_fits(self, offers) -> bool:
             return True
 
-        async def route(self, **kwargs) -> ProviderRoute:
-            offers = kwargs["offers"]
-            captured["route_count"] = len(offers)
-            captured["route_history"] = kwargs["conversation_history"]
-            selected = next(offer for offer in offers if offer.source_index == 9)
-            return ProviderRoute(
-                intent=Category.ADVICE,
-                offer_ids=[selected.id],
-                needs_clarification=False,
-                out_of_scope=False,
+        async def interpret_query(self, **kwargs) -> QueryInterpretation:
+            captured["aliases"] = kwargs["aliases"]
+            captured["interpreter_history"] = kwargs["conversation_history"]
+            assert "offers" not in kwargs
+            return _interpretation(Need.ADVICE)
+
+        async def select_candidates(self, **kwargs) -> CandidateSelectionResponse:
+            return CandidateSelectionResponse(
+                contract_version="1",
+                selection_status="selected",
+                selected_ids=[kwargs["decision"].selectable_candidates[0].offer_id],
             )
 
-        async def answer(self, **kwargs) -> ProviderAnswer:
-            offers = kwargs["offers"]
-            captured["answer_count"] = len(offers)
-            captured["question"] = kwargs["query"]
-            captured["routing_context"] = kwargs["routing_context"]
-            captured["answer_history"] = kwargs["conversation_history"]
-            return ProviderAnswer(answer="I found a suitable service.", card_ids=[offers[0].id])
+        async def formulate_answer(self, **kwargs) -> ProviderAnswer:
+            evidence = kwargs["evidence"]
+            captured["evidence"] = evidence
+            captured["answer_count"] = len(evidence.selected_offers)
+            captured["answer_ids"] = [offer.offer_id for offer in evidence.selected_offers]
+            captured["question"] = evidence.current_query
+            return ProviderAnswer(
+                answer="I found a suitable service.",
+                card_ids=[evidence.selected_offers[0].offer_id],
+                answer_type=evidence.answer_type,
+            )
 
     app.state.service.blablador = FakeProvider()
 
@@ -399,119 +674,108 @@ def test_two_stage_pipeline_routes_all_offers_then_formulates_from_selected_reco
     ).json()
 
     assert body["provider"] == "blablador"
-    assert captured["route_count"] == 30
-    assert captured["answer_count"] == 1
+    assert captured["aliases"]
+    assert all(not hasattr(alias, "offer_ids") for alias in captured["aliases"])
+    assert captured["answer_count"] <= 4
     assert captured["question"] == "A detailed but indirect Leipzig support question"
-    assert captured["routing_context"] == {"intent": "advice", "source": "llm_router"}
-    assert captured["route_history"] == []
-    assert captured["answer_history"] == []
+    evidence = captured["evidence"]
+    assert evidence.evidence_version == "3"
+    assert evidence.prompt_version == FORMULATOR_PROMPT_VERSION
+    assert all(item.candidate_role in {"direct_service", "referral_contact"} for item in evidence.selected_offers)
+    assert [item.offer_id for item in evidence.selected_offers] == captured["answer_ids"]
+    assert captured["interpreter_history"] == []
 
 
-def test_llm_follow_up_receives_previous_session_turns_and_can_return_no_cards() -> None:
+def test_structured_dialog_follow_up_excludes_natural_language_session_turns() -> None:
     app = create_app(settings())
     captured: dict[str, object] = {}
 
     class FakeProvider:
-        def index_context_fits(self, offers) -> bool:
+        def context_fits(self, evidence) -> bool:
             return True
 
-        def context_fits(self, offers) -> bool:
-            return True
+        async def interpret_query(self, **kwargs) -> QueryInterpretation:
+            captured["interpreter_history"] = kwargs["conversation_history"]
+            facts = {"age": 12} if kwargs["query"] == "Ich bin erst 12." else None
+            return _interpretation(Need.SLEEP, facts=facts)
 
-        async def route(self, **kwargs) -> ProviderRoute:
-            captured["route_history"] = kwargs["conversation_history"]
-            roles = sleep_roles(kwargs["offers"])
-            return ProviderRoute(
-                intent=Category.SLEEP,
-                offer_ids=[roles["ruecke"][0].id, roles["women"][0].id],
-                needs_clarification=False,
-                out_of_scope=False,
+        async def select_candidates(self, **kwargs) -> CandidateSelectionResponse:
+            return CandidateSelectionResponse(
+                contract_version="1",
+                selection_status="no_selection",
+                selected_ids=[],
             )
 
-        async def answer(self, **kwargs) -> ProviderAnswer:
-            captured["answer_history"] = kwargs["conversation_history"]
-            if kwargs["query"] == "Ich bin erst 12.":
-                return ProviderAnswer(
-                    answer="LENA hat in diesen Daten keinen passenden Schlafplatz fuer Minderjaehrige.",
-                    card_ids=[],
-                )
-            return ProviderAnswer(answer="Du kannst in der Rueckmarsdorfer Strasse schlafen.", card_ids=[kwargs["offers"][0].id])
+        async def formulate_answer(self, **kwargs) -> ProviderAnswer:
+            evidence = kwargs["evidence"]
+            captured["formulator_query"] = evidence.current_query
+            return ProviderAnswer(
+                answer="Wende dich an Jugendstreetwork.",
+                card_ids=[item.offer_id for item in evidence.selected_offers],
+                answer_type=evidence.answer_type,
+            )
 
     app.state.service.blablador = FakeProvider()
     client = TestClient(app)
     first = client.post("/api/query", json={"query": "Wo kann ich schlafen?", "language": "de"}).json()
+    assert first["clarification"]["type"] == "sleep_target_group"
     second = client.post(
         "/api/query",
         json={"query": "Ich bin erst 12.", "language": "de", "session_id": first["session_id"]},
     ).json()
 
     assert second["provider"] == "blablador"
-    assert second["cards"] == []
-    assert len(captured["route_history"]) == 1
-    assert captured["route_history"][0].question == "Wo kann ich schlafen?"
-    assert len(captured["answer_history"]) == 1
-    assert captured["answer_history"][0].question == "Wo kann ich schlafen?"
-    assert captured["answer_history"][0].answer
+    assert [card["id"] for card in second["cards"]] == ["17.1"]
+    assert captured["interpreter_history"] == []
+    assert captured["formulator_query"] == "Ich bin erst 12."
 
 
 def test_answer_prompt_uses_informal_language_and_forbids_visible_ids(monkeypatch: pytest.MonkeyPatch) -> None:
     app = create_app(settings("blablador"))
     provider: BlabladorProvider = app.state.service.blablador
     offer = next(item for item in app.state.kb.offers if item.source_index == 10)
+    evidence = _evidence_for(app, offer, query="Ich hab Hunger", language=Language.DE)
+    name_fact = _fact(evidence, FactType.DISPLAY_NAME)
     captured: dict[str, object] = {}
 
     async def response(payload: dict) -> dict:
         captured["payload"] = payload
-        content = json.dumps({"answer": "Du kannst dort Mittagessen bekommen.", "card_ids": [offer.id]})
+        content = _formulator_json(evidence, text=f"Geh zu {name_fact.value}.")
         return {"choices": [{"message": {"content": content}}]}
 
     monkeypatch.setattr(provider, "_post", response)
     import asyncio
     asyncio.run(
-        provider.answer(
-            query="Ich hab Hunger",
-            language=Language.DE,
-            category=Category.FOOD,
-            offers=[offer],
-            conversation_history=[ChatTurn(question="Ich brauche Hilfe", answer="Welche Hilfe brauchst du?")],
-        )
+        provider.formulate_answer(evidence=evidence)
     )
 
     system_prompt = captured["payload"]["messages"][0]["content"]
     user_prompt = json.loads(captured["payload"]["messages"][1]["content"])
-    assert "Never use formal German Sie/Ihnen" in system_prompt
-    assert "Never mention internal record IDs" in system_prompt
-    assert "labels like 'ID 7'" in system_prompt
-    assert "CONVERSATION_CONTEXT" in system_prompt
-    assert user_prompt["CONVERSATION_CONTEXT"][0]["user"] == "Ich brauche Hilfe"
+    assert system_prompt == FORMULATOR_SYSTEM_PROMPT
+    assert "simple informal language" in system_prompt
+    assert "expose internal IDs" in system_prompt
+    assert user_prompt["current_query"] == "Ich hab Hunger"
+    assert "recent_user_messages" not in user_prompt
 
 
-def test_sleep_router_enforces_ruecke_and_target_group_options() -> None:
+def test_candidate_selector_limits_general_sleep_to_referral_contacts() -> None:
     app = create_app(settings())
     captured: dict[str, object] = {}
 
     class FakeProvider:
-        def index_context_fits(self, offers) -> bool:
+        def context_fits(self, evidence) -> bool:
             return True
 
-        def context_fits(self, offers) -> bool:
-            return True
+        async def interpret_query(self, **kwargs) -> QueryInterpretation:
+            return _interpretation(Need.SLEEP)
 
-        async def route(self, **kwargs) -> ProviderRoute:
-            role_map = sleep_roles(kwargs["offers"])
-            return ProviderRoute(
-                intent=Category.SLEEP,
-                offer_ids=[role_map["men"][-1].id],
-                needs_clarification=False,
-                out_of_scope=False,
-            )
-
-        async def answer(self, **kwargs) -> ProviderAnswer:
-            offers = kwargs["offers"]
-            captured["ids"] = [offer.id for offer in offers]
+        async def formulate_answer(self, **kwargs) -> ProviderAnswer:
+            evidence = kwargs["evidence"]
+            captured["ids"] = [offer.offer_id for offer in evidence.selected_offers]
             return ProviderAnswer(
                 answer="Wende dich zuerst an die Rückmarsdorfer Straße. Danach gibt es passende Orte nach Zielgruppe.",
-                card_ids=[offer.id for offer in offers],
+                card_ids=captured["ids"],
+                answer_type=evidence.answer_type,
             )
 
     app.state.service.blablador = FakeProvider()
@@ -519,106 +783,91 @@ def test_sleep_router_enforces_ruecke_and_target_group_options() -> None:
         "/api/query", json={"query": "Wo kann ich übernachten?", "language": "de", "category": None}
     ).json()
 
-    assert body["provider"] == "blablador"
-    roles = sleep_roles(app.state.kb.offers)
-    expected = [roles["ruecke"][0].id, roles["women"][0].id, roles["drug"][0].id]
-    assert captured["ids"][:3] == expected
-    assert [card["id"] for card in body["cards"][:3]] == expected
+    assert body["provider"] == "template"
+    assert [card["id"] for card in body["cards"]] == ["7"]
+    assert body["clarification"]["type"] == "sleep_target_group"
+    assert "ids" not in captured
 
 
-def test_router_rejects_unknown_offer_id(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_interpreter_rejects_model_output_with_offer_id(monkeypatch: pytest.MonkeyPatch) -> None:
     app = create_app(settings("blablador"))
     provider: BlabladorProvider = app.state.service.blablador
 
     async def response(_: dict) -> dict:
         content = json.dumps(
             {
-                "intent": "sleep",
-                "offer_ids": ["invented-offer"],
-                "needs_clarification": False,
-                "out_of_scope": False,
-                "acute_risk_detected": False,
+                **_interpretation(Need.SLEEP).model_dump(mode="json"),
+                "offer_id": "invented-offer",
             }
         )
         return {"choices": [{"message": {"content": content}}]}
 
     monkeypatch.setattr(provider, "_post", response)
-    with pytest.raises(ProviderError):
+    with pytest.raises(InterpreterError, match="interpreter_contract_violation"):
         import asyncio
         asyncio.run(
-            provider.route(
+            provider.interpret_query(
                 query="sleep",
                 language=Language.EN,
                 category=None,
-                offers=app.state.kb.offers,
+                aliases=app.state.service.interpreter_aliases,
             )
         )
 
 
-def test_router_prompt_contains_question_index_and_sleep_policy(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_interpreter_prompt_has_versions_context_and_no_offer_index(monkeypatch: pytest.MonkeyPatch) -> None:
     app = create_app(settings("blablador"))
     provider: BlabladorProvider = app.state.service.blablador
-    ruecke = sleep_roles(app.state.kb.offers)["ruecke"][0]
     captured: dict[str, object] = {}
 
     async def response(payload: dict) -> dict:
         captured["payload"] = payload
-        content = json.dumps(
-            {
-                "intent": "sleep",
-                "offer_ids": [ruecke.id],
-                "needs_clarification": False,
-                "out_of_scope": False,
-                "acute_risk_detected": False,
-            }
-        )
+        content = _interpretation(Need.SLEEP).model_dump_json()
         return {"choices": [{"message": {"content": content}}]}
 
     monkeypatch.setattr(provider, "_post", response)
     import asyncio
-    route = asyncio.run(
-        provider.route(
+    interpretation = asyncio.run(
+        provider.interpret_query(
             query="Wo kann ich übernachten?",
             language=Language.DE,
             category=None,
-            offers=app.state.kb.offers,
+            aliases=app.state.service.interpreter_aliases,
             conversation_history=[ChatTurn(question="Ich brauche Hilfe", answer="Welche Hilfe brauchst du?")],
         )
     )
     payload = captured["payload"]
     user_prompt = json.loads(payload["messages"][1]["content"])
 
-    assert route.intent == Category.SLEEP
-    assert route.acute_risk_detected is False
-    assert "acute_risk_detected" in payload["messages"][0]["content"]
-    assert user_prompt["question"] == "Wo kann ich übernachten?"
-    assert user_prompt["CONVERSATION_CONTEXT"][0]["user"] == "Ich brauche Hilfe"
-    assert len(user_prompt["OFFER_INDEX"]) == 30
-    assert user_prompt["SLEEP_ROUTING_POLICY"]["general_sleep_first"] == ruecke.id
+    assert interpretation.need == Need.SLEEP
+    assert interpretation.acute_risk_status == AcuteRiskStatus.NOT_DETECTED
+    assert "acute_risk_status" in payload["messages"][0]["content"]
+    assert user_prompt["contract_version"] == "3"
+    assert user_prompt["prompt_version"] == INTERPRETER_PROMPT_VERSION
+    assert user_prompt["current_query"] == "Wo kann ich übernachten?"
+    assert user_prompt["recent_user_messages"] == ["Ich brauche Hilfe"]
+    assert "OFFER_INDEX" not in user_prompt
+    assert "SLEEP_ROUTING_POLICY" not in user_prompt
+    assert "offer_ids" not in json.dumps(user_prompt)
 
 
-def test_explicit_womens_sleep_route_removes_male_only_ruecke_card() -> None:
+def test_explicit_womens_sleep_selects_only_verified_scharni_offer() -> None:
     app = create_app(settings())
 
     class FakeProvider:
-        def index_context_fits(self, offers) -> bool:
+        def context_fits(self, evidence) -> bool:
             return True
 
-        def context_fits(self, offers) -> bool:
-            return True
+        async def interpret_query(self, **kwargs) -> QueryInterpretation:
+            return _interpretation(Need.SLEEP, facts={"age": 30, "gender": "female"})
 
-        async def route(self, **kwargs) -> ProviderRoute:
-            roles = sleep_roles(kwargs["offers"])
-            return ProviderRoute(
-                intent=Category.SLEEP,
-                offer_ids=[roles["ruecke"][0].id, roles["women"][0].id, roles["drug"][0].id],
-                needs_clarification=False,
-                out_of_scope=False,
+        async def formulate_answer(self, **kwargs) -> ProviderAnswer:
+            evidence = kwargs["evidence"]
+            return ProviderAnswer(
+                answer="Für Frauen gibt es ein passendes Übernachtungsangebot.",
+                card_ids=[offer.offer_id for offer in evidence.selected_offers],
+                answer_type=evidence.answer_type,
             )
-
-        async def answer(self, **kwargs) -> ProviderAnswer:
-            offers = kwargs["offers"]
-            return ProviderAnswer(answer="Für Frauen gibt es passende Übernachtungsangebote.", card_ids=[o.id for o in offers])
 
     app.state.service.blablador = FakeProvider()
     body = TestClient(app).post(
@@ -626,31 +875,41 @@ def test_explicit_womens_sleep_route_removes_male_only_ruecke_card() -> None:
         json={"query": "Ich suche einen Schlafplatz für Frauen", "language": "de", "category": None},
     ).json()
 
-    role_map = sleep_roles(app.state.kb.offers)
     ids = [card["id"] for card in body["cards"]]
-    assert ids[0] == role_map["women"][0].id
-    assert role_map["ruecke"][0].id not in ids
+    assert ids == ["8"]
 
 
-def test_full_context_size_guard_disables_llm_router() -> None:
+def test_context_size_guard_is_applied_per_evidence_package() -> None:
     app = create_app(settings("blablador", max_chars=100))
 
-    assert app.state.service.full_context_available is False
+    assert app.state.service.interpreter_available is True
+    assert app.state.service.formulator_context_available is True
     health = TestClient(app).get("/api/health").json()
-    assert health["llm_router_available"] is False
-    assert health["full_context_fallback_available"] is False
+    assert "llm_router_available" not in health
+    assert health["llm_interpreter_available"] is True
+    assert health["llm_formulator_available"] is True
+
+    offer = app.state.kb.offers[0]
+    evidence = _evidence_for(app, offer, query="Eine ausreichend lange Frage nach Essen in Leipzig")
+    assert app.state.service.blablador.context_fits(evidence) is False
 
 
 def test_frontend_contains_required_languages_and_no_internal_source_term() -> None:
     frontend = (ROOT / "app" / "static" / "index.html").read_text(encoding="utf-8")
     frontend += (ROOT / "app" / "static" / "app.js").read_text(encoding="utf-8")
+    resources = json.loads(
+        (ROOT / "app" / "resources" / "bootstrap" / "i18n" / "application_texts.json").read_text(encoding="utf-8")
+    )
+    english = resources["languages"]["en"]["texts"]
 
     for language in ("Deutsch", "English", "Polski", "Română", "Русский"):
         assert language in frontend
     for category in ("Food", "Sleep", "Medical help", "Advice"):
-        assert category in frontend
-    for interaction_text in ("Speak question", "I answer questions about help in Leipzig", "voiceReady"):
-        assert interaction_text in frontend
+        assert category in english.values()
+    assert english["ui.micLabel"] == "Speak question"
+    assert english["ui.mainIntro"].startswith("I answer questions about help in Leipzig")
+    assert "ui.voiceReady" in english
+    assert "/api/i18n/copy" in frontend
     assert "SESSION_TIMEOUT_MS = 3 * 60 * 1000" in frontend
     assert "MediaRecorder" in frontend
     assert "/api/speech/transcribe" in frontend
@@ -659,19 +918,35 @@ def test_frontend_contains_required_languages_and_no_internal_source_term() -> N
     assert "submit-icon" in frontend
     assert "submitQuery(transcript)" not in frontend
     assert "replayAnswerButton" in frontend
-    assert "textForSpeech" in frontend
-    assert "germanTime" in frontend
-    assert "englishTime" in frontend
+    assert "textForSpeech" not in frontend
+    assert "germanTime" not in frontend
+    assert "englishTime" not in frontend
+    assert "session_id: state.sessionId" in frontend
+    assert "state.lastAnswer = text().error" not in frontend
+    assert "speakText(text().speechIntro)" not in frontend
     assert "Wissensbasis" not in frontend
     assert "knowledge base" not in frontend.casefold()
 
 
 def test_english_cards_are_loaded_from_stored_translations() -> None:
-    client = TestClient(create_app(settings()))
-    body = client.post("/api/query", json={"query": "", "language": "en", "category": "sleep"}).json()
+    app = create_app(settings())
+
+    class WomenProvider:
+        async def interpret_query(self, **kwargs) -> QueryInterpretation:
+            return _interpretation(Need.SLEEP, facts={"age": 30, "gender": "female"})
+
+        def context_fits(self, offers) -> bool:
+            return False
+
+    app.state.service.blablador = WomenProvider()
+    client = TestClient(app)
+    body = client.post(
+        "/api/query",
+        json={"query": "I need a place for a woman to sleep", "language": "en"},
+    ).json()
     card_text = json.dumps(body["cards"], ensure_ascii=False)
 
     assert body["status"] == "ok"
-    assert "Grundversorgung" not in card_text
-    assert "Social counseling" in card_text or "Basic supplies" in card_text
-    assert "Scharnhorststr. 27, 04275 Leipzig" in card_text
+    assert "Scharni" in card_text
+    assert "Scharnhorststr. 27, 04275 Leipzig" not in card_text
+    assert "Georg-Schumann-Str. 268, 04159 Leipzig" in card_text

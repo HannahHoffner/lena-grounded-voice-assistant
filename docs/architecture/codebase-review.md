@@ -274,10 +274,16 @@ bereits gesetzte Prozessvariablen. Das ist für lokale Entwicklung praktisch,
 für Deployment jedoch überraschend und kann zentral gesetzte sichere Werte
 aushebeln. Es fehlt eine explizite Environment-/Profilentscheidung.
 
-Der WFS-HTTP-Timeout von 30 Sekunden ist hart codiert. OSM-Tile-URL,
-Hauptbahnhof-Koordinaten und einige fachliche Texte sind ebenfalls direkt im
-Code. Nicht jeder harte Wert braucht Konfiguration; Betriebswerte und fachliche
-Policies sollten aber getrennt und getestet werden.
+Der WFS-HTTP-Timeout von 30 Sekunden ist hart codiert. OSM-Tile-URL und einige
+fachliche Texte sind ebenfalls direkt im Code. Nicht jeder harte Wert braucht
+Konfiguration; Betriebswerte und fachliche Policies sollten aber getrennt und
+getestet werden.
+
+Statushinweis: Die Hauptbahnhof-Koordinaten wurden am 2026-08-04 aus diesem
+Befund herausgelöst. `Settings.hbf_latitude`/`hbf_longitude`
+(`HBF_LATITUDE`/`HBF_LONGITUDE`) sind jetzt der konfigurierbare Ursprung für
+alle Luftliniensortierungen; `app/spatial.py::LEIPZIG_HBF` bleibt nur noch
+Standard- und Testwert. Siehe [Konfiguration](../configuration.md#räumliche-auswahl).
 
 ### 5.5 Persistenz, Nebenläufigkeit und Ressourcen
 

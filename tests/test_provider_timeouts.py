@@ -6,7 +6,9 @@ import asyncio
 import json
 import logging
 from dataclasses import replace
+from datetime import datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import httpx
 import pytest
@@ -16,13 +18,36 @@ import app.config as config
 from app.config import Settings
 from app.main import create_app
 from app.models import Category, Language
-from app.providers.llm import BlabladorProvider, ProviderTimeoutError
+from app.providers.llm import BlabladorProvider, InterpreterError
 from app.speech import SpeechSynthesizer, SpeechSynthesisTimeoutError
 from app.translate_offers import TranslationError, _post_blablador
 from app.wfs_sync import WfsTimeoutError, sync_wfs
 
 
 ROOT = Path(__file__).resolve().parents[1]
+
+
+def _interpretation_payload(need: str = "food") -> dict[str, object]:
+    return {
+            "contract_version": "3",
+        "need": need,
+        "explicit_service_requests": [],
+        "scope_status": "in_scope",
+        "input_language": "de",
+        "explicit_facts": {
+            "age": None,
+            "gender": "unknown",
+            "drug_use": "unknown",
+            "no_social_benefit_entitlement": "unknown",
+            "district": None,
+            "requested_day": None,
+            "requested_time": None,
+        },
+        "uncertain_hints": [],
+        "potentially_missing_information": [],
+        "clarification_may_be_needed": False,
+        "acute_risk_status": "not_detected",
+    }
 
 
 def _settings(tmp_path: Path, **overrides: object) -> Settings:
@@ -35,7 +60,7 @@ def _settings(tmp_path: Path, **overrides: object) -> Settings:
         blablador_model="test-model",
         blablador_timeout_seconds=1,
         blablador_max_context_chars=50_000,
-        llm_router_timeout_seconds=0.02,
+        llm_interpreter_timeout_seconds=0.02,
         llm_formulator_timeout_seconds=0.02,
         speech_transcription_base_url="https://speech.example/v1",
         speech_transcription_api_key="test-token",
@@ -56,13 +81,15 @@ def _interaction(path: Path) -> dict[str, object]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def test_timeout_configuration_defaults_aliases_and_validation(
+def test_timeout_configuration_defaults_and_validation(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setattr(config, "_load_env_file", lambda *args, **kwargs: None)
     for name in (
-        "LLM_ROUTER_TIMEOUT_SECONDS",
+        "LLM_INTERPRETER_TIMEOUT_SECONDS",
+        "LLM_SELECTOR_TIMEOUT_SECONDS",
         "LLM_FORMULATOR_TIMEOUT_SECONDS",
+        "LLM_REQUEST_BUDGET_SECONDS",
         "STT_TIMEOUT_SECONDS",
         "TTS_TIMEOUT_SECONDS",
         "WFS_CONNECT_TIMEOUT_SECONDS",
@@ -77,44 +104,56 @@ def test_timeout_configuration_defaults_aliases_and_validation(
         monkeypatch.delenv(name, raising=False)
 
     loaded = config.load_settings()
-    assert loaded.llm_router_timeout_seconds == 15
+    assert loaded.llm_interpreter_timeout_seconds == 15
+    assert loaded.llm_selector_timeout_seconds == 10
     assert loaded.llm_formulator_timeout_seconds == 30
+    assert loaded.llm_request_budget_seconds == 45
     assert loaded.speech_transcription_timeout_seconds == 45
     assert loaded.speech_synthesis_timeout_seconds == 45
     assert loaded.wfs_connect_timeout_seconds == 10
     assert loaded.wfs_read_timeout_seconds == 30
 
-    monkeypatch.setenv("LLM_ROUTER_TIMEOUT_SECONDS", "-1")
+    monkeypatch.setenv("LLM_INTERPRETER_TIMEOUT_SECONDS", "-1")
+    monkeypatch.setenv("LLM_REQUEST_BUDGET_SECONDS", "inf")
     monkeypatch.setenv("STT_TIMEOUT_SECONDS", "nan")
     invalid = config.load_settings()
-    assert invalid.llm_router_timeout_seconds == 15
+    assert invalid.llm_interpreter_timeout_seconds == 15
+    assert invalid.llm_request_budget_seconds == 45
     assert invalid.speech_transcription_timeout_seconds == 45
 
-    monkeypatch.setenv("LLM_ROUTER_TIMEOUT_SECONDS", "0.2")
+    monkeypatch.setenv("LLM_INTERPRETER_TIMEOUT_SECONDS", "0.2")
+    monkeypatch.setenv("LLM_SELECTOR_TIMEOUT_SECONDS", "0.25")
     monkeypatch.setenv("LLM_FORMULATOR_TIMEOUT_SECONDS", "0.3")
+    monkeypatch.setenv("LLM_REQUEST_BUDGET_SECONDS", "0.35")
     monkeypatch.setenv("STT_TIMEOUT_SECONDS", "0.4")
     monkeypatch.setenv("TTS_TIMEOUT_SECONDS", "0.5")
     monkeypatch.setenv("WFS_CONNECT_TIMEOUT_SECONDS", "0.6")
     monkeypatch.setenv("WFS_READ_TIMEOUT_SECONDS", "0.7")
     loaded = config.load_settings()
     assert (
-        loaded.llm_router_timeout_seconds,
+        loaded.llm_interpreter_timeout_seconds,
+        loaded.llm_selector_timeout_seconds,
         loaded.llm_formulator_timeout_seconds,
+        loaded.llm_request_budget_seconds,
         loaded.speech_transcription_timeout_seconds,
         loaded.speech_synthesis_timeout_seconds,
         loaded.wfs_connect_timeout_seconds,
         loaded.wfs_read_timeout_seconds,
-    ) == (0.2, 0.3, 0.4, 0.5, 0.6, 0.7)
+    ) == (0.2, 0.25, 0.3, 0.35, 0.4, 0.5, 0.6, 0.7)
 
     with pytest.raises(ValueError, match="positive finite"):
-        replace(loaded, llm_router_timeout_seconds=0)
+        replace(loaded, llm_interpreter_timeout_seconds=0)
+    with pytest.raises(ValueError, match="positive finite"):
+        replace(loaded, llm_selector_timeout_seconds=float("nan"))
+    with pytest.raises(ValueError, match="positive finite"):
+        replace(loaded, llm_request_budget_seconds=0)
     with pytest.raises(ValueError, match="positive finite"):
         replace(loaded, wfs_read_timeout_seconds=-1)
     with pytest.raises(ValueError, match="positive finite"):
         replace(loaded, speech_synthesis_timeout_seconds=None)  # type: ignore[arg-type]
 
 
-def test_router_timeout_uses_real_query_fallback_without_safety_signal(
+def test_interpreter_timeout_fails_closed_with_conditional_safety_guidance(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
     caplog: pytest.LogCaptureFixture,
@@ -136,14 +175,24 @@ def test_router_timeout_uses_real_query_fallback_without_safety_signal(
         response = TestClient(app).post("/api/query", json={"query": query, "language": "de"})
 
     assert response.status_code == 200
-    assert "112" not in response.json()["answer"]
+    body = response.json()
+    assert body["status"] == "error"
+    assert body["cards"] == []
+    assert body["map_data"] is None
+    assert "112" in body["answer"]
+    assert body["answer_type"] == "technical_fallback"
     assert cancelled.is_set()
-    assert "query.router.timeout" in caplog.text
+    assert "query.interpreter.failed" in caplog.text
+    assert any(
+        getattr(record, "error_code", None) == "interpreter_timeout"
+        for record in caplog.records
+    )
     assert query not in caplog.text
     record = _interaction(app.state.interaction_writer.path)
     assert record["fallback_used"] is True
     assert record["acute_risk_detected"] is False
-    assert record["assistant_answer"] == response.json()["answer"]
+    assert record["interpreter_error_code"] == "interpreter_timeout"
+    assert record["assistant_answer"] == body["answer"]
 
 
 def test_formulator_timeout_uses_existing_template_fallback(
@@ -154,24 +203,31 @@ def test_formulator_timeout_uses_existing_template_fallback(
     app = create_app(_settings(tmp_path))
     provider: BlabladorProvider = app.state.service.blablador
     offer = app.state.kb.offers[0]
+    # Eingefroren auf Montag 10:00, da die Food-Selektion ein geöffnetes
+    # Angebot voraussetzt; ohne feste Uhr hängt der Testerfolg von der realen
+    # Tageszeit ab (WP9C).
+    app.state.service.clock = lambda: datetime(2026, 8, 3, 10, 0, tzinfo=ZoneInfo("Europe/Berlin"))
     calls = 0
 
-    async def route_then_block(payload: dict) -> dict:
+    async def interpret_then_block(payload: dict) -> dict:
         nonlocal calls
         calls += 1
         if calls == 1:
-            route = {
-                "intent": "food",
-                "offer_ids": [offer.id],
-                "needs_clarification": False,
-                "out_of_scope": False,
-                "acute_risk_detected": False,
-            }
+            route = _interpretation_payload()
             return {"choices": [{"message": {"content": json.dumps(route)}}]}
+        if calls == 2:
+            user = json.loads(payload["messages"][1]["content"])
+            selected = user["candidates"][0]["id"]
+            result = {
+                "contract_version": "1",
+                "selection_status": "selected",
+                "selected_ids": [selected],
+            }
+            return {"choices": [{"message": {"content": json.dumps(result)}}]}
         await asyncio.sleep(60)
         raise AssertionError("unreachable")
 
-    monkeypatch.setattr(provider, "_post", route_then_block)
+    monkeypatch.setattr(provider, "_post", interpret_then_block)
     with caplog.at_level(logging.INFO):
         response = TestClient(app).post(
             "/api/query",
@@ -180,10 +236,12 @@ def test_formulator_timeout_uses_existing_template_fallback(
 
     assert response.status_code == 200
     assert response.json()["provider"] == "template"
-    assert calls == 2
-    assert "query.formulation.timeout" in caplog.text
+    assert calls == 3
+    assert "query.formulation.failed" in caplog.text
     record = _interaction(app.state.interaction_writer.path)
     assert record["fallback_used"] is True
+    assert record["formulator_fallback_used"] is True
+    assert record["formulator_error_code"] == "formulator_timeout"
     assert record["assistant_answer"] == response.json()["answer"]
 
 
@@ -274,7 +332,11 @@ def test_edge_tts_timeout_keeps_existing_text_interaction(
     with caplog.at_level(logging.INFO):
         speech_response = client.post(
             "/api/speech/synthesize",
-            json={"text": text_response.json()["answer"], "language": "de"},
+            json={
+                "text": text_response.json()["answer"],
+                "language": "de",
+                "session_id": text_response.json()["session_id"],
+            },
         )
 
     assert speech_response.status_code == 503
@@ -312,10 +374,17 @@ def test_openai_tts_httpx_timeout_is_translated_to_stable_event(
             raise httpx.ReadTimeout("private TTS detail", request=request)
 
     monkeypatch.setattr(httpx, "AsyncClient", TimeoutClient)
+    service = app.state.service
+    session = service.sessions.resolve(None, Language.DE, service.kb.runtime_kb_fingerprint or "")
+    session = service.sessions.add_turn(session, question="test", answer="Bitte 112 anrufen.")
     with caplog.at_level(logging.INFO):
         response = TestClient(app).post(
             "/api/speech/synthesize",
-            json={"text": "Bitte 112 anrufen.", "language": "de"},
+            json={
+                "text": "Bitte 112 anrufen.",
+                "language": "de",
+                "session_id": session.session_id,
+            },
         )
 
     assert response.status_code == 503
@@ -381,11 +450,11 @@ def test_translation_provider_uses_formulator_total_timeout(
             await asyncio.sleep(60)
 
     monkeypatch.setattr(httpx, "AsyncClient", BlockingClient)
-    with pytest.raises(TranslationError, match="timed out"):
+    with pytest.raises(TranslationError, match="translation_timeout"):
         asyncio.run(_post_blablador(settings, {"model": "test"}))
 
 
-def test_provider_timeout_error_remains_a_controlled_provider_error(tmp_path: Path) -> None:
+def test_interpreter_timeout_has_a_controlled_error_code(tmp_path: Path) -> None:
     provider = BlabladorProvider(_settings(tmp_path))
 
     async def blocked_post(payload: dict) -> dict:
@@ -393,12 +462,12 @@ def test_provider_timeout_error_remains_a_controlled_provider_error(tmp_path: Pa
         return {}
 
     provider._post = blocked_post  # type: ignore[method-assign]
-    with pytest.raises(ProviderTimeoutError):
+    with pytest.raises(InterpreterError, match="interpreter_timeout"):
         asyncio.run(
-            provider.route(
+            provider.interpret_query(
                 query="Essen",
                 language=Language.DE,
                 category=Category.FOOD,
-                offers=[],
+                aliases=[],
             )
         )

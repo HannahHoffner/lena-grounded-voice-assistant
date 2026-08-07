@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>LENA</title>
+    <link rel="stylesheet" href="/static/vendor/leaflet/leaflet.css?v=20260709-server-tts-2">
+    <link rel="stylesheet" href="/static/styles.css?v=20260709-server-tts-2">
+  </head>
+  <body>
+    <main class="shell">
+      <section id="languageView" class="screen language-view">
+        <p class="eyebrow">LENA · Leipzig</p>
+        <h1 id="languageTitle">Sprache wählen</h1>
+        <p id="languageIntro" class="intro">Wähle die Sprache für die Anwendung.</p>
+        <div class="language-grid" aria-label="Language selection">
+          <button type="button" data-language="de"><span aria-hidden="true">🇩🇪</span> Deutsch</button>
+          <button type="button" data-language="en"><span aria-hidden="true">🇬🇧</span> English</button>
+          <button type="button" data-language="pl"><span aria-hidden="true">🇵🇱</span> Polski</button>
+          <button type="button" data-language="ro"><span aria-hidden="true">🇷🇴</span> Română</button>
+          <button type="button" data-language="ru"><span aria-hidden="true">🇷🇺</span> Русский</button>
+        </div>
+      </section>
+
+      <section id="appView" class="screen" hidden>
+        <nav class="navigation" aria-label="Navigation">
+          <button id="startButton" class="icon-button" type="button">
+            <span class="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M4 11.5 12 5l8 6.5"></path>
+                <path d="M6.5 10.5V20h11v-9.5"></path>
+                <path d="M10 20v-5h4v5"></path>
+              </svg>
+            </span>
+            <span class="sr-only"></span>
+          </button>
+          <button id="backButton" class="icon-button" type="button">
+            <span class="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <path d="M19 12H5"></path>
+                <path d="m12 5-7 7 7 7"></path>
+              </svg>
+            </span>
+            <span class="sr-only"></span>
+          </button>
+          <button id="languageButton" class="icon-button" type="button">
+            <span class="nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" focusable="false">
+                <circle cx="12" cy="12" r="9"></circle>
+                <path d="M3 12h18"></path>
+                <path d="M12 3a14 14 0 0 1 0 18"></path>
+                <path d="M12 3a14 14 0 0 0 0 18"></path>
+              </svg>
+            </span>
+            <span class="sr-only"></span>
+          </button>
+        </nav>
+
+        <header class="hero">
+          <p class="eyebrow">LENA · Leipzig</p>
+          <h1 id="mainTitle"></h1>
+          <p id="mainIntro" class="intro"></p>
+        </header>
+
+        <section id="searchView">
+          <section class="voice-panel" aria-live="polite">
+            <button id="micButton" class="mic-button" type="button">
+              <span class="mic-pulse" aria-hidden="true"></span>
+              <span class="mic-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <rect x="9" y="3" width="6" height="11" rx="3"></rect>
+                  <path d="M5 11a7 7 0 0 0 14 0"></path>
+                  <path d="M12 18v3"></path>
+                  <path d="M8 21h8"></path>
+                </svg>
+              </span>
+              <span id="micButtonLabel" class="mic-label"></span>
+            </button>
+            <p id="voiceStatus" class="voice-status"></p>
+          </section>
+          <div id="categoryGrid" class="category-grid"></div>
+          <form id="queryForm" class="query-form">
+            <label id="queryLabel" for="queryInput"></label>
+            <div class="input-row">
+              <input id="queryInput" type="text" maxlength="1000" autocomplete="off">
+              <button id="submitButton" class="submit-button" type="submit">
+                <span class="submit-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" focusable="false">
+                    <path d="M4 12 20 5l-7 16-2-7Z"></path>
+                    <path d="m20 5-9 9"></path>
+                  </svg>
+                </span>
+                <span id="submitButtonLabel" class="sr-only"></span>
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <section id="resultView" class="results" hidden aria-live="polite">
+          <p id="statusLine" class="status"></p>
+          <section id="questionEcho" class="question-echo" hidden>
+            <strong id="questionEchoLabel"></strong>
+            <p id="questionEchoText"></p>
+          </section>
+          <div class="answer-heading">
+            <h2 id="answerTitle"></h2>
+            <button id="replayAnswerButton" class="icon-button replay-button" type="button" hidden>
+              <span class="replay-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" focusable="false">
+                  <path d="M4 9v6h4l5 4V5L8 9Z"></path>
+                  <path d="M16 9.5a4 4 0 0 1 0 5"></path>
+                  <path d="M18.5 7a7 7 0 0 1 0 10"></path>
+                </svg>
+              </span>
+              <span id="replayAnswerLabel" class="sr-only"></span>
+            </button>
+          </div>
+          <p id="answerText" class="answer"></p>
+          <details id="historyPanel" class="history-panel" hidden>
+            <summary id="historyTitle"></summary>
+            <div id="historyList" class="history-list"></div>
+          </details>
+          <section id="mapPanel" class="map-panel" hidden>
+            <div class="map-head">
+              <h2 id="mapTitle"></h2>
+              <p id="mapHint"></p>
+            </div>
+            <div id="answerMap" class="answer-map" aria-label="Karte mit passenden Orten"></div>
+            <div id="mapList" class="map-list"></div>
+          </section>
+          <div id="cardList" class="card-list"></div>
+        </section>
+      </section>
+      <footer class="source-footer">
+        Quelle: Stadt Leipzig,
+        <a href="https://geodienste.leipzig.de/l3/OpenData/wohnungslosenhilfe/wfs?REQUEST=GetCapabilities&amp;SERVICE=WFS" target="_blank" rel="noopener noreferrer">WFS Wohnungslosenhilfe</a>,
+        <a href="https://www.govdata.de/dl-de/by-2-0" target="_blank" rel="noopener noreferrer">dl-de/by-2-0</a>.
+        Daten automatisiert strukturiert und für LENA aufbereitet.
+      </footer>
+    </main>
+    <script src="/static/vendor/leaflet/leaflet.js?v=20260709-server-tts-2"></script>
+    <script src="/static/app.js?v=20260709-server-tts-2" defer></script>
+  </body>
+</html>

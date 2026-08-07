@@ -8,21 +8,44 @@ sequenceDiagram
     participant A as FastAPI
     participant S as QueryService
     participant K as lokale KB
+    participant C as CandidateSelector
+    participant D as Dialogzustand
     participant L as Blablador optional
     participant J as lokales JSONL
     B->>A: POST /api/query
     A->>S: QueryRequest
-    S->>K: Retrieval und Kartenfelder
-    opt Provider vollständig konfiguriert
-        S->>L: Index + Frage
-        L-->>S: Intent + Offer-IDs + acute_risk_detected
-        alt validiertes Akutgefahr-Signal
+    opt vollständig expliziter Akutsatz (enger Wortlauttreffer)
+        S->>D: Safety-Dialog atomar öffnen (kein Interpreteraufruf)
+    end
+    opt Provider vollständig konfiguriert und kein Preflight-Dialog
+        S->>L: Frage + letzte Nutzertexte + minimale Alias-Hinweise
+        L-->>S: validierte Bedarfsbeschreibung ohne Angebots-IDs
+        alt acute_risk_status = detected
             S->>S: kontrollierten 112-Text auswählen
-        else kein Akutgefahr-Signal
-            S->>L: ausgewählte vollständige Records
-            L-->>S: Antwort + Card-IDs
-            S->>S: Grounding validieren
+        else acute_risk_status = uncertain
+            S->>D: Safety-Dialog atomar öffnen
         end
+    end
+    S->>K: kuratierte Runtime-Angebote
+    S->>C: Interpretation + minimale kontrollierte Hinweise + lokale Zeit
+    C-->>S: validierte Kandidatenentscheidung mit Rollen und Reason Codes
+    alt entscheidungsrelevante Information fehlt
+        S->>D: fingerprintgebundenen Dialog atomar öffnen
+        S-->>B: lokalisierter Clarification-Block + sichere Karte
+        B->>S: Buttonwert oder normaler Text/STT
+        S->>D: Dialog-ID und Choice atomar prüfen
+        S->>C: aktualisierte ausdrückliche Fakten
+    end
+    opt mindestens zwei auswählbare Kandidaten
+        S->>L: kompakter Selectorindex ohne Mandatory/Conditional/Excluded
+        L-->>S: strikt validierte Auswahl-IDs
+        S->>S: Mandatory ergänzen und stabile Reihenfolge herstellen
+    end
+    opt geerdete Formulierung verfügbar
+        S->>S: Evidence-Vertrag 2 aus finalen Angeboten
+        S->>L: Evidence + bindende Policies
+        L-->>S: Satzvertrag 2 + Card-IDs
+        S->>S: Fakten, Rollen, Sprache und Karten atomar validieren
     end
     S-->>A: QueryResponse oder Template-Fallback
     A->>A: finales Interaktionsmodell validieren
@@ -31,25 +54,201 @@ sequenceDiagram
 ```
 
 `QueryRequest` enthält `query`, `language`, `input_mode` sowie optional
-`category` und `session_id`. `QueryResponse` enthält Antwort, Karten, Providerstatus,
+`category`, `session_id`, `dialog_id` und höchstens zwei `choice_values`.
+Choice-Antworten dürfen nicht gleichzeitig Freitext oder Kategorie enthalten.
+`QueryResponse` enthält Antwort, Karten, Providerstatus, den expliziten
+`answer_type`,
 Sitzungsverlauf und optionale Kartendaten. Pydantic begrenzt die Frage auf 1000
 Zeichen und normalisiert Whitespace.
 
-`acute_risk_detected` ist ein verpflichtendes striktes boolesches Feld der
-ersten strukturierten LLM-Antwort. Bei `true` bricht `QueryService` vor
-Formulator, Retrieval, Karten und normaler Antwort ab. Die Anwendung wählt einen
-festen Text für `de`, `en`, `pl`, `ro` oder `ru`; das LLM kann weder diesen Text
-noch die Nummer 112 verändern. Fehlende, ungültige oder nicht parsebare Felder
-lösen das bestehende technische Fallback aus und gelten nicht als erkannte oder
-ausgeschlossene Gefahr. Das Verfahren besitzt keine Risikostufen und keine
-zusätzliche Keyword-Klassifikation.
+Der Interpretervertrag Version 3 unterscheidet `need`, ausdrücklich angefragte
+Einzelleistungen, `scope_status`, `input_language`, ausdrücklich genannte Fakten, begrenzte unsichere Hinweise,
+potenziell fehlende Informationen, ein unverbindliches Klärungssignal und
+`acute_risk_status`. Unbekannte sensible Eigenschaften bleiben `unknown` oder
+`null`. `age_group` speichert eine ausdrücklich genannte U27-Grenze, ohne ein
+exaktes Alter abzuleiten. Bei offenem Dialog enthält der Interpreterpayload nur
+Dialogart, angefragte Felder, erlaubte Choice-Bedeutungen und bereits
+ausdrücklich bekannte Fakten; keine Angebotsdatensätze oder IDs. Prompt- und
+Vertragsversion stehen in `/api/health`; vollständige
+Prompts und Nutzereingaben werden nicht in das technische Log geschrieben. Das
+Modell formuliert weder Antwort noch Rückfrage und erhält keine Angebotsdaten.
+Die getrennte Liste `explicit_service_requests` verhindert insbesondere, dass
+eine grobe Essens- oder Grundversorgungsabsicht unbelegt auf Hygiene, Kleidung,
+Wäsche oder Postservice ausgeweitet wird.
 
-Der LLM-Router besitzt eine kürzere Gesamtgrenze als der Formulator. Läuft der
-Router ab, wird kein Safety-Wert erfunden; der deterministische Retrievalpfad
-läuft weiter und das Interaktionsprotokoll markiert den kontrollierten Fallback.
-Läuft nur der Formulator ab, wird die bestehende Template-Antwort als tatsächlich
-sichtbare und gespeicherte Antwort verwendet. Ein Timeout erzeugt keinen zweiten
-Interaktionsdatensatz.
+`acute_risk_status` ist ein verpflichtendes dreiwertiges Feld der ersten
+strukturierten LLM-Antwort. Bei `detected` bricht `QueryService` vor
+Formulator, Kandidatenbegrenzung, Karten und normaler Antwort ab. Die Anwendung wählt einen
+festen Text für `de`, `en`, `pl`, `ro` oder `ru`; das LLM kann weder diesen Text
+noch die Nummer 112 verändern. `uncertain` öffnet vor jedem Fachpfad den
+strukturierten Safety-Dialog. Ja und Unsicher führen zum 112-Pfad; nur eine
+kontrolliert ausdrückliche Verneinung zusammen mit `not_detected` darf den
+ursprünglichen strukturierten Bedarf wieder öffnen. Eine kleine versionierte
+Vorprüfung erkennt ausschließlich vollständige explizite Akutsätze und ersetzt
+keine allgemeine Sprachinterpretation.
+
+Interpreter, Selector und Formulator besitzen getrennte Stufengrenzen und
+teilen zusätzlich ein monotones externes Wartebudget von standardmäßig 45
+Sekunden. Vor jeder Stufe wird deren Timeout auf die verbleibende Budgetzeit
+gekürzt; nach Ausschöpfung beginnt keine weitere Modellstufe. Läuft der
+Interpreter ab oder verletzt seine Antwort den Vertrag, wird keine Kandidaten-
+oder Infrastrukturentscheidung begonnen. Die Anwendung gibt einen lokalisierten
+technischen Text mit bedingtem 112-Hinweis ohne Karten und Marker aus und ruft
+keinen nachgelagerten Provider auf. Auch eine providerfreie Templatekonfiguration
+verwendet keine lexikalische Fachklassifikation.
+Läuft der Selector ab, wird keine teilweise Modellmenge übernommen. Mandatory
+und auswählbare Ergänzungen stammen dann in stabiler Reihenfolge ausschließlich
+aus derselben `CandidateDecision`; der Provider wird in dieser Anfrage nicht
+nochmals als Formulator aufgerufen. Läuft nur der Formulator ab, wird die
+bestehende Template-Antwort als tatsächlich sichtbare und gespeicherte Antwort
+verwendet. Ein Timeout erzeugt keinen zweiten Interaktionsdatensatz.
+
+## Deterministische Kandidatenentscheidung
+
+Der Vertrag `CandidateDecision` Version 2 enthält den effektiven Bedarf, die
+verwendeten ausdrücklichen Fakten, `mandatory_candidates`,
+`selectable_candidates`, `conditional_candidates`, `excluded_candidates`, fehlende Informationen,
+Regel- und Reason Codes, UI-Konflikte und einen eindeutigen Ergebnisstatus.
+Nur fachlich zulässige `direct_service`- und `referral_contact`-Einträge können
+weitergegeben werden. `conditional_candidate` bleibt grundsätzlich intern. Die eng begrenzte Dialogpolitik darf einen
+eindeutig per Organisationsbedarf oder kuratierter Ortsbindung bestimmten
+Kontakt bedingt anzeigen, ohne Zugang oder Zuständigkeit zu behaupten.
+
+## Kontrollierte LLM-Auswahl
+
+Der Selectorvertrag und -prompt besitzen jeweils Version 1. Das Modell erhält
+die aktuelle untrusted Anfrage, die strukturierte Bedarfsart, notwendige Orts-
+und Zeitangaben sowie ausschließlich kompakte `SelectorCandidateView`-Objekte
+aus `selectable_candidates`. Kontakte, Adressen, URLs, WFS-Rohfelder,
+Kurationsbegründungen, Mandatory-, Conditional- und Excluded-Einträge fehlen.
+
+Bei mindestens zwei auswählbaren Kandidaten kann das Modell `selected` mit
+höchstens vier aktuellen IDs oder `no_selection` zurückgeben. Reines JSON,
+Feldinventar, Typen, Enum, Duplikate, Höchstzahl und jede ID werden strikt
+validiert. Eine einzelne fremde ID verwirft die gesamte Antwort. Danach setzt
+die Anwendung Mandatory-Kandidaten vor die gewählte Menge und stellt die
+kuratierte stabile Reihenfolge wieder her. Erst daraus entsteht ein
+`FormulatorEvidence`-Paket mit Evidence-Version 2 und Promptversion 3. Es enthält
+pro finalem Angebot Rolle, Mandatory-Status und ausschließlich freigegebene
+Fakten mit opaken Referenzen. Der Formulator sieht weder die übrige
+Kandidatenmenge noch Conditional-/Excluded-Einträge, Rohfelder,
+Kurationsbegründungen oder frühere Antworttexte.
+
+Die Modellantwort folgt Formulatorvertrag 2: ein bis drei kurze Sätze mit
+Claimtyp sowie Fakten- oder Policyreferenzen und höchstens vier Card-IDs. Das
+Backend baut den sichtbaren Text erst nach vollständiger Vertrags-, Sprach-,
+Rollen-, Fakten- und Kartenprüfung zusammen. Eine ungültige Referenz oder ein
+ungeerdeter operativer Fakt verwirft die gesamte Antwort. Verbindliche Karten
+und die finale Reihenfolge werden deterministisch aus dem Evidence-Paket
+wiederhergestellt und können durch `card_ids` weder entfernt noch umsortiert
+werden.
+
+## Strukturierter Dialog
+
+`ConversationSession.dialog` ist der einzige Klärungszustand. Er wird zusammen
+mit Turns atomar gespeichert, läuft spätestens mit der Session ab und wird bei
+Fingerprintwechsel verworfen. Technische Buttonwerte werden gegen Dialog-ID,
+Session, Status und erlaubtes Inventar geprüft. Die erste parallele Antwort
+beansprucht den Dialog; Wiederholung und Doppelabsenden enden mit dem redigierten
+API-Fehler `dialog_response_invalid`.
+
+Ein Button erzeugt keinen künstlichen Nutzertext. Die Anwendung leitet seinen
+gebundenen Bedarf oder das ausdrückliche Faktum deterministisch ab und zeigt im
+Verlauf nur das lokalisierte Label. Freitext und Spracheingabe werden als
+untrusted input mit offenem Dialog durch den Interpreter verarbeitet. Bei einem
+Interpreterfehler wird der Fachdialog geschlossen und der fail-closed
+Safety-Fehlerpfad ausgegeben; es werden keine Fakten übernommen. Ein erkanntes
+Risiko ersetzt jeden Fachdialog. Ein ungeklärter Safety-Dialog kann durch einen
+Themenwechsel oder Out-of-Scope nicht aufgehoben werden. Texte und
+Labels liegen gemeinsam mit UI- und Fallbacktexten in
+`app/resources/bootstrap/i18n/application_texts.json`;
+`/api/health` weist den tatsächlichen Sprachprüfstatus getrennt aus.
+
+Die Reihenfolge ist: validierte Runtime-Freigabe, aktuelle Interpretation vor
+UI-Hinweis, kuratierte Aliasbegrenzung, positiver Leistungs- oder Verweisbeleg,
+Alters-/Zielgruppen-/Zugangsprüfung, dokumentierte Zeitbedingung, kuratierte
+Prioritätsregel und stabile ID-Sortierung. Unbekannte Eigenschaften erfüllen
+keine spezifische Zugangsbedingung. Der Stadtteil wird – außer bei bereits
+kuratierten Aliaszuordnungen – nur als noch nicht validierte Bedingung im
+Entscheid vermerkt. Kapazität, garantierte Aufnahme und geografische Nähe werden
+nicht bewertet.
+
+Die vollständige Entscheidung wird nicht in das Forschungsprotokoll kopiert.
+Persistiert wird lediglich `candidate_selection_status`; Fakten, bedingte und
+ausgeschlossene IDs, Reason Codes und freie Nutzerdetails bleiben flüchtig. Der
+Formulator erhält ausschließlich den Evidence-Vertrag aus finalen IDs, Rollen
+und freigegebenen Fakten; Grundcodes und die vollständige Entscheidung bleiben
+außerhalb des Prompts.
+
+## Öffentliche Toiletten und räumliche Ergebnisordnung
+
+`app.toilet_sync fetch` lädt die amtliche CSV mit getrennten Connect-/Read-
+Timeouts. `app.infrastructure` prüft UTF-8/BOM, Pflichtspalten, IDs, Kosten,
+Quellkoordinaten und die EPSG:25833/WGS84-Konsistenz. Rohbytes bleiben als
+`snapshot.csv`; `records.json` enthält nur das positive Runtime-Schema.
+`diff.json` und `manifest.json` werden vor und nach dem Schreiben gehasht. Das
+Manifest bindet Quellenmetadaten, Roh- und normalisierten Inhaltshash sowie den
+Status `validated`. Bei jeder Prüfung muss sich `records.json` erneut exakt aus
+`snapshot.csv` reproduzieren lassen. Mehr als 50 Prozent Datensatzverlust oder
+weniger als 50 Prozent valide Geometrien sind nicht releasefähig. Ein Abruf
+ändert `active_release.json` nie.
+
+Die Runtime betrachtet lokal ausschließlich die in `active_release.json`,
+`last_verified_release.json` oder `previous_verified_release.json` gebundenen
+Stände, in dieser Reihenfolge. Diese Pointer entstehen nur bei ausdrücklicher
+Promotion oder Rollback und binden Release-ID und Manifesthash. Zusätzlich muss
+die im Manifest gespeicherte Ressourcen-URL exakt der konfigurierten
+Toilettenquelle entsprechen. Pending-Releases und beliebige, zwar technisch
+gültige, aber nie aktivierte Releaseverzeichnisse werden nicht durchsucht. Erst
+danach ist der ebenso vollständig geprüfte und quellidentische Paket-Bootstrap
+zulässig; ohne sicheren Kandidaten entsteht ein kontrollierter Fehler.
+
+Die Runtime hält `social_offer`, `public_toilet` und `drinking_fountain`
+getrennt, bindet aber alle drei Releasezustände in denselben Session-Fingerprint. Toilettenbedarf umgeht den
+sozialen CandidateSelector und den LLM-Selector. Belegte Schließungen sowie
+nicht valide oder doppelte Geometrien werden vor Distanz, Evidence und Karte
+entfernt. Danach folgen HBF-Luftlinie und stabile ID. Höchstens drei Ergebnisse
+gehen in Primärtext und Karten, alle passenden validen Geometrien in
+`map_marker_ids`.
+
+## Feste Trinkwasserbrunnen
+
+`python -m app.drinking_fountain_sync fetch` lädt genau den von der offiziellen
+Wasserwerke-Seite verlinkten KML-Export und die amtlichen Leipziger
+Bezirksgeometrien. Die redaktionellen Betreiberangaben zu Kostenfreiheit,
+Trinkwasser, Saison April bis Oktober und fehlendem Echtzeitstatus liegen als
+kleine releasegebundene, manuell geprüfte Evidenz vor. KML, Grenz-GeoJSON,
+Evidenz, normalisierte Positivliste und Diff werden einzeln und gemeinsam
+gehasht; die Verifikation normalisiert alle drei Eingaben erneut. Ein Fetch
+schreibt nur unter `runtime/drinking_fountains/pending/`.
+
+Die Runtime lädt ausschließlich Active-, Last-Verified- oder Previous-Verified-
+Pointer, danach den quellidentischen Paket-Bootstrap. Pointer binden Release-ID
+und Manifesthash. Pending-, beliebige nie aktivierte oder live geladene Stände
+sind keine Fallbacks. Der aktuelle Bootstrap enthält 30 feste und fünf mobile
+Quellpunkte. 21 feste Punkte liegen nach lokaler Polygonprüfung in Leipzig;
+neun externe und alle mobilen Punkte bleiben in Release und Diff, gelangen aber
+nicht in Runtime, LLM, Karten oder Marker.
+
+Bei `Need.DRINKING_WATER` begrenzt der soziale `CandidateSelector` weiterhin
+nur Angebote mit positiv belegter Wasserleistung. Die anschließende gemeinsame
+Wasserprojektion ergänzt saisonal zulässige feste Brunnen, erhält fachlich
+verbindliche soziale Resultate und sortiert danach nach HBF-Luftlinie und
+stabiler ID. Sie umgeht den LLM-Selector. Eine ausdrückliche Brunnenanfrage
+liefert im Saisonfenster Brunnen; außerhalb des Fensters können nur belegte
+soziale Wasserangebote folgen. Höchstens drei Resultate gehen an Evidence und
+Karten, alle zulässigen Geometrien an `map_marker_ids`.
+
+Das Evidence-Paket enthält nur sichtbare Namen/Ortsbeschreibungen, belegte
+Kosten-, Trinkwasser-, Saison- und Betriebsstatus, Quelle und HBF-Luftlinie.
+Koordinaten, ausgeschlossene Datensätze und die Stadtteilangabe der Anfrage
+werden nicht an den Formulator übergeben. `operation_status=unknown` und die
+Groundingprüfung verhindern eine Behauptung aktueller Funktion oder Öffnung.
+
+Bei Essen setzt `app.result_time` ohne expliziten Tag den Leipziger Kalendertag
+ein. Fach- und Pflichtprioritäten bleiben vor der Entfernung; belegte
+Ausgabezeiten und tatsächliche Standorte gehen Büroadresse und HBF-Distanz vor.
+Ein mobiler Datensatz ohne verifizierten Standpunkt erzeugt keinen Büromarker.
 
 ## WFS-Aktualisierung
 
@@ -63,19 +262,96 @@ Erst nach Manifest-, Hash-, Größen-, Schema- und Basisreleaseprüfung wird er 
 `--promote <release-id>` führt keinen WFS-Abruf aus. Es validiert exakt den
 geprüften Pending-Ordner, verschiebt ihn in `data/wfs/releases/` und ersetzt
 zuletzt atomar `data/wfs/active_release.json`. Bis zu diesem Pointerwechsel
-bleibt der alte Release vollständig aktiv. Anwendung und Übersetzungswartung
-lesen den Pointer einmal und verwenden anschließend ausschließlich den darin
-bezeichneten Ordner. `--rollback <release-id>` validiert einen vorhandenen
+bleibt der alte Release als Quelle vollständig aktiv. Die Nutzeranwendung
+verwendet den Pointer nur als Quellenstatus: Fachlich aktiv bleibt ausschließlich
+der an den Kurationskatalog gebundene Release. `--rollback <release-id>`
+validiert einen vorhandenen
 früheren Release und wechselt nur denselben Pointer. Connect-/Read-Timeouts und
 alle Fehler vor dem Pointerwechsel lassen den aktiven Stand unverändert.
 
-## Übersetzungen
+## Kuratierte Runtime-Sicht
 
-Karten werden aus deutschen Quelldaten erzeugt. `offer_translation_hash()`
-erkennt fachlich veränderte Angebote. Der Wartungsbefehl schreibt maschinelle
-Übersetzungen nach `data/i18n/offer_translations.json`; manuelle Overrides werden
-zuletzt angewendet. Nutzeranfragen lösen keine Übersetzung kompletter Angebote
-aus.
+`load_active_knowledge_base()` validiert zuerst den expliziten oder paketierten
+Standardkatalog. `curation_path=None` bedeutet dabei paketierter Katalog und
+deaktiviert die Kuration nicht. Der Katalog muss alle IDs des freigegebenen, durch Release-ID
+und Hash gebundenen Quellstands genau einmal referenzieren. Danach werden
+Organisation, Standort, Leistungsart, Aliase, Suchphrasen, Bedarfe und belegte
+Overrides auf neue `OfferRecord`-Instanzen projiziert. Rohtext, `raw_properties`
+und der normalisierte WFS-Release werden dabei nicht geschrieben oder verändert.
+
+Die Runtime-Quellreihenfolge ist strikt: exakt gebundener verifizierter lokaler
+Release, exakt passender manifest- und hashverifizierter Paket-Bootstrap,
+ansonsten kontrollierter Fehler ohne Nutzerangebote. Pending-Releases,
+ungeprüfte aktive Releases und beliebige ältere Stände sind keine Fallbacks.
+`/api/health` unterscheidet Runtime-, Quellen- und Fallbackstatus ohne lokale
+Pfade offenzulegen.
+
+Der Interpreter erhält überhaupt keine Angebotsprojektion. Seine Aliassicht ist
+eine eigene Positivliste aus Aliastext, Aliasart und Mehrdeutigkeit. Die
+vorbereitete Kandidatensicht und der aktive Formulator besitzen getrennte
+Pydantic-Transportmodelle mit verbotenen Zusatzfeldern. `raw_fields`,
+`raw_properties`, Provenienznotizen und überschriebene Quellfakten bleiben lokal.
+
+`include_in_runtime=false` entfernt ein Angebot vor Alias-Hinweisen,
+deterministischer Kandidatenbegrenzung, späteren LLM-Kandidaten, Formulator,
+Angebotskarten und Kartenmarkern. Organisationsaliase können mehrere Leistungen umfassen. Ein im
+Katalog belegter Bedarf oder Ortsbezug grenzt diese Menge ein; bleibt mehr als
+ein Angebot übrig, antwortet die Anwendung mit einer kontrollierten Rückfrage
+statt einer willkürlichen Auswahl.
+
+Der fachliche Review-Status lautet für den aktuellen Prototyp
+`reviewed_for_prototype`; er ist keine formale institutionelle Freigabe. Ein
+periodisches Review-Intervall ist `null` und noch nicht formal definiert.
+Quelländerungen und der erforderliche Review vor der finalen Evaluation sind
+über `/api/health` sichtbar, ohne den bestätigten Prototypbestand zu sperren.
+
+## Übersetzungen und Lokalisierung
+
+Die Runtime trennt drei Sprachbereiche. Kartenübersetzungen liegen im
+schema-validierten Store 2; ausschließlich `short_description` und `services`
+sind übersetzbar. Anzeigenamen, Aliase, Adressen, Kontakte, URLs, Preise und
+Zeiten werden bei jeder Karte aus der aktuellen kuratierten Runtime-Sicht
+eingesetzt. Jede Sprachfassung ist an Angebot, Quellfeldhash, operative Fakten,
+Kuration, Prompt, Provider/Modell und Erstellungszeit gebunden. Listenstruktur
+und geschützte Tokens werden lokal geprüft. Ungültige, abgelehnte oder veraltete
+Fassungen werden nicht verwendet.
+
+Vor einem Maschinenübersetzungsrequest werden die bereits kanonisch erkannten
+operativen Tokens in den beiden übersetzbaren Feldern lokal maskiert. Dazu
+zählen insbesondere Dezimalwerte und Preise, Telefonnummern, E-Mail-Adressen,
+URLs, exakte Zeiten und Daten sowie kuratierte Namen, Aliase und Adressen, wenn
+sie im übersetzbaren Text vorkommen. Jedes Vorkommen erhält in stabiler
+Feldreihenfolge einen eigenen requestlokalen Marker wie `__LENA_P0000__`; das
+Marker-zu-Original-Mapping verlässt den Prozess nicht. Der Provider erhält nur
+die maskierten Positivlistenfelder und die Zielsprache.
+
+Nach der Schema-Prüfung muss jeder bekannte Marker genau einmal und im
+ursprünglichen Feld vorkommen. Fehlende, veränderte, doppelte, unbekannte oder
+verschobene Marker sowie eine geänderte Serviceanzahl verwerfen die gesamte
+Providerantwort. Erst danach werden die Originaltokens exakt eingesetzt und
+die vollständige bestehende Listen-, Token-, Eigennamen-, ID- und Skriptprüfung
+ausgeführt. Weder Maskierung noch erfolgreiche Wiederherstellung gelten als
+menschliche Sprachprüfung; neu erzeugte Fassungen bleiben `machine`.
+
+Als begrenzte Skriptprüfung muss eine russische Kartenübersetzung kyrillischen
+Text enthalten; in englischen, polnischen und rumänischen Karten gilt
+unerwarteter kyrillischer Text als Vertragsfehler. Diese Prüfung erkennt nur
+klare Skriptabweichungen und ist keine Aussage über sprachliche Natürlichkeit.
+
+`TRANSLATION_RUNTIME_POLICY` steuert die Nutzung: `reviewed_only` erlaubt nur
+dokumentiert menschlich geprüfte Texte, `reviewed_or_machine` zusätzlich lokal
+valide Maschinenfassungen und `source_language_fallback` ausschließlich die
+deutsche Basis. Der Prototyp verwendet den zweiten Modus, behauptet damit aber
+keine Sprachfreigabe. Status und Integritätsfehler werden pro Sprache in
+`/api/health` ausgewiesen.
+
+UI-, Dialog- und Fallbacktexte stammen aus einer gemeinsamen paketierten
+Ressource. 112 wird als zentraler Policywert und Hilfebus-Kontakt/Zeiten werden
+aus der kuratierten Wissensbasis eingesetzt; diese Fakten werden nicht in den
+Sprachressourcen dupliziert. Dynamische LLM-Antworten bleiben durch Evidence-,
+Grounding- und Sprachverträge begrenzt, können aber nur anhand des synthetischen
+Szenariokatalogs manuell sprachlich bewertet werden. Automatische Vertrags- und
+Skriptprüfungen ersetzen keine menschliche Sprachprüfung.
 
 ## Speech
 
@@ -86,9 +362,12 @@ Byte-Limit vor und während des Streamings und ruft erst danach
 Medientypen 415 und leere Bodies 422. Gültiges Audio wird an einen
 konfigurierten OpenAI-kompatiblen Transkriptionsendpunkt gesendet.
 
-`POST /api/speech/synthesize` erwartet den Pydantic-Vertrag mit `text` und einer
-unterstützten `language`. Leere, unbekanntsprachige oder zu lange Payloads
-enden mit 422 vor dem Provider. Je nach Konfiguration wird ein
+`POST /api/speech/synthesize` erwartet den Pydantic-Vertrag mit `text`, einer
+unterstützten `language` und `session_id`. Der Text muss exakt der letzten
+sichtbaren Antwort der aktiven Session und Sprache entsprechen; fremde,
+veränderte oder veraltete Texte enden mit dem redigierten HTTP-409-Fehler
+`tts_text_invalid`. Leere, unbekanntsprachige oder zu lange Payloads enden mit
+422 vor dem Provider. Je nach Konfiguration wird ein
 OpenAI-kompatibler Endpunkt oder `edge-tts` genutzt. Bei Providerfehlern
 antworten beide Endpunkte mit HTTP 503 und geben keine internen Zugangsdaten
 aus. Unmittelbar vor beiden Syntheseprovidern ersetzt `normalize_tts_text()`
@@ -106,7 +385,8 @@ lange Texte erreichen `QueryService` nicht und ergeben 422.
 
 ## Persistenz und Datenschutz
 
-Sessions werden als JSON gespeichert, enthalten Fragen und Antworten und laufen
+Sessions werden als JSON gespeichert, enthalten Fragen, Antworten und optional
+den begrenzten strukturierten Dialog und laufen
 konfigurierbar ab. Vor dem Antwortpfad löst `QueryService` die Session auf; nach
 der finalen sichtbaren Antwort fügt er genau einen Turn hinzu. Der Store sperrt
 den vollständigen Lese-Ändere-Schreibe-Zyklus innerhalb eines Prozesses,
@@ -114,7 +394,13 @@ entfernt abgelaufene beziehungsweise überzählige Einträge und ersetzt die
 vollständig validierte JSON-Map atomar. Ein Schreibfehler liefert trotzdem das
 In-Memory-Modell zurück und blockiert weder Nutzerantwort noch das getrennte
 Interaktions-JSONL. Die dateibasierte Sperre koordiniert keine mehreren
-Prozesse. `runtime/` sollte daher lokal, zugriffsgeschützt und gemäß dem
+Prozesse. Jede Session speichert den Fingerabdruck der kuratierten
+Runtime-Wissensbasis. Fehlt er bei einer Legacy-Session oder weicht er ab, wird
+der alte Verlauf weder an Interpreter noch Formulator gegeben; die aktuelle
+Anfrage wird mit einer neuen Session normal verarbeitet. Ein Sprachwechsel bei
+gleichem Fingerabdruck erhält dagegen Dialog und Fakten und aktualisiert nur die
+Interface-Sprache. Strukturierte Nutzerdaten
+werden derzeit nicht separat migriert. `runtime/` sollte daher lokal, zugriffsgeschützt und gemäß dem
 Datenschutzkonzept regelmäßig bereinigt werden.
 
 Nach einer vollständig bearbeiteten `/api/query`-Anfrage schreibt ausschließlich

@@ -42,6 +42,10 @@ CATEGORY_TERMS: dict[Category, set[str]] = {
         "doradztwo", "urzad", "consiliere", "sprijin", "autoritati", "консультация", "поддержка", "совет",
         "ведомство",
     },
+    Category.TOILET: {
+        "toilette", "toiletten", "wc", "klo", "public toilet", "toilet", "restroom",
+        "toaleta", "toalety", "toaletă", "toalete", "туалет", "туалеты",
+    },
 }
 
 SOURCE_CATEGORY_MARKERS: dict[Category, set[str]] = {
@@ -49,6 +53,7 @@ SOURCE_CATEGORY_MARKERS: dict[Category, set[str]] = {
     Category.SLEEP: {"ubernachtungshaus"},
     Category.MEDICAL: {"medizinische versorgung"},
     Category.ADVICE: {"sozialberatung", "soziale wohnhilfen", "streetwork erwachsene"},
+    Category.TOILET: set(),
 }
 
 STOPWORDS = {
@@ -137,8 +142,10 @@ class RetrievalOutcome:
 
 def _offer_texts(offer: OfferRecord) -> tuple[str, str, str, str, str]:
     return (
-        normalize_text(offer.name),
-        normalize_text(f"{offer.source_category} {offer.short_description}"),
+        normalize_text(
+            " ".join([offer.name, *offer.organization_aliases, *offer.offer_aliases, *offer.search_phrases])
+        ),
+        normalize_text(f"{offer.source_category} {offer.offer_type or ''} {' '.join(offer.needs)} {offer.short_description}"),
         normalize_text(" ".join(offer.services)),
         normalize_text(" ".join([*offer.opening_hours_raw, *offer.notes])),
         normalize_text(offer.raw_text),

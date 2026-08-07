@@ -5,198 +5,7 @@
  * die Darstellung von Backend-Karten und Leaflet-Zielen. Angebotsfakten werden
  * im Frontend weder ergänzt noch fachlich neu interpretiert.
  */
-const copy = {
-  de: {
-    languageTitle: "Sprache wählen",
-    languageIntro: "Wähle deine Sprache.",
-    mainTitle: "Welche Hilfe brauchst du?",
-    mainIntro: "Ich beantworte Fragen zu Hilfsangeboten in Leipzig. Stell mir eine Frage!",
-    speechIntro: "Ich beantworte Fragen zu Hilfsangeboten in Leipzig. Stell mir eine Frage!",
-    categories: { food: "Essen", sleep: "Schlafen", medical: "Medizin", advice: "Beratung" },
-    queryLabel: "Frage schreiben",
-    placeholder: "Zum Beispiel: Wo bekomme ich Essen?",
-    send: "Senden",
-    navStart: "Start",
-    navBack: "Zurück",
-    navLanguage: "Sprache ändern",
-    micLabel: "Frage sprechen",
-    voiceReady: "Du kannst jetzt sprechen. Du kannst auch schreiben.",
-    voiceSpeaking: "LENA spricht. Danach kannst du sprechen.",
-    voiceListening: "Ich höre zu.",
-    voiceHeard: "Ich habe verstanden: {text}",
-    voiceProcessing: "Ich verarbeite deine Sprache.",
-    voiceUnavailable: "Spracheingabe ist nicht verfügbar. Du kannst schreiben.",
-    voiceDenied: "Das Mikrofon ist nicht frei. Du kannst schreiben.",
-    voiceTryAgain: "Ich habe nichts verstanden. Bitte noch einmal sprechen oder schreiben.",
-    answer: "Antwort",
-    replayAnswer: "Antwort noch einmal abspielen",
-    questionEcho: "Verstandene Frage",
-    historyTitle: "Chatverlauf",
-    mapTitle: "Karte",
-    mapHint: "Startpunkt ist Leipzig Hauptbahnhof. Markiert sind passende Orte.",
-    loading: "Ich suche ...",
-    error: "Die Anfrage konnte nicht verarbeitet werden.",
-    description: "Beschreibung",
-    services: "Angebote",
-    address: "Adresse",
-    phone: "Telefon",
-    hours: "Öffnungszeiten",
-    standTimes: "Standzeiten",
-    notes: "Wichtige Hinweise"
-  },
-  en: {
-    languageTitle: "Choose language",
-    languageIntro: "Choose your language.",
-    mainTitle: "What help do you need?",
-    mainIntro: "I answer questions about help in Leipzig. Ask me a question!",
-    speechIntro: "I answer questions about help in Leipzig. Ask me a question!",
-    categories: { food: "Food", sleep: "Sleep", medical: "Medical help", advice: "Advice" },
-    queryLabel: "Write a question",
-    placeholder: "For example: Where can I get food?",
-    send: "Send",
-    navStart: "Start",
-    navBack: "Back",
-    navLanguage: "Change language",
-    micLabel: "Speak question",
-    voiceReady: "You can speak now. You can also type.",
-    voiceSpeaking: "LENA is speaking. Then you can speak.",
-    voiceListening: "I am listening.",
-    voiceHeard: "I understood: {text}",
-    voiceProcessing: "I am processing your speech.",
-    voiceUnavailable: "Voice input does not work in this browser. You can type.",
-    voiceDenied: "The microphone is not available. You can type.",
-    voiceTryAgain: "I did not understand. Please speak again or type.",
-    answer: "Answer",
-    replayAnswer: "Play answer again",
-    questionEcho: "Understood question",
-    historyTitle: "Chat history",
-    mapTitle: "Map",
-    mapHint: "The starting point is Leipzig Hauptbahnhof. Matching places are marked.",
-    loading: "I am searching ...",
-    error: "The request could not be processed.",
-    description: "Description",
-    services: "Help offered",
-    address: "Address",
-    phone: "Phone",
-    hours: "Opening hours",
-    standTimes: "Times at this place",
-    notes: "Important notes"
-  },
-  pl: {
-    languageTitle: "Wybierz język",
-    languageIntro: "Wybierz swój język.",
-    mainTitle: "Jakiej pomocy potrzebujesz?",
-    mainIntro: "Odpowiadam na pytania o pomoc w Lipsku. Zadaj mi pytanie!",
-    speechIntro: "Odpowiadam na pytania o pomoc w Lipsku. Zadaj mi pytanie!",
-    categories: { food: "Jedzenie", sleep: "Nocleg", medical: "Pomoc medyczna", advice: "Porada" },
-    queryLabel: "Napisz pytanie",
-    placeholder: "Na przykład: Gdzie dostanę jedzenie?",
-    send: "Wyślij",
-    navStart: "Start",
-    navBack: "Wstecz",
-    navLanguage: "Zmień język",
-    micLabel: "Powiedz pytanie",
-    voiceReady: "Możesz teraz mówić. Możesz też pisać.",
-    voiceSpeaking: "LENA mówi. Potem możesz mówić.",
-    voiceListening: "Słucham.",
-    voiceHeard: "Zrozumiałam: {text}",
-    voiceProcessing: "Przetwarzam twoją mowę.",
-    voiceUnavailable: "W tej przeglądarce nie działa mówienie. Możesz pisać.",
-    voiceDenied: "Mikrofon nie jest dostępny. Możesz pisać.",
-    voiceTryAgain: "Nie zrozumiałam. Powiedz jeszcze raz albo napisz.",
-    answer: "Odpowiedź",
-    replayAnswer: "Odtwórz odpowiedź jeszcze raz",
-    questionEcho: "Zrozumiane pytanie",
-    historyTitle: "Historia rozmowy",
-    mapTitle: "Mapa",
-    mapHint: "Punkt startowy to Leipzig Hauptbahnhof. Pasujące miejsca są zaznaczone.",
-    loading: "Szukam ...",
-    error: "Nie udało się przetworzyć pytania.",
-    description: "Opis",
-    services: "Pomoc",
-    address: "Adres",
-    phone: "Telefon",
-    hours: "Godziny otwarcia",
-    standTimes: "Godziny w tym miejscu",
-    notes: "Ważne informacje"
-  },
-  ro: {
-    languageTitle: "Alege limba",
-    languageIntro: "Alege limba ta.",
-    mainTitle: "De ce ajutor ai nevoie?",
-    mainIntro: "Răspund la întrebări despre ajutor în Leipzig. Pune-mi o întrebare!",
-    speechIntro: "Răspund la întrebări despre ajutor în Leipzig. Pune-mi o întrebare!",
-    categories: { food: "Mâncare", sleep: "Loc de dormit", medical: "Ajutor medical", advice: "Consiliere" },
-    queryLabel: "Scrie o întrebare",
-    placeholder: "De exemplu: Unde primesc mâncare?",
-    send: "Trimite",
-    navStart: "Start",
-    navBack: "Înapoi",
-    navLanguage: "Schimbă limba",
-    micLabel: "Spune întrebarea",
-    voiceReady: "Poți vorbi acum. Poți și scrie.",
-    voiceSpeaking: "LENA vorbește. Apoi poți vorbi.",
-    voiceListening: "Ascult.",
-    voiceHeard: "Am înțeles: {text}",
-    voiceProcessing: "Procesez vocea ta.",
-    voiceUnavailable: "Intrarea vocală nu merge în acest browser. Poți scrie.",
-    voiceDenied: "Microfonul nu este disponibil. Poți scrie.",
-    voiceTryAgain: "Nu am înțeles. Vorbește încă o dată sau scrie.",
-    answer: "Răspuns",
-    replayAnswer: "Redă răspunsul încă o dată",
-    questionEcho: "Întrebare înțeleasă",
-    historyTitle: "Istoric chat",
-    mapTitle: "Hartă",
-    mapHint: "Punctul de start este Leipzig Hauptbahnhof. Locurile potrivite sunt marcate.",
-    loading: "Caut ...",
-    error: "Cererea nu a putut fi procesată.",
-    description: "Descriere",
-    services: "Ajutor oferit",
-    address: "Adresă",
-    phone: "Telefon",
-    hours: "Program",
-    standTimes: "Ore în acest loc",
-    notes: "Informații importante"
-  },
-  ru: {
-    languageTitle: "Выберите язык",
-    languageIntro: "Выберите ваш язык.",
-    mainTitle: "Какая помощь вам нужна?",
-    mainIntro: "Я отвечаю на вопросы о помощи в Leipzig. Задайте мне вопрос!",
-    speechIntro: "Я отвечаю на вопросы о помощи в Leipzig. Задайте мне вопрос!",
-    categories: { food: "Еда", sleep: "Ночлег", medical: "Медицинская помощь", advice: "Консультация" },
-    queryLabel: "Напишите вопрос",
-    placeholder: "Например: Где получить еду?",
-    send: "Отправить",
-    navStart: "Старт",
-    navBack: "Назад",
-    navLanguage: "Сменить язык",
-    micLabel: "Сказать вопрос",
-    voiceReady: "Теперь можно говорить. Также можно написать.",
-    voiceSpeaking: "LENA говорит. Потом можно говорить.",
-    voiceListening: "Я слушаю.",
-    voiceHeard: "Я поняла: {text}",
-    voiceProcessing: "Я обрабатываю вашу речь.",
-    voiceUnavailable: "Голосовой ввод не работает в этом браузере. Можно написать.",
-    voiceDenied: "Микрофон недоступен. Можно написать.",
-    voiceTryAgain: "Я не поняла. Повторите или напишите.",
-    answer: "Ответ",
-    replayAnswer: "Прослушать ответ еще раз",
-    questionEcho: "Понятый вопрос",
-    historyTitle: "История чата",
-    mapTitle: "Карта",
-    mapHint: "Начальная точка: Leipzig Hauptbahnhof. Подходящие места отмечены.",
-    loading: "Я ищу ...",
-    error: "Запрос не удалось обработать.",
-    description: "Описание",
-    services: "Помощь",
-    address: "Адрес",
-    phone: "Телефон",
-    hours: "Часы работы",
-    standTimes: "Время в этом месте",
-    notes: "Важная информация"
-  }
-};
+const copy = {};
 
 const speechLanguages = {
   de: "de-DE",
@@ -224,17 +33,40 @@ const state = {
   listeningMode: null,
   serverSynthesisAvailable: false,
   currentSpeechAudio: null,
+  currentSpeechButton: null,
+  resultTiles: new Map(),
   lastAnswer: "",
-  queryInputMode: "text"
+  queryInputMode: "text",
+  isSubmitting: false
 };
 
 const SESSION_TIMEOUT_MS = 3 * 60 * 1000;
 
 const byId = (id) => document.getElementById(id);
 const recognitionConstructor = window.SpeechRecognition || window.webkitSpeechRecognition;
+const dialogueUI = new window.LenaDialogueUI(
+  byId("clarificationPanel"),
+  byId("clarificationPrompt"),
+  byId("clarificationChoices"),
+  byId("clarificationSubmit"),
+  (dialogId, values) => submitQuery("", { dialogId, values })
+);
 
 function text() {
-  return copy[state.language];
+  return copy[state.language] || copy.de || {};
+}
+
+async function loadApplicationCopy(language) {
+  if (copy[language]) return;
+  const response = await fetch(`/api/i18n/copy?language=${encodeURIComponent(language)}`);
+  if (!response.ok) throw new Error("application copy unavailable");
+  const payload = await response.json();
+  const texts = payload.texts || {};
+  const categories = {};
+  Object.entries(texts).forEach(([key, value]) => {
+    if (key.startsWith("category.")) categories[key.slice(9)] = value;
+  });
+  copy[language] = { ...texts, categories };
 }
 
 function voiceInputAvailable() {
@@ -263,6 +95,7 @@ function resetSessionTimeout() {
   if (state.idleTimer) window.clearTimeout(state.idleTimer);
   state.idleTimer = window.setTimeout(() => {
     state.sessionId = null;
+    dialogueUI.clear();
   }, SESSION_TIMEOUT_MS);
 }
 
@@ -274,8 +107,15 @@ function setIconButton(id, label) {
   if (screenReaderText) screenReaderText.textContent = label;
 }
 
-function setLanguage(language) {
+async function setLanguage(language) {
+  const preserveSession = Boolean(state.sessionId);
   resetSessionTimeout();
+  try {
+    await loadApplicationCopy(language);
+  } catch (_) {
+    await loadApplicationCopy("de");
+    language = "de";
+  }
   state.language = language;
   state.category = null;
   state.autoListenTried = false;
@@ -284,8 +124,16 @@ function setLanguage(language) {
   byId("languageView").hidden = true;
   byId("appView").hidden = false;
   applyCopy();
-  resetView();
+  if (!preserveSession) resetView();
   void (async () => {
+    if (preserveSession && dialogueUI.active) {
+      try {
+        const response = await fetch(`/api/dialogue/copy?language=${encodeURIComponent(language)}`);
+        if (response.ok) dialogueUI.relocalize(await response.json());
+      } catch (_) {
+        // Freie Text- und Spracheingabe bleiben bei einem Copy-Fehler erhalten.
+      }
+    }
     await loadSpeechConfig();
     await speakIntroThenListen();
   })();
@@ -293,6 +141,8 @@ function setLanguage(language) {
 
 function applyCopy() {
   const value = text();
+  byId("languageTitle").textContent = value.languageTitle;
+  byId("languageIntro").textContent = value.languageIntro;
   byId("mainTitle").textContent = value.mainTitle;
   byId("mainIntro").textContent = value.mainIntro;
   byId("queryLabel").textContent = value.queryLabel;
@@ -352,6 +202,16 @@ const categoryIcons = {
       <path d="M22 26h20"></path>
       <path d="M22 34h14"></path>
     </svg>
+  `,
+  toilet: `
+    <svg viewBox="0 0 64 64" focusable="false" aria-hidden="true">
+      <path d="M14 10h36v44H14z"></path>
+      <path d="M32 10v44"></path>
+      <circle cx="23" cy="21" r="3"></circle>
+      <path d="M18 39v-8c0-4 2-6 5-6s5 2 5 6v8M20 39v10M26 39v10"></path>
+      <circle cx="41" cy="21" r="3"></circle>
+      <path d="M36 38l2-11h6l2 11M38 38v11M44 38v11"></path>
+    </svg>
   `
 };
 
@@ -389,6 +249,7 @@ function resetView() {
   state.queryInputMode = "text";
   state.keepRecognizedStatus = false;
   state.sessionId = null;
+  dialogueUI.clear();
   byId("queryInput").value = "";
   byId("searchView").hidden = false;
   byId("resultView").hidden = true;
@@ -396,6 +257,7 @@ function resetView() {
   byId("replayAnswerButton").hidden = true;
   state.lastAnswer = "";
   byId("cardList").replaceChildren();
+  state.resultTiles = new Map();
   byId("questionEcho").hidden = true;
   byId("historyPanel").hidden = true;
   byId("historyList").replaceChildren();
@@ -413,6 +275,7 @@ function backToSearch() {
   byId("replayAnswerButton").hidden = true;
   state.lastAnswer = "";
   byId("cardList").replaceChildren();
+  state.resultTiles = new Map();
   byId("questionEcho").hidden = true;
   clearMap();
   renderCategories();
@@ -445,24 +308,166 @@ function addField(card, label, values, options = {}) {
   card.appendChild(group);
 }
 
-function renderCards(cards) {
-  const list = byId("cardList");
-  list.replaceChildren();
-  for (const offer of cards) {
-    const card = document.createElement("article");
-    card.className = "offer-card";
-    const title = document.createElement("h3");
-    title.textContent = offer.name;
-    card.appendChild(title);
-    addField(card, text().description, offer.short_description);
-    addField(card, text().services, offer.services);
-    addField(card, text().address, offer.address, { keepSource: true });
-    addField(card, text().phone, offer.phone_numbers);
-    addField(card, text().hours, offer.opening_hours_raw);
-    addField(card, text().standTimes, offer.standzeiten_raw);
-    addField(card, text().notes, offer.notes);
-    list.appendChild(card);
+// `spokenText` must be exactly a string the backend already vouched for --
+// either the main answer (replay button) or one card's server-built
+// `spoken_text` (see app/spoken_text.py). /api/speech/synthesize rejects
+// (409) anything else, so this can never be built client-side from other
+// fields; see buildOfferTile().
+function createListenButton(spokenText) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "icon-button replay-button card-listen-button";
+  button.setAttribute("aria-label", text().listenToOffer);
+  button.title = text().listenToOffer;
+  button.setAttribute("aria-pressed", "false");
+  button.innerHTML = `
+    <span class="replay-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" focusable="false">
+        <path d="M4 9v6h4l5 4V5L8 9Z"></path>
+        <path d="M16 9.5a4 4 0 0 1 0 5"></path>
+        <path d="M18.5 7a7 7 0 0 1 0 10"></path>
+      </svg>
+    </span>
+  `;
+  button.addEventListener("click", (event) => {
+    // The button lives inside a <summary> (see buildOfferTile); without this the
+    // click would also trigger <details>'s native open/close toggle.
+    event.stopPropagation();
+    resetSessionTimeout();
+    void speakText(spokenText, button);
+  });
+  return button;
+}
+
+// `OfferCard` (data.cards) and `MapDestination` (data.map_data.destinations)
+// describe the same offers with slightly different field names. This is the
+// fallback used only when no map data is available at all (e.g. an offer
+// without usable coordinates) -- normally the richer, uncapped destination
+// list is what's rendered, see renderResultList().
+function offerCardAsDestination(card) {
+  return {
+    id: card.id,
+    label: card.name,
+    address: card.address,
+    distance_meters: null,
+    description: card.short_description,
+    phone_numbers: card.phone_numbers,
+    opening_hours: card.opening_hours_raw,
+    services: card.services,
+    standzeiten_raw: card.standzeiten_raw,
+    notes: card.notes,
+    record_type: card.record_type,
+    district: card.district,
+    facilities: card.facilities,
+    fee_raw: card.fee_raw,
+    source_attribution: card.source_attribution,
+    location_description: card.location_description,
+    cost_status: card.cost_status,
+    seasonal_status: card.seasonal_status,
+    spoken_text: card.spoken_text
+  };
+}
+
+// One collapsible "Tafel" per offer/place. Collapsed: name, address, distance.
+// Expanded (click, or via expandResultTile() from a map marker click): every
+// field the old full-detail card used to show unconditionally.
+function buildOfferTile(item, { highlighted = false } = {}) {
+  const name = item.label || item.name;
+
+  const tile = document.createElement("details");
+  tile.className = "offer-tile";
+  tile.dataset.resultId = item.id;
+  if (highlighted) tile.classList.add("offer-tile--highlighted");
+
+  const summary = document.createElement("summary");
+  const heading = document.createElement("div");
+  heading.className = "offer-tile-heading";
+  const title = document.createElement("strong");
+  title.textContent = name;
+  heading.appendChild(title);
+  if (highlighted) {
+    const badge = document.createElement("span");
+    badge.className = "offer-tile-badge";
+    badge.textContent = text().mentionedInAnswer;
+    heading.appendChild(badge);
   }
+  if (state.serverSynthesisAvailable && item.spoken_text) {
+    heading.appendChild(createListenButton(item.spoken_text));
+  }
+  summary.appendChild(heading);
+  const distance = Number.isFinite(item.distance_meters)
+    ? `${Math.round(item.distance_meters / 100) / 10} km`
+    : null;
+  const meta = document.createElement("p");
+  meta.className = "offer-tile-meta";
+  meta.textContent = [item.address, distance].filter(Boolean).join(" · ");
+  summary.appendChild(meta);
+  tile.appendChild(summary);
+
+  const body = document.createElement("div");
+  body.className = "offer-tile-body";
+  tile.appendChild(body);
+
+  if (item.record_type === "public_toilet") {
+    tile.classList.add("public-toilet-card");
+    addField(body, text().district, item.district, { keepSource: true });
+    addField(body, text().hours, item.opening_hours, { keepSource: true });
+    addField(body, text().facilities, item.facilities, { keepSource: true });
+    addField(body, text().fee, item.fee_raw, { keepSource: true });
+    addField(body, text().source, item.source_attribution, { keepSource: true });
+    return tile;
+  }
+  if (item.record_type === "drinking_fountain") {
+    tile.classList.add("drinking-fountain-card");
+    addField(body, text().drinkingFountain, item.location_description || item.description, { keepSource: true });
+    addField(body, text().address, item.address, { keepSource: true });
+    if (item.cost_status === "free") {
+      addField(body, text().fee, text().freeWater, { keepSource: true });
+    }
+    if (item.seasonal_status === "april_to_october") {
+      addField(body, text().hours, text().seasonalOperation, { keepSource: true });
+    }
+    addField(body, text().airDistance, distance, { keepSource: true });
+    addField(body, text().source, item.source_attribution, { keepSource: true });
+    return tile;
+  }
+  addField(body, text().description, item.description);
+  addField(body, text().services, item.services);
+  addField(body, text().address, item.address, { keepSource: true });
+  addField(body, text().phone, item.phone_numbers);
+  addField(body, text().hours, item.opening_hours);
+  addField(body, text().standTimes, item.standzeiten_raw);
+  addField(body, text().notes, item.notes);
+  return tile;
+}
+
+// Renders every matched offer/place as a tile -- not just the (deliberately
+// narrower, strictly grounded) subset the answer text is built from. `cards`
+// is only used here to mark which tiles the answer mentions; map_data carries
+// the full, richer set whenever a map is available (see build_map_data() on
+// the backend, which is intentionally uncapped).
+function renderResultList(cards, mapData) {
+  const container = byId("cardList");
+  container.replaceChildren();
+  state.resultTiles = new Map();
+  const items = mapData && mapData.destinations && mapData.destinations.length
+    ? mapData.destinations
+    : cards.map(offerCardAsDestination);
+  const mentionedIds = new Set(cards.map((card) => card.id));
+  for (const item of items) {
+    const tile = buildOfferTile(item, { highlighted: mentionedIds.has(item.id) });
+    state.resultTiles.set(item.id, tile);
+    container.appendChild(tile);
+  }
+}
+
+// Called when a map marker is clicked (see renderMap): opens and scrolls to
+// the matching tile so the marker and the list stay in sync.
+function expandResultTile(id) {
+  const tile = state.resultTiles && state.resultTiles.get(id);
+  if (!tile) return;
+  tile.open = true;
+  tile.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
 function displayQuestionFor(query) {
@@ -495,9 +500,28 @@ function renderHistory(history) {
   }
 }
 
+function renderSafetyState(answerType) {
+  const resultView = byId("resultView");
+  const answerText = byId("answerText");
+  const safety = ["acute_risk", "acute_risk_clarification", "technical_fallback"].includes(answerType);
+  resultView.classList.toggle("safety-result", safety);
+  byId("answerTitle").textContent = safety ? text().safetyHeading : text().answer;
+  if (safety) {
+    resultView.setAttribute("aria-live", "off");
+    answerText.setAttribute("role", "alert");
+    answerText.setAttribute("aria-live", "assertive");
+    answerText.setAttribute("tabindex", "-1");
+  } else {
+    resultView.setAttribute("aria-live", "polite");
+    answerText.removeAttribute("role");
+    answerText.removeAttribute("aria-live");
+    answerText.removeAttribute("tabindex");
+  }
+  return safety;
+}
+
 function clearMap() {
   byId("mapPanel").hidden = true;
-  byId("mapList").replaceChildren();
   if (state.map) {
     for (const layer of state.mapLayers) {
       layer.remove();
@@ -517,7 +541,7 @@ function ensureMap() {
   return state.map;
 }
 
-function buildMapPopup(label, address) {
+function buildMapPopup(label, address, details = []) {
   const container = document.createElement("div");
   const title = document.createElement("strong");
   title.textContent = label ?? "";
@@ -528,32 +552,26 @@ function buildMapPopup(label, address) {
     container.appendChild(document.createElement("br"));
     container.appendChild(document.createTextNode(addressText));
   }
+  for (const detail of details.filter(Boolean)) {
+    container.appendChild(document.createElement("br"));
+    container.appendChild(document.createTextNode(detail));
+  }
   return container;
 }
 
 function renderMap(mapData) {
   // Das Backend liefert bereits transformierte und fachlich gefilterte Ziele;
   // der Browser visualisiert sie ohne eine zweite Rankinglogik.
+  // The tile list itself comes from renderResultList(), called separately
+  // with the same map_data -- this only draws markers and, on marker click,
+  // expands the matching tile (see expandResultTile()).
   clearMap();
   if (!mapData || !mapData.destinations || !mapData.destinations.length) return;
   byId("mapPanel").hidden = false;
-  const list = byId("mapList");
   const map = ensureMap();
   const bounds = [];
 
-  const addListItem = (label, address, distance) => {
-    const item = document.createElement("article");
-    item.className = "map-list-item";
-    const title = document.createElement("strong");
-    title.textContent = label;
-    const line = document.createElement("p");
-    line.textContent = distance ? `${address} · ${Math.round(distance / 100) / 10} km` : address;
-    item.append(title, line);
-    list.appendChild(item);
-  };
-
   const origin = mapData.origin;
-  addListItem(origin.label, origin.address, null);
   if (map) {
     const originMarker = L.circleMarker([origin.latitude, origin.longitude], {
       radius: 8,
@@ -566,14 +584,60 @@ function renderMap(mapData) {
   }
 
   for (const destination of mapData.destinations) {
-    addListItem(destination.label, destination.address, destination.distance_meters);
     if (!map) continue;
-    const marker = L.circleMarker([destination.latitude, destination.longitude], {
-      radius: 9,
-      color: "#005ea8",
-      fillColor: "#f28c00",
-      fillOpacity: 0.92
-    }).bindPopup(buildMapPopup(destination.label, destination.address)).addTo(map);
+    const isToilet = destination.record_type === "public_toilet";
+    const isFountain = destination.record_type === "drinking_fountain";
+    const fountainDetails = isFountain ? [
+      text().drinkingFountain,
+      destination.cost_status === "free" ? text().freeWater : null,
+      destination.seasonal_status === "april_to_october" ? text().seasonalOperation : null,
+      text().operationUnknown,
+      destination.source_attribution
+    ] : [];
+    let marker;
+    if (isFountain) {
+      const iconElement = document.createElement("span");
+      iconElement.className = "drinking-fountain-symbol";
+      iconElement.setAttribute("aria-hidden", "true");
+      const iconGlyph = document.createElement("span");
+      iconGlyph.className = "drinking-fountain-glyph";
+      iconGlyph.textContent = "💧";
+      iconElement.appendChild(iconGlyph);
+      marker = L.marker([destination.latitude, destination.longitude], {
+        icon: L.divIcon({
+          className: "drinking-fountain-marker",
+          html: iconElement,
+          iconSize: [34, 40],
+          iconAnchor: [17, 36]
+        })
+      });
+    } else {
+      marker = L.circleMarker([destination.latitude, destination.longitude], {
+        radius: isToilet ? 11 : 9,
+        color: isToilet ? "#005b4f" : "#005ea8",
+        fillColor: isToilet ? "#27a889" : "#f28c00",
+        fillOpacity: 0.92,
+        dashArray: isToilet ? "4 2" : null
+      });
+    }
+    marker.bindPopup(buildMapPopup(
+      destination.label,
+      destination.address,
+      isToilet ? [destination.fee_raw, ...(destination.opening_hours || [])] : fountainDetails
+    )).addTo(map);
+    marker.on("click", () => expandResultTile(destination.id));
+    const markerElement = marker.getElement();
+    if (markerElement) {
+      markerElement.setAttribute("role", "img");
+      markerElement.setAttribute(
+        "aria-label",
+        isToilet
+          ? `${text().categories.toilet}: ${destination.label}`
+          : isFountain
+          ? `${text().drinkingFountain}: ${destination.label}`
+          : destination.label
+      );
+    }
     state.mapLayers.push(marker);
     bounds.push([destination.latitude, destination.longitude]);
   }
@@ -585,7 +649,7 @@ function renderMap(mapData) {
   }
 }
 
-async function submitQuery(query) {
+async function submitQuery(query, dialogSubmission = null) {
   // Die Session-ID verbindet kurze Folgefragen. Alle Fakten werden mit jeder
   // Antwort erneut vom Backend geliefert.
   resetSessionTimeout();
@@ -607,11 +671,14 @@ async function submitQuery(query) {
         language: state.language,
         category: state.category,
         session_id: state.sessionId,
-        input_mode: state.queryInputMode
+        input_mode: state.queryInputMode,
+        dialog_id: dialogSubmission?.dialogId || null,
+        choice_values: dialogSubmission?.values || []
       })
     });
     if (!response.ok) throw new Error("request failed");
     const data = await response.json();
+    const safety = renderSafetyState(data.answer_type);
     state.sessionId = data.session_id || state.sessionId;
     resetSessionTimeout();
     byId("statusLine").textContent = "";
@@ -620,20 +687,29 @@ async function submitQuery(query) {
     byId("replayAnswerButton").hidden = !state.lastAnswer;
     renderQuestionEcho(data.question || displayQuestionFor(query));
     renderHistory(data.history || []);
-    renderCards(data.cards || []);
+    dialogueUI.render(data.clarification || null);
+    renderResultList(data.cards || [], data.map_data);
     renderMap(data.map_data);
-    byId("resultView").scrollIntoView({ behavior: "smooth", block: "start" });
-    void speakText(data.answer);
+    if (safety && !data.clarification) {
+      byId("answerText").focus();
+    } else {
+      byId("resultView").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    void speakText(data.answer, byId("replayAnswerButton"));
     state.category = null;
     renderCategories();
     byId("queryInput").value = "";
     state.queryInputMode = "text";
     updateVoiceStatusReady();
   } catch (_) {
+    renderSafetyState(null);
     byId("statusLine").textContent = "";
     byId("answerText").textContent = text().error;
-    state.lastAnswer = text().error;
-    byId("replayAnswerButton").hidden = false;
+    state.lastAnswer = "";
+    byId("replayAnswerButton").hidden = true;
+    dialogueUI.restore();
+  } finally {
+    state.isSubmitting = false;
   }
 }
 
@@ -645,80 +721,41 @@ function updateVoiceStatusReady() {
   byId("voiceStatus").textContent = voiceInputAvailable() ? text().voiceReady : text().voiceUnavailable;
 }
 
-function textForSpeech(message) {
-  if (state.language === "de") return normalizeGermanSpeech(message);
-  if (state.language === "en") return normalizeEnglishSpeech(message);
-  return message;
+function setSpeechButtonActive(button) {
+  if (state.currentSpeechButton && state.currentSpeechButton !== button) {
+    state.currentSpeechButton.classList.remove("is-speaking");
+    state.currentSpeechButton.setAttribute("aria-pressed", "false");
+  }
+  state.currentSpeechButton = button;
+  if (button) {
+    button.classList.add("is-speaking");
+    button.setAttribute("aria-pressed", "true");
+  }
 }
 
-function normalizeGermanSpeech(message) {
-  return message
-    .replace(/\b(\d{1,2}):(\d{2})\s*(?:-|–|—|bis)\s*(\d{1,2}):(\d{2})\s*(?:Uhr)?\b/gi, (_, h1, m1, h2, m2) => (
-      `${germanTime(Number(h1), Number(m1))} bis ${germanTime(Number(h2), Number(m2))}`
-    ))
-    .replace(/\b(\d{1,2}):(\d{2})\s*(?:Uhr)?\b/gi, (_, h, m) => germanTime(Number(h), Number(m)));
+function clearSpeechButtonActive(button) {
+  if (button) {
+    button.classList.remove("is-speaking");
+    button.setAttribute("aria-pressed", "false");
+  }
+  if (state.currentSpeechButton === button) state.currentSpeechButton = null;
 }
 
-function normalizeEnglishSpeech(message) {
-  return message
-    .replace(/\b(\d{1,2}):(\d{2})\s*(?:-|–|—|to)\s*(\d{1,2}):(\d{2})\b/gi, (_, h1, m1, h2, m2) => (
-      `${englishTime(Number(h1), Number(m1))} to ${englishTime(Number(h2), Number(m2))}`
-    ))
-    .replace(/\b(\d{1,2}):(\d{2})\b/g, (_, h, m) => englishTime(Number(h), Number(m)));
-}
-
-function germanTime(hour, minute) {
-  const safeHour = Number.isFinite(hour) ? Math.max(0, Math.min(24, hour)) : 0;
-  const safeMinute = Number.isFinite(minute) ? Math.max(0, Math.min(59, minute)) : 0;
-  const hourWord = safeHour === 1 ? "ein" : germanNumber(safeHour);
-  if (safeMinute === 0) return `${hourWord} Uhr`;
-  return `${hourWord} Uhr ${germanNumber(safeMinute)}`;
-}
-
-function germanNumber(value) {
-  const ones = ["null", "eins", "zwei", "drei", "vier", "fünf", "sechs", "sieben", "acht", "neun"];
-  const teens = {
-    10: "zehn", 11: "elf", 12: "zwölf", 13: "dreizehn", 14: "vierzehn", 15: "fünfzehn",
-    16: "sechzehn", 17: "siebzehn", 18: "achtzehn", 19: "neunzehn"
-  };
-  const tens = { 20: "zwanzig", 30: "dreißig", 40: "vierzig", 50: "fünfzig" };
-  if (value < 10) return ones[value];
-  if (value < 20) return teens[value];
-  if (value in tens) return tens[value];
-  const ten = Math.floor(value / 10) * 10;
-  const one = value % 10;
-  const oneWord = one === 1 ? "ein" : ones[one];
-  return `${oneWord}und${tens[ten]}`;
-}
-
-function englishTime(hour, minute) {
-  const safeHour = Number.isFinite(hour) ? Math.max(0, Math.min(23, hour)) : 0;
-  const safeMinute = Number.isFinite(minute) ? Math.max(0, Math.min(59, minute)) : 0;
-  if (safeMinute === 0 && safeHour === 0) return "midnight";
-  if (safeMinute === 0 && safeHour === 12) return "noon";
-  const period = safeHour < 12 ? "A M" : "P M";
-  const displayHour = safeHour % 12 || 12;
-  if (safeMinute === 0) return `${englishNumber(displayHour)} ${period}`;
-  return `${englishNumber(displayHour)} ${englishNumber(safeMinute)} ${period}`;
-}
-
-function englishNumber(value) {
-  const small = [
-    "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
-    "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen",
-    "seventeen", "eighteen", "nineteen"
-  ];
-  const tens = { 20: "twenty", 30: "thirty", 40: "forty", 50: "fifty" };
-  if (value < 20) return small[value];
-  if (value in tens) return tens[value];
-  const ten = Math.floor(value / 10) * 10;
-  return `${tens[ten]} ${small[value % 10]}`;
-}
-
-function speakText(message) {
+// `button` is optional: when given, its visual "is-speaking" state tracks this
+// call so callers (replay button, per-card listen buttons) don't need their
+// own bookkeeping. Interrupting a call via a new speakText() only updates the
+// old button's visible state here — the old call's own Promise is left
+// unresolved once its audio is torn down, which is harmless since nothing
+// awaits it for further cleanup.
+function speakText(message, button = null) {
   return new Promise(async (resolve) => {
-    if (!state.serverSynthesisAvailable || !message) {
+    setSpeechButtonActive(button);
+    const finish = () => {
+      clearSpeechButtonActive(button);
       resolve();
+    };
+    if (!state.serverSynthesisAvailable || !message) {
+      finish();
       return;
     }
     if (state.currentSpeechAudio) {
@@ -733,8 +770,9 @@ function speakText(message) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          text: textForSpeech(message),
-          language: state.language
+          text: message,
+          language: state.language,
+          session_id: state.sessionId
         })
       });
       if (!response.ok) throw new Error("speech synthesis failed");
@@ -745,23 +783,24 @@ function speakText(message) {
       audio.onended = () => {
         URL.revokeObjectURL(audioUrl);
         if (state.currentSpeechAudio === audio) state.currentSpeechAudio = null;
-        resolve();
+        finish();
       };
       audio.onerror = () => {
         URL.revokeObjectURL(audioUrl);
         if (state.currentSpeechAudio === audio) state.currentSpeechAudio = null;
-        resolve();
+        finish();
       };
       await audio.play();
     } catch (_) {
       if (audioUrl) URL.revokeObjectURL(audioUrl);
       state.currentSpeechAudio = null;
-      resolve();
+      finish();
     }
   });
 }
 
 function stopSpeechOutput() {
+  clearSpeechButtonActive(state.currentSpeechButton);
   if (!state.currentSpeechAudio) return;
   state.currentSpeechAudio.pause();
   state.currentSpeechAudio.removeAttribute("src");
@@ -771,8 +810,6 @@ function stopSpeechOutput() {
 
 async function speakIntroThenListen() {
   stopListening();
-  byId("voiceStatus").textContent = text().voiceSpeaking;
-  await speakText(text().speechIntro);
   updateVoiceStatusReady();
   startListening({ automatic: true });
 }
@@ -963,12 +1000,15 @@ byId("queryForm").addEventListener("submit", (event) => {
 
 byId("queryInput").addEventListener("input", () => {
   state.queryInputMode = "text";
+  if (state.isSubmitting) return;
+  state.isSubmitting = true;
+  if (dialogueUI.active) dialogueUI.disable();
   resetSessionTimeout();
 });
 
 byId("replayAnswerButton").addEventListener("click", () => {
   resetSessionTimeout();
-  if (state.lastAnswer) void speakText(state.lastAnswer);
+  if (state.lastAnswer) void speakText(state.lastAnswer, byId("replayAnswerButton"));
 });
 
 byId("micButton").addEventListener("click", () => {
@@ -993,9 +1033,17 @@ byId("languageButton").addEventListener("click", () => {
   resetSessionTimeout();
   stopListening();
   stopSpeechOutput();
-  resetView();
   byId("appView").hidden = true;
   byId("languageView").hidden = false;
 });
 
-void loadSpeechConfig();
+void (async () => {
+  try {
+    await loadApplicationCopy("de");
+    byId("languageTitle").textContent = copy.de.languageTitle;
+    byId("languageIntro").textContent = copy.de.languageIntro;
+  } catch (_) {
+    byId("languageTitle").textContent = "LENA";
+  }
+  await loadSpeechConfig();
+})();

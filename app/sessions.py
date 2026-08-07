@@ -15,6 +15,7 @@ from pathlib import Path
 
 from pydantic import BaseModel, Field, ValidationError
 
+from .dialogue import DialogRequestError, DialogState, DialogStatus
 from .models import ChatTurn, Language
 
 
@@ -42,7 +43,16 @@ class ConversationSession(BaseModel):
     created_at: datetime
     last_activity_at: datetime
     turns: list[ChatTurn] = Field(default_factory=list)
-    pending_clarification: bool = False
+    dialog: DialogState | None = None
+    runtime_kb_fingerprint: str | None = None
+    # Server-built spoken_text values for the cards/destinations of the most
+    # recent turn only (not part of the displayed history). This is the
+    # allow-list /api/speech/synthesize checks against for per-card "listen"
+    # requests, alongside turns[-1].answer for the main answer replay -- see
+    # main.py::synthesize_speech. Old sessions loaded without this field
+    # default to empty, which just means per-card TTS is unavailable for them
+    # until their next turn.
+    speakable_texts: list[str] = Field(default_factory=list)
 
 
 @dataclass(slots=True)
@@ -65,35 +75,66 @@ class SessionStore:
     timeout_seconds: int = 180
     max_turns: int = 8
     max_sessions: int = 500
+    # Infrastructure routes (toilets/fountains) can report up to 500 map
+    # markers per query; without a cap, speakable_texts would write that many
+    # full sentences into the session store on every such turn. Bounded the
+    # same way turns/sessions already are, not left to grow with the result set.
+    max_speakable_texts: int = 40
     _lock: threading.RLock = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
-        if self.timeout_seconds <= 0 or self.max_turns <= 0 or self.max_sessions <= 0:
+        if (
+            self.timeout_seconds <= 0
+            or self.max_turns <= 0
+            or self.max_sessions <= 0
+            or self.max_speakable_texts <= 0
+        ):
             raise ValueError("Sessiongrenzen müssen positive Ganzzahlen sein")
         self._lock = _lock_for(self.path)
 
-    def resolve(self, session_id: str | None, language: Language) -> ConversationSession:
-        """Liefert eine aktive Session oder legt bei Ablauf/Sprachwechsel eine neue an."""
+    def resolve(
+        self,
+        session_id: str | None,
+        language: Language,
+        runtime_kb_fingerprint: str,
+    ) -> ConversationSession:
+        """Erhaelt Sprachwechsel, verwirft aber jeden fremden Wissensstand."""
         with self._lock:
             now = utc_now()
             loaded = self._load_all_unlocked()
             self._cleanup_unlocked(loaded, now)
             existing = loaded.sessions.get(session_id) if session_id else None
-            if existing and existing.language == language:
+            if (
+                existing
+                and existing.runtime_kb_fingerprint == runtime_kb_fingerprint
+            ):
+                if existing.language != language:
+                    existing = existing.model_copy(deep=True)
+                    existing.language = language
+                    existing.last_activity_at = now
+                    loaded.sessions[existing.session_id] = existing
+                    loaded.changed = True
+                if existing.dialog and existing.dialog.expires_at <= now:
+                    existing = existing.model_copy(deep=True)
+                    existing.dialog = None
+                    loaded.sessions[existing.session_id] = existing
+                    loaded.changed = True
                 if loaded.changed and loaded.writable:
                     self._write_all_unlocked(loaded.sessions)
                 return existing
 
-            session = self._new_session(language, now)
+            if existing:
+                loaded.sessions.pop(existing.session_id, None)
+            session = self._new_session(language, now, runtime_kb_fingerprint)
             loaded.sessions[session.session_id] = session
             self._enforce_capacity_unlocked(loaded, protected_id=session.session_id)
             if loaded.writable:
                 self._write_all_unlocked(loaded.sessions)
             return session
 
-    def create(self, language: Language) -> ConversationSession:
+    def create(self, language: Language, runtime_kb_fingerprint: str) -> ConversationSession:
         """Erzeugt eine neue Session; ein Persistenzfehler blockiert sie nicht."""
-        return self.resolve(None, language)
+        return self.resolve(None, language, runtime_kb_fingerprint)
 
     def get(self, session_id: str | None) -> ConversationSession | None:
         """Lädt eine aktive Session und bereinigt dabei abgelaufene Datensätze."""
@@ -127,7 +168,7 @@ class SessionStore:
         *,
         question: str,
         answer: str,
-        pending_clarification: bool,
+        speakable_texts: list[str] | None = None,
     ) -> ConversationSession:
         """Fügt einen Turn ohne Lost Update unter dem gemeinsamen Dateilock hinzu."""
         with self._lock:
@@ -135,13 +176,17 @@ class SessionStore:
             loaded = self._load_all_unlocked()
             self._cleanup_unlocked(loaded, now)
             current = loaded.sessions.get(session.session_id)
-            if current is None or current.language != session.language:
+            if (
+                current is None
+                or current.language != session.language
+                or current.runtime_kb_fingerprint != session.runtime_kb_fingerprint
+            ):
                 current = session.model_copy(deep=True)
             else:
                 current = current.model_copy(deep=True)
             current.turns.append(ChatTurn(question=question, answer=answer))
             current.turns = current.turns[-self.max_turns :]
-            current.pending_clarification = pending_clarification
+            current.speakable_texts = list(speakable_texts or [])[: self.max_speakable_texts]
             current.last_activity_at = now
             loaded.sessions[current.session_id] = current
             self._enforce_capacity_unlocked(loaded, protected_id=current.session_id)
@@ -149,13 +194,80 @@ class SessionStore:
                 self._write_all_unlocked(loaded.sessions)
             return current
 
+    def set_dialog(self, session: ConversationSession, dialog: DialogState | None) -> ConversationSession:
+        """Ersetzt den einzigen Dialogzustand atomar in der aktuellen Session."""
+        with self._lock:
+            now = utc_now()
+            loaded = self._load_all_unlocked()
+            self._cleanup_unlocked(loaded, now)
+            current = loaded.sessions.get(session.session_id)
+            current = (current or session).model_copy(deep=True)
+            if dialog and dialog.knowledge_base_fingerprint != current.runtime_kb_fingerprint:
+                raise DialogRequestError("dialog_fingerprint_mismatch")
+            current.dialog = dialog.model_copy(deep=True) if dialog else None
+            current.last_activity_at = now
+            loaded.sessions[current.session_id] = current
+            if loaded.writable:
+                self._write_all_unlocked(loaded.sessions)
+            return current
+
+    def claim_dialog(
+        self,
+        session: ConversationSession,
+        *,
+        dialog_id: str,
+        choice_values: list[str] | None = None,
+    ) -> tuple[ConversationSession, DialogState]:
+        """Beansprucht genau eine offene Antwort und verhindert Doppelverarbeitung."""
+        with self._lock:
+            current, loaded, now = self._current_unlocked(session)
+            dialog = current.dialog
+            if (
+                not dialog
+                or dialog.dialog_id != dialog_id
+                or dialog.status != DialogStatus.AWAITING_ANSWER
+                or dialog.expires_at <= now
+                or dialog.knowledge_base_fingerprint != current.runtime_kb_fingerprint
+            ):
+                raise DialogRequestError()
+            values = list(choice_values or [])
+            allowed = {choice.value for choice in dialog.choices}
+            if values and (not set(values).issubset(allowed) or (len(values) > 1 and not dialog.allow_multiple_choices)):
+                raise DialogRequestError()
+            dialog = dialog.model_copy(deep=True)
+            dialog.status = DialogStatus.PROCESSING
+            dialog.updated_at = now
+            current.dialog = dialog
+            current.last_activity_at = now
+            loaded.sessions[current.session_id] = current
+            if loaded.writable:
+                self._write_all_unlocked(loaded.sessions)
+            return current, dialog
+
+    def _current_unlocked(
+        self,
+        session: ConversationSession,
+    ) -> tuple[ConversationSession, _LoadResult, datetime]:
+        now = utc_now()
+        loaded = self._load_all_unlocked()
+        self._cleanup_unlocked(loaded, now)
+        current = loaded.sessions.get(session.session_id)
+        if current is None or current.runtime_kb_fingerprint != session.runtime_kb_fingerprint:
+            raise DialogRequestError("dialog_session_invalid")
+        return current.model_copy(deep=True), loaded, now
+
     @staticmethod
-    def _new_session(language: Language, now: datetime) -> ConversationSession:
+    def _new_session(
+        language: Language,
+        now: datetime,
+        runtime_kb_fingerprint: str,
+    ) -> ConversationSession:
         return ConversationSession(
             session_id=uuid.uuid4().hex,
             language=language,
             created_at=now,
             last_activity_at=now,
+            runtime_kb_fingerprint=runtime_kb_fingerprint,
         )
 
     def _load_all_unlocked(self) -> _LoadResult:

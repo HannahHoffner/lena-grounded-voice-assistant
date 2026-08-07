@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "description": "Manual fachliche Korrekturen. Einträge hier überschreiben maschinelle Übersetzungen, ohne bei WFS-Updates automatisch verloren zu gehen.",
+  "entries": {
+    "example-offer-id": {
+      "review_status": "example",
+      "translations": {
+        "de": {
+          "name": "Beispielname"
+        },
+        "en": {
+          "name": "Example name"
+        }
+      }
+    }
+  }
+}

@@ -44,7 +44,7 @@ def test_atomic_replace_preserves_previous_file_and_removes_temporary_file(
 ) -> None:
     path = tmp_path / "sessions.json"
     store = SessionStore(path)
-    session = store.create(Language.DE)
+    session = store.create(Language.DE, "kb-v1")
     previous = path.read_bytes()
 
     def fail_replace(source, destination) -> None:
@@ -57,7 +57,6 @@ def test_atomic_replace_preserves_previous_file_and_removes_temporary_file(
         session,
         question="sensitive question",
         answer="sensitive answer",
-        pending_clarification=False,
     )
 
     assert len(updated.turns) == 1
@@ -70,7 +69,7 @@ def test_parallel_store_instances_do_not_lose_sessions_or_turns(tmp_path: Path) 
     stores = [SessionStore(path, max_turns=50, max_sessions=100) for _ in range(8)]
 
     with ThreadPoolExecutor(max_workers=8) as pool:
-        created = list(pool.map(lambda store: store.create(Language.DE), stores))
+        created = list(pool.map(lambda store: store.create(Language.DE, "kb-v1"), stores))
 
     base = created[0]
     with ThreadPoolExecutor(max_workers=8) as pool:
@@ -80,7 +79,6 @@ def test_parallel_store_instances_do_not_lose_sessions_or_turns(tmp_path: Path) 
                     base,
                     question=f"question-{pair[0]}",
                     answer=f"answer-{pair[0]}",
-                    pending_clarification=False,
                 ),
                 enumerate(stores),
             )
@@ -107,8 +105,8 @@ def test_lock_is_released_after_write_failure(tmp_path: Path, monkeypatch: pytes
         real_replace(source, destination)
 
     monkeypatch.setattr("app.sessions.os.replace", fail_once)
-    first = store.create(Language.DE)
-    second = store.create(Language.DE)
+    first = store.create(Language.DE, "kb-v1")
+    second = store.create(Language.DE, "kb-v1")
 
     assert first.session_id != second.session_id
     assert store.get(second.session_id) is not None
@@ -157,7 +155,7 @@ def test_corrupt_file_is_quarantined_without_logging_content(
     path.write_text(content, encoding="utf-8")
 
     with caplog.at_level(logging.WARNING):
-        session = SessionStore(path).create(Language.DE)
+        session = SessionStore(path).create(Language.DE, "kb-v1")
 
     assert SessionStore(path).get(session.session_id) is not None
     recovery = list(tmp_path.glob("sessions.corrupt.*.json"))
@@ -193,7 +191,7 @@ def test_failed_quarantine_keeps_corrupt_file_untouched(
     path.write_text("corrupt-sensitive-content", encoding="utf-8")
 
     monkeypatch.setattr("app.sessions.os.replace", lambda *_: (_ for _ in ()).throw(OSError("blocked")))
-    session = SessionStore(path).create(Language.DE)
+    session = SessionStore(path).create(Language.DE, "kb-v1")
 
     assert session.session_id
     assert path.read_text(encoding="utf-8") == "corrupt-sensitive-content"

@@ -9,7 +9,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.config import Settings
-from app.kb_loader import KnowledgeBaseError, load_active_knowledge_base
+from app.kb_loader import KnowledgeBaseError, load_normalized_source_release
 from app.main import create_app
 from app.wfs_releases import (
     WfsReleaseError,
@@ -88,7 +88,7 @@ def test_promotion_uses_existing_release_and_atomic_pointer(tmp_path: Path) -> N
     assert active.release_id == pending.release_id
     assert active.path == promoted.path
     assert not pending.path.exists()
-    assert load_active_knowledge_base(settings).release_id == pending.release_id
+    assert load_normalized_source_release(settings).release_id == pending.release_id
 
 
 @pytest.mark.parametrize("filename", ["offers.json", "snapshot.geojson", "diff.json", "manifest.json"])
@@ -172,7 +172,7 @@ def test_active_load_uses_pointer_only_once(
         return original_read_text(path, *args, **kwargs)
 
     monkeypatch.setattr(Path, "read_text", tracked_read)
-    loaded = load_active_knowledge_base(settings)
+    loaded = load_normalized_source_release(settings)
 
     assert loaded.release_id == first.release_id
     assert pointer_reads == 1
@@ -194,7 +194,7 @@ def test_legacy_migration_is_idempotent_and_uses_no_network(tmp_path: Path) -> N
 
     assert first is not None and second is not None
     assert first.release_id == second.release_id == f"legacy-{canonical['source']['content_hash'][:12]}"
-    assert load_active_knowledge_base(settings).release_id == first.release_id
+    assert load_normalized_source_release(settings).release_id == first.release_id
 
 
 def test_corrupt_pointer_does_not_fall_back_to_pending_or_legacy(tmp_path: Path) -> None:
@@ -207,7 +207,7 @@ def test_corrupt_pointer_does_not_fall_back_to_pending_or_legacy(tmp_path: Path)
     paths.pointer.write_text('{"release_id":"bad"}', encoding="utf-8")
 
     with pytest.raises(KnowledgeBaseError):
-        load_active_knowledge_base(settings)
+        load_normalized_source_release(settings)
     assert release.path.is_dir()
 
 
@@ -231,8 +231,9 @@ def test_interaction_records_release_used_for_answer(tmp_path: Path) -> None:
 
     assert response.status_code == 200
     record = json.loads(settings.interaction_log_path.read_text(encoding="utf-8"))  # type: ignore[union-attr]
-    assert record["data_release_id"] == release.release_id
-    assert record["schema_version"] == 2
+    assert record["data_release_id"].startswith("curation-")
+    assert record["data_release_id"] != release.release_id
+    assert record["schema_version"] == 11
 
 
 def test_failed_release_write_leaves_no_visible_pending_release(

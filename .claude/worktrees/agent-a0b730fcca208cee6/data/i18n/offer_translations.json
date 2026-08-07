@@ -1,0 +1,3342 @@
+{
+  "schema_version": 1,
+  "generated_at": "2026-07-07T15:19:32.352714Z",
+  "description": "Stored offer translations for LENA. Machine translations are generated only for new or changed WFS records and can be adjusted through manual_overrides.json.",
+  "languages": [
+    "en",
+    "pl",
+    "ro",
+    "ru"
+  ],
+  "entries": {
+    "1": {
+      "source_hash": "44a61ea3d9168157df59c358489598341e7b15058605b36673b66b5f8676dd61",
+      "source_name": "Sozialamt - Abteilung Soziale Wohnhilfen",
+      "review_status": "machine",
+      "translations": {
+        "en": {
+          "name": "Social Welfare Office - Department of Social Housing Assistance",
+          "short_description": "Social housing assistance - City of Leipzig",
+          "services": [
+            "The Department of Social Housing Assistance offers, among other things, support on the following topics:",
+            "economic assistance in housing emergencies",
+            "personal help for people who have become or are at risk of becoming homeless",
+            "emergency accommodation for homeless households and individuals",
+            "help to prevent imminent energy supply cut‑off",
+            "support in finding housing and issuing housing entitlement certificates"
+          ],
+          "opening_hours_raw": [],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 1239139"
+          ],
+          "notes": []
+        },
+        "pl": {
+          "name": "Urząd ds. Pomocy Społecznej - Wydział Pomocy Mieszkaniowej",
+          "short_description": "Pomoc mieszkaniowa - miasto Lipsk",
+          "services": [
+            "Wydział Pomocy Mieszkaniowej oferuje m.in. wsparcie w następujących obszarach:",
+            "pomoc finansowa w nagłych sytuacjach mieszkaniowych",
+            "indywidualna pomoc przy już istniejącej lub grożącej bezdomności",
+            "awaryjne zakwaterowanie dla bezdomnych gospodarstw domowych i osób",
+            "pomoc w zapobieganiu groźbie odcięcia dostaw energii",
+            "wsparcie w poszukiwaniu mieszkania oraz wydawanie zaświadczeń o prawie do lokalu"
+          ],
+          "opening_hours_raw": [],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 1239139"
+          ],
+          "notes": []
+        },
+        "ro": {
+          "name": "Oficiul Social - Departamentul de Ajutor pentru Locuințe Sociale",
+          "short_description": "Ajutor pentru locuințe sociale - orașul Leipzig",
+          "services": [
+            "Departamentul de Ajutor pentru Locuințe Sociale oferă, printre altele, sprijin în următoarele domenii:",
+            "asistență financiară în cazuri de urgență locativă",
+            "asistență personală pentru persoanele care au devenit sau riscă să devină fără locuință",
+            "cazare de urgență pentru gospodării și persoane fără locuință",
+            "ajutor pentru a preveni întreruperea iminentă a furnizării de energie",
+            "sprijin în căutarea locuinței și eliberarea certificatelor de drept de locuire"
+          ],
+          "opening_hours_raw": [],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 1239139"
+          ],
+          "notes": []
+        },
+        "ru": {
+          "name": "Социальный отдел - подразделение социальной жилищной помощи",
+          "short_description": "Социальная жилищная помощь – город Лейпциг",
+          "services": [
+            "Подразделение социальной жилищной помощи предлагает, среди прочего, поддержку по следующим вопросам:",
+            "экономическая помощь в жилищных чрезвычайных ситуациях",
+            "личная помощь при наступившей или грозящей бездомности",
+            "экстренное размещение бездомных семей и лиц",
+            "помощь при угрозе отключения энергоснабжения",
+            "поддержка в поиске жилья и выдача справок о праве на жильё"
+          ],
+          "opening_hours_raw": [],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 1239139"
+          ],
+          "notes": []
+        }
+      },
+      "stale": false,
+      "translated_at": "2026-07-07T15:05:28.042965Z",
+      "provider": "blablador"
+    },
+    "2": {
+      "source_hash": "3fa13e81c47a6ac018a2edadd31f30609887ce47c4201fc94f469a3a5016bdec",
+      "source_name": "Sozialamt - Sachgebiet Wohnungsnotfallhilfe",
+      "review_status": "machine",
+      "translations": {
+        "en": {
+          "name": "Social Welfare Office - Emergency Housing Assistance",
+          "short_description": "Social housing assistance - City of Leipzig",
+          "services": [],
+          "opening_hours_raw": [],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 1239139"
+          ],
+          "notes": []
+        },
+        "pl": {
+          "name": "Urząd ds. pomocy społecznej - Dział pomocy w nagłych wypadkach mieszkaniowych",
+          "short_description": "Pomoc mieszkaniowa - miasto Lipsk",
+          "services": [],
+          "opening_hours_raw": [],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 1239139"
+          ],
+          "notes": []
+        },
+        "ro": {
+          "name": "Oficiul Social - Secția Ajutor pentru Urgențe Locative",
+          "short_description": "Ajutor locativ social - orașul Leipzig",
+          "services": [],
+          "opening_hours_raw": [],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 1239139"
+          ],
+          "notes": []
+        },
+        "ru": {
+          "name": "Социальная служба – отдел экстренной жилищной помощи",
+          "short_description": "Социальная жилищная помощь – город Лейпциг",
+          "services": [],
+          "opening_hours_raw": [],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 1239139"
+          ],
+          "notes": []
+        }
+      },
+      "stale": false,
+      "translated_at": "2026-07-07T15:05:35.282303Z",
+      "provider": "blablador"
+    },
+    "3": {
+      "source_hash": "6491d9e10935d1c87fb6fbcb92d506d9c351e8c2e440bd43e0dfc96c83671bac",
+      "source_name": "Sozialamt - Sachgebiet Wohnen",
+      "review_status": "machine",
+      "translations": {
+        "en": {
+          "name": "Social Welfare Office - Housing Department",
+          "short_description": "Social housing assistance - City of Leipzig",
+          "services": [
+            "Information about social housing",
+            "Apply for a housing entitlement certificate"
+          ],
+          "opening_hours_raw": [
+            "Tuesday: 09:00 to 18:00",
+            "Thursday: 09:00 to 16:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 1239119"
+          ],
+          "notes": []
+        },
+        "pl": {
+          "name": "Urząd ds. socjalnych – dział mieszkalnictwa",
+          "short_description": "Pomoc mieszkaniowa – miasto Lipsk",
+          "services": [
+            "Informacje o mieszkaniach socjalnych",
+            "Złożyć wniosek o zaświadczenie o prawie do mieszkania"
+          ],
+          "opening_hours_raw": [
+            "wtorek: 09:00 do 18:00",
+            "czwartek: 09:00 do 16:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 1239119"
+          ],
+          "notes": []
+        },
+        "ro": {
+          "name": "Oficiul social - departamentul locuințe",
+          "short_description": "Ajutor pentru locuințe sociale - orașul Leipzig",
+          "services": [
+            "Informații despre locuințe sociale",
+            "Depune cerere pentru certificat de drept la locuință"
+          ],
+          "opening_hours_raw": [
+            "marți: 09:00 până la 18:00",
+            "joi: 09:00 până la 16:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 1239119"
+          ],
+          "notes": []
+        },
+        "ru": {
+          "name": "Социальный отдел – отдел жилья",
+          "short_description": "Социальная жилищная помощь – город Лейпциг",
+          "services": [
+            "Информация о социальных квартирах",
+            "Подать заявление на справку о праве на жильё"
+          ],
+          "opening_hours_raw": [
+            "вторник: 09:00 до 18:00",
+            "четверг: 09:00 до 16:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 1239119"
+          ],
+          "notes": []
+        }
+      },
+      "stale": false,
+      "translated_at": "2026-07-07T15:05:48.080323Z",
+      "provider": "blablador"
+    },
+    "4": {
+      "source_hash": "5fe3e53bdeffcdd525da265dca5174f4cc46ca25b817a05f078415e26e4d8f2f",
+      "source_name": "Sozialamt - Sachgebiet Notunterbringung",
+      "review_status": "machine",
+      "translations": {
+        "en": {
+          "name": "Social Welfare Office - Emergency Accommodation Department",
+          "short_description": "Social housing assistance - City of Leipzig",
+          "services": [],
+          "opening_hours_raw": [],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 1234503"
+          ],
+          "notes": [
+            "Phone appointment required"
+          ]
+        },
+        "pl": {
+          "name": "Urząd ds. Pomocy Społecznej - Dział Zakwaterowania Awaryjnego",
+          "short_description": "Pomoc mieszkaniowa - miasto Lipsk",
+          "services": [],
+          "opening_hours_raw": [],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 1234503"
+          ],
+          "notes": [
+            "Wymagana telefoniczna rezerwacja terminu"
+          ]
+        },
+        "ro": {
+          "name": "Oficiul Social - Departamentul Cazare de Urgență",
+          "short_description": "Ajutor pentru locuință - orașul Leipzig",
+          "services": [],
+          "opening_hours_raw": [],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 1234503"
+          ],
+          "notes": [
+            "Este necesară programarea telefonică"
+          ]
+        },
+        "ru": {
+          "name": "Социальный отдел - отдел экстренного размещения",
+          "short_description": "Социальная жилищная помощь - город Лейпциг",
+          "services": [],
+          "opening_hours_raw": [],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 1234503"
+          ],
+          "notes": [
+            "Необходимо записаться по телефону"
+          ]
+        }
+      },
+      "stale": false,
+      "translated_at": "2026-07-07T15:05:54.657824Z",
+      "provider": "blablador"
+    },
+    "5": {
+      "source_hash": "4bb72e3ce7c8545fa263d992eaefa408d8c4ece31e21f49c717ccda7131b7ca4",
+      "source_name": "Zentrum für Drogenhilfe Notschlafstelle für drogenkonsumierende Obdachlose Alternative III",
+      "review_status": "machine",
+      "translations": {
+        "en": {
+          "name": "Center for Drug Assistance Emergency Shelter for Homeless Drug Users Alternative III",
+          "short_description": "Overnight shelter",
+          "services": [
+            "Overnight accommodation with self‑catering",
+            "(40 places in single or double rooms, for women and men, aged 18 and over, for users of illegal substances)",
+            "Low‑threshold survival assistance offers",
+            "(Safer Use, distribution of first‑time kits, etc.)",
+            "Support with personal matters",
+            "(Authorities and offices, health, finances, etc.)",
+            "Advice on further help system offers",
+            "(Addiction counseling, substitution treatment, detoxification, etc.)",
+            "Emergency medical care",
+            "Advice on safer use / safer sex",
+            "Distribution of consumption supplies, condoms"
+          ],
+          "opening_hours_raw": [
+            "Monday - Friday: 18:00 - 10:00",
+            "Open all day on weekends and holidays"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 30879740"
+          ],
+          "notes": []
+        },
+        "pl": {
+          "name": "Centrum Pomocy w Zakresie Narkotyków Nocny Schron dla Bezdomnych Użytkowników Narkotyków Alternatywa III",
+          "short_description": "Dom noclegowy",
+          "services": [
+            "Oferta noclegowa z samodzielnym wyżywieniem",
+            "(40 miejsc w pokojach jedno- i dwuosobowych, dla kobiet i mężczyzn, od 18 lat, dla konsumentów nielegalnych substancji)",
+            "Nisko progowe oferty pomocy przetrwania",
+            "(Safer Use, wydawanie pierwszych zestawów, itp.)",
+            "Wsparcie w sprawach osobistych",
+            "(Urzędy i instytucje, zdrowie, finanse, itp.)",
+            "Poradnictwo w zakresie dalszych ofert systemu pomocy",
+            "(Poradnictwo uzależnieniowe, leczenie substytucyjne, detoksykacja itp.)",
+            "Nagła opieka medyczna",
+            "Poradnictwo w zakresie bezpiecznego użycia/bezpiecznego seksu",
+            "Wydawanie przyborów do konsumpcji, prezerwatyw"
+          ],
+          "opening_hours_raw": [
+            "Poniedziałek - Piątek: 18:00 - 10:00",
+            "Weekendy i święta otwarte całą dobę"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 30879740"
+          ],
+          "notes": []
+        },
+        "ro": {
+          "name": "Centrul de Ajutor pentru Droguri Refugiu de Urgență pentru Persoane fără Acasă Consumatori de Droguri Alternativa III",
+          "short_description": "Casa de cazare peste noapte",
+          "services": [
+            "Oferă cazare cu autoservire",
+            "(40 de locuri în camere cu unul sau două paturi, pentru femei și bărbați, de la 18 ani, pentru consumatori de substanțe ilegale)",
+            "Oferte cu prag scăzut de ajutor pentru supraviețuire",
+            "(Safer Use, distribuție de seturi de bază, etc.)",
+            "Sprijin în chestiuni personale",
+            "(Autorități și instituții, sănătate, finanțe, etc.)",
+            "Consiliere privind alte oferte ale sistemului de ajutor",
+            "(Consiliere pentru dependență, tratament de substituție, detoxifiere etc.)",
+            "Îngrijire medicală de urgență",
+            "Consiliere privind utilizarea sigură/sexul sigur",
+            "Distribuție de materiale de consum, prezervative"
+          ],
+          "opening_hours_raw": [
+            "Luni - Vineri: 18:00 - 10:00",
+            "În weekend și sărbători deschis toată ziua"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 30879740"
+          ],
+          "notes": []
+        },
+        "ru": {
+          "name": "Центр помощи при употреблении наркотиков Экстренный ночлежка для бездомных потребителей наркотиков Альтернатива III",
+          "short_description": "Дом ночлега",
+          "services": [
+            "Предложение ночлега с самостоятельным обслуживанием",
+            "(40 мест в одно- и двухместных комнатах, для женщин и мужчин, от 18 лет, для потребителей нелегальных веществ)",
+            "Низкопороговые предложения помощи в выживании",
+            "(Safer Use, выдача стартовых наборов и т.д.)",
+            "Поддержка в личных вопросах",
+            "(Власти и органы, здоровье, финансы и т.д.)",
+            "Консультации по дальнейшим предложениям системы помощи",
+            "(Консультации по зависимости, заместительная терапия, детоксикация и т.д.)",
+            "Неотложная медицинская помощь",
+            "Консультации по безопасному использованию/безопасному сексу",
+            "Выдача предметов для потребления, презервативов"
+          ],
+          "opening_hours_raw": [
+            "Понедельник - Пятница: 18:00 - 10:00",
+            "Выходные и праздники открыто круглосуточно"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 30879740"
+          ],
+          "notes": []
+        }
+      },
+      "stale": false,
+      "translated_at": "2026-07-07T15:06:09.379308Z",
+      "provider": "blablador"
+    },
+    "6": {
+      "source_hash": "f6064df3694e9980b32bece6e6d6a6ca5703079dfdf7e7fb836a2a7afe5540f6",
+      "source_name": "Zentrum für Drogenhilfe Notschlafstelle für drogenkonsumierende Obdachlose Alternative I",
+      "review_status": "machine",
+      "translations": {
+        "en": {
+          "name": "Zentrum für Drogenhilfe – Emergency Shelter for Homeless Drug Users (Alternative I)",
+          "short_description": "overnight shelter",
+          "services": [
+            "Distribution of consumption supplies",
+            "Distribution of condoms",
+            "Information about safer sex and safer use",
+            "Showers and laundry",
+            "Overnight stay (emergency)",
+            "Crisis intervention",
+            "Help with social and financial problems and dealing with authorities",
+            "Emergency medical care",
+            "Counselling and special support for people who use drugs",
+            "Mailing address"
+          ],
+          "opening_hours_raw": [
+            "Monday - Sunday: 18:00 - 10:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 913560"
+          ],
+          "notes": [
+            "Referral is mainly done through the emergency shelter on Rückmarsdorfer Straße."
+          ]
+        },
+        "pl": {
+          "name": "Zentrum für Drogenhilfe – Nocny schron dla bezdomnych osób używających narkotyki (Alternative I)",
+          "short_description": "Miejsce noclegowe",
+          "services": [
+            "Rozdawanie środków do konsumpcji",
+            "Rozdawanie prezerwatyw",
+            "Informacje o bezpiecznym seksie i bezpiecznym używaniu",
+            "Prysznice, pranie",
+            "Nocleg (pilny)",
+            "Interwencja kryzysowa",
+            "Wsparcie w rozwiązywaniu problemów społecznych i finansowych oraz w kontaktach z urzędami",
+            "Nagła opieka medyczna",
+            "Poradnictwo i specjalna pomoc dla osób używających narkotyki",
+            "Adres pocztowy"
+          ],
+          "opening_hours_raw": [
+            "Poniedziałek - niedziela: 18:00 - 10:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 913560"
+          ],
+          "notes": [
+            "Skierowanie odbywa się głównie przez nocny schron przy Rückmarsdorfer Straße."
+          ]
+        },
+        "ro": {
+          "name": "Zentrum für Drogenhilfe – Adăpost de urgență pentru persoanele fără adăpost care consumă droguri (Alternative I)",
+          "short_description": "Casa de cazare peste noapte",
+          "services": [
+            "Distribuirea materialelor de consum",
+            "Distribuirea prezervativelor",
+            "Informații despre sex sigur și consum sigur",
+            "Dușuri, spălarea rufelor",
+            "Cazare peste noapte (cazare de urgență)",
+            "Intervenție în criză",
+            "Sprijin pentru rezolvarea problemelor sociale și financiare și pentru relațiile cu autoritățile",
+            "Îngrijire medicală de urgență",
+            "Consiliere și ajutor special pentru persoanele care consumă droguri",
+            "Adresă poștală"
+          ],
+          "opening_hours_raw": [
+            "Luni - Duminică: 18:00 - 10:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 913560"
+          ],
+          "notes": [
+            "Trimiterea se face în principal prin adăpostul de urgență de pe Rückmarsdorfer Straße."
+          ]
+        },
+        "ru": {
+          "name": "Zentrum für Drogenhilfe – Приют для бездомных наркозависимых (Alternative I)",
+          "short_description": "Дом ночлега",
+          "services": [
+            "Раздача средств для употребления",
+            "Раздача презервативов",
+            "Информация о безопасном сексе и безопасном употреблении",
+            "Душ, стирка белья",
+            "Ночёвка (экстренная ночёвка)",
+            "Кризисное вмешательство",
+            "Помощь в решении социальных и финансовых проблем и в вопросах с органами власти",
+            "Экстренная медицинская помощь",
+            "Консультации и специальная помощь для людей, употребляющих наркотики",
+            "Почтовый адрес"
+          ],
+          "opening_hours_raw": [
+            "Понедельник - Воскресенье: 18:00 - 10:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 913560"
+          ],
+          "notes": [
+            "Направление в основном осуществляется через приют на Rückmarsdorfer Straße."
+          ]
+        }
+      },
+      "stale": false,
+      "translated_at": "2026-07-07T15:06:23.434927Z",
+      "provider": "blablador"
+    },
+    "7": {
+      "source_hash": "2f83fc5be263824ef42e22342b811c4bddcb8d6eab2487855b72edf4e4800427",
+      "source_name": "Übernachtungshaus für wohnungslose Männer",
+      "review_status": "machine",
+      "translations": {
+        "en": {
+          "name": "Overnight shelter for homeless men",
+          "short_description": "Overnight shelter",
+          "services": [
+            "Overnight stay (5.00 € per night)",
+            "Laundry washing (2.50 €)",
+            "Free tea",
+            "Clothing from the house's own clothing room",
+            "Medical care",
+            "Help with personal matters by social service (e.g., passport and registration issues, finances, health, housing, accommodation, work)"
+          ],
+          "opening_hours_raw": [
+            "Monday - Friday: 16:00 - 08:00",
+            "Saturday, Sunday and public holidays: all day"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 1234502",
+            "0341 1234504"
+          ],
+          "notes": []
+        },
+        "pl": {
+          "name": "Dom noclegowy dla bezdomnych mężczyzn",
+          "short_description": "Dom noclegowy",
+          "services": [
+            "Nocleg (5,00 € za noc)",
+            "Pranie (2,50 €)",
+            "Darmowa herbata",
+            "Ubrania z własnej szafy odzieżowej",
+            "Opieka medyczna",
+            "Wsparcie w sprawach osobistych przez serwis społeczny (np. w sprawach paszportowych i meldunkowych, finansach, zdrowiu, mieszkaniu, zakwaterowaniu, pracy)"
+          ],
+          "opening_hours_raw": [
+            "Poniedziałek - Piątek: 16:00 - 08:00",
+            "Sobota, niedziela i święta: cały dzień"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 1234502",
+            "0341 1234504"
+          ],
+          "notes": []
+        },
+        "ro": {
+          "name": "Casa de cazare pentru bărbați fără locuință",
+          "short_description": "Casa de cazare",
+          "services": [
+            "Cazare peste noapte (5,00 € pe noapte)",
+            "Spălare rufe (2,50 €)",
+            "Ceai gratuit",
+            "Îmbrăcăminte din camera de haine a casei",
+            "Îngrijire medicală",
+            "Sprijin în chestiuni personale prin serviciul social (de ex. pentru pașaport și înregistrare, finanțe, sănătate, locuință, cazare, muncă)"
+          ],
+          "opening_hours_raw": [
+            "Luni - Vineri: 16:00 - 08:00",
+            "Sâmbătă, duminică și sărbători: toată ziua"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 1234502",
+            "0341 1234504"
+          ],
+          "notes": []
+        },
+        "ru": {
+          "name": "Ночлежка для бездомных мужчин",
+          "short_description": "Ночлежка",
+          "services": [
+            "Ночёвка (5,00 € за ночь)",
+            "Стирка белья (2,50 €)",
+            "Бесплатный чай",
+            "Одежда из собственной гардеробной",
+            "Медицинская помощь",
+            "Помощь в личных вопросах через социальную службу (например, вопросы паспорта и регистрации, финансы, здоровье, жильё, размещение, работа)"
+          ],
+          "opening_hours_raw": [
+            "Понедельник - Пятница: 16:00 - 08:00",
+            "Суббота, воскресенье и праздничные дни: круглосуточно"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 1234502",
+            "0341 1234504"
+          ],
+          "notes": []
+        }
+      },
+      "stale": false,
+      "translated_at": "2026-07-07T15:06:33.147918Z",
+      "provider": "blablador"
+    },
+    "8": {
+      "source_hash": "59d442354d8cda2e74e21a26141daa0b18455e4a6a9d17dfa703c8b763087489",
+      "source_name": "Advent-Wohlfahrtswerk e. V. Übernachtungshaus für wohnungslose Frauen",
+      "review_status": "machine",
+      "translations": {
+        "en": {
+          "name": "Advent-Wohlfahrtswerk e. V. Overnight house for homeless women",
+          "short_description": "Overnight house",
+          "services": [
+            "Basic supplies (food, clothing, hygiene products)",
+            "Social counseling, i.e. support for securing financial livelihood, authority/registration matters, housing search etc.",
+            "Referral to specialist services, e.g. SPDi, debt counseling",
+            "Crisis intervention",
+            "Medical basic care 1x weekly or as needed",
+            "Low‑threshold access to open consultation, once a month or as needed",
+            "Possibility of psychosocial counseling in cooperation with the Sozialpsychiatrischen Dienst, location Südost"
+          ],
+          "opening_hours_raw": [
+            "Monday - Friday: 16:00 - 08:00",
+            "Saturday, Sunday and public holidays: all day"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 5852413"
+          ],
+          "notes": []
+        },
+        "pl": {
+          "name": "Advent-Wohlfahrtswerk e. V. Dom noclegowy dla bezdomnych kobiet",
+          "short_description": "Dom noclegowy",
+          "services": [
+            "Podstawowe zaopatrzenie (żywność, odzież, artykuły higieniczne)",
+            "Poradnictwo społeczne, tzn. wsparcie w zabezpieczeniu finansowych podstaw życia, sprawy urzędowe/rejestracyjne, poszukiwanie mieszkania itp.",
+            "Pośrednictwo do specjalistycznych usług, np. SPDi, doradztwo w sprawach długów",
+            "Interwencja kryzysowa",
+            "Podstawowa opieka medyczna 1 raz w tygodniu lub w razie potrzeby",
+            "Niskoprogowy dostęp do otwartej konsultacji, raz w miesiącu lub w razie potrzeby",
+            "Możliwość poradnictwa psychospołecznego we współpracy z Sozialpsychiatrischen Dienst, lokalizacja Südost"
+          ],
+          "opening_hours_raw": [
+            "Poniedziałek - Piątek: 16:00 - 08:00",
+            "Sobota, niedziela i święta: całą dobę"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 5852413"
+          ],
+          "notes": []
+        },
+        "ro": {
+          "name": "Advent-Wohlfahrtswerk e. V. Casa de cazare pentru femei fără locuință",
+          "short_description": "Casa de cazare",
+          "services": [
+            "Aprovizionare de bază (alimente, îmbrăcăminte, produse de igienă)",
+            "Consiliere socială, adică sprijin pentru asigurarea bazei financiare de viață, chestiuni cu autoritățile/înregistrarea, căutarea locuinței etc.",
+            "Recomandare către servicii specializate, de ex. SPDi, consiliere pentru datorii",
+            "Intervenție în criză",
+            "Îngrijire medicală de bază 1 dată pe săptămână sau după nevoie",
+            "Acces facil la consultație deschisă, o dată pe lună sau după nevoie",
+            "Posibilitate de consiliere psihosocială în cooperare cu Sozialpsychiatrischen Dienst, locația Südost"
+          ],
+          "opening_hours_raw": [
+            "Luni - Vineri: 16:00 - 08:00",
+            "Sâmbătă, Duminică și sărbători legale: toată ziua"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 5852413"
+          ],
+          "notes": []
+        },
+        "ru": {
+          "name": "Advent-Wohlfahrtswerk e. V. Приют для бездомных женщин",
+          "short_description": "Приют",
+          "services": [
+            "Базовое обеспечение (продукты питания, одежда, гигиенические средства)",
+            "Социальное консультирование, т.е. поддержка в обеспечении финансовой основы жизни, вопросы с органами/регистрацией, поиск жилья и т.д.",
+            "Направление к специализированным службам, например SPDi, консультация по долгам",
+            "Кризисное вмешательство",
+            "Базовое медицинское обслуживание 1 раз в неделю или по необходимости",
+            "Низкий порог доступа к открытой приёмной, раз в месяц или по необходимости",
+            "Возможность психосоциального консультирования в сотрудничестве с Sozialpsychiatrischen Dienst, местоположение Südost"
+          ],
+          "opening_hours_raw": [
+            "Понедельник - Пятница: 16:00 - 08:00",
+            "Суббота, воскресенье и праздничные дни: круглосуточно"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 5852413"
+          ],
+          "notes": []
+        }
+      },
+      "stale": false,
+      "translated_at": "2026-07-07T15:06:50.335914Z",
+      "provider": "blablador"
+    },
+    "9": {
+      "source_hash": "ebe2bb2a78870fad71c8e4e96cff1898664bd64dc5ad92aa4b1b124424b04158",
+      "source_name": "SZL Suchtzentrum gGmbH Tagestreff Insel",
+      "review_status": "machine",
+      "translations": {
+        "en": {
+          "name": "SZL Suchtzentrum gGmbH Tagestreff Insel (Day Meeting Point)",
+          "short_description": "Day meeting point",
+          "services": [
+            "Social counseling daily 09:00 - 12:00 and by appointment",
+            "Sunday 09:00 - 15:00",
+            "Mail delivery addresses",
+            "Shower, washing machine, clothing storage",
+            "Lockers",
+            "Snack bar and lunch"
+          ],
+          "opening_hours_raw": [
+            "Monday - Friday: 08:00 - 16:00",
+            "Sunday: 09:00 - 15:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 24676655"
+          ],
+          "notes": []
+        },
+        "pl": {
+          "name": "SZL Suchtzentrum gGmbH Tagestreff Insel (Miejsce spotkań dziennych)",
+          "short_description": "Miejsce spotkań dziennych",
+          "services": [
+            "Poradnictwo społeczne codziennie 09:00 - 12:00 i po umówieniu",
+            "Niedziela 09:00 - 15:00",
+            "Adresy do doręczeń pocztowych",
+            "Prysznic, pralka, szafa na ubrania",
+            "Skrzynki depozytowe",
+            "Kiosk i obiad"
+          ],
+          "opening_hours_raw": [
+            "Poniedziałek - piątek: 08:00 - 16:00",
+            "Niedziela: 09:00 - 15:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 24676655"
+          ],
+          "notes": []
+        },
+        "ro": {
+          "name": "SZL Suchtzentrum gGmbH Tagestreff Insel (Punct de întâlnire zilnică)",
+          "short_description": "Punct de întâlnire zilnică",
+          "services": [
+            "Consiliere socială zilnic 09:00 - 12:00 și pe bază de programare",
+            "Duminică 09:00 - 15:00",
+            "Adrese pentru livrare poștală",
+            "Duș, mașină de spălat, spațiu pentru haine",
+            "Căsuțe de depozitare",
+            "Gustări și prânz"
+          ],
+          "opening_hours_raw": [
+            "Luni - Vineri: 08:00 - 16:00",
+            "Duminică: 09:00 - 15:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 24676655"
+          ],
+          "notes": []
+        },
+        "ru": {
+          "name": "SZL Suchtzentrum gGmbH Tagestreff Insel (Дневной пункт встречи)",
+          "short_description": "Дневной пункт встречи",
+          "services": [
+            "Социальное консультирование ежедневно 09:00 - 12:00 и по записи",
+            "Воскресенье 09:00 - 15:00",
+            "Адреса для доставки почты",
+            "Душ, стиральная машина, шкаф для одежды",
+            "Шкафчики",
+            "Кафе и обед"
+          ],
+          "opening_hours_raw": [
+            "Понедельник - Пятница: 08:00 - 16:00",
+            "Воскресенье: 09:00 - 15:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 24676655"
+          ],
+          "notes": []
+        }
+      },
+      "stale": false,
+      "translated_at": "2026-07-07T15:07:00.645353Z",
+      "provider": "blablador"
+    },
+    "10": {
+      "source_hash": "47db44cf2bed54fb5f4f3a40dd4cb0d1501b63b3160531a99fdaa773490fd1cb",
+      "source_name": "Diakonisches Werk Innere Mission Leipzig e. V. Leipziger Oase",
+      "review_status": "machine",
+      "translations": {
+        "en": {
+          "name": "Diakonisches Werk Innere Mission Leipzig e. V. Leipziger Oase",
+          "short_description": "Day meeting point",
+          "services": [
+            "Shower facility, laundry service",
+            "Mailing address",
+            "Accompaniment to authorities and hospital",
+            "Social counseling",
+            "Breakfast: 09:00 - 10:00",
+            "Lunch: 12:00 - 13:30",
+            "Medical consultation:",
+            "Thursday from 15:00"
+          ],
+          "opening_hours_raw": [
+            "Monday - Friday: 08:00 - 16:00 with social counseling",
+            "Saturday and public holidays: 09:00 - 14:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 56124357"
+          ],
+          "notes": [
+            "Mailing address service:",
+            "Monday, Tuesday: 12:30 - 14:30",
+            "Wednesday: 12:30 - 14:00",
+            "Thursday, Friday: 12:30 - 14:30"
+          ]
+        },
+        "pl": {
+          "name": "Diakonisches Werk Innere Mission Leipzig e. V. Leipziger Oase",
+          "short_description": "Miejsce spotkań",
+          "services": [
+            "Możliwość kąpieli, pranie",
+            "Adres pocztowy",
+            "Towarzyszenie do urzędów i szpitala",
+            "Poradnictwo społeczne",
+            "Śniadanie: 09:00 - 10:00",
+            "Obiad: 12:00 - 13:30",
+            "Godziny przyjęć lekarskich:",
+            "Czwartek od 15:00"
+          ],
+          "opening_hours_raw": [
+            "Poniedziałek - piątek: 08:00 - 16:00, z poradnictwem społecznym",
+            "Sobota i święta: 09:00 - 14:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 56124357"
+          ],
+          "notes": [
+            "Usługa adresu pocztowego:",
+            "Poniedziałek, wtorek: 12:30 - 14:30",
+            "Środa: 12:30 - 14:00",
+            "Czwartek, piątek: 12:30 - 14:30"
+          ]
+        },
+        "ro": {
+          "name": "Diakonisches Werk Innere Mission Leipzig e. V. Leipziger Oase",
+          "short_description": "Întâlnire zilnică",
+          "services": [
+            "Facilități de duș, servicii de spălătorie",
+            "Adresă poștală",
+            "Însoțire la autorități și la spital",
+            "Consiliere socială",
+            "Mic dejun: 09:00 - 10:00",
+            "Prânz: 12:00 - 13:30",
+            "Program medical:",
+            "Joi de la 15:00"
+          ],
+          "opening_hours_raw": [
+            "Luni - Vineri: 08:00 - 16:00 cu consiliere socială",
+            "Sâmbătă și sărbători: 09:00 - 14:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 56124357"
+          ],
+          "notes": [
+            "Serviciu de adresă poștală:",
+            "Luni, Marţi: 12:30 - 14:30",
+            "Miercuri: 12:30 - 14:00",
+            "Joi, Vineri: 12:30 - 14:30"
+          ]
+        },
+        "ru": {
+          "name": "Diakonisches Werk Innere Mission Leipzig e. V. Leipziger Oase",
+          "short_description": "Место встречи",
+          "services": [
+            "Возможность принять душ, стирка",
+            "Почтовый адрес",
+            "Сопровождение в органы и в больницу",
+            "Социальная консультация",
+            "Завтрак: 09:00 - 10:00",
+            "Обед: 12:00 - 13:30",
+            "Врачебный приём:",
+            "Четверг с 15:00"
+          ],
+          "opening_hours_raw": [
+            "Пн‑Пт: 08:00 - 16:00, с социальной консультацией",
+            "Сб и праздничные дни: 09:00 - 14:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 56124357"
+          ],
+          "notes": [
+            "Служба почтового адреса:",
+            "Пн, Вт: 12:30 - 14:30",
+            "Ср: 12:30 - 14:00",
+            "Чт, Пт: 12:30 - 14:30"
+          ]
+        }
+      },
+      "stale": false,
+      "translated_at": "2026-07-07T15:13:17.685256Z",
+      "provider": "blablador"
+    },
+    "11": {
+      "source_hash": "2e1e61c5c703f90a59891da6fe394cecfae4a142eed8c8e5570a25ad5da700fd",
+      "source_name": "Zentrum für Drogenhilfe, Kontaktcafé, Alternative I",
+      "review_status": "machine",
+      "translations": {
+        "en": {
+          "name": "Center for Drug Assistance, Contact Café, Alternative I",
+          "short_description": "Day meeting point",
+          "services": [
+            "Lunch, coffee, other drinks",
+            "Showers, laundry washing",
+            "Mailing address",
+            "Distribution of consumption supplies",
+            "Condom distribution",
+            "Information on safer sex and safer use",
+            "Crisis intervention",
+            "Help with social and financial emergencies and dealing with authorities",
+            "Medical emergency care",
+            "Counselling and special support for people who use drugs"
+          ],
+          "opening_hours_raw": [
+            "Monday & Tuesday and Thursday to Sunday: 11:00 - 14:00 and 15:00 - 18:00",
+            "Wednesday: 16:00 - 18:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 913560"
+          ],
+          "notes": [
+            "Doctor's consultation hour: Wednesdays from 16:00",
+            "Lawyer's consultation hour: Wednesdays from 17:00",
+            "Wound care consultation: Tuesday and Friday at 12:00",
+            "Psychiatric consultation with substitution, in cooperation with the Community Psychiatry Network:",
+            "Monday: 08:00 - 16:00",
+            "Thursday: 08:00 - 14:00",
+            "Friday: 08:00 - 12:00"
+          ]
+        },
+        "pl": {
+          "name": "Centrum Pomocy Narkotykowej, Kawiarnia kontaktowa, Alternative I",
+          "short_description": "Spotkanie dzienne",
+          "services": [
+            "Obiad, kawa, inne napoje",
+            "Możliwość kąpieli, pranie",
+            "Adres pocztowy",
+            "Rozdawanie środków do konsumpcji",
+            "Dystrybucja prezerwatyw",
+            "Informacje o bezpiecznym seksie i bezpiecznym używaniu",
+            "Interwencja kryzysowa",
+            "Wsparcie w radzeniu sobie z problemami społecznymi i finansowymi oraz w kontaktach z urzędami",
+            "Nagła opieka medyczna",
+            "Porady i specjalna pomoc dla osób używających narkotyków"
+          ],
+          "opening_hours_raw": [
+            "Poniedziałek i wtorek oraz czwartek do niedzieli: 11:00‑14:00 i 15:00‑18:00",
+            "Środa: 16:00‑18:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 913560"
+          ],
+          "notes": [
+            "Konsultacje lekarskie: w środy od 16:00",
+            "Konsultacje prawne: w środy od 17:00",
+            "Konsultacje ran: we wtorki i piątki o 12:00",
+            "Poradnia psychiatryczna z substytucją we współpracy z Siecią Psychiatrycznej Opieki Społecznej:",
+            "Poniedziałek: 08:00‑16:00",
+            "Czwartek: 08:00‑14:00",
+            "Piątek: 08:00‑12:00"
+          ]
+        },
+        "ro": {
+          "name": "Centru de ajutor pentru droguri, cafenea de contact, Alternativa I",
+          "short_description": "Întâlnire de zi",
+          "services": [
+            "Prânz, cafea, alte băuturi",
+            "Facilități de duș, spălarea rufelor",
+            "Adresă poștală",
+            "Distribuție de substanțe de consum",
+            "Distribuție de prezervative",
+            "Informații despre sex sigur și consum sigur",
+            "Intervenție în criză",
+            "Sprijin pentru depășirea dificultăților sociale și financiare și pentru chestiuni cu autoritățile",
+            "Îngrijire medicală de urgență",
+            "Consiliere și ajutoare speciale pentru persoane care consumă droguri"
+          ],
+          "opening_hours_raw": [
+            "Luni și marți, precum și joi până duminică: 11:00 - 14:00 și 15:00 - 18:00",
+            "Miercuri: 16:00 - 18:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 913560"
+          ],
+          "notes": [
+            "Program de consultații medicale: miercuri de la 16:00",
+            "Program de consultații juridice: miercuri de la 17:00",
+            "Program de consultații pentru răni: marți și vineri la 12:00",
+            "Program de consultații psihiatrice cu substituție în cooperare cu rețeaua Psihiatrie comunitară:",
+            "Luni: 08:00 - 16:00",
+            "Joi: 08:00 - 14:00",
+            "Vineri: 08:00 - 12:00"
+          ]
+        },
+        "ru": {
+          "name": "Центр помощи при наркотиках, контактное кафе, Alternative I",
+          "short_description": "Дневная встреча",
+          "services": [
+            "Обед, кофе, другие напитки",
+            "Возможность принять душ, стирать бельё",
+            "Почтовый адрес",
+            "Раздача средств для употребления",
+            "Раздача презервативов",
+            "Информация о безопасном сексе и безопасном употреблении",
+            "Кризисное вмешательство",
+            "Помощь в решении социальных и финансовых проблем, а также в вопросах с органами власти",
+            "Экстренная медицинская помощь",
+            "Консультации и специальные услуги для людей, употребляющих наркотики"
+          ],
+          "opening_hours_raw": [
+            "Понедельник и вторник, а также четверг‑воскресенье: 11:00‑14:00 и 15:00‑18:00",
+            "Среда: 16:00‑18:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 913560"
+          ],
+          "notes": [
+            "Приём врача: по средам с 16:00",
+            "Приём адвоката: по средам с 17:00",
+            "Приём по ранам: вторник и пятница в 12:00",
+            "Психиатрический приём с заместительной терапией в сотрудничестве с объединением Gemeindenahe Psychiatrie:",
+            "Понедельник: 08:00‑16:00",
+            "Четверг: 08:00‑14:00",
+            "Пятница: 08:00‑12:00"
+          ]
+        }
+      },
+      "stale": false,
+      "translated_at": "2026-07-07T15:14:07.471679Z",
+      "provider": "blablador"
+    },
+    "12": {
+      "source_hash": "064446d0a673152fdfe64aaf8b28c19dbf1abf28972279a2b2328f1c2cc4681a",
+      "source_name": "Safe-Straßensozialarbeit für Erwachsene - Team Konsum\nSZL Suchtzentrum gGmbH",
+      "review_status": "machine",
+      "translations": {
+        "en": {
+          "name": "Safe Street Social Work for Adults - Team Consumption SZL Suchtzentrum gGmbH",
+          "short_description": "Street work for adults",
+          "services": [
+            "Information and advice",
+            "Support and mediation on topics such as: consumption behavior, office and authority matters, housing difficulties, homelessness, work and employment, mental burdens, worries and fears",
+            "Stand time:",
+            "every Thursday 16:00 to 17:30 at Lindenauer Markt",
+            "Distribution of warm drinks and small snacks, conversation offer"
+          ],
+          "opening_hours_raw": [
+            "Wednesday: 10:00 - 16:00 (office hours)"
+          ],
+          "standzeiten_raw": [
+            "Stand time:",
+            "every Thursday 16:00 to 17:30 at Lindenauer Markt"
+          ],
+          "phone_numbers": [
+            "0175 6758041 (Mr. Neufert)",
+            "0176 47126642 (Mr. Pahrmann)",
+            "01577 3636416 (Ms. Weller)",
+            "01520 2917779 (Ms. Beyer)",
+            "01515 2989245 (Mr. Petzka)"
+          ],
+          "notes": [
+            "Instagram channel: #safeleipzig",
+            "Areas of operation:",
+            "Lindenau, Neulindenau, Altlindenau, Plagwitz, Kleinzschocher, Leutzsch and Grünau"
+          ]
+        },
+        "pl": {
+          "name": "Safe-Straßensozialarbeit für Erwachsene - Team Konsum SZL Suchtzentrum gGmbH",
+          "short_description": "Streetwork dla dorosłych",
+          "services": [
+            "Informacja i porada",
+            "Wsparcie i skierowanie w tematach takich jak: zachowania konsumpcyjne, sprawy urzędowe, problemy z mieszkaniem, bezdomność, praca i zatrudnienie, obciążenia psychiczne, zmartwienia i lęki",
+            "Czas stoiska:",
+            "każdego czwartku 16:00‑17:30 na rynku Lindenauer Markt",
+            "Podawanie ciepłych napojów i małych przekąsek, oferta rozmowy"
+          ],
+          "opening_hours_raw": [
+            "Środa: 10:00 - 16:00 (godziny biura)"
+          ],
+          "standzeiten_raw": [
+            "Czas stoiska:",
+            "każdego czwartku 16:00‑17:30 na rynku Lindenauer Markt"
+          ],
+          "phone_numbers": [
+            "0175 6758041 (pan Neufert)",
+            "0176 47126642 (pan Pahrmann)",
+            "01577 3636416 (pani Weller)",
+            "01520 2917779 (pani Beyer)",
+            "01515 2989245 (pan Petzka)"
+          ],
+          "notes": [
+            "Kanał Instagram: #safeleipzig",
+            "Obszary działania:",
+            "Lindenau, Neulindenau, Altlindenau, Plagwitz, Kleinzschocher, Leutzsch und Grünau"
+          ]
+        },
+        "ro": {
+          "name": "Safe - Lucru social pe stradă pentru adulți - Echipa Consum SZL Suchtzentrum gGmbH",
+          "short_description": "Lucru pe stradă pentru adulți",
+          "services": [
+            "Informații și consiliere",
+            "Sprijin și mediere în teme precum: comportament de consum, chestiuni cu autoritățile și instituțiile, dificultăți legate de locuință, lipsa locuinței și fără adăpost, muncă și ocupare, probleme emoționale, griji și temeri",
+            "Timp de prezență:",
+            "în fiecare joi, de la 16:00 la 17:30, pe piața Lindenauer Markt",
+            "Distribuție de băuturi calde și gustări mici, ofertă de discuție"
+          ],
+          "opening_hours_raw": [
+            "Miercuri: 10:00 - 16:00 (Program birou)"
+          ],
+          "standzeiten_raw": [
+            "Timp de prezență:",
+            "în fiecare joi, de la 16:00 la 17:30, pe piața Lindenauer Markt"
+          ],
+          "phone_numbers": [
+            "0175 6758041 (Domnul Neufert)",
+            "0176 47126642 (Domnul Pahrmann)",
+            "01577 3636416 (Doamna Weller)",
+            "01520 2917779 (Doamna Beyer)",
+            "01515 2989245 (Domnul Petzka)"
+          ],
+          "notes": [
+            "Canal Instagram: #safeleipzig",
+            "Zone de intervenție:",
+            "Lindenau, Neulindenau, Altlindenau, Plagwitz, Kleinzschocher, Leutzsch și Grünau"
+          ]
+        },
+        "ru": {
+          "name": "Safe – уличная социальная работа для взрослых, команда Konsum SZL Suchtzentrum gGmbH",
+          "short_description": "Уличная работа для взрослых",
+          "services": [
+            "Информация и консультация",
+            "Поддержка и посредничество по темам: потребление, вопросы с государственными органами, проблемы с жильём, бездомность, работа и занятость, эмоциональные нагрузки, тревоги и страхи",
+            "Время работы:",
+            "каждый четверг 16:00 до 17:30 на рынке Lindenauer Markt",
+            "Предоставление тёплых напитков и небольших закусок, предложение беседы"
+          ],
+          "opening_hours_raw": [
+            "Среда: 10:00 - 16:00 (рабочее время)"
+          ],
+          "standzeiten_raw": [
+            "Время работы:",
+            "каждый четверг 16:00 до 17:30 на рынке Lindenauer Markt"
+          ],
+          "phone_numbers": [
+            "0175 6758041 (г‑н. Нойферт)",
+            "0176 47126642 (г‑н. Пахрманн)",
+            "01577 3636416 (г‑ж. Веллер)",
+            "01520 2917779 (г‑ж. Бейер)",
+            "01515 2989245 (г‑н. Петцка)"
+          ],
+          "notes": [
+            "Instagram‑канал: #safeleipzig",
+            "Регионы работы:",
+            "Lindenau, Neulindenau, Altlindenau, Plagwitz, Kleinzschocher, Leutzsch und Grünau"
+          ]
+        }
+      },
+      "stale": false,
+      "translated_at": "2026-07-07T15:14:59.604484Z",
+      "provider": "blablador"
+    },
+    "13": {
+      "source_hash": "6fa1d28d0cca35dc9fd0d9bea7bb5fe0759f56e06b7b2c6948ae8340393108aa",
+      "source_name": "Safe-Straßensozialarbeit für Erwachsene - Team Wohnen\nSZL Suchtzentrum gGmbH",
+      "review_status": "machine",
+      "translations": {
+        "en": {
+          "name": "Safe Street Social Work for Adults – Team Wohnen, SZL Suchtzentrum gGmbH",
+          "short_description": "Street work for adults",
+          "services": [
+            "Help, advice and support with housing and",
+            "homelessness, problems with the apartment, financial issues,",
+            "questions about alcohol or drug use or addiction problems,",
+            "mental strain, worries and fears, health problems",
+            "Referral to other contacts or institutions",
+            "Support with authorities",
+            "Stand times:",
+            "every Tuesday 17:00 to 18:00 at Schwanenteich (Goethestraße)",
+            "in cooperation with the Streetwork team of Diakonie",
+            "every Wednesday and Friday 10:00 - 16:00 at Hauptbahnhof"
+          ],
+          "opening_hours_raw": [
+            "Tuesday: 10:00 - 16:00 (office hours)"
+          ],
+          "standzeiten_raw": [
+            "Stand times:",
+            "every Tuesday 17:00 to 18:00 at Schwanenteich (Goethestraße)"
+          ],
+          "phone_numbers": [
+            "0175 6758041 (Mr. Neufert)",
+            "0176 60778246 (Ms. Scheffler)",
+            "0157 58466472 (Ms. Hoffmann)",
+            "01577 6295555 (Mr. Udich)"
+          ],
+          "notes": [
+            "Areas of work: northern Leipzig with focus on Zentrum Nord, Nordwest, Eutritzsch, Gohlis, Möckern, Mockau, Thekla, Lindenthal",
+            "Instagram channel: #safeleipzig"
+          ]
+        },
+        "pl": {
+          "name": "Safe - Praca socjalna na ulicy dla dorosłych – Zespół Mieszkalny SZL Suchtzentrum gGmbH",
+          "short_description": "Praca uliczna dla dorosłych",
+          "services": [
+            "Pomoc, doradztwo i wsparcie w sprawach mieszkaniowych i",
+            "Bezdomność, trudności z mieszkaniem, problemy finansowe,",
+            "Pytania o spożycie alkoholu i narkotyków lub problemy z uzależnieniem,",
+            "obciążenia emocjonalne, zmartwienia i lęki, problemy zdrowotne",
+            "Skierowanie do innych kontaktów lub instytucji",
+            "Wsparcie w sprawach urzędowych",
+            "Godziny stałe:",
+            "każdy wtorek 17:00‑18:00 przy Schwanenteich (Goethestraße)",
+            "w współpracy z zespołem Streetwork Diakonie",
+            "każdy środę i piątek 10:00‑16:00 Dworzec Główny"
+          ],
+          "opening_hours_raw": [
+            "wtorek: 10:00‑16:00 (godziny biura)"
+          ],
+          "standzeiten_raw": [
+            "Godziny stałe:",
+            "każdy wtorek 17:00‑18:00 przy Schwanenteich (Goethestraße)"
+          ],
+          "phone_numbers": [
+            "0175 6758041 (pan Neufert)",
+            "0176 60778246 (pani Scheffler)",
+            "0157 58466472 (pani Hoffmann)",
+            "01577 6295555 (pan Udich)"
+          ],
+          "notes": [
+            "Obszary działania: północny Leipzig z naciskiem na Centrum Północ, Północny Zachód, Eutritzsch, Gohlis, Möckern, Mockau, Thekla, Lindenthal",
+            "Kanał Instagram: #safeleipzig"
+          ]
+        },
+        "ro": {
+          "name": "Safe - lucru social pe stradă pentru adulți - Echipa Locuință SZL Suchtzentrum gGmbH",
+          "short_description": "Lucru social pe stradă pentru adulți",
+          "services": [
+            "Ajutor, consiliere și sprijin în legătură cu locuința și",
+            "Fără adăpost, dificultăți cu locuința, probleme financiare,",
+            "Întrebări despre consumul de alcool și droguri sau probleme de dependență,",
+            "Stres emoțional, griji și temeri, probleme de sănătate",
+            "Mediere către alte contacte sau instituții",
+            "Sprijin în relația cu autoritățile",
+            "Program de prezență:",
+            "în fiecare marți 17:00 - 18:00 la Schwanenteich (Goethestraße)",
+            "în cooperare cu echipa de lucru social pe stradă a Diaconiei",
+            "în fiecare miercuri și vineri 10:00 - 16:00 la Gara Centrală"
+          ],
+          "opening_hours_raw": [
+            "Marți: 10:00 - 16:00 (Program birou)"
+          ],
+          "standzeiten_raw": [
+            "Program de prezență:",
+            "în fiecare marți 17:00 - 18:00 la Schwanenteich (Goethestraße)"
+          ],
+          "phone_numbers": [
+            "0175 6758041 (Domnul Neufert)",
+            "0176 60778246 (Doamna Scheffler)",
+            "0157 58466472 (Doamna Hoffmann)",
+            "01577 6295555 (Domnul Udich)"
+          ],
+          "notes": [
+            "Zone de intervenție: nordul Leipzigului cu accent pe Centrul Nord, Nordvest, Eutritzsch, Gohlis, Möckern, Mockau, Thekla, Lindenthal",
+            "Canal Instagram: #safeleipzig"
+          ]
+        },
+        "ru": {
+          "name": "Safe‑уличная социальная работа для взрослых – команда «Wohnen» SZL Suchtzentrum gGmbH",
+          "short_description": "Уличная работа для взрослых",
+          "services": [
+            "Помощь, консультация и поддержка по вопросам жилья и",
+            "Бездомность, трудности с жильём, финансовые проблемы,",
+            "Вопросы, связанные с употреблением алкоголя и наркотиков или проблемами зависимости,",
+            "Эмоциональные нагрузки, тревоги и страхи, проблемы со здоровьем",
+            "Посредничество в контактах с другими людьми или учреждениями",
+            "Поддержка в вопросах с органами власти",
+            "Время работы:",
+            "Каждый вторник с 17:00 до 18:00 у Schwanenteich (Goethestraße)",
+            "в сотрудничестве с уличной командой Diakonie",
+            "Каждую среду и пятницу с 10:00 до 16:00 у Hauptbahnhof"
+          ],
+          "opening_hours_raw": [
+            "Вторник: 10:00 - 16:00 (рабочее время)"
+          ],
+          "standzeiten_raw": [
+            "Время работы:",
+            "Каждый вторник с 17:00 до 18:00 у Schwanenteich (Goethestraße)"
+          ],
+          "phone_numbers": [
+            "0175 6758041 (г‑н. Нойфер)",
+            "0176 60778246 (г‑ж. Шеффлер)",
+            "0157 58466472 (г‑ж. Хоффманн)",
+            "01577 6295555 (г‑н. Удич)"
+          ],
+          "notes": [
+            "Области работы: северный Лейпциг, в частности центр Север, Северо‑запад, Эутриц, Гольис, Мёккен, Моккау, Текла, Линденхальт",
+            "Instagram‑канал: #safeleipzig"
+          ]
+        }
+      },
+      "stale": false,
+      "translated_at": "2026-07-07T15:15:54.856043Z",
+      "provider": "blablador"
+    },
+    "14": {
+      "source_hash": "3c245a51c0f073cfe51c633929338416b74734366890731129986555b873e87e",
+      "source_name": "Diakonisches Werk Innere Mission Leipzig e. V.",
+      "review_status": "machine",
+      "translations": {
+        "en": {
+          "name": "Diakonisches Werk Innere Mission Leipzig e. V.",
+          "short_description": "Street work for adults",
+          "services": [
+            "social counseling",
+            "mobile clothing closet",
+            "distribution of rolls or soup",
+            "Stand time:",
+            "Tuesdays 17:00 - 18:00 at Goethestraße (Schwanenteich or at the Dresden Railway monument)",
+            "in cooperation with the addiction centre"
+          ],
+          "opening_hours_raw": [
+            "Tuesday: 10:00 - 13:00 (office hours)"
+          ],
+          "standzeiten_raw": [
+            "Stand time:",
+            "Tuesdays 17:00 - 18:00 at Goethestraße (Schwanenteich or at the Dresden Railway monument)"
+          ],
+          "phone_numbers": [
+            "0151 56382800 (Ms. Berengo)",
+            "0157 80549406 (Ms. Kunze)",
+            "0151 56382508 (Mr. Rode)",
+            "0157 80549803 (Ms. Leger)"
+          ],
+          "notes": [
+            "Areas of operation: South, East and Central"
+          ]
+        },
+        "pl": {
+          "name": "Diakonisches Werk Innere Mission Leipzig e. V.",
+          "short_description": "Praca uliczna dla dorosłych",
+          "services": [
+            "doradztwo społeczne",
+            "mobilna szafa z ubraniami",
+            "rozdawanie bułek lub zupy",
+            "Czas stały:",
+            "we wtorki 17:00 - 18:00 Goethestraße (Schwanenteich lub przy pomniku kolei drezneckiej)",
+            "we współpracy z centrum uzależnień"
+          ],
+          "opening_hours_raw": [
+            "wtorek: 10:00 - 13:00 (godziny biura)"
+          ],
+          "standzeiten_raw": [
+            "Czas stały:",
+            "we wtorki 17:00 - 18:00 Goethestraße (Schwanenteich lub przy pomniku kolei drezneckiej)"
+          ],
+          "phone_numbers": [
+            "0151 56382800 (pani Berengo)",
+            "0157 80549406 (pani Kunze)",
+            "0151 56382508 (pan Rode)",
+            "0157 80549803 (pani Leger)"
+          ],
+          "notes": [
+            "Obszary działania: południe, wschód i centrum"
+          ]
+        },
+        "ro": {
+          "name": "Diakonisches Werk Innere Mission Leipzig e. V.",
+          "short_description": "Muncă pe stradă pentru adulți",
+          "services": [
+            "consiliere socială",
+            "camera de haine mobilă",
+            "distribuire de chifle sau supă",
+            "Program de stație:",
+            "marți 17:00 - 18:00 Goethestraße (Schwanenteich sau lângă monumentul Dresdner Eisenbahn)",
+            "în cooperare cu Centrul de dependență"
+          ],
+          "opening_hours_raw": [
+            "marți: 10:00 - 13:00 (program birou)"
+          ],
+          "standzeiten_raw": [
+            "Program de stație:",
+            "marți 17:00 - 18:00 Goethestraße (Schwanenteich sau lângă monumentul Dresdner Eisenbahn)"
+          ],
+          "phone_numbers": [
+            "0151 56382800 (doamna Berengo)",
+            "0157 80549406 (doamna Kunze)",
+            "0151 56382508 (domnul Rode)",
+            "0157 80549803 (doamna Leger)"
+          ],
+          "notes": [
+            "Zone de intervenție: sud, est și centru"
+          ]
+        },
+        "ru": {
+          "name": "Diakonisches Werk Innere Mission Leipzig e. V.",
+          "short_description": "Уличная работа для взрослых",
+          "services": [
+            "социальные консультации",
+            "мобильный шкаф одежды",
+            "раздача булочек или супа",
+            "Время работы:",
+            "по вторникам 17:00 - 18:00 Goethestraße (Schwanenteich или у памятника железной дороге Дрездена)",
+            "в сотрудничестве с центром лечения зависимостей"
+          ],
+          "opening_hours_raw": [
+            "вторник: 10:00 - 13:00 (рабочее время офиса)"
+          ],
+          "standzeiten_raw": [
+            "Время работы:",
+            "по вторникам 17:00 - 18:00 Goethestraße (Schwanenteich или у памятника железной дороге Дрездена)"
+          ],
+          "phone_numbers": [
+            "0151 56382800 (г-жа Беренго)",
+            "0157 80549406 (г-жа Кунце)",
+            "0151 56382508 (г-н Роде)",
+            "0157 80549803 (г-жа Легер)"
+          ],
+          "notes": [
+            "Регионы обслуживания: юг, восток и центр"
+          ]
+        }
+      },
+      "stale": false,
+      "translated_at": "2026-07-07T15:16:43.388977Z",
+      "provider": "blablador"
+    },
+    "15": {
+      "source_hash": "b7ce252323d31ec08fad1eed1b79e6e48eab0ba232c95dc97c623c937f34eeb4",
+      "source_name": "Zentrum für Drogenhilfe, mobile Alternative",
+      "review_status": "machine",
+      "translations": {
+        "en": {
+          "name": "Center for Drug Assistance, mobile Alternative",
+          "short_description": "Street work for adults",
+          "services": [
+            "Distribution of consumption supplies",
+            "Condom distribution",
+            "Information on Safer Sex and Safer Use",
+            "Crisis intervention",
+            "Help with social and financial emergencies and dealing with authorities",
+            "Medical emergency care",
+            "Counselling and special support for people who use drugs",
+            "Basic care",
+            "Accompanying to doctors, authorities, offices"
+          ],
+          "opening_hours_raw": [
+            "Opening times:",
+            "Tuesday: Koehlerstr. 10:00 - 12:00",
+            "Wednesday: Brücke am Kohlweg / Torgauer Platz 13:00 - 15:00",
+            "Thursday: Rabet 17:00 - 19:00",
+            "Friday: Koehlerstr. 10:00 - 12:00 together with the Medibus of CABL e. V."
+          ],
+          "standzeiten_raw": [
+            "Opening times:",
+            "Tuesday: Koehlerstr. 10:00 - 12:00",
+            "Wednesday: Brücke am Kohlweg / Torgauer Platz 13:00 - 15:00",
+            "Thursday: Rabet 17:00 - 19:00",
+            "Friday: Koehlerstr. 10:00 - 12:00 together with the Medibus of CABL e. V."
+          ],
+          "phone_numbers": [
+            "0171 5616396 (Mr. Kriebitzsch)",
+            "0160 7411343 (Ms. Hähnel)",
+            "0171 5616398 (Mr. Gumprecht)",
+            "0151 74415945 (Ms. Laue)"
+          ],
+          "notes": []
+        },
+        "pl": {
+          "name": "Centrum Pomocy w Narkotykach, mobilna Alternatywa",
+          "short_description": "Street work dla dorosłych",
+          "services": [
+            "Dystrybucja środków konsumpcyjnych",
+            "Dystrybucja prezerwatyw",
+            "Informacje o bezpiecznym seksie i bezpiecznym używaniu",
+            "Interwencja kryzysowa",
+            "Wsparcie w sytuacjach społecznych i finansowych oraz w kontaktach z urzędami",
+            "Nagła pomoc medyczna",
+            "Doradztwo i specjalna pomoc dla osób używających narkotyków",
+            "Podstawowa opieka",
+            "Towarzyszenie do lekarzy, urzędów, instytucji"
+          ],
+          "opening_hours_raw": [
+            "Godziny otwarcia:",
+            "Wtorek: Koehlerstr. 10:00 - 12:00",
+            "Środa: Brücke am Kohlweg / Torgauer Platz 13:00 - 15:00",
+            "Czwartek: Rabet 17:00 - 19:00",
+            "Piątek: Koehlerstr. 10:00 - 12:00 razem z Medibusem od CABL e. V."
+          ],
+          "standzeiten_raw": [
+            "Godziny otwarcia:",
+            "Wtorek: Koehlerstr. 10:00 - 12:00",
+            "Środa: Brücke am Kohlweg / Torgauer Platz 13:00 - 15:00",
+            "Czwartek: Rabet 17:00 - 19:00",
+            "Piątek: Koehlerstr. 10:00 - 12:00 razem z Medibusem od CABL e. V."
+          ],
+          "phone_numbers": [
+            "0171 5616396 (Pan Kriebitzsch)",
+            "0160 7411343 (Pani Hähnel)",
+            "0171 5616398 (Pan Gumprecht)",
+            "0151 74415945 (Pani Laue)"
+          ],
+          "notes": []
+        },
+        "ro": {
+          "name": "Centrul de Ajutor pentru Droguri, Alternativa mobilă",
+          "short_description": "Street work pentru adulți",
+          "services": [
+            "Distribuirea materialelor de consum",
+            "Distribuirea prezervativelor",
+            "Informații despre Safer Sex și Safer Use",
+            "Intervenție în criză",
+            "Sprijin în situații sociale și financiare și în relația cu autoritățile",
+            "Îngrijire medicală de urgență",
+            "Consiliere și ajutor special pentru persoanele care consumă droguri",
+            "Îngrijire de bază",
+            "Însoțire la medici, autorități, birouri"
+          ],
+          "opening_hours_raw": [
+            "Program de lucru:",
+            "Marți: Koehlerstr. 10:00 - 12:00",
+            "Miercuri: Brücke am Kohlweg / Torgauer Platz 13:00 - 15:00",
+            "Joi: Rabet 17:00 - 19:00",
+            "Vineri: Koehlerstr. 10:00 - 12:00 împreună cu Medibusul de la CABL e. V."
+          ],
+          "standzeiten_raw": [
+            "Program de lucru:",
+            "Marți: Koehlerstr. 10:00 - 12:00",
+            "Miercuri: Brücke am Kohlweg / Torgauer Platz 13:00 - 15:00",
+            "Joi: Rabet 17:00 - 19:00",
+            "Vineri: Koehlerstr. 10:00 - 12:00 împreună cu Medibusul de la CABL e. V."
+          ],
+          "phone_numbers": [
+            "0171 5616396 (Dl. Kriebitzsch)",
+            "0160 7411343 (Dna. Hähnel)",
+            "0171 5616398 (Dl. Gumprecht)",
+            "0151 74415945 (Dna. Laue)"
+          ],
+          "notes": []
+        },
+        "ru": {
+          "name": "Центр помощи при наркотиках, мобильная Альтернатива",
+          "short_description": "Уличная работа для взрослых",
+          "services": [
+            "Раздача средств для употребления",
+            "Раздача презервативов",
+            "Информация о безопасном сексе и безопасном употреблении",
+            "Кризисное вмешательство",
+            "Помощь в решении социальных и финансовых проблем и в вопросах с органами власти",
+            "Экстренная медицинская помощь",
+            "Консультации и специальная поддержка для людей, употребляющих наркотики",
+            "Базовое обслуживание",
+            "Сопровождение к врачам, в органы власти, в учреждения"
+          ],
+          "opening_hours_raw": [
+            "Время работы:",
+            "Вторник: Koehlerstr. 10:00 - 12:00",
+            "Среда: Brücke am Kohlweg / Torgauer Platz 13:00 - 15:00",
+            "Четверг: Rabet 17:00 - 19:00",
+            "Пятница: Koehlerstr. 10:00 - 12:00 совместно с Medibus от CABL e. V."
+          ],
+          "standzeiten_raw": [
+            "Время работы:",
+            "Вторник: Koehlerstr. 10:00 - 12:00",
+            "Среда: Brücke am Kohlweg / Torgauer Platz 13:00 - 15:00",
+            "Четверг: Rabet 17:00 - 19:00",
+            "Пятница: Koehlerstr. 10:00 - 12:00 совместно с Medibus от CABL e. V."
+          ],
+          "phone_numbers": [
+            "0171 5616396 (г‑н Kriebitzsch)",
+            "0160 7411343 (г‑жа Hähnel)",
+            "0171 5616398 (г‑н Gumprecht)",
+            "0151 74415945 (г‑жа Laue)"
+          ],
+          "notes": []
+        }
+      },
+      "stale": false,
+      "translated_at": "2026-07-07T15:08:40.753919Z",
+      "provider": "blablador"
+    },
+    "16": {
+      "source_hash": "c1884ca509832b6349eb3d86e89e32e0c48269edb2502fff83b054f801559ea3",
+      "source_name": "TiMMi ToHelp e. V. -  Projekt Care Bags",
+      "review_status": "machine",
+      "translations": {
+        "en": {
+          "name": "TiMMi ToHelp e. V. - Project Care Bags",
+          "short_description": "Distribution of food etc.",
+          "services": [
+            "Distribution of food, drinks, hygiene items, sleeping bags, sleeping mats, clothing, shoes etc."
+          ],
+          "opening_hours_raw": [],
+          "standzeiten_raw": [],
+          "phone_numbers": [],
+          "notes": [
+            "Distribution always on Thursday around 16:00 - 19:00",
+            "Area of operation: city centre and main train station",
+            "Tour plan for download at https://timmitohelp.de/downloads/",
+            "No street workers or social workers, therefore no advice"
+          ]
+        },
+        "pl": {
+          "name": "TiMMi ToHelp e. V. - Projekt Care Bags",
+          "short_description": "Dystrybucja żywności itp.",
+          "services": [
+            "Dystrybucja żywności, napojów, artykułów higienicznych, śpiworów, mat izolacyjnych, ubrań, butów itp."
+          ],
+          "opening_hours_raw": [],
+          "standzeiten_raw": [],
+          "phone_numbers": [],
+          "notes": [
+            "Rozdawanie zawsze w czwartek około 16:00 - 19:00",
+            "Obszar działania: śródmieście i dworzec główny",
+            "Plan trasy do pobrania pod adresem https://timmitohelp.de/downloads/",
+            "Brak pracowników ulicznych ani pracowników socjalnych, więc brak porad"
+          ]
+        },
+        "ro": {
+          "name": "TiMMi ToHelp e. V. - Proiect Care Bags",
+          "short_description": "Distribuire de alimente etc.",
+          "services": [
+            "Distribuire de alimente, băuturi, articole de igienă, saci de dormit, saltele izoterme, îmbrăcăminte, încălțăminte etc."
+          ],
+          "opening_hours_raw": [],
+          "standzeiten_raw": [],
+          "phone_numbers": [],
+          "notes": [
+            "Distribuirea are loc în fiecare joi în jurul orei 16:00 - 19:00",
+            "Zasięg: centrul orașului și gara principală",
+            "Plan de tură pentru descărcare la https://timmitohelp.de/downloads/",
+            "Nu există lucrători de stradă sau asistenți sociali, deci nu se oferă consiliere"
+          ]
+        },
+        "ru": {
+          "name": "TiMMi ToHelp e. V. - Проект Care Bags",
+          "short_description": "Раздача продуктов и т.д.",
+          "services": [
+            "Раздача продуктов, напитков, средств гигиены, спальных мешков, изоляционных ковриков, одежды, обуви и т.д."
+          ],
+          "opening_hours_raw": [],
+          "standzeiten_raw": [],
+          "phone_numbers": [],
+          "notes": [
+            "Раздача всегда по четвергам около 16:00 - 19:00",
+            "Зона действия: центр города и главный вокзал",
+            "План маршрута для скачивания по адресу https://timmitohelp.de/downloads/",
+            "Нет уличных работников или социальных работников, поэтому консультаций нет"
+          ]
+        }
+      },
+      "stale": false,
+      "translated_at": "2026-07-07T15:08:50.080624Z",
+      "provider": "blablador"
+    },
+    "17.1": {
+      "source_hash": "71bbb4fa54ecb1502e4358a5db02ca2b478f12bfe8cf9211b22272196e1ab3cb",
+      "source_name": "Straßensozialarbeit am Amt für Jugend und Familie - Streetwork Mitte",
+      "review_status": "machine",
+      "translations": {
+        "en": {
+          "name": "Street social work at the Office for Youth and Family – Streetwork Mitte",
+          "short_description": "Mobile youth work / streetwork",
+          "services": [
+            "Mobile youth work",
+            "Advice, support, mediation, information",
+            "Crisis intervention, individual assistance, basic care (showering, laundry)",
+            "safer-sex and safer-use counseling",
+            "Postal address",
+            "PC and internet",
+            "Projects, group offers"
+          ],
+          "opening_hours_raw": [
+            "Monday, Wednesday & Friday: 13:00 - 16:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 1231794"
+          ],
+          "notes": [
+            "We are active daily in the Mitte district:",
+            "- From the main train station to the sports forum",
+            "- From Chausseehaus to Alte Messe",
+            "- Zentrum-Ost"
+          ]
+        },
+        "pl": {
+          "name": "Praca socjalna na ulicy w Urzędzie ds. Młodzieży i Rodziny – Streetwork Mitte",
+          "short_description": "Mobilna praca z młodzieżą / streetwork",
+          "services": [
+            "Mobilna praca z młodzieżą",
+            "Doradztwo, wsparcie, pośrednictwo, informacje",
+            "Interwencja kryzysowa, pomoc indywidualna, podstawowa opieka (prysznice, pranie)",
+            "Poradnictwo w zakresie bezpiecznego seksu i bezpiecznego użycia",
+            "Adres pocztowy",
+            "Komputer i internet",
+            "Projekty, oferty grupowe"
+          ],
+          "opening_hours_raw": [
+            "Poniedziałek, środa i piątek: 13:00 - 16:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 1231794"
+          ],
+          "notes": [
+            "Jesteśmy codziennie w dzielnicy Mitte:",
+            "- From Hauptbahnhof to Sportforum",
+            "- From Chausseehaus to Alte Messe",
+            "- Zentrum-Ost"
+          ]
+        },
+        "ro": {
+          "name": "Lucrări sociale pe stradă la Oficiul pentru Tineret și Familie – Streetwork Mitte",
+          "short_description": "Lucrări mobile cu tinerii / streetwork",
+          "services": [
+            "Lucrări mobile cu tinerii",
+            "Consiliere, însoțire, mediere, informații",
+            "Intervenție în criză, ajutor individual, asistență de bază (dușuri, spălarea rufelor)",
+            "Consiliere pentru sex și consum sigur",
+            "Adresă poștală",
+            "PC și internet",
+            "Proiecte, oferte de grup"
+          ],
+          "opening_hours_raw": [
+            "Luni, miercuri și vineri: 13:00 - 16:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 1231794"
+          ],
+          "notes": [
+            "Suntem zilnic în districtul Mitte:",
+            "- De la Hauptbahnhof până la Sportforum",
+            "- De la Chausseehaus până la Alte Messe",
+            "- Zentrum-Ost"
+          ]
+        },
+        "ru": {
+          "name": "Уличная социальная работа в Управлении по делам молодежи и семьи – Streetwork Mitte",
+          "short_description": "Мобильная работа с молодежью / streetwork",
+          "services": [
+            "Мобильная работа с молодежью",
+            "Консультации, сопровождение, посредничество, информация",
+            "Кризисное вмешательство, индивидуальная помощь, базовое обеспечение (душ, стирка)",
+            "Консультации по безопасному сексу и безопасному использованию",
+            "Почтовый адрес",
+            "ПК и интернет",
+            "Проекты, групповые предложения"
+          ],
+          "opening_hours_raw": [
+            "Понедельник, среда и пятница: 13:00 - 16:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 1231794"
+          ],
+          "notes": [
+            "Мы ежедневно работаем в районе Mitte:",
+            "- От Hauptbahnhof до Sportforum",
+            "- От Chausseehaus до Alte Messe",
+            "- Zentrum-Ost"
+          ]
+        }
+      },
+      "stale": false,
+      "translated_at": "2026-07-07T15:09:07.650635Z",
+      "provider": "blablador"
+    },
+    "17.2": {
+      "source_hash": "859219515eab0618abf9554f367924eacad31ba2f03fc7b8fd9196e838b48950",
+      "source_name": "Straßensozialarbeit am Amt für Jugend und Familie - Streetwork Ost",
+      "review_status": "machine",
+      "translations": {
+        "en": {
+          "name": "Street social work at the Office for Youth and Family - Streetwork East",
+          "short_description": "Mobile youth work / streetwork",
+          "services": [
+            "Mobile youth work",
+            "Counselling, support, mediation, information",
+            "Crisis intervention, individual assistance, basic services (showering, laundry)",
+            "Safer sex and safer use counselling",
+            "Mailing address",
+            "Computer and internet",
+            "Projects, group offers"
+          ],
+          "opening_hours_raw": [
+            "Tuesday and Thursday: 14:00 - 16:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 6888189"
+          ],
+          "notes": [
+            "We are active daily in the eastern part of Leipzig:",
+            "Anger-Crottendorf",
+            "Neustadt-Neuschönefeld",
+            "Reudnitz",
+            "Sellerhausen",
+            "Volkmarsdorf"
+          ]
+        },
+        "pl": {
+          "name": "Praca socjalna na ulicy w Urzędzie ds. Młodzieży i Rodziny - Streetwork Wschód",
+          "short_description": "Mobilna praca z młodzieżą / streetwork",
+          "services": [
+            "Mobilna praca z młodzieżą",
+            "Doradztwo, wsparcie, pośrednictwo, informacje",
+            "Interwencja kryzysowa, pomoc indywidualna, podstawowe usługi (prysznic, pranie)",
+            "Poradnictwo w zakresie bezpiecznego seksu i bezpiecznego używania",
+            "Adres pocztowy",
+            "Komputer i internet",
+            "Projekty, oferty grupowe"
+          ],
+          "opening_hours_raw": [
+            "Wtorek i czwartek: 14:00 - 16:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 6888189"
+          ],
+          "notes": [
+            "Jesteśmy codziennie wschodniej części Lipska:",
+            "Anger-Crottendorf",
+            "Neustadt-Neuschönefeld",
+            "Reudnitz",
+            "Sellerhausen",
+            "Volkmarsdorf"
+          ]
+        },
+        "ro": {
+          "name": "Lucrări sociale pe stradă la Oficiul pentru Tineret și Familie - Streetwork Est",
+          "short_description": "Lucrări mobile cu tinerii / streetwork",
+          "services": [
+            "Lucrări mobile cu tinerii",
+            "Consiliere, însoțire, mediere, informații",
+            "Intervenție în criză, ajutor individual, servicii de bază (duș, spălare rufe)",
+            "Consiliere pentru sex în siguranță și utilizare în siguranță",
+            "Adresă poștală",
+            "PC și internet",
+            "Proiecte, oferte de grup"
+          ],
+          "opening_hours_raw": [
+            "Marţi și Joi: 14:00 - 16:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 6888189"
+          ],
+          "notes": [
+            "Suntem zilnic în estul Leipzigului:",
+            "Anger-Crottendorf",
+            "Neustadt-Neuschönefeld",
+            "Reudnitz",
+            "Sellerhausen",
+            "Volkmarsdorf"
+          ]
+        },
+        "ru": {
+          "name": "Уличная социальная работа в Управлении по делам молодежи и семьи – Streetwork Восток",
+          "short_description": "Мобильная работа с молодёжью / streetwork",
+          "services": [
+            "Мобильная работа с молодёжью",
+            "Консультации, сопровождение, посредничество, информация",
+            "Кризисное вмешательство, индивидуальная помощь, базовые услуги (душ, стирка)",
+            "Консультации по безопасному сексу и безопасному использованию",
+            "Почтовый адрес",
+            "ПК и интернет",
+            "Проекты, групповые предложения"
+          ],
+          "opening_hours_raw": [
+            "Вторник и четверг: 14:00 - 16:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 6888189"
+          ],
+          "notes": [
+            "Мы ежедневно работаем в восточной части Лейпцига:",
+            "Anger-Crottendorf",
+            "Neustadt-Neuschönefeld",
+            "Reudnitz",
+            "Sellerhausen",
+            "Volkmarsdorf"
+          ]
+        }
+      },
+      "stale": false,
+      "translated_at": "2026-07-07T15:09:22.394944Z",
+      "provider": "blablador"
+    },
+    "17.3": {
+      "source_hash": "4eeec74a3ac4634565c8668816e005fd4adff006e0275bea0d170a93cc9ca888",
+      "source_name": "Straßensozialarbeit am Amt für Jugend und Familie - Streetwork Nord",
+      "review_status": "machine",
+      "translations": {
+        "en": {
+          "name": "Street social work at the Office for Youth and Family – Streetwork Nord",
+          "short_description": "Mobile youth work / streetwork",
+          "services": [
+            "Mobile youth work",
+            "Counselling, support, mediation, information",
+            "Crisis intervention, individual assistance, basic services (showering, laundry)",
+            "Safer-sex and safer-use counselling",
+            "Mailing address",
+            "PC and internet",
+            "Projects, group offers"
+          ],
+          "opening_hours_raw": [
+            "Wednesday: 14:00 - 16:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 2153821"
+          ],
+          "notes": [
+            "Streetwork and the use of the street mobile take place in the districts:",
+            "- Eutritzsch",
+            "- Gohlis-Nord",
+            "- Gohlis-Mitte",
+            "- Gohlis-Süd",
+            "- Lindenthal",
+            "- Lützschena-Stahmeln",
+            "- Möckern",
+            "- Wahren",
+            "- Wiederitzsch",
+            "- Seehausen",
+            "- Zentrum-Südost",
+            "- Zentrum-Ost"
+          ]
+        },
+        "pl": {
+          "name": "Praca socjalna na ulicy w Urzędzie ds. Młodzieży i Rodziny – Streetwork Nord",
+          "short_description": "Mobilna praca z młodzieżą / streetwork",
+          "services": [
+            "Mobilna praca z młodzieżą",
+            "Doradztwo, wsparcie, pośrednictwo, informacje",
+            "Interwencja kryzysowa, pomoc indywidualna, podstawowe usługi (prysznice, pranie)",
+            "Poradnictwo w zakresie bezpiecznego seksu i bezpiecznego używania",
+            "Adres pocztowy",
+            "Komputer i internet",
+            "Projekty, oferty grupowe"
+          ],
+          "opening_hours_raw": [
+            "Środa: 14:00 - 16:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 2153821"
+          ],
+          "notes": [
+            "Streetwork i użycie Streetmobil odbywają się w dzielnicach:",
+            "- Eutritzsch",
+            "- Gohlis-Nord",
+            "- Gohlis-Mitte",
+            "- Gohlis-Süd",
+            "- Lindenthal",
+            "- Lützschena-Stahmeln",
+            "- Möckern",
+            "- Wahren",
+            "- Wiederitzsch",
+            "- Seehausen",
+            "- Zentrum-Südost",
+            "- Zentrum-Ost"
+          ]
+        },
+        "ro": {
+          "name": "Lucrări sociale pe stradă la Oficiul pentru Tineret și Familie – Streetwork Nord",
+          "short_description": "Lucrări mobile cu tinerii / streetwork",
+          "services": [
+            "Lucrări mobile cu tinerii",
+            "Consiliere, însoțire, mediere, informare",
+            "Intervenție în criză, ajutor individual, servicii de bază (dușuri, spălare rufe)",
+            "Consiliere safer-sex și safer-use",
+            "Adresă poștală",
+            "PC și internet",
+            "Proiecte, oferte de grup"
+          ],
+          "opening_hours_raw": [
+            "Miercuri: 14:00 - 16:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 2153821"
+          ],
+          "notes": [
+            "Streetwork și utilizarea Streetmobil se desfășoară în cartierele:",
+            "- Eutritzsch",
+            "- Gohlis-Nord",
+            "- Gohlis-Mitte",
+            "- Gohlis-Süd",
+            "- Lindenthal",
+            "- Lützschena-Stahmeln",
+            "- Möckern",
+            "- Wahren",
+            "- Wiederitzsch",
+            "- Seehausen",
+            "- Zentrum-Südost",
+            "- Zentrum-Ost"
+          ]
+        },
+        "ru": {
+          "name": "Уличная социальная работа в Управлении по делам молодежи и семьи – Streetwork Nord",
+          "short_description": "Мобильная работа с молодежью / streetwork",
+          "services": [
+            "Мобильная работа с молодежью",
+            "Консультации, сопровождение, посредничество, информация",
+            "Кризисное вмешательство, индивидуальная помощь, базовое обслуживание (душ, стирка)",
+            "Консультации по безопасному сексу и безопасному использованию",
+            "Почтовый адрес",
+            "ПК и интернет",
+            "Проекты, групповые предложения"
+          ],
+          "opening_hours_raw": [
+            "Среда: 14:00 - 16:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 2153821"
+          ],
+          "notes": [
+            "Streetwork и использование Streetmobil осуществляются в районах:",
+            "- Eutritzsch",
+            "- Gohlis-Nord",
+            "- Gohlis-Mitte",
+            "- Gohlis-Süd",
+            "- Lindenthal",
+            "- Lützschena-Stahmeln",
+            "- Möckern",
+            "- Wahren",
+            "- Wiederitzsch",
+            "- Seehausen",
+            "- Zentrum-Südost",
+            "- Zentrum-Ost"
+          ]
+        }
+      },
+      "stale": false,
+      "translated_at": "2026-07-07T15:09:38.186341Z",
+      "provider": "blablador"
+    },
+    "18": {
+      "source_hash": "dc170a49c34fa9e2ec1a71ec99f7f68b09b4861aa7b92e257e9afc31a18f43b0",
+      "source_name": "MachtLos e. V.",
+      "review_status": "machine",
+      "translations": {
+        "en": {
+          "name": "MachtLos e. V.",
+          "short_description": "Mobile youth work / street work",
+          "services": [
+            "mobile youth work in the southern part of Leipzig",
+            "counseling and support with authorities",
+            "individual support",
+            "youth (legal) counseling / social counseling",
+            "mediation and crisis intervention",
+            "distribution of food and consumer goods",
+            "mailing address",
+            "Bunter Hund e.V.",
+            "showers and laundry facilities",
+            "computer / internet access",
+            "creative, sports, and cultural projects",
+            "break-time mobile unit at secondary schools",
+            "activating offers at community shelters"
+          ],
+          "opening_hours_raw": [
+            "Monday: 15:00 - 17:00, focusing on job counseling and help with applications",
+            "Tuesday: 12:00 - 15:00, with joint cooking offer",
+            "Thursday: 12:00 - 15:00 and 18:00 - 19:00 (youth legal counseling, game night, FLINTA* time)",
+            "Friday: 16:00 - 17:00"
+          ],
+          "standzeiten_raw": [
+            "Streetwork areas / presence times:",
+            "Wednesday: 15:00 - 17:30, on the move in the South district",
+            "Thursday: 15:30 - 18:00, on the move in Dölitz DÖsen / Lößnig",
+            "Friday, occasional presence in southern Leipzig"
+          ],
+          "phone_numbers": [
+            "0341 3025586 (General)",
+            "0152 36975829 (Becky)",
+            "0157 53680573 (Yannic)",
+            "0172 9123020 (Kristina)",
+            "0162 9153890 (Leon)"
+          ],
+          "notes": [
+            "Streetwork areas / presence times:",
+            "Wednesday: 15:00 - 17:30, on the move in the South district",
+            "Thursday: 15:30 - 18:00, on the move in Dölitz DÖsen / Lößnig",
+            "Friday, occasional presence in southern Leipzig",
+            "Instagram channel: machtlos_streetwork"
+          ]
+        },
+        "pl": {
+          "name": "MachtLos e. V.",
+          "short_description": "Mobilna praca z młodzieżą / streetwork",
+          "services": [
+            "mobilna praca z młodzieżą w południowej części Lipska",
+            "doradztwo i wsparcie przy kontaktach z urzędami",
+            "indywidualne wsparcie",
+            "poradnictwo prawne i społeczne dla młodzieży",
+            "pośrednictwo i interwencja kryzysowa",
+            "rozdawanie żywności i artykułów codziennego użytku",
+            "adres pocztowy",
+            "Bunter Hund e.V.",
+            "prysznice i pranie",
+            "komputer / internet",
+            "kreatywne, sportowe i kulturalne projekty",
+            "mobilny punkt w szkole średniej",
+            "aktywujące oferty w schroniskach zbiorowych"
+          ],
+          "opening_hours_raw": [
+            "Poniedziałek: 15:00 - 17:00, z naciskiem na doradztwo zawodowe i pomoc przy aplikacji",
+            "Wtorek: 12:00 - 15:00, wspólne gotowanie",
+            "Czwartek: 12:00 - 15:00 i 18:00 - 19:00 (poradnictwo prawne dla młodzieży, wieczór gier, czas dla FLINTA*)",
+            "Piątek: 16:00 - 17:00"
+          ],
+          "standzeiten_raw": [
+            "Obszary działań streetwork / godziny obecności:",
+            "Środa: 15:00 - 17:30, w ruchu w dzielnicy Südvorstadt",
+            "Czwartek: 15:30 - 18:00, w ruchu w Dölitz DÖsen / Lößnig",
+            "Piątek, w zależności od potrzeb, w południowej części Lipska"
+          ],
+          "phone_numbers": [
+            "0341 3025586 (ogólne)",
+            "0152 36975829 (Becky)",
+            "0157 53680573 (Yannic)",
+            "0172 9123020 (Kristina)",
+            "0162 9153890 (Leon)"
+          ],
+          "notes": [
+            "Obszary działań streetwork / godziny obecności:",
+            "Środa: 15:00 - 17:30, w ruchu w dzielnicy Südvorstadt",
+            "Czwartek: 15:30 - 18:00, w ruchu w Dölitz DÖsen / Lößnig",
+            "Piątek, w zależności od potrzeb, w południowej części Lipska",
+            "Kanał Instagram: machtlos_streetwork"
+          ]
+        },
+        "ro": {
+          "name": "MachtLos e. V.",
+          "short_description": "Lucru mobil cu tinerii / Streetwork",
+          "services": [
+            "Lucru mobil cu tinerii în zona sudică a Leipzigului",
+            "Consiliere și însoțire la autorități",
+            "Sprijin individual",
+            "Consiliere juridică și socială pentru tineri",
+            "Mediere și intervenție în criză",
+            "Distribuție de alimente și produse de consum",
+            "Adresă poștală",
+            "Bunter Hund e.V.",
+            "Dușuri și spălare a rufelor",
+            "PC / Internet",
+            "Proiecte creative, sportive și culturale",
+            "Mobil de pauză la școlile secundare",
+            "Oferte activante în adăposturi colective"
+          ],
+          "opening_hours_raw": [
+            "Luni: 15:00 - 17:00, cu accent pe consiliere pentru job și sprijin la aplicații",
+            "Marți: 12:00 - 15:00, cu ofertă comună de gătit",
+            "Joi: 12:00 - 15:00 și 18:00 - 19:00 (consiliere juridică pentru tineri, seară de jocuri, timp FLINTA*)",
+            "Vineri: 16:00 - 17:00"
+          ],
+          "standzeiten_raw": [
+            "Zone de intervenție Streetwork / Program:",
+            "Miercuri: 15:00 - 17:30, în mișcare în zona sudică a orașului",
+            "Joi: 15:30 - 18:00, în mișcare în Dölitz DÖsen / Lößnig",
+            "Vineri, în funcție de eveniment, în mișcare în zona sudică a Leipzigului"
+          ],
+          "phone_numbers": [
+            "0341 3025586 (General)",
+            "0152 36975829 (Becky)",
+            "0157 53680573 (Yannic)",
+            "0172 9123020 (Kristina)",
+            "0162 9153890 (Leon)"
+          ],
+          "notes": [
+            "Zone de intervenție Streetwork / Program:",
+            "Miercuri: 15:00 - 17:30, în mișcare în zona sudică a orașului",
+            "Joi: 15:30 - 18:00, în mișcare în Dölitz DÖsen / Lößnig",
+            "Vineri, în funcție de eveniment, în mișcare în zona sudică a Leipzigului",
+            "Canal Instagram: machtlos_streetwork"
+          ]
+        },
+        "ru": {
+          "name": "MachtLos e. V.",
+          "short_description": "Мобильная работа с молодёжью / уличная работа",
+          "services": [
+            "мобильная работа с молодёжью в южной части Лейпцига",
+            "консультации и сопровождение в органах",
+            "индивидуальная поддержка",
+            "правовая и социальная консультация для молодёжи",
+            "помощь в поиске и кризисное вмешательство",
+            "раздача продуктов питания и предметов первой необходимости",
+            "почтовый адрес",
+            "Bunter Hund e.V.",
+            "душ и стирка белья",
+            "компьютер / интернет",
+            "творческие, спортивные и культурные проекты",
+            "мобильный пункт отдыха в старших школах",
+            "активные предложения в общежитиях"
+          ],
+          "opening_hours_raw": [
+            "Понедельник: 15:00 - 17:00, фокус на консультации по работе и помощи с заявками",
+            "Вторник: 12:00 - 15:00, совместное приготовление еды",
+            "Четверг: 12:00 - 15:00 и 18:00 - 19:00 (правовая консультация для молодёжи, игровой вечер, время для FLINTA*)",
+            "Пятница: 16:00 - 17:00"
+          ],
+          "standzeiten_raw": [
+            "Области работы уличной помощи / часы присутствия:",
+            "Среда: 15:00 - 17:30, в пути в районе Südvorstadt",
+            "Четверг: 15:30 - 18:00, в пути в Dölitz DÖsen / Lößnig",
+            "Пятница: по необходимости в пути в южной части Лейпцига"
+          ],
+          "phone_numbers": [
+            "0341 3025586 (Общий)",
+            "0152 36975829 (Becky)",
+            "0157 53680573 (Yannic)",
+            "0172 9123020 (Kristina)",
+            "0162 9153890 (Leon)"
+          ],
+          "notes": [
+            "Области работы уличной помощи / часы присутствия:",
+            "Среда: 15:00 - 17:30, в пути в районе Südvorstadt",
+            "Четверг: 15:30 - 18:00, в пути в Dölitz DÖsen / Lößnig",
+            "Пятница: по необходимости в пути в южной части Лейпцига",
+            "Instagram‑канал: machtlos_streetwork"
+          ]
+        }
+      },
+      "stale": false,
+      "translated_at": "2026-07-07T15:17:40.037158Z",
+      "provider": "blablador"
+    },
+    "19.1": {
+      "source_hash": "e35789266a9e965102692f6667dbdc218ad757f47c00aa090b563a86ea0df68b",
+      "source_name": "Mobile Jugendarbeit Leipzig e. V. - Team Westen",
+      "review_status": "machine",
+      "translations": {
+        "en": {
+          "name": "Mobile Jugendarbeit Leipzig e. V. - West Team",
+          "short_description": "Mobile youth work / street outreach",
+          "services": [
+            "Information",
+            "Support",
+            "Accompanying to authorities and court",
+            "Mediation",
+            "Crisis intervention",
+            "Laundry washing, showering",
+            "Clothing distribution, condom distribution"
+          ],
+          "opening_hours_raw": [],
+          "standzeiten_raw": [
+            "Stand time: Thursday 16:00 - 17:30 at weekly changing locations"
+          ],
+          "phone_numbers": [
+            "0341 9406622",
+            "0163 2387458 (Ms. Zschuckelt)"
+          ],
+          "notes": [
+            "Stand time: Thursday 16:00 - 17:30 at weekly changing locations",
+            "Locations are always posted at the beginning of the month on Instagram",
+            "https://www.instagram.com/streetworkwesten/"
+          ]
+        },
+        "pl": {
+          "name": "Mobile Jugendarbeit Leipzig e. V. - Zespół Zachodni",
+          "short_description": "Mobilna praca z młodzieżą / streetwork",
+          "services": [
+            "Informacje",
+            "Wsparcie",
+            "Towarzyszenie do urzędów i sądu",
+            "Pośrednictwo",
+            "Interwencja kryzysowa",
+            "Pranie, kąpiel",
+            "Dystrybucja ubrań, dystrybucja prezerwatyw"
+          ],
+          "opening_hours_raw": [],
+          "standzeiten_raw": [
+            "Czas stały: czwartek 16:00 - 17:30 w tygodniowo zmieniających się miejscach"
+          ],
+          "phone_numbers": [
+            "0341 9406622",
+            "0163 2387458 (Pani Zschuckelt)"
+          ],
+          "notes": [
+            "Czas stały: czwartek 16:00 - 17:30 w tygodniowo zmieniających się miejscach",
+            "Miejsca są zawsze publikowane na początku miesiąca na Instagramie",
+            "https://www.instagram.com/streetworkwesten/"
+          ]
+        },
+        "ro": {
+          "name": "Mobile Jugendarbeit Leipzig e. V. - Echipa Vest",
+          "short_description": "Lucru mobil cu tinerii / streetwork",
+          "services": [
+            "Informații",
+            "Sprijin",
+            "Însoțire la autorități și la tribunal",
+            "Mediere",
+            "Intervenție în criză",
+            "Spălare rufe, duș",
+            "Distribuire haine, distribuire prezervative"
+          ],
+          "opening_hours_raw": [],
+          "standzeiten_raw": [
+            "Timp de stație: Joi 16:00 - 17:30 la locații care se schimbă săptămânal"
+          ],
+          "phone_numbers": [
+            "0341 9406622",
+            "0163 2387458 (Doamna Zschuckelt)"
+          ],
+          "notes": [
+            "Timp de stație: Joi 16:00 - 17:30 la locații care se schimbă săptămânal",
+            "Locurile sunt întotdeauna publicate la începutul lunii pe Instagram",
+            "https://www.instagram.com/streetworkwesten/"
+          ]
+        },
+        "ru": {
+          "name": "Mobile Jugendarbeit Leipzig e. V. - Западная команда",
+          "short_description": "Мобильная работа с молодёжью / streetwork",
+          "services": [
+            "Информация",
+            "Поддержка",
+            "Сопровождение в органы и суд",
+            "Посредничество",
+            "Кризисное вмешательство",
+            "Стирка, душ",
+            "Раздача одежды, раздача презервативов"
+          ],
+          "opening_hours_raw": [],
+          "standzeiten_raw": [
+            "Время работы: четверг 16:00 - 17:30 в меняющихся каждую неделю местах"
+          ],
+          "phone_numbers": [
+            "0341 9406622",
+            "0163 2387458 (г-жа Zschuckelt)"
+          ],
+          "notes": [
+            "Время работы: четверг 16:00 - 17:30 в меняющихся каждую неделю местах",
+            "Места всегда публикуются в начале месяца в Instagram",
+            "https://www.instagram.com/streetworkwesten/"
+          ]
+        }
+      },
+      "stale": false,
+      "translated_at": "2026-07-07T15:10:21.449166Z",
+      "provider": "blablador"
+    },
+    "19.2": {
+      "source_hash": "ab5d75a0dc250f13ea8dca833df4d9161a6c46656cdfa2c19138e00ca4327ccd",
+      "source_name": "Mobile Jugendarbeit Leipzig e. V. - Team Grünau",
+      "review_status": "machine",
+      "translations": {
+        "en": {
+          "name": "Mobile Jugendarbeit Leipzig e. V. - Team Grünau",
+          "short_description": "Mobile youth work / street work",
+          "services": [
+            "Information",
+            "Support",
+            "Accompanying to offices and court",
+            "Mediation",
+            "Crisis intervention",
+            "Washing clothes, showering",
+            "Distribution of clothing, condoms"
+          ],
+          "opening_hours_raw": [],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 5820910",
+            "0163 2387458 (Frau Zschuckelt)"
+          ],
+          "notes": []
+        },
+        "pl": {
+          "name": "Mobile Jugendarbeit Leipzig e. V. - Team Grünau",
+          "short_description": "Mobilna praca z młodzieżą / praca uliczna",
+          "services": [
+            "Informacje",
+            "Wsparcie",
+            "Towarzyszenie do urzędów i sądu",
+            "Pośrednictwo",
+            "Interwencja kryzysowa",
+            "Pranie ubrań, prysznic",
+            "Rozdawanie ubrań, prezerwatyw"
+          ],
+          "opening_hours_raw": [],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 5820910",
+            "0163 2387458 (Frau Zschuckelt)"
+          ],
+          "notes": []
+        },
+        "ro": {
+          "name": "Mobile Jugendarbeit Leipzig e. V. - Team Grünau",
+          "short_description": "Lucru mobil cu tinerii / muncă pe stradă",
+          "services": [
+            "Informații",
+            "Sprijin",
+            "Însoțire la instituții și la tribunal",
+            "Mediere",
+            "Intervenție în criză",
+            "Spălarea rufei, duș",
+            "Distribuție de haine, prezervative"
+          ],
+          "opening_hours_raw": [],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 5820910",
+            "0163 2387458 (Frau Zschuckelt)"
+          ],
+          "notes": []
+        },
+        "ru": {
+          "name": "Mobile Jugendarbeit Leipzig e. V. - Team Grünau",
+          "short_description": "Мобильная работа с молодёжью / уличная работа",
+          "services": [
+            "Информация",
+            "Поддержка",
+            "Сопровождение в органы и суд",
+            "Посредничество",
+            "Кризисное вмешательство",
+            "Стирка одежды, душ",
+            "Раздача одежды, презервативов"
+          ],
+          "opening_hours_raw": [],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 5820910",
+            "0163 2387458 (Frau Zschuckelt)"
+          ],
+          "notes": []
+        }
+      },
+      "stale": false,
+      "translated_at": "2026-07-07T15:10:30.844490Z",
+      "provider": "blablador"
+    },
+    "19.3": {
+      "source_hash": "63826c4b12fb451392ee7ed068e1cc5ef37d38a66eb7457e62c702a12d1a2983",
+      "source_name": "Mobile Jugendarbeit Leipzig e. V. - Team Südost",
+      "review_status": "machine",
+      "translations": {
+        "en": {
+          "name": "Mobile Youth Work Leipzig e. V. - Team Southeast",
+          "short_description": "Mobile youth work / street work",
+          "services": [
+            "Information",
+            "Support",
+            "Accompanying to offices and court",
+            "Mediation",
+            "Crisis intervention",
+            "Laundry washing, showering",
+            "Clothing distribution, condom distribution"
+          ],
+          "opening_hours_raw": [],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 24890355",
+            "0163 2387458 (Ms. Zschuckelt)"
+          ],
+          "notes": []
+        },
+        "pl": {
+          "name": "Mobile Youth Work Leipzig e. V. - Zespół Południowo-Wschodni",
+          "short_description": "Mobilna praca z młodzieżą / praca uliczna",
+          "services": [
+            "Informacje",
+            "Wsparcie",
+            "Towarzystwo przy wizytach w urzędach i sądzie",
+            "Pośrednictwo",
+            "Interwencja kryzysowa",
+            "Pranie i prysznic",
+            "Rozdawanie ubrań, rozdawanie prezerwatyw"
+          ],
+          "opening_hours_raw": [],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 24890355",
+            "0163 2387458 (Pani Zschuckelt)"
+          ],
+          "notes": []
+        },
+        "ro": {
+          "name": "Mobile Youth Work Leipzig e. V. - Echipa Sud-Est",
+          "short_description": "Lucru mobil cu tinerii / streetwork",
+          "services": [
+            "Informații",
+            "Sprijin",
+            "Însoțire la instituții și la tribunal",
+            "Mediere",
+            "Intervenție în criză",
+            "Spălare rufe, duș",
+            "Distribuire de haine, distribuire de prezervative"
+          ],
+          "opening_hours_raw": [],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 24890355",
+            "0163 2387458 (Doamna Zschuckelt)"
+          ],
+          "notes": []
+        },
+        "ru": {
+          "name": "Mobile Youth Work Leipzig e. V. - Команда Юго-Восток",
+          "short_description": "Мобильная работа с молодёжью / уличная работа",
+          "services": [
+            "Информация",
+            "Поддержка",
+            "Сопровождение в органы и суд",
+            "Посредничество",
+            "Кризисное вмешательство",
+            "Стирка и душ",
+            "Раздача одежды, раздача презервативов"
+          ],
+          "opening_hours_raw": [],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 24890355",
+            "0163 2387458 (г-жа Zschuckelt)"
+          ],
+          "notes": []
+        }
+      },
+      "stale": false,
+      "translated_at": "2026-07-07T15:10:41.499249Z",
+      "provider": "blablador"
+    },
+    "20.1": {
+      "source_hash": "94a9348166784bcd8302991b0a60f987da97a6164bfef3bd5219c0ec6f0e11d5",
+      "source_name": "Jugendhaus Leipzig e.V. Projekt suedpol Mobile Jugendarbeit (Connewitz)",
+      "review_status": "machine",
+      "translations": {
+        "en": {
+          "name": "Jugendhaus Leipzig e.V. Project suedpol Mobile Youth Work (Connewitz)",
+          "short_description": "Mobile youth work / street work",
+          "services": [
+            "Streetwork Tuesday to Friday from 16:00",
+            "Mobile break service at schools",
+            "Low-threshold fun and leisure activities",
+            "Support when visiting offices",
+            "Counselling",
+            "Help finding opportunities",
+            "Everyday life help"
+          ],
+          "opening_hours_raw": [
+            "Tuesday: 13:00 - 15:30",
+            "Wednesday: 15:00 - 18:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 30690769",
+            "0176 46511187"
+          ],
+          "notes": []
+        },
+        "pl": {
+          "name": "Jugendhaus Leipzig e.V. Projekt suedpol Mobilna Praca z Młodzieżą (Connewitz)",
+          "short_description": "Mobilna praca z młodzieżą / praca uliczna",
+          "services": [
+            "Streetwork od wtorku do piątku od 16:00",
+            "Mobilny serwis przerwy w szkołach",
+            "Niskoprogowe, przyjazne zajęcia rekreacyjne",
+            "Wsparcie przy wizytach w urzędach",
+            "Poradnictwo",
+            "Pośrednictwo",
+            "Praktyczna pomoc w codziennym życiu"
+          ],
+          "opening_hours_raw": [
+            "Wtorek: 13:00 - 15:30",
+            "Środa: 15:00 - 18:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 30690769",
+            "0176 46511187"
+          ],
+          "notes": []
+        },
+        "ro": {
+          "name": "Jugendhaus Leipzig e.V. Proiect suedpol Muncă Mobilă cu Tinerii (Connewitz)",
+          "short_description": "Muncă mobilă cu tinerii / streetwork",
+          "services": [
+            "Streetwork de marţi până vineri de la 16:00",
+            "Serviciu mobil de pauză la şcoli",
+            "Activităţi recreative accesibile",
+            "Însoțire la autorităţi",
+            "Consiliere",
+            "Mediere / plasare",
+            "Ajutor practic pentru viața de zi cu zi"
+          ],
+          "opening_hours_raw": [
+            "Marţi: 13:00 - 15:30",
+            "Miercuri: 15:00 - 18:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 30690769",
+            "0176 46511187"
+          ],
+          "notes": []
+        },
+        "ru": {
+          "name": "Jugendhaus Leipzig e.V. Проект suedpol Мобильная работа с молодёжью (Connewitz)",
+          "short_description": "Мобильная работа с молодёжью / уличная работа",
+          "services": [
+            "Уличная работа с вторника по пятницу с 16:00",
+            "Мобильный сервис перерывов в школах",
+            "Доступные развлекательные и досуговые мероприятия",
+            "Сопровождение в органы",
+            "Консультация",
+            "Посредничество",
+            "Практическая помощь в повседневной жизни"
+          ],
+          "opening_hours_raw": [
+            "Вторник: 13:00 - 15:30",
+            "Среда: 15:00 - 18:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 30690769",
+            "0176 46511187"
+          ],
+          "notes": []
+        }
+      },
+      "stale": false,
+      "translated_at": "2026-07-07T15:10:56.326671Z",
+      "provider": "blablador"
+    },
+    "20.2": {
+      "source_hash": "800719cbc97c37fa578efd44b1363501a42601e611734efeec8230f41c3ba558",
+      "source_name": "Jugendhaus Leipzig e.V. Projekt suedpol Mobile Jugendarbeit (Lößnig)",
+      "review_status": "machine",
+      "translations": {
+        "en": {
+          "name": "Jugendhaus Leipzig e.V. Project suedpol Mobile Youth Work (Lößnig)",
+          "short_description": "Mobile youth work / street outreach",
+          "services": [
+            "Streetwork Tuesday to Friday from 16:00",
+            "Self‑assertion workshop (FLINTA only) by appointment, Tuesdays 17:30‑19:00",
+            "Mobile break service at schools",
+            "Low‑threshold recreational and educational activities",
+            "Accompaniment to authorities",
+            "Counselling",
+            "Mediation",
+            "Practical life assistance"
+          ],
+          "opening_hours_raw": [
+            "Monday: 15:00‑18:00",
+            "Thursday: 13:00‑15:30"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 30690769",
+            "0176 46511187"
+          ],
+          "notes": []
+        },
+        "pl": {
+          "name": "Jugendhaus Leipzig e.V. Projekt suedpol Mobilna Praca z Młodzieżą (Lößnig)",
+          "short_description": "Mobilna praca z młodzieżą / streetwork",
+          "services": [
+            "Streetwork od wtorku do piątku od 16:00",
+            "Warsztat wzmacniania pewności siebie (tylko FLINTA) po wcześniejszej rejestracji, we wtorki 17:30‑19:00",
+            "Mobilny punkt przerwy w szkołach",
+            "Niskoprogowe oferty edukacyjne i rekreacyjne",
+            "Towarzyszenie przy urzędach",
+            "Poradnictwo",
+            "Pośrednictwo",
+            "Praktyczna pomoc życiowa"
+          ],
+          "opening_hours_raw": [
+            "Poniedziałek: 15:00‑18:00",
+            "Czwartek: 13:00‑15:30"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 30690769",
+            "0176 46511187"
+          ],
+          "notes": []
+        },
+        "ro": {
+          "name": "Jugendhaus Leipzig e.V. Proiectul suedpol Muncă Mobilă cu Tinerii (Lößnig)",
+          "short_description": "Muncă mobilă cu tinerii / streetwork",
+          "services": [
+            "Streetwork de marţi până vineri de la 16:00",
+            "Workshop de afirmare a sinelui (doar FLINTA) cu programare prealabilă, marţi 17:30‑19:00",
+            "Mobilul de pauză la școli",
+            "Oferte educaționale și recreative cu bariere reduse",
+            "Însoțire la instituții",
+            "Consiliere",
+            "Mediere",
+            "Ajutor practic pentru viață"
+          ],
+          "opening_hours_raw": [
+            "Luni: 15:00‑18:00",
+            "Joi: 13:00‑15:30"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 30690769",
+            "0176 46511187"
+          ],
+          "notes": []
+        },
+        "ru": {
+          "name": "Jugendhaus Leipzig e.V. Проект suedpol Мобильная работа с молодёжью (Lößnig)",
+          "short_description": "Мобильная работа с молодёжью / уличная работа",
+          "services": [
+            "Streetwork вторник‑пятница с 16:00",
+            "Workshop по самозащите (только FLINTA) по предварительной записи, по вторникам 17:30‑19:00",
+            "Мобильный пункт перерыва в школах",
+            "Низкопороговые развлекательные и досуговые программы",
+            "Сопровождение в органы",
+            "Консультация",
+            "Посредничество",
+            "Практическая помощь в жизни"
+          ],
+          "opening_hours_raw": [
+            "Понедельник: 15:00‑18:00",
+            "Четверг: 13:00‑15:30"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 30690769",
+            "0176 46511187"
+          ],
+          "notes": []
+        }
+      },
+      "stale": false,
+      "translated_at": "2026-07-07T15:11:08.290873Z",
+      "provider": "blablador"
+    },
+    "21": {
+      "source_hash": "56a1d932f22abb6fb60f2bf40a9856215f86f42ef20f13fe2cb51b5f4a91a176",
+      "source_name": "Safe-Straßensozialarbeit für Erwachsene - Hilfebus\nSZL Suchtzentrum gGmbH",
+      "review_status": "machine",
+      "translations": {
+        "en": {
+          "name": "Safe - Street Social Work for Adults - Hilfebus SZL Suchtzentrum gGmbH",
+          "short_description": "Hilfebus",
+          "services": [
+            "appropriate emergency care for homeless people",
+            "warm food and drinks",
+            "warm clothing, blankets and sleeping bags",
+            "referral to emergency overnight shelters",
+            "mobile basic care and advice",
+            "Standzeiten:",
+            "every Sunday 20:00 - 21:00 at the west side of the main train station with soup service"
+          ],
+          "opening_hours_raw": [
+            "operation daily 18:00 - 23:00, citywide",
+            "every Sunday: 20:00 - 21:00 at the west side of the main train station with soup service"
+          ],
+          "standzeiten_raw": [
+            "Standzeiten:",
+            "every Sunday 20:00 - 21:00 at the west side of the main train station with soup service"
+          ],
+          "phone_numbers": [
+            "0175 6758041 (Mr. Neufert)",
+            "0152 33661087 (only during bus operation times)"
+          ],
+          "notes": [
+            "Instagram channel: #safeleipzig"
+          ]
+        },
+        "pl": {
+          "name": "Safe - Praca socjalna na ulicy dla dorosłych - Hilfebus SZL Suchtzentrum gGmbH",
+          "short_description": "Hilfebus",
+          "services": [
+            "odpowiednia pomoc awaryjna dla osób bezdomnych",
+            "ciepłe jedzenie i napoje",
+            "ciepłe ubrania, koce i śpiwory",
+            "skierowanie do noclegowni awaryjnych",
+            "mobilna podstawowa opieka i doradztwo",
+            "Standzeiten:",
+            "w każdą niedzielę 20:00 - 21:00 po zachodniej stronie dworca głównego z podawaniem zupy"
+          ],
+          "opening_hours_raw": [
+            "działanie codziennie 18:00 - 23:00, w całym mieście",
+            "w każdą niedzielę: 20:00 - 21:00 po zachodniej stronie dworca głównego z podawaniem zupy"
+          ],
+          "standzeiten_raw": [
+            "Standzeiten:",
+            "w każdą niedzielę 20:00 - 21:00 po zachodniej stronie dworca głównego z podawaniem zupy"
+          ],
+          "phone_numbers": [
+            "0175 6758041 (Pan Neufert)",
+            "0152 33661087 (tylko w godzinach działania autobusu)"
+          ],
+          "notes": [
+            "Kanał na Instagramie: #safeleipzig"
+          ]
+        },
+        "ro": {
+          "name": "Safe - Lucrări sociale pe stradă pentru adulți - Hilfebus SZL Suchtzentrum gGmbH",
+          "short_description": "Hilfebus",
+          "services": [
+            "asistență de urgență adecvată pentru persoanele fără adăpost",
+            "mâncare caldă și băuturi",
+            "îmbrăcăminte călduroasă, pături și saci de dormit",
+            "trimitere la adăposturi de urgență pentru noapte",
+            "îngrijire de bază mobilă și consiliere",
+            "Standzeiten:",
+            "în fiecare duminică 20:00 - 21:00 pe partea vestică a gara principală cu distribuție de supă"
+          ],
+          "opening_hours_raw": [
+            "intervenție zilnic 18:00 - 23:00, în tot orașul",
+            "în fiecare duminică: 20:00 - 21:00 pe partea vestică a gara principală cu distribuție de supă"
+          ],
+          "standzeiten_raw": [
+            "Standzeiten:",
+            "în fiecare duminică 20:00 - 21:00 pe partea vestică a gara principală cu distribuție de supă"
+          ],
+          "phone_numbers": [
+            "0175 6758041 (Dl. Neufert)",
+            "0152 33661087 (doar în orele de funcționare ale autobuzului)"
+          ],
+          "notes": [
+            "Canal Instagram: #safeleipzig"
+          ]
+        },
+        "ru": {
+          "name": "Safe - Уличная социальная работа для взрослых - Hilfebus SZL Suchtzentrum gGmbH",
+          "short_description": "Hilfebus",
+          "services": [
+            "адекватная экстренная помощь бездомным людям",
+            "горячая еда и напитки",
+            "тёплая одежда, одеяла и спальные мешки",
+            "направление в экстренные ночные приюты",
+            "мобильное базовое обслуживание и консультация",
+            "Standzeiten:",
+            "каждое воскресенье 20:00 - 21:00 на западной стороне главного вокзала с раздачей супа"
+          ],
+          "opening_hours_raw": [
+            "работа ежедневно 18:00 - 23:00, по всему городу",
+            "каждое воскресенье: 20:00 - 21:00 на западной стороне главного вокзала с раздачей супа"
+          ],
+          "standzeiten_raw": [
+            "Standzeiten:",
+            "каждое воскресенье 20:00 - 21:00 на западной стороне главного вокзала с раздачей супа"
+          ],
+          "phone_numbers": [
+            "0175 6758041 (г‑н Нойферт)",
+            "0152 33661087 (только в часы работы автобуса)"
+          ],
+          "notes": [
+            "Канал Instagram: #safeleipzig"
+          ]
+        }
+      },
+      "stale": false,
+      "translated_at": "2026-07-07T15:17:55.725963Z",
+      "provider": "blablador"
+    },
+    "22": {
+      "source_hash": "badc39209c3fced4b20937ea7616c01aca1bb68ae1623b87608d79d9cfb21480",
+      "source_name": "Caritasverband Leipzig e.V. Ökumenische Bahnhofsmission Leipzig",
+      "review_status": "machine",
+      "translations": {
+        "en": {
+          "name": "Caritasverband Leipzig e.V. Ecumenical Station Mission Leipzig",
+          "short_description": "Ecumenical Station Mission",
+          "services": [
+            "coffee, tea, water",
+            "filled rolls",
+            "distribution of clothing, sleeping bags, etc.",
+            "social counseling for housing emergencies and social difficulties",
+            "travel assistance at Leipzig main station"
+          ],
+          "opening_hours_raw": [
+            "Monday - Friday: 09:00 - 18:00",
+            "Sunday: 13:30 - 18:00",
+            "Flexibility possible depending on need and request"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 9683254"
+          ],
+          "notes": []
+        },
+        "pl": {
+          "name": "Caritasverband Leipzig e.V. Ekumeniczna Misja Dworcowa Leipzig",
+          "short_description": "Ekumeniczna Misja Dworcowa",
+          "services": [
+            "kawa, herbata, woda",
+            "kanapki",
+            "wydawanie ubrań, śpiworów itp.",
+            "społeczne doradztwo w sytuacjach kryzysu mieszkaniowego i problemach społecznych",
+            "pomoc w podróży na głównym dworcu Leipzig"
+          ],
+          "opening_hours_raw": [
+            "Poniedziałek - Piątek: 09:00 - 18:00",
+            "Niedziela: 13:30 - 18:00",
+            "Elastyczność w zależności od potrzeb i zapytań"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 9683254"
+          ],
+          "notes": []
+        },
+        "ro": {
+          "name": "Caritasverband Leipzig e.V. Misiunea Ecumenică a Gării Leipzig",
+          "short_description": "Misiunea Ecumenică a Gării",
+          "services": [
+            "cafea, ceai, apă",
+            "sandvișuri",
+            "distribuire de haine, saci de dormit etc.",
+            "consiliere socială pentru urgențe locative și dificultăți sociale",
+            "asistență de călătorie la Gara Centrală Leipzig"
+          ],
+          "opening_hours_raw": [
+            "Luni - Vineri: 09:00 - 18:00",
+            "Duminică: 13:30 - 18:00",
+            "Flexibilitate în funcție de necesități și cereri"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 9683254"
+          ],
+          "notes": []
+        },
+        "ru": {
+          "name": "Caritasverband Leipzig e.V. Экуменическая станционная миссия Лейпциг",
+          "short_description": "Экуменическая станционная миссия",
+          "services": [
+            "кофе, чай, вода",
+            "бутерброды",
+            "раздача одежды, спальных мешков и т.д.",
+            "социальное консультирование при жилищных чрезвычайных ситуациях и социальных трудностях",
+            "помощь в поездках на главном вокзале Лейпцига"
+          ],
+          "opening_hours_raw": [
+            "Понедельник - Пятница: 09:00 - 18:00",
+            "Воскресенье: 13:30 - 18:00",
+            "Гибкость в зависимости от потребностей и запросов"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "0341 9683254"
+          ],
+          "notes": []
+        }
+      },
+      "stale": false,
+      "translated_at": "2026-07-07T15:11:36.491772Z",
+      "provider": "blablador"
+    },
+    "23": {
+      "source_hash": "f35ba50779dc67da631e986238c41f3dd0bc9c92805243c131de5f76ee2f898e",
+      "source_name": "Übernachtungshaus für wohnungslose Männer",
+      "review_status": "machine",
+      "translations": {
+        "en": {
+          "name": "Overnight shelter for homeless men",
+          "short_description": "Overnight shelter",
+          "services": [
+            "Overnight shelter",
+            "Overnight stay (5.00 € per night for self‑paying; for men receiving benefits the 5.00 € is covered by the job centre or social welfare office)",
+            "Laundry washing (2.50 €)",
+            "Medical consultation",
+            "Free tea",
+            "Support with personal matters by the social service (e.g., passport and registration issues, finances, health, housing, accommodation, work)",
+            "Emergency sleeping place",
+            "30 places (free)"
+          ],
+          "opening_hours_raw": [
+            "Overnight shelter",
+            "Monday - Friday: from 16:00",
+            "Saturday, Sunday and public holidays: all day",
+            "Free emergency sleeping place",
+            "Monday – Sunday: 21:00 - 08:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "015127136096",
+            "015127136394"
+          ],
+          "notes": [
+            "Social service availability:",
+            "Monday – Sunday: 06:00 – 22:00"
+          ]
+        },
+        "pl": {
+          "name": "Dom noclegowy dla bezdomnych mężczyzn",
+          "short_description": "Dom noclegowy",
+          "services": [
+            "Dom noclegowy",
+            "Nocleg (5,00 € za noc dla osób płacących samodzielnie; dla mężczyzn otrzymujących świadczenia 5,00 € pokrywa Jobcenter lub urząd ds. pomocy społecznej)",
+            "Pranie (2,50 €)",
+            "Porada medyczna",
+            "Darmowa herbata",
+            "Wsparcie w sprawach osobistych od usług socjalnych (np. w sprawach paszportowych i meldunkowych, finansach, zdrowiu, mieszkaniu, zakwaterowaniu, pracy)",
+            "Miejsce awaryjnego noclegu",
+            "30 miejsc (bezpłatnie)"
+          ],
+          "opening_hours_raw": [
+            "Dom noclegowy",
+            "Poniedziałek - piątek: od 16:00",
+            "Sobota, niedziela i święta: całą dobę",
+            "Bezpłatne miejsce awaryjnego noclegu",
+            "Poniedziałek – niedziela: 21:00 - 08:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "015127136096",
+            "015127136394"
+          ],
+          "notes": [
+            "Dostępność usług socjalnych:",
+            "Poniedziałek – niedziela: 06:00 – 22:00"
+          ]
+        },
+        "ro": {
+          "name": "Casa de cazare pentru bărbați fără locuință",
+          "short_description": "Casa de cazare",
+          "services": [
+            "Casa de cazare",
+            "Cazare (5,00 € pe noapte pentru cei care plătesc singuri; pentru bărbații care primesc beneficii, cei 5,00 € sunt plătiți de Jobcenter sau de serviciul social)",
+            "Spălare rufe (2,50 €)",
+            "Consultație medicală",
+            "Ceai gratuit",
+            "Sprijin în probleme personale de la serviciul social (de ex. pentru pașaport și înregistrare, finanțe, sănătate, locuință, cazare, muncă)",
+            "Loc de odihnă de urgență",
+            "30 de locuri (gratuit)"
+          ],
+          "opening_hours_raw": [
+            "Casa de cazare",
+            "Luni - Vineri: de la 16:00",
+            "Sâmbătă, Duminică și sărbători: toată ziua",
+            "Loc de odihnă de urgență gratuit",
+            "Luni – Duminică: 21:00 - 08:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "015127136096",
+            "015127136394"
+          ],
+          "notes": [
+            "Disponibilitatea serviciului social:",
+            "Luni – Duminică: 06:00 – 22:00"
+          ]
+        },
+        "ru": {
+          "name": "Дом ночлега для бездомных мужчин",
+          "short_description": "Дом ночлега",
+          "services": [
+            "Дом ночлега",
+            "Ночлег (5,00 € за ночь для тех, кто платит сам; для мужчин, получающих пособия, 5,00 € покрывает центр занятости или соцслужба)",
+            "Стирка белья (2,50 €)",
+            "Медицинский приём",
+            "Бесплатный чай",
+            "Помощь в личных вопросах от соцслужбы (например, с паспортом и регистрацией, финансами, здоровьем, жильём, проживанием, работой)",
+            "Экстренный ночлег",
+            "30 мест (бесплатно)"
+          ],
+          "opening_hours_raw": [
+            "Дом ночлега",
+            "Пн‑Пт: с 16:00",
+            "Сб, Вс и праздничные дни: круглосуточно",
+            "бесплатный экстренный ночлег",
+            "Пн‑Вс: 21:00‑08:00"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "015127136096",
+            "015127136394"
+          ],
+          "notes": [
+            "Доступность соцслужбы:",
+            "Пн‑Вс: 06:00‑22:00"
+          ]
+        }
+      },
+      "stale": false,
+      "translated_at": "2026-07-07T15:18:46.060044Z",
+      "provider": "blablador"
+    },
+    "24": {
+      "source_hash": "c6d2477ce6d59663fed2b98b3616a81e0a916f77f86d292291b0e943c04097d5",
+      "source_name": "CABL e. V. - Clearingstelle und anonymer Behandlungsschein Leipzig e. V.",
+      "review_status": "machine",
+      "translations": {
+        "en": {
+          "name": "CABL e. V. - Clearing office and anonymous treatment certificate Leipzig e. V.",
+          "short_description": "Social counseling",
+          "services": [
+            "Social counseling for people without regular access to the health system",
+            "Issuing anonymous treatment certificates"
+          ],
+          "opening_hours_raw": [
+            "Open consultation hours:",
+            "Tuesday: 17:00 - 20:00",
+            "Thursday: 09:00 - 12:00",
+            "by appointment"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "017645982130"
+          ],
+          "notes": []
+        },
+        "pl": {
+          "name": "CABL e. V. - Biuro rozliczeniowe i anonimowy zaświadczenie o leczeniu Leipzig e. V.",
+          "short_description": "Poradnictwo społeczne",
+          "services": [
+            "Poradnictwo społeczne dla osób bez regularnego dostępu do systemu opieki zdrowotnej",
+            "Wydawanie anonimowych zaświadczeń o leczeniu"
+          ],
+          "opening_hours_raw": [
+            "Godziny otwartych konsultacji:",
+            "Wtorek: 17:00 - 20:00",
+            "Czwartek: 09:00 - 12:00",
+            "po umówieniu się"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "017645982130"
+          ],
+          "notes": []
+        },
+        "ro": {
+          "name": "CABL e. V. - Biroul de decontare și certificat de tratament anonim Leipzig e. V.",
+          "short_description": "Consiliere socială",
+          "services": [
+            "Consiliere socială pentru persoane fără acces regulat la sistemul de sănătate",
+            "Eliberarea de certificate de tratament anonime"
+          ],
+          "opening_hours_raw": [
+            "Ore de consultație deschise:",
+            "Marţi: 17:00 - 20:00",
+            "Joi: 09:00 - 12:00",
+            "la programare"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "017645982130"
+          ],
+          "notes": []
+        },
+        "ru": {
+          "name": "CABL e. V. - Офис расчётов и анонимный справка о лечении Leipzig e. V.",
+          "short_description": "Социальное консультирование",
+          "services": [
+            "Социальное консультирование для людей без регулярного доступа к системе здравоохранения",
+            "Выдача анонимных справок о лечении"
+          ],
+          "opening_hours_raw": [
+            "Часы открытых консультаций:",
+            "Вторник: 17:00 - 20:00",
+            "Четверг: 09:00 - 12:00",
+            "по предварительной записи"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "017645982130"
+          ],
+          "notes": []
+        }
+      },
+      "stale": false,
+      "translated_at": "2026-07-07T15:12:00.012996Z",
+      "provider": "blablador"
+    },
+    "25": {
+      "source_hash": "9366fed7f990e143cb5cd39f6aa8c1c79621ea162ad099288e276c7e9881b9c0",
+      "source_name": "UVO - Umfeldnahe Versorgung von Menschen ohne festen Wohnsitz",
+      "review_status": "machine",
+      "translations": {
+        "en": {
+          "name": "UVO - Local support for people without a fixed residence",
+          "short_description": "Medical care",
+          "services": [
+            "Outreach medical care",
+            "Referral to other services"
+          ],
+          "opening_hours_raw": [
+            "Mobile service / Medibus:",
+            "Wednesday: 6:30 pm at Central Station",
+            "Friday: 10:00 am at Koehlerstraße / Dresdner Straße and 2:00 pm at Central Station",
+            "Sunday: 8:00 pm at Central Station"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "015777682195"
+          ],
+          "notes": [
+            "Free doctor appointments by appointment only:",
+            "Monday:",
+            "3:00 pm – 4:00 pm at the day centre OASE, Nürnberger Straße 31 (nursing consultation)",
+            "7:00 pm – 8:00 pm at Alternative III, Braunstraße 28a",
+            "8:00 pm – 9:00 pm at the emergency sleeping place for homeless men, Helenenstraße 26",
+            "Tuesday:",
+            "1:00 pm – 3:00 pm at the day centre OASE, Nürnberger Straße 31 (medical consultation)",
+            "Wednesday:",
+            "4:00 pm – 5:00 pm at Alternative I, Chopinstraße 13",
+            "5:00 pm – 7:00 pm at the overnight house for homeless men, Helenenstraße 26",
+            "Thursday:",
+            "7:30 pm – 9:00 pm at the emergency sleeping place for homeless men, Rückmarsdorfer Straße 5-7"
+          ]
+        },
+        "pl": {
+          "name": "UVO - Opieka blisko otoczenia dla osób bez stałego miejsca zamieszkania",
+          "short_description": "Opieka medyczna",
+          "services": [
+            "Opieka medyczna w terenie",
+            "Przekierowanie do dalszych usług"
+          ],
+          "opening_hours_raw": [
+            "Mobilna oferta / Medibus:",
+            "Środa: 18:30 Hauptbahnhof",
+            "Piątek: 10:00 Koehlerstraße / Dresdner Straße i 14:00 Hauptbahnhof",
+            "Niedziela: 20:00 Hauptbahnhof"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "015777682195"
+          ],
+          "notes": [
+            "Bezpłatne konsultacje lekarskie po wcześniejszej rejestracji:",
+            "Poniedziałek:",
+            "15:00 - 16:00 w Tagestref OASE, Nürnberger Straße 31 (porada pielęgniarska)",
+            "19:00 - 20:00 w Alternative III, Braunstraße 28a",
+            "20:00 - 21:00 w Notschlafstelle für wohnungslose Männer, Helenenstraße 26",
+            "Wtorek:",
+            "13:00 - 15:00 w Tagestreff OASE, Nürnberger Straße 31 (konsultacja lekarska)",
+            "Środa:",
+            "16:00 - 17:00 w Alternative I, Chopinstraße 13",
+            "17:00 - 19:00 w Übernachtungshaus für wohnungslose Männer, Helenenstraße 26",
+            "Czwartek:",
+            "19:30 - 21:00 w Notschlafstelle für wohnungslose Männer, Rückmarsdorfer Straße 5-7"
+          ]
+        },
+        "ro": {
+          "name": "UVO - Asistență apropiată pentru persoane fără locuință stabilă",
+          "short_description": "Îngrijire medicală",
+          "services": [
+            "Îngrijire medicală la fața locului",
+            "Redirecționare către alte servicii"
+          ],
+          "opening_hours_raw": [
+            "Serviciu mobil / Medibus:",
+            "Miercuri: 18:30 la Gara Centrală",
+            "Vineri: 10:00 pe Koehlerstraße / Dresdner Straße și 14:00 la Gara Centrală",
+            "Duminică: 20:00 la Gara Centrală"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "015777682195"
+          ],
+          "notes": [
+            "Consultații medicale gratuite cu programare prealabilă:",
+            "Luni:",
+            "15:00 - 16:00 la Tagestref OASE, Nürnberger Straße 31 (consultație de îngrijire)",
+            "19:00 - 20:00 la Alternative III, Braunstraße 28a",
+            "20:00 - 21:00 la adăpostul de urgență pentru bărbați fără locuință, Helenenstraße 26",
+            "Marți:",
+            "13:00 - 15:00 la Tagestreff OASE, Nürnberger Straße 31 (consultație medicală)",
+            "Miercuri:",
+            "16:00 - 17:00 la Alternative I, Chopinstraße 13",
+            "17:00 - 19:00 la casa de cazare pentru bărbați fără locuință, Helenenstraße 26",
+            "Joi:",
+            "19:30 - 21:00 la adăpostul de urgență pentru bărbați fără locuință, Rückmarsdorfer Straße 5-7"
+          ]
+        },
+        "ru": {
+          "name": "UVO – Близкое к окружению обслуживание людей без постоянного места жительства",
+          "short_description": "Медицинское обслуживание",
+          "services": [
+            "Выездное медицинское обслуживание",
+            "Дальнейшее направление"
+          ],
+          "opening_hours_raw": [
+            "Мобильное предложение / Medibus:",
+            "Среда: 18:30, главный вокзал",
+            "Пятница: 10:00, улица Koehlerstraße / Dresdner Straße и 14:00, главный вокзал",
+            "Воскресенье: 20:00, главный вокзал"
+          ],
+          "standzeiten_raw": [],
+          "phone_numbers": [
+            "015777682195"
+          ],
+          "notes": [
+            "Бесплатные врачебные приёмы после предварительной записи:",
+            "Понедельник:",
+            "15:00‑16:00, в дневном центре OASE, Nürnberger Straße 31 (консультация по уходу)",
+            "19:00‑20:00, в Alternative III, Braunstraße 28a",
+            "20:00‑21:00, в экстренном ночлежке для бездомных мужчин, Helenenstraße 26",
+            "Вторник:",
+            "13:00‑15:00, в дневном центре OASE, Nürnberger Straße 31 (врачебный приём)",
+            "Среда:",
+            "16:00‑17:00, в Alternative I, Chopinstraße 13",
+            "17:00‑19:00, в ночном доме для бездомных мужчин, Helenenstraße 26",
+            "Четверг:",
+            "19:30‑21:00, в экстренном ночлежке для бездомных мужчин, Rückmarsdorfer Straße 5-7"
+          ]
+        }
+      },
+      "stale": false,
+      "translated_at": "2026-07-07T15:19:32.348228Z",
+      "provider": "blablador"
+    }
+  },
+  "source_dataset_hash": "3b72f95a88f98c57778f50beaa4c66af61b58493fe995feb1deb6f7756d7bf9c"
+}
