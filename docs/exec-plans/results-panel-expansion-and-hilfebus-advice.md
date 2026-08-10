@@ -670,3 +670,77 @@ grün (`SPEECH_SYNTH_STATUS=200`, keine Konsolenfehler).
   mindestens einem Screenreader gegenzuprüfen (native `<details>`-Semantik
   sollte tragen, wurde aber nicht mit echter AT verifiziert).
 - **Teil 1 (Formulator-Zuverlässigkeit)** bleibt wie geplant unangetastet.
+
+### Nachtrag (2026-08-07) — Nutzer-Feedback aus dem Live-Betrieb
+
+Vier konkrete Rückmeldungen nach dem oben dokumentierten Rollout:
+
+1. **Überlappende Sprachausgabe bei Mehrfachklick**: Ein zweiter Klick auf
+   ein Lautsprecher-Symbol, während der `/api/speech/synthesize`-Request des
+   ersten Klicks noch lief (Fetch/Blob noch nicht fertig, also noch kein
+   `<audio>`-Objekt zum Pausieren vorhanden), ließ beide Antworten
+   gleichzeitig abspielen — die bestehende "vorheriges Audio pausieren"-Logik
+   in `speakText()` griff erst, sobald ein `<audio>`-Objekt existierte, nicht
+   während des Ladens.
+   **Fix**: `speakText()` (`app/static/app.js`) vergibt pro Aufruf ein
+   monoton steigendes Token (`state.speechRequestToken`) und bricht jeden
+   noch laufenden Request per `AbortController` ab (neue Hilfsfunktion
+   `interruptCurrentSpeech()`, auch von `stopSpeechOutput()` genutzt); eine
+   verspätet eintreffende, längst überholte Antwort erkennt sich am
+   veralteten Token und verwirft sich selbst, statt über die neuere Wiedergabe
+   zu spielen. Damit startet jeder Klick — auch auf dieselbe Tafel — immer
+   von vorn, nie überlappend.
+2. **"Wird in der Antwort genannt"-Kachel entfernt**: Das Badge (und die
+   zugehörige `highlighted`-Rahmenfarbe) auf Wunsch komplett entfernt —
+   `buildOfferTile()`/`renderResultList()` (`app/static/app.js`) tragen den
+   Unterschied zwischen erwähnten und nicht erwähnten Angeboten nicht mehr
+   visuell aus. `.offer-tile-badge`/`.offer-tile--highlighted`
+   (`app/static/styles.css`) und der jetzt ungenutzte i18n-Schlüssel
+   `ui.mentionedInAnswer` (alle 5 Sprachen, `application_texts.json`)
+   entfernt.
+3. **Fallback-Satz ("Diese Angebote passen zu deiner Frage: …") kommt immer
+   noch häufig vor**: siehe eigenständigen Nachtrag in
+   `fix-formulator-fallback-sie-and-menschen-collision.md` — ein Retry-Versuch
+   bei Grounding-Fehlschlag wurde ergänzt (`QueryService._call_formulator()`
+   in `app/service.py`). Das ist eine Milderung, keine vollständige
+   Behebung; die Restursache (fehlende Zitierdisziplin des Modells) bleibt
+   dort als offener, fachlicher Kompromiss dokumentiert.
+4. **"Die Karten sind immer noch nicht übersetzt"**: In einer nicht-deutschen
+   Sitzung waren die Tafeln für Angebote, die die Antwort nicht namentlich
+   zitiert, weiterhin komplett auf Deutsch — nur die Feldbezeichner (Labels
+   wie „Beschreibung", „Adresse") waren übersetzt, nicht der Angebotstext
+   selbst. Root Cause: `QueryService.query()` patchte lokalisierte Felder
+   bislang nur auf `map_data.destinations`, deren ID in `response.cards`
+   vorkam — also nur auf die (≤4) von der Antwort tatsächlich zitierten
+   Angebote. `map_data.destinations` ist aber bewusst unbeschränkt (Teil 3)
+   und enthält typischerweise mehr Angebote als zitiert werden; für den
+   Rest blieben die von `build_map_data()`/`offer_stand_destinations()`
+   (`app/maps.py`, die absichtlich keinen Übersetzungskatalog kennt und rein
+   auf dem `OfferRecord` arbeitet) gesetzten Rohfelder (Deutsch) stehen.
+   **Fix**: Die Patch-Schleife in `QueryService.query()` (`app/service.py`)
+   löst jede Kartenziel-ID jetzt über `self.kb.by_id()` auf (nicht mehr nur
+   über `response.cards`) und lokalisiert *jedes* Angebots-Kartenziel via
+   `localize_offer_card()`. Stand-Kartenziele (z. B. `"<id>:hbf-west"`, siehe
+   `offer_stand_destinations()`) behalten ihr handverfasstes
+   Label/Adresse/Beschreibung/Öffnungszeiten für den jeweiligen Standort und
+   bekommen nur die unverändert vom Angebot übernommenen, wohl übersetzbaren
+   Felder (`services`, `notes`) lokalisiert. Öffentliche Toiletten/Trinkbrunnen
+   sind nicht in `self.kb.by_id()` und bleiben unangetastet (dort schon an der
+   Quelle sprachabhängig gebaut).
+   Bewusst weiterhin unübersetzt (Vorverhalten, nicht Teil dieses Fixes):
+   Telefonnummern-Anmerkungen wie „(Herr Neufert)" (kein `TRANSLATABLE_FIELDS`)
+   und `standzeiten_raw` (laut `localize_offer_card()`-Docstring immer aus der
+   Roh-KB, sicherheitskritischer Wortlaut wird nie automatisch übersetzt).
+
+Verifikation: volle Testsuite grün (inkl. drei neuer Regressionstests:
+zwei für Punkt 3, einer für Punkt 4 —
+`test_map_destinations_not_cited_in_the_answer_are_still_localized` in
+`tests/test_api.py`, prüft mit echtem Übersetzungskatalog, dass ein nicht
+zitiertes Kartenziel exakt das liefert, was `localize_offer_card()` für dasselbe
+Angebot ergäbe). Punkte 1, 2 und 4 zusätzlich live per Playwright gegen den
+echten Blablador-Backend verifiziert: Doppelklick-Test zeigt genau einen
+erfolgreichen Sprachsynthese-Request bei zwei abgebrochenen, nie zwei aktive
+Wiedergaben gleichzeitig; DOM-Test bestätigt 0 Badges; eine russischsprachige
+Sitzung zeigt für die Hilfebus-Tafel (zuvor komplett deutsch) jetzt
+durchgehend russischen Text für Beschreibung, Angebote/Leistungen und
+Öffnungszeiten-Hinweise.

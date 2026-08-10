@@ -33,7 +33,9 @@ const state = {
   listeningMode: null,
   serverSynthesisAvailable: false,
   currentSpeechAudio: null,
+  currentSpeechAbort: null,
   currentSpeechButton: null,
+  speechRequestToken: 0,
   resultTiles: new Map(),
   lastAnswer: "",
   queryInputMode: "text",
@@ -371,13 +373,12 @@ function offerCardAsDestination(card) {
 // One collapsible "Tafel" per offer/place. Collapsed: name, address, distance.
 // Expanded (click, or via expandResultTile() from a map marker click): every
 // field the old full-detail card used to show unconditionally.
-function buildOfferTile(item, { highlighted = false } = {}) {
+function buildOfferTile(item) {
   const name = item.label || item.name;
 
   const tile = document.createElement("details");
   tile.className = "offer-tile";
   tile.dataset.resultId = item.id;
-  if (highlighted) tile.classList.add("offer-tile--highlighted");
 
   const summary = document.createElement("summary");
   const heading = document.createElement("div");
@@ -385,12 +386,6 @@ function buildOfferTile(item, { highlighted = false } = {}) {
   const title = document.createElement("strong");
   title.textContent = name;
   heading.appendChild(title);
-  if (highlighted) {
-    const badge = document.createElement("span");
-    badge.className = "offer-tile-badge";
-    badge.textContent = text().mentionedInAnswer;
-    heading.appendChild(badge);
-  }
   if (state.serverSynthesisAvailable && item.spoken_text) {
     heading.appendChild(createListenButton(item.spoken_text));
   }
@@ -443,9 +438,9 @@ function buildOfferTile(item, { highlighted = false } = {}) {
 
 // Renders every matched offer/place as a tile -- not just the (deliberately
 // narrower, strictly grounded) subset the answer text is built from. `cards`
-// is only used here to mark which tiles the answer mentions; map_data carries
-// the full, richer set whenever a map is available (see build_map_data() on
-// the backend, which is intentionally uncapped).
+// is the fallback item source when no map is available; map_data carries the
+// full, richer set whenever a map is available (see build_map_data() on the
+// backend, which is intentionally uncapped).
 function renderResultList(cards, mapData) {
   const container = byId("cardList");
   container.replaceChildren();
@@ -453,9 +448,8 @@ function renderResultList(cards, mapData) {
   const items = mapData && mapData.destinations && mapData.destinations.length
     ? mapData.destinations
     : cards.map(offerCardAsDestination);
-  const mentionedIds = new Set(cards.map((card) => card.id));
   for (const item of items) {
-    const tile = buildOfferTile(item, { highlighted: mentionedIds.has(item.id) });
+    const tile = buildOfferTile(item);
     state.resultTiles.set(item.id, tile);
     container.appendChild(tile);
   }
@@ -741,29 +735,47 @@ function clearSpeechButtonActive(button) {
   if (state.currentSpeechButton === button) state.currentSpeechButton = null;
 }
 
+// Tears down whatever is currently playing/loading so a new call always
+// starts from a clean slate: pauses any playing audio and aborts any
+// in-flight synthesize request (a click while the fetch/blob is still
+// loading has no audio object yet for the pause-branch below to catch).
+function interruptCurrentSpeech() {
+  if (state.currentSpeechAbort) {
+    state.currentSpeechAbort.abort();
+    state.currentSpeechAbort = null;
+  }
+  if (state.currentSpeechAudio) {
+    state.currentSpeechAudio.pause();
+    state.currentSpeechAudio.removeAttribute("src");
+    state.currentSpeechAudio.load();
+    state.currentSpeechAudio = null;
+  }
+}
+
 // `button` is optional: when given, its visual "is-speaking" state tracks this
 // call so callers (replay button, per-card listen buttons) don't need their
-// own bookkeeping. Interrupting a call via a new speakText() only updates the
-// old button's visible state here — the old call's own Promise is left
-// unresolved once its audio is torn down, which is harmless since nothing
-// awaits it for further cleanup.
+// own bookkeeping. Each call gets a token; a superseding call aborts the
+// previous request/audio and bumps the token, so a stale response arriving
+// late (or a stale error) can recognize itself and skip playback instead of
+// resolving/erroring on top of the newer call -- this is what previously let
+// two clicks in quick succession (before the first request had produced an
+// <audio> to pause) speak over each other.
 function speakText(message, button = null) {
+  const requestToken = ++state.speechRequestToken;
+  const isCurrent = () => state.speechRequestToken === requestToken;
   return new Promise(async (resolve) => {
+    interruptCurrentSpeech();
     setSpeechButtonActive(button);
     const finish = () => {
-      clearSpeechButtonActive(button);
+      if (isCurrent()) clearSpeechButtonActive(button);
       resolve();
     };
     if (!state.serverSynthesisAvailable || !message) {
       finish();
       return;
     }
-    if (state.currentSpeechAudio) {
-      state.currentSpeechAudio.pause();
-      state.currentSpeechAudio.removeAttribute("src");
-      state.currentSpeechAudio.load();
-      state.currentSpeechAudio = null;
-    }
+    const controller = new AbortController();
+    state.currentSpeechAbort = controller;
     let audioUrl = null;
     try {
       const response = await fetch("/api/speech/synthesize", {
@@ -773,10 +785,15 @@ function speakText(message, button = null) {
           text: message,
           language: state.language,
           session_id: state.sessionId
-        })
+        }),
+        signal: controller.signal
       });
       if (!response.ok) throw new Error("speech synthesis failed");
       const audioBlob = await response.blob();
+      if (!isCurrent()) {
+        finish();
+        return;
+      }
       audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
       state.currentSpeechAudio = audio;
@@ -800,12 +817,9 @@ function speakText(message, button = null) {
 }
 
 function stopSpeechOutput() {
+  state.speechRequestToken += 1;
   clearSpeechButtonActive(state.currentSpeechButton);
-  if (!state.currentSpeechAudio) return;
-  state.currentSpeechAudio.pause();
-  state.currentSpeechAudio.removeAttribute("src");
-  state.currentSpeechAudio.load();
-  state.currentSpeechAudio = null;
+  interruptCurrentSpeech();
 }
 
 async function speakIntroThenListen() {

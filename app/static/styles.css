@@ -101,8 +101,6 @@ h1 { margin: 0; font-size: clamp(2rem, 5vw, 3.4rem); line-height: 1.08; }
 .offer-tile-heading { display: inline-flex; align-items: center; gap: 10px; width: calc(100% - 24px); vertical-align: middle; }
 .offer-tile-heading strong { flex: 1 1 auto; color: var(--blue-dark); font-size: 1.15rem; }
 .offer-tile-meta { margin: 6px 0 0; color: #53677e; }
-.offer-tile-badge { flex: 0 0 auto; padding: 3px 10px; border-radius: 999px; background: var(--orange-soft); border: 1px solid var(--orange); color: #7a3c00; font-size: .78rem; font-weight: 800; }
-.offer-tile--highlighted { border-left: 6px solid var(--orange); }
 .offer-tile-body { padding: 4px 22px 22px; }
 .card-listen-button { flex: 0 0 auto; width: 40px; height: 40px; }
 .card-listen-button .replay-icon { width: 22px; height: 22px; }

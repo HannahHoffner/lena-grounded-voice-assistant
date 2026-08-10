@@ -45,7 +45,14 @@ from app.live_evaluation_plan import (
     provider_free_evaluation_settings,
     provider_payload_field_inventory,
 )
-from app.live_evaluation_runner import run_interpreter_live_gate
+from app.live_evaluation_runner import (
+    run_end_to_end_live_gate,
+    run_interpreter_live_gate,
+    run_selector_formulator_live_gate,
+    run_stability_live_gate,
+)
+from app.llm_selection import CandidateSelectionResponse, SelectorError, SelectorSelectionStatus
+from app.providers.llm import ProviderAnswer
 from app.live_evaluation_runtime import (
     AtomicRunCounter,
     EvaluationLimitReached,
@@ -330,16 +337,24 @@ def test_live_authorization_requires_exact_env_and_versioned_limits(monkeypatch:
         )
 
 
-def test_later_stage_is_prepared_but_cannot_initialize_provider() -> None:
-    plan = load_live_scenario_catalog().plan(EvaluationStage.SELECTOR_FORMULATOR)
+@pytest.mark.parametrize(
+    "stage",
+    [
+        EvaluationStage.INTERPRETER,
+        EvaluationStage.SELECTOR_FORMULATOR,
+        EvaluationStage.END_TO_END,
+        EvaluationStage.STABILITY,
+    ],
+)
+def test_all_four_stages_are_released_and_pass_authorization(stage: EvaluationStage) -> None:
+    plan = load_live_scenario_catalog().plan(stage)
 
-    with pytest.raises(SystemExit, match="prepared_but_not_released"):
-        require_live_authorization(
-            confirm_live=True,
-            stage=EvaluationStage.SELECTOR_FORMULATOR,
-            limits=plan.live_limits,
-            environ={"LENA_ALLOW_LIVE_SMOKE": "true"},
-        )
+    require_live_authorization(
+        confirm_live=True,
+        stage=stage,
+        limits=plan.live_limits,
+        environ={"LENA_ALLOW_LIVE_SMOKE": "true"},
+    )
 
 
 def test_counter_reserves_atomically_before_limits() -> None:
@@ -561,3 +576,181 @@ def test_provider_initialization_failure_finishes_redacted_report(tmp_path: Path
     assert "secret initialization detail" not in (
         report / "redacted-errors.jsonl"
     ).read_text(encoding="utf-8")
+
+
+class FakeSelectorFormulatorProvider:
+    """Reines Protokoll-Double für Stufe 2: keine Netzwerkaufrufe, plausible Antworten."""
+
+    name = "blablador"
+
+    def __init__(self, settings: Settings) -> None:
+        self.model = settings.blablador_model
+        self.base_url = settings.blablador_base_url
+        self.selector_calls = 0
+        self.formulator_calls = 0
+
+    async def select_candidates(self, *, decision: Any, **_kwargs: Any) -> CandidateSelectionResponse:
+        self.selector_calls += 1
+        ids = [item.offer_id for item in decision.selectable_candidates[:1]]
+        return CandidateSelectionResponse(
+            contract_version="1",
+            selection_status=SelectorSelectionStatus.SELECTED if ids else SelectorSelectionStatus.NO_SELECTION,
+            selected_ids=ids,
+        )
+
+    async def formulate_answer(self, *, evidence: Any, **_kwargs: Any) -> ProviderAnswer:
+        self.formulator_calls += 1
+        return ProviderAnswer(
+            answer="Getestete, geerdete Antwort.",
+            card_ids=[offer.offer_id for offer in evidence.selected_offers],
+            sentence_count=1,
+            answer_type=evidence.answer_type,
+        )
+
+
+class FailingSelectorFormulatorProvider(FakeSelectorFormulatorProvider):
+    async def select_candidates(self, **_kwargs: Any) -> CandidateSelectionResponse:
+        self.selector_calls += 1
+        raise SelectorError("selector_invalid_id")
+
+
+def test_selector_formulator_runner_executes_six_selector_and_ten_formulator_calls(tmp_path: Path) -> None:
+    settings = _settings(tmp_path)
+    plan = load_live_scenario_catalog().plan(EvaluationStage.SELECTOR_FORMULATOR)
+
+    result = asyncio.run(
+        run_selector_formulator_live_gate(
+            settings, plan.live_limits, provider_factory=FakeSelectorFormulatorProvider
+        )
+    )
+
+    assert result["status"] == "completed"
+    assert result["counts"]["requests"] == 16
+    assert result["counts"]["formulator_calls"] == 10
+    assert result["next_stage_started"] is False
+    report = settings.runtime_dir / result["report_directory"]
+    assert len((report / "stage-results.jsonl").read_text(encoding="utf-8").splitlines()) == 16
+
+
+def test_selector_formulator_runner_records_selector_failures(tmp_path: Path) -> None:
+    settings = _settings(tmp_path)
+    plan = load_live_scenario_catalog().plan(EvaluationStage.SELECTOR_FORMULATOR)
+
+    result = asyncio.run(
+        run_selector_formulator_live_gate(
+            settings, plan.live_limits, provider_factory=FailingSelectorFormulatorProvider
+        )
+    )
+
+    assert result["status"] in {"completed", "aborted"}
+    assert result["counts"]["failures"] >= 1
+
+
+class FakeFullPipelineProvider:
+    """Protokoll-Double für Stufen 3/4: treibt den echten QueryService ohne Netzwerk."""
+
+    name = "blablador"
+
+    def __init__(self, settings: Settings) -> None:
+        self.model = settings.blablador_model
+        self.base_url = settings.blablador_base_url
+        self._by_query: dict[str, QueryInterpretation] = {}
+        safety_case_status = {
+            "acute": "detected",
+            "other_person": "detected",
+            "prompt_injection": "detected",
+            "uncertain": "uncertain",
+            "non_acute": "not_detected",
+            "historical": "not_detected",
+            "denied": "not_detected",
+            "metaphorical": "not_detected",
+            "quoted": "not_detected",
+        }
+        for stage in (EvaluationStage.END_TO_END, EvaluationStage.STABILITY):
+            for scenario in load_live_scenario_catalog().scenarios_for(stage):
+                required = dict(scenario.expectation.required)
+                safety_case = scenario.fixture.get("safety_case")
+                if safety_case in safety_case_status:
+                    required.setdefault("acute_risk_status", safety_case_status[safety_case])
+                self._by_query.setdefault(
+                    scenario.synthetic_inputs[0],
+                    _interpretation(required, scenario.language),
+                )
+        self.interpreter_calls = 0
+        self.selector_calls = 0
+        self.formulator_calls = 0
+
+    async def interpret_query(self, *, query: str, **_kwargs: Any) -> QueryInterpretation:
+        self.interpreter_calls += 1
+        return self._by_query.get(query) or _interpretation({}, "de")
+
+    def context_fits(self, _evidence: Any) -> bool:
+        return True
+
+    async def select_candidates(self, *, decision: Any, **_kwargs: Any) -> CandidateSelectionResponse:
+        self.selector_calls += 1
+        ids = [item.offer_id for item in decision.selectable_candidates[:1]]
+        return CandidateSelectionResponse(
+            contract_version="1",
+            selection_status=SelectorSelectionStatus.SELECTED if ids else SelectorSelectionStatus.NO_SELECTION,
+            selected_ids=ids,
+        )
+
+    async def formulate_answer(self, *, evidence: Any, **_kwargs: Any) -> ProviderAnswer:
+        self.formulator_calls += 1
+        return ProviderAnswer(
+            answer="Getestete, geerdete Antwort.",
+            card_ids=[offer.offer_id for offer in evidence.selected_offers],
+            sentence_count=1,
+            answer_type=evidence.answer_type,
+        )
+
+
+def test_end_to_end_runner_executes_real_pipeline_without_touching_application_runtime(tmp_path: Path) -> None:
+    settings = _settings(tmp_path)
+    plan = load_live_scenario_catalog().plan(EvaluationStage.END_TO_END)
+
+    result = asyncio.run(
+        run_end_to_end_live_gate(settings, plan.live_limits, provider_factory=FakeFullPipelineProvider)
+    )
+
+    assert result["status"] in {"completed", "aborted"}
+    assert result["counts"]["requests"] >= 27
+    assert result["next_stage_started"] is False
+    assert not (settings.runtime_dir / "sessions.json").exists()
+    assert not (settings.runtime_dir / "logs").exists()
+    report = settings.runtime_dir / result["report_directory"]
+    assert (report / "summary.json").is_file()
+
+
+def test_stability_runner_executes_eighteen_single_turn_repetitions(tmp_path: Path) -> None:
+    settings = _settings(tmp_path)
+    plan = load_live_scenario_catalog().plan(EvaluationStage.STABILITY)
+
+    result = asyncio.run(
+        run_stability_live_gate(settings, plan.live_limits, provider_factory=FakeFullPipelineProvider)
+    )
+
+    assert result["status"] == "completed"
+    assert result["counts"]["requests"] == 18
+    assert len(result["response_type_stable_per_scenario"]) == 6
+    assert not (settings.runtime_dir / "sessions.json").exists()
+
+
+def test_e2e_and_stability_runners_abort_on_provider_identity_mismatch(tmp_path: Path) -> None:
+    settings = _settings(tmp_path)
+    plan = load_live_scenario_catalog().plan(EvaluationStage.END_TO_END)
+
+    result = asyncio.run(
+        run_end_to_end_live_gate(
+            settings,
+            plan.live_limits,
+            provider_factory=lambda configured: FakeFullPipelineProvider(
+                _settings(tmp_path, model="different-model")
+            ),
+        )
+    )
+
+    assert result["status"] == "aborted"
+    assert result["abort_reason"] == "live_evaluation_provider_identity_mismatch"
+    assert result["counts"]["requests"] == 0

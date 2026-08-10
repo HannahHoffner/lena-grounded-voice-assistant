@@ -2,10 +2,10 @@
 
 ## Status
 
-- State: Complete (Root Cause 1 & 2); Residualverhalten dokumentiert, nicht behoben
+- State: Complete (Root Cause 1 & 2); Residualverhalten durch Retry gemildert (siehe Nachtrag), nicht vollständig behebbar
 - Owner: Claude
 - Created: 2026-08-05
-- Last updated: 2026-08-05
+- Last updated: 2026-08-07
 
 ## Befund
 
@@ -151,3 +151,57 @@ gegengetestet und schlug in der Stichprobe sogar häufiger fehl, vermutlich
 Timeout-bedingt bei 90s-Zeitlimit) oder (b) eine bewusste Lockerung der
 Grounding-Strenge reduzieren; beides sind fachliche Entscheidungen, keine
 Bugs.
+
+## Nachtrag (2026-08-07) — Ein Retry-Versuch bei Grounding-Fehlschlag
+
+**Befund**: Live-Rückmeldung, dass der Fallback-Satz weiterhin regelmäßig
+auftritt. Das oben beschriebene Residualverhalten (Modell zitiert
+gelegentlich einen Fakt ohne die zugehörige `fact_id`) ist laut
+Reproduktionslauf eine **einzelne Stichprobenschwäche**, kein struktureller
+Fehler — der atomare Grounding-Validator (`validate_formulation()`) verwarf
+bislang aber schon beim ersten Fehlschlag die gesamte Antwort, ohne es mit
+einer zweiten, frischen Stichprobe erneut zu versuchen.
+
+**Fix**: `QueryService._call_formulator()` (`app/service.py`) kapselt jetzt
+den Formulator-Aufruf für alle drei Aufrufer (`_formulate_or_fallback`,
+`_drinking_water_response`, `_public_toilet_response`) und wiederholt ihn
+bis zu `FORMULATOR_MAX_ATTEMPTS = 2`-mal (Erstversuch + ein Retry), sobald
+`FormulatorError` einen **Grounding-/Parsing-Code** trägt (z. B.
+`formulator_ungrounded_claim`, `formulator_invalid_fact`,
+`formulator_contract_violation`, `formulator_invalid_json`,
+`formulator_schema_error`, `formulator_invalid_card`,
+`formulator_invalid_language`).
+
+Bewusst **nicht** wiederholt werden `formulator_timeout` und
+`formulator_http_error` (`_FORMULATOR_NON_RETRYABLE_ERRORS`): das sind
+Transportfehler, kein Stichprobenproblem — ein zweiter Versuch würde nur
+das ohnehin geteilte, knappe `LLMRequestBudget` für ein ebenso
+wahrscheinliches zweites Scheitern verbrauchen. Diese Unterscheidung wurde
+erst nach einem ersten (zu weiten) Wurf ergänzt: die Vollsuite deckte sofort
+auf, dass `test_formulator_timeout_uses_existing_template_fallback` einen
+vierten Call statt der erwarteten drei sah, weil ein simulierter Hänger
+(`asyncio.sleep(60)`, durch das Zeitbudget als `formulator_timeout`
+abgebrochen) fälschlich erneut versucht wurde.
+
+`LLMBudgetExhausted` aus `budget.begin()` wird weiterhin nicht abgefangen —
+ist die Zeit aufgebraucht, erreicht das den jeweiligen Aufrufer unverändert
+direkt, ein Retry würde ohnehin sofort mit demselben Fehler scheitern.
+
+**Verifikation**: Neue Regressionstests in `tests/test_api.py`:
+- `test_formulator_retries_once_after_grounding_failure_then_succeeds` —
+  erster Versuch wirft `formulator_ungrounded_claim`, zweiter liefert eine
+  gültige Antwort; erwartet `provider == "blablador"` und genau 2 Aufrufe.
+- `test_formulator_falls_back_to_template_after_repeated_grounding_failures`
+  — beide Versuche scheitern; erwartet `provider == "template"` und genau 2
+  (nicht mehr) Aufrufe, um eine unbeschränkte Retry-Schleife auszuschließen.
+
+Volle Testsuite: grün.
+
+**Grenzen**: Das ist eine Milderung, keine vollständige Behebung — bei
+knappem Restbudget (z. B. wenn Interpreter/Selektor bereits viel Zeit
+verbraucht haben) bleibt für den Retry ggf. keine Zeit mehr
+(`budget.begin()` wirft dann `LLMBudgetExhausted`, identisch zum
+Verhalten vor diesem Fix). Die verbleibende Restrate an Fallbacks durch
+grundsätzlich fehlende Zitierdisziplin ist weiterhin nur durch (a) ein
+leistungsfähigeres Modell oder (b) eine bewusste Lockerung der
+Grounding-Strenge reduzierbar (siehe „Offen" oben, unverändert gültig).

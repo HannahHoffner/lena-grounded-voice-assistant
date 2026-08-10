@@ -20,7 +20,12 @@ from .interpreter import INTERPRETER_CONTRACT_VERSION, INTERPRETER_PROMPT_VERSIO
 from .kb_loader import load_active_knowledge_base
 from .live_evaluation import EvaluationStage, LiveRunLimits, require_live_authorization
 from .live_evaluation_plan import build_live_dry_run
-from .live_evaluation_runner import run_interpreter_live_gate
+from .live_evaluation_runner import (
+    run_end_to_end_live_gate,
+    run_interpreter_live_gate,
+    run_selector_formulator_live_gate,
+    run_stability_live_gate,
+)
 from .llm_selection import SELECTOR_CONTRACT_VERSION, SELECTOR_PROMPT_VERSION
 from .models import Language
 from .resources import packaged_bootstrap_data_root
@@ -233,7 +238,13 @@ def main() -> None:
             raise SystemExit("live_smoke_model_identifier_mismatch")
         if urlsplit(settings.blablador_base_url or "").hostname != args.expected_provider_domain:
             raise SystemExit("live_smoke_provider_domain_mismatch")
-        result = asyncio.run(run_interpreter_live_gate(settings, limits))
+        runner = {
+            EvaluationStage.INTERPRETER: run_interpreter_live_gate,
+            EvaluationStage.SELECTOR_FORMULATOR: run_selector_formulator_live_gate,
+            EvaluationStage.END_TO_END: run_end_to_end_live_gate,
+            EvaluationStage.STABILITY: run_stability_live_gate,
+        }[stage]
+        result = asyncio.run(runner(settings, limits))
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return
     settings = load_settings()

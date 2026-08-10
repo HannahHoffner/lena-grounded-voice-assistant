@@ -22,7 +22,9 @@ LIVE_SCENARIO_CATALOG_VERSION = "1"
 LIVE_SMOKE_ENVIRONMENT_FLAG = "LENA_ALLOW_LIVE_SMOKE"
 LIVE_REPORT_SUBDIRECTORY = Path("live-evaluations")
 RUN_ID_RE = re.compile(r"^run_[0-9a-f]{32}$")
-EXECUTABLE_LIVE_STAGES = frozenset({"interpreter"})
+EXECUTABLE_LIVE_STAGES = frozenset(
+    {"interpreter", "selector-formulator", "end-to-end", "stability"}
+)
 
 
 class StrictModel(BaseModel):

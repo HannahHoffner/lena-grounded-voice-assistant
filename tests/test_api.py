@@ -20,6 +20,7 @@ from app.formulation import (
     FormulatorError,
     build_formulator_evidence,
 )
+from app.i18n import localize_offer_card
 from app.interpreter import (
     INTERPRETER_PROMPT_VERSION,
     AcuteRiskStatus,
@@ -684,6 +685,143 @@ def test_interpreter_then_candidate_selector_formulates_from_curated_records() -
     assert all(item.candidate_role in {"direct_service", "referral_contact"} for item in evidence.selected_offers)
     assert [item.offer_id for item in evidence.selected_offers] == captured["answer_ids"]
     assert captured["interpreter_history"] == []
+
+
+def test_map_destinations_not_cited_in_the_answer_are_still_localized() -> None:
+    """`map_data.destinations` is intentionally uncapped and wider than the
+
+    (<=4) offers the answer actually cites in `response.cards` -- a user
+    reported that tiles for offers *not* mentioned in the answer kept showing
+    raw German content in a non-German session, because the localization
+    patch in `QueryService.query()` used to only cover `response.cards`.
+    """
+    app = create_app(settings())
+
+    class FakeProvider:
+        def context_fits(self, offers) -> bool:
+            return True
+
+        async def interpret_query(self, **kwargs) -> QueryInterpretation:
+            return _interpretation(Need.ADVICE)
+
+        async def select_candidates(self, **kwargs) -> CandidateSelectionResponse:
+            # Only cite one candidate -- the others remain in map_data.destinations
+            # (built from the full candidate list) without ever appearing in cards.
+            return CandidateSelectionResponse(
+                contract_version="1",
+                selection_status="selected",
+                selected_ids=[kwargs["decision"].selectable_candidates[0].offer_id],
+            )
+
+        async def formulate_answer(self, **kwargs) -> ProviderAnswer:
+            evidence = kwargs["evidence"]
+            return ProviderAnswer(
+                answer="Found it.",
+                card_ids=[evidence.selected_offers[0].offer_id],
+                answer_type=evidence.answer_type,
+            )
+
+    app.state.service.blablador = FakeProvider()
+
+    body = TestClient(app).post(
+        "/api/query", json={"query": "A detailed but indirect Leipzig support question", "language": "en", "category": None}
+    ).json()
+
+    cited_ids = {card["id"] for card in body["cards"]}
+    destinations = body["map_data"]["destinations"]
+    assert len(destinations) > len(cited_ids), "test needs at least one uncited destination to be meaningful"
+
+    kb_by_id = app.state.service.kb.by_id()
+    for destination in destinations:
+        if destination["id"] in cited_ids:
+            continue
+        offer = kb_by_id[destination["id"]]
+        expected = localize_offer_card(
+            offer, Language.EN, app.state.service.translation_catalog, app.state.service.translation_policy
+        )
+        assert destination["description"] == expected.short_description
+        assert destination["description"] != offer.short_description, (
+            f"offer {offer.id} has no EN translation fixture to distinguish localized from raw -- pick another id"
+        )
+
+
+def test_formulator_retries_once_after_grounding_failure_then_succeeds() -> None:
+    """A single bad sample (contract violation, ungrounded claim, ...) must not
+    fall back to the static template if a second attempt would have cited its
+    facts correctly -- see FORMULATOR_MAX_ATTEMPTS in app/service.py.
+    """
+    app = create_app(settings())
+    attempts: list[int] = []
+
+    class FlakyProvider:
+        def context_fits(self, offers) -> bool:
+            return True
+
+        async def interpret_query(self, **kwargs) -> QueryInterpretation:
+            return _interpretation(Need.ADVICE)
+
+        async def select_candidates(self, **kwargs) -> CandidateSelectionResponse:
+            return CandidateSelectionResponse(
+                contract_version="1",
+                selection_status="selected",
+                selected_ids=[kwargs["decision"].selectable_candidates[0].offer_id],
+            )
+
+        async def formulate_answer(self, **kwargs) -> ProviderAnswer:
+            attempts.append(len(attempts) + 1)
+            if len(attempts) == 1:
+                raise FormulatorError("formulator_ungrounded_claim")
+            evidence = kwargs["evidence"]
+            return ProviderAnswer(
+                answer="Found it on the second try.",
+                card_ids=[evidence.selected_offers[0].offer_id],
+                answer_type=evidence.answer_type,
+            )
+
+    app.state.service.blablador = FlakyProvider()
+
+    body = TestClient(app).post(
+        "/api/query", json={"query": "A detailed but indirect Leipzig support question", "language": "en", "category": None}
+    ).json()
+
+    assert attempts == [1, 2]
+    assert body["provider"] == "blablador"
+    assert body["answer"] == "Found it on the second try."
+
+
+def test_formulator_falls_back_to_template_after_repeated_grounding_failures() -> None:
+    """The retry is bounded -- a persistently non-compliant model must still
+    fall back to the safe template rather than retry indefinitely.
+    """
+    app = create_app(settings())
+    attempts: list[int] = []
+
+    class AlwaysFlakyProvider:
+        def context_fits(self, offers) -> bool:
+            return True
+
+        async def interpret_query(self, **kwargs) -> QueryInterpretation:
+            return _interpretation(Need.ADVICE)
+
+        async def select_candidates(self, **kwargs) -> CandidateSelectionResponse:
+            return CandidateSelectionResponse(
+                contract_version="1",
+                selection_status="selected",
+                selected_ids=[kwargs["decision"].selectable_candidates[0].offer_id],
+            )
+
+        async def formulate_answer(self, **kwargs) -> ProviderAnswer:
+            attempts.append(len(attempts) + 1)
+            raise FormulatorError("formulator_ungrounded_claim")
+
+    app.state.service.blablador = AlwaysFlakyProvider()
+
+    body = TestClient(app).post(
+        "/api/query", json={"query": "A detailed but indirect Leipzig support question", "language": "en", "category": None}
+    ).json()
+
+    assert attempts == [1, 2]
+    assert body["provider"] == "template"
 
 
 def test_structured_dialog_follow_up_excludes_natural_language_session_turns() -> None:

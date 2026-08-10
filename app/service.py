@@ -98,6 +98,19 @@ from .translation_contract import TranslationRuntimePolicy
 
 LOGGER = logging.getLogger(__name__)
 
+# A `FormulatorError` (contract violation, ungrounded claim, ...) is usually a
+# single sampling weakness of the model, not a structural fault -- see
+# docs/exec-plans/fix-formulator-fallback-sie-and-menschen-collision.md. One
+# retry with a fresh sample clears a meaningful share of these without
+# loosening the citation requirement itself. 2 = the original attempt plus one
+# retry.
+FORMULATOR_MAX_ATTEMPTS = 2
+
+# Transport-level failures, not sampling weaknesses -- retrying buys nothing
+# (a timeout is likely to time out again) and only spends the shared LLM
+# request budget that another stage may still need.
+_FORMULATOR_NON_RETRYABLE_ERRORS = frozenset({"formulator_timeout", "formulator_http_error"})
+
 
 def _fallback_text(language: Language, key: str, **values: str) -> str:
     try:
@@ -454,13 +467,32 @@ class QueryService:
         response = outcome.response
         if next_dialog:
             response.clarification = clarification_block(next_dialog, payload.language)
-        selected_offers = [self.kb.by_id()[card.id] for card in response.cards if card.id in self.kb.by_id()]
+        kb_by_id = self.kb.by_id()
+        selected_offers = [kb_by_id[card.id] for card in response.cards if card.id in kb_by_id]
         map_data = response.map_data or build_map_data(selected_offers, language=payload.language, origin=self.hbf_origin)
         if map_data:
-            localized_cards = {card.id: card for card in response.cards}
+            # `build_map_data()`/`offer_stand_destinations()` (app/maps.py) build every
+            # destination straight from the (German) `OfferRecord` -- that module has no
+            # translation catalog, deliberately, to keep it pure geometry/offer-data. This
+            # is the one place with both the full destination list (map_data is
+            # intentionally uncapped, unlike the ~4 answer-citation `response.cards`) and
+            # the translation catalog, so it re-localizes every destination that's backed
+            # by a KB offer. Non-offer destinations (public toilets, drinking fountains)
+            # aren't in `kb_by_id` and are already localized at their own source.
             for destination in map_data.destinations:
-                card = localized_cards.get(destination.id)
-                if card and getattr(card, "record_type", "social_offer") == "social_offer":
+                base_id, _, stand_suffix = destination.id.partition(":")
+                offer = kb_by_id.get(base_id)
+                if offer is None:
+                    continue
+                card = _card(offer, payload.language, self.translation_catalog, self.translation_policy)
+                if stand_suffix:
+                    # A stand destination (e.g. "<id>:hbf-west") carries a hand-authored
+                    # label/address/description/opening_hours for that one stand location
+                    # (see offer_stand_destinations()) -- only the fields it otherwise
+                    # inherits unchanged from the offer get localized here.
+                    destination.services = card.services
+                    destination.notes = card.notes
+                else:
                     destination.label = card.name
                     destination.description = card.short_description
                     destination.phone_numbers = card.phone_numbers
@@ -1121,6 +1153,54 @@ class QueryService:
             visible_question=visible_question,
         )
 
+    async def _call_formulator(
+        self,
+        formulator_method,
+        *,
+        evidence,
+        budget: LLMRequestBudget,
+        interaction: QueryInteraction,
+    ) -> ProviderAnswer:
+        """Ruft den Formulator auf und wiederholt einmal bei einem Grounding-Fehlschlag.
+
+        Jeder der drei Formulator-Aufrufer (`_formulate_or_fallback`,
+        `_drinking_water_response`, `_public_toilet_response`) ruft diese eine
+        Stelle statt eigener Retry-Logik auf, siehe `FORMULATOR_MAX_ATTEMPTS`.
+
+        Nur Fehler, bei denen eine frische Stichprobe realistisch anders
+        ausfallen kann (Grounding-/Parsing-Verstöße), lösen einen zweiten
+        Versuch aus. `formulator_timeout`/`formulator_http_error` sind
+        Transportfehler, kein Stichprobenproblem -- ein Retry würde dort nur
+        das ohnehin knappe Zeitbudget für ein zweites, ebenso wahrscheinliches
+        Scheitern verbrauchen (siehe
+        `test_formulator_timeout_uses_existing_template_fallback`).
+        `LLMBudgetExhausted` aus `budget.begin()` wird bewusst nicht
+        abgefangen: ist die Zeit aufgebraucht, ist ein weiterer Versuch
+        ohnehin sinnlos und soll den Aufrufer wie bisher direkt erreichen.
+        """
+        for attempt in range(FORMULATOR_MAX_ATTEMPTS):
+            allocation = budget.begin(self.settings.llm_formulator_timeout_seconds)
+            interaction.formulator_used = True
+            try:
+                result: ProviderAnswer = await formulator_method(
+                    evidence=evidence,
+                    timeout_seconds=allocation.timeout_seconds,
+                )
+            except FormulatorError as exc:
+                interaction.formulator_error_code = exc.code
+                retryable = exc.code not in _FORMULATOR_NON_RETRYABLE_ERRORS
+                if retryable and attempt + 1 < FORMULATOR_MAX_ATTEMPTS:
+                    LOGGER.warning(
+                        "query.formulation.retry",
+                        extra={"error_code": exc.code, "attempt": attempt + 1},
+                    )
+                    continue
+                raise
+            finally:
+                budget.finish(allocation)
+            return result
+        raise AssertionError("unreachable: the loop above always returns or raises")
+
     async def _formulate_or_fallback(
         self,
         *,
@@ -1173,15 +1253,9 @@ class QueryService:
             try:
                 if not self.blablador.context_fits(evidence):
                     raise FormulatorError("formulator_contract_violation")
-                allocation = budget.begin(self.settings.llm_formulator_timeout_seconds)
-                interaction.formulator_used = True
-                try:
-                    result: ProviderAnswer = await formulator_method(
-                        evidence=evidence,
-                        timeout_seconds=allocation.timeout_seconds,
-                    )
-                finally:
-                    budget.finish(allocation)
+                result: ProviderAnswer = await self._call_formulator(
+                    formulator_method, evidence=evidence, budget=budget, interaction=interaction
+                )
                 interaction.formulator_sentence_count = result.sentence_count
                 by_id = {offer.id: offer for offer in offers}
                 return QueryResponse(
@@ -1308,15 +1382,9 @@ class QueryService:
                 )
                 if not self.blablador.context_fits(evidence):
                     raise FormulatorError("formulator_contract_violation")
-                allocation = budget.begin(self.settings.llm_formulator_timeout_seconds)
-                interaction.formulator_used = True
-                try:
-                    result: ProviderAnswer = await formulator_method(
-                        evidence=evidence,
-                        timeout_seconds=allocation.timeout_seconds,
-                    )
-                finally:
-                    budget.finish(allocation)
+                result: ProviderAnswer = await self._call_formulator(
+                    formulator_method, evidence=evidence, budget=budget, interaction=interaction
+                )
                 cards_by_id = {card.id: card for card in cards}
                 interaction.formulator_sentence_count = result.sentence_count
                 interaction.formulator_offer_count = len(result.card_ids)
@@ -1439,15 +1507,9 @@ class QueryService:
                 )
                 if not self.blablador.context_fits(evidence):
                     raise FormulatorError("formulator_contract_violation")
-                allocation = budget.begin(self.settings.llm_formulator_timeout_seconds)
-                interaction.formulator_used = True
-                try:
-                    result: ProviderAnswer = await formulator_method(
-                        evidence=evidence,
-                        timeout_seconds=allocation.timeout_seconds,
-                    )
-                finally:
-                    budget.finish(allocation)
+                result: ProviderAnswer = await self._call_formulator(
+                    formulator_method, evidence=evidence, budget=budget, interaction=interaction
+                )
                 by_id = {card.id: card for card in cards}
                 interaction.formulator_sentence_count = result.sentence_count
                 interaction.formulator_offer_count = len(result.card_ids)
