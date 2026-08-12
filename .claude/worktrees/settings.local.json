@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(python -m app.multilingual_review live-smoke*)",
-      "Bash(LENA_ALLOW_LIVE_SMOKE=true python -m app.multilingual_review live-smoke*)"
-    ]
-  }
-}
