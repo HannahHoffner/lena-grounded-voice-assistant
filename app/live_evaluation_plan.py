@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import math
 import os
+import subprocess
 from collections.abc import Mapping
 from datetime import UTC, datetime
 from pathlib import Path
@@ -47,6 +48,49 @@ from .llm_selection import (
 from .policy_facts import EMERGENCY_POLICY
 from .resources import checkout_root, packaged_bootstrap_data_root
 from .safety import SAFETY_POLICY_VERSION
+from .version import software_version
+
+
+class GitState(StrictModel):
+    commit: str
+    dirty: bool
+
+
+def collect_git_state(root: Path | None = None) -> GitState:
+    """Ermittelt Commit und Dirty-Status per ``git``, isoliert vom Anwendungsstart.
+
+    Wird ausschließlich von der Live-Evaluations-Vorbereitung aufgerufen (nicht
+    von ``config.py``/``main.py`` und nicht von Pytest-Fixtures für den
+    regulären Anfragepfad). Ein Evaluationslauf auf einem Stand, dessen Commit
+    nicht zweifelsfrei feststeht, ist nicht reproduzierbar; bei fehlendem
+    ``git``, fehlendem Repository, Zeitüberschreitung oder sonstigem Fehler wird
+    deshalb ``dirty=True`` mit einem sprechenden Platzhalter-Commit erzwungen,
+    statt einen unverifizierten Stand stillschweigend als sauber auszugeben.
+    """
+    app_root = root or checkout_root() or Path.cwd()
+    try:
+        commit_result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=app_root,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=True,
+        )
+        status_result = subprocess.run(
+            ["git", "status", "--porcelain"],
+            cwd=app_root,
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=True,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return GitState(commit="git_unavailable", dirty=True)
+    commit = commit_result.stdout.strip()
+    if not commit:
+        return GitState(commit="git_unavailable", dirty=True)
+    return GitState(commit=commit, dirty=bool(status_result.stdout.strip()))
 
 
 class RedactedLiveConfiguration(StrictModel):
@@ -279,6 +323,7 @@ def build_run_manifest(
     settings: Settings,
     kb: KnowledgeBase,
     limits: LiveRunLimits,
+    git_state: GitState,
 ) -> dict[str, Any]:
     releases = _release_inventory(kb)
     return {
@@ -288,7 +333,11 @@ def build_run_manifest(
         "synthetic_data_only": True,
         "synthetic_scenario_catalog_version": LIVE_SCENARIO_CATALOG_VERSION,
         "scenario_hash": live_scenario_hash(),
+        "git_commit": git_state.commit,
+        "git_dirty": git_state.dirty,
+        "software_version": software_version(),
         "provider_name": "blablador",
+        "provider_base_domain": urlsplit(settings.blablador_base_url or "").hostname,
         # "redacted_model_identifier" bleibt der gemeinsame Basiswert (Rückwärtskompatibilität
         # bestehender Reports). Für den tatsächlichen Identitätsabgleich sind ausschließlich die
         # drei Stufenwerte maßgeblich, da BlabladorProvider pro Stufe eigene Overrides sendet.

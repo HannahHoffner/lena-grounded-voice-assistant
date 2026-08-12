@@ -24,7 +24,7 @@ import app.version as version_module
 
 
 ROOT = Path(__file__).resolve().parents[1]
-EXPECTED_VERSION = "0.1.0"
+EXPECTED_VERSION = "0.2.0"
 BOOTSTRAP_FILES = {
     "app/resources/bootstrap/canonical/offers.json",
     "app/resources/bootstrap/curation/runtime_manifest.json",

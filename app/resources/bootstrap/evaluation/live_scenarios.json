@@ -95,11 +95,11 @@
       "stage":"end-to-end",
       "scenario_ids":["e_food_time","e_sleep_general","e_sleep_u27","e_sleep_woman_age","e_schoppi","e_mobile","e_toilet","e_water","e_advice","e_medical","e_general_help","e_hilfebus","e_out_of_scope","e_acute_detected","e_acute_uncertain","e_safety_nonacute","e_safety_historical","e_safety_denied","e_safety_metaphorical","e_safety_quoted","e_safety_other_person","e_safety_injection","e_interpreter_error","e_prompt_injection","e_language_switch","e_dialog_continuation","e_session_continuation"],
       "repetitions":1,
-      "request_count":33,
+      "request_count":34,
       "minimum_calls":{"interpreter":30,"selector":4,"formulator":10},
-      "maximum_calls":{"interpreter":33,"selector":33,"formulator":33},
-      "maximum_provider_wait_seconds":1485,
-      "live_limits":{"max_requests":33,"max_provider_calls":99,"max_interpreter_calls":33,"max_selector_calls":33,"max_formulator_calls":33,"max_total_runtime_seconds":1900,"max_failures":4}
+      "maximum_calls":{"interpreter":34,"selector":34,"formulator":34},
+      "maximum_provider_wait_seconds":1530,
+      "live_limits":{"max_requests":34,"max_provider_calls":102,"max_interpreter_calls":34,"max_selector_calls":34,"max_formulator_calls":34,"max_total_runtime_seconds":1960,"max_failures":4}
     },
     {
       "stage":"stability",

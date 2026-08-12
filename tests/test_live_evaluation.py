@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from pydantic import ValidationError
 
 from app.candidate_contract import CandidateRole
 from app.config import Settings
@@ -34,18 +35,24 @@ from app.live_evaluation import (
     EvaluationComponent,
     EvaluationStage,
     LiveRunLimits,
+    LiveScenario,
+    LiveScenarioCatalog,
+    ScenarioExpectation,
     live_scenario_hash,
     load_live_scenario_catalog,
     require_live_authorization,
 )
 from app.live_evaluation_plan import (
+    GitState,
     build_live_dry_run,
     build_run_manifest,
+    collect_git_state,
     load_redacted_live_configuration,
     provider_free_evaluation_settings,
     provider_payload_field_inventory,
 )
 from app.live_evaluation_runner import (
+    _evaluate_e2e,
     run_end_to_end_live_gate,
     run_interpreter_live_gate,
     run_selector_formulator_live_gate,
@@ -59,9 +66,12 @@ from app.live_evaluation_runtime import (
     EvaluationReportStore,
     new_run_id,
 )
-from app.models import Language
+from app.models import Language, QueryInteraction, QueryResponse
 from app.providers.llm import InterpreterError
 from app.resources import packaged_bootstrap_data_root
+
+
+_FIXED_GIT_STATE = GitState(commit="0" * 40, dirty=False)
 
 
 def _settings(
@@ -488,6 +498,7 @@ def test_manifest_is_reproducible_and_contains_no_secret(tmp_path: Path) -> None
         settings=settings,
         kb=kb,
         limits=plan.live_limits,
+        git_state=_FIXED_GIT_STATE,
     )
     serialized = json.dumps(manifest)
 
@@ -496,6 +507,10 @@ def test_manifest_is_reproducible_and_contains_no_secret(tmp_path: Path) -> None
     assert manifest["social_release_id"]
     assert manifest["toilet_release_id"]
     assert manifest["drinking_fountain_release_id"]
+    assert manifest["git_commit"] == "0" * 40
+    assert manifest["git_dirty"] is False
+    assert manifest["software_version"]
+    assert manifest["provider_base_domain"] == "provider.example"
     assert "super-secret-test-key" not in serialized
     assert "api_key" not in serialized.casefold()
 
@@ -518,6 +533,7 @@ def test_manifest_records_per_stage_model_identifiers_separately(tmp_path: Path)
         settings=settings,
         kb=kb,
         limits=plan.live_limits,
+        git_state=_FIXED_GIT_STATE,
     )
 
     assert manifest["redacted_model_identifier"] == "alias-large"
@@ -856,3 +872,146 @@ def test_e2e_and_stability_runners_abort_on_provider_identity_mismatch(tmp_path:
     assert result["status"] == "aborted"
     assert result["abort_reason"] == "live_evaluation_provider_identity_mismatch"
     assert result["counts"]["requests"] == 0
+
+
+def test_catalog_validator_rejects_request_count_inconsistent_with_synthetic_inputs() -> None:
+    """Regressionstest für den 34-vs-33-Befund (AP1): Ein Katalog, dessen
+
+    deklariertes Requestbudget einer Stufe nicht der tatsächlichen Summe der
+    ``synthetic_inputs`` ihrer Szenarien entspricht, darf gar nicht erst laden
+    -- unabhängig davon, welche konkrete Stufe oder Zahl betroffen ist.
+    """
+    catalog_data = load_live_scenario_catalog().model_dump(mode="json")
+    for stage in catalog_data["stages"]:
+        if stage["stage"] == "end-to-end":
+            stage["request_count"] = 33
+            stage["live_limits"]["max_requests"] = 33
+            stage["maximum_calls"] = {"interpreter": 33, "selector": 33, "formulator": 33}
+            stage["live_limits"]["max_interpreter_calls"] = 33
+            stage["live_limits"]["max_selector_calls"] = 33
+            stage["live_limits"]["max_formulator_calls"] = 33
+            stage["live_limits"]["max_provider_calls"] = 99
+
+    with pytest.raises(ValidationError, match="declares request_count=33"):
+        LiveScenarioCatalog.model_validate(catalog_data)
+
+
+def test_catalog_validator_accounts_for_stability_stage_truncating_to_first_turn() -> None:
+    """Die Stabilitätsstufe sendet je Ablauf nur den ersten Turn
+
+    (``run_stability_live_gate``); der Requestbudget-Check darf ein
+    mehrstufiges Szenario in dieser Stufe deshalb nicht mit seiner vollen
+    Turnzahl einrechnen. Der reale, unveränderte Katalog (in dem
+    ``e_acute_uncertain`` zwei Turns hat) muss weiterhin laden.
+    """
+    catalog = load_live_scenario_catalog()
+    stability_scenarios = catalog.scenarios_for(EvaluationStage.STABILITY)
+
+    assert any(len(item.synthetic_inputs) > 1 for item in stability_scenarios)
+    assert catalog.plan(EvaluationStage.STABILITY).request_count == 18
+
+
+def _acute_test_scenario(scenario_id: str, safety_case: str) -> LiveScenario:
+    return LiveScenario(
+        scenario_id=scenario_id,
+        component=EvaluationComponent.END_TO_END,
+        language="de",
+        synthetic_inputs=["Synthetische Testeingabe."],
+        fixture={"safety_case": safety_case},
+        expectation=ScenarioExpectation(
+            required={"response_type": "acute_risk", "safety_priority_valid": True},
+        ),
+    )
+
+
+def _minimal_response(*, answer_type: str) -> QueryResponse:
+    return QueryResponse(
+        answer="Testantwort.",
+        language=Language.DE,
+        provider="template",
+        status="ok",
+        answer_type=answer_type,
+        interaction=QueryInteraction(),
+    )
+
+
+def test_uncertain_clarification_is_not_penalized_as_content_mismatch() -> None:
+    """Regressionstest für den ``e_acute_uncertain``-Befund (AP1): Der
+
+    Klärungsdialog ist bei ``safety_case=uncertain`` die spezifikationsgemäße
+    Zielantwort (app/interpreter.py, Policy zu ``acute_risk_status=uncertain``),
+    keine Herabstufung, und darf deshalb keinen Content-Mismatch erzeugen.
+    """
+    scenario = _acute_test_scenario("t_uncertain_ok", "uncertain")
+    response = _minimal_response(answer_type="acute_risk_clarification")
+
+    metrics, mismatches, critical, unverified = _evaluate_e2e(scenario, response)
+
+    assert metrics["response_type"] is True
+    assert "acute_risk_immediate_stop" not in metrics
+    assert mismatches == []
+    assert critical is False
+    assert metrics["safety_priority_valid"] is True
+
+
+def test_acute_clarification_remains_a_visible_non_critical_downgrade() -> None:
+    """Für tatsächlich akute Fixture-Fälle bleibt der Klärungsdialog statt
+
+    Sofortstopp eine sichtbare, aber nicht kritische Herabstufung -- diese
+    Unterscheidung darf der Fix aus AP1 nicht verwischen.
+    """
+    scenario = _acute_test_scenario("t_acute_downgrade", "acute")
+    response = _minimal_response(answer_type="acute_risk_clarification")
+
+    metrics, mismatches, critical, unverified = _evaluate_e2e(scenario, response)
+
+    assert metrics["response_type"] is True
+    assert metrics["acute_risk_immediate_stop"] is False
+    assert mismatches == ["acute_risk_immediate_stop"]
+    assert critical is False
+
+
+def test_acute_case_without_any_safety_intercept_is_critical() -> None:
+    scenario = _acute_test_scenario("t_acute_missed", "acute")
+    response = _minimal_response(answer_type="grounded_result")
+
+    _metrics, _mismatches, critical, _unverified = _evaluate_e2e(scenario, response)
+
+    assert critical is True
+
+
+def test_collect_git_state_reads_real_repository_head() -> None:
+    state = collect_git_state()
+
+    assert state.commit == "git_unavailable" or len(state.commit) == 40
+    assert isinstance(state.dirty, bool)
+
+
+def test_runner_records_git_state_in_manifest_without_gating_on_it(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Der Runner selbst bleibt von Pytest getrennt: Er verwendet ``git_state``
+
+    ausschließlich zur Protokollierung im Manifest. Die harte Ablehnung eines
+    dirty Arbeitsbaums vor jedem realen Lauf sitzt bewusst eine Ebene höher, in
+    der CLI (``app/multilingual_review.py``, siehe ``tests/test_provider_isolation.py``),
+    damit White-Box-Tests mit Fake-Providern unabhängig vom tatsächlichen
+    Git-Status des Arbeitsbaums lauffähig bleiben.
+    """
+    settings = _settings(tmp_path)
+    plan = load_live_scenario_catalog().plan(EvaluationStage.INTERPRETER)
+    monkeypatch.setattr(
+        "app.live_evaluation_runner.collect_git_state",
+        lambda: GitState(commit="deadbeef" * 5, dirty=True),
+    )
+
+    result = asyncio.run(
+        run_interpreter_live_gate(settings, plan.live_limits, provider_factory=FakeInterpreterProvider)
+    )
+
+    assert result["status"] == "completed"
+    report = settings.runtime_dir / result["report_directory"]
+    manifest = json.loads((report / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["git_commit"] == "deadbeef" * 5
+    assert manifest["git_dirty"] is True

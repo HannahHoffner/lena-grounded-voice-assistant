@@ -186,6 +186,24 @@ class LiveScenarioCatalog(StrictModel):
             raise ValueError("end-to-end gate lacks the fixed safety evaluation matrix")
         if len(by_stage[EvaluationStage.STABILITY].scenario_ids) != 6:
             raise ValueError("stability gate requires six scenario flows")
+        for stage_plan in self.stages:
+            stage_items = [by_id[item] for item in stage_plan.scenario_ids]
+            if stage_plan.stage == EvaluationStage.STABILITY:
+                # run_stability_live_gate() sendet je Ablauf ausschließlich den
+                # ersten Turn (scenario.synthetic_inputs[:1]); nachgelagerte
+                # Turns eines mehrstufigen Szenarios zählen hier bewusst nicht mit.
+                declared_inputs = len(stage_items)
+            else:
+                declared_inputs = sum(len(item.synthetic_inputs) for item in stage_items)
+            actual_requests = declared_inputs * stage_plan.repetitions
+            if actual_requests != stage_plan.request_count:
+                raise ValueError(
+                    f"stage {stage_plan.stage.value} declares request_count="
+                    f"{stage_plan.request_count} but its scenarios require "
+                    f"{actual_requests} requests ({declared_inputs} synthetic "
+                    f"inputs x {stage_plan.repetitions} repetitions); catalog "
+                    "and stage plan must agree before any provider call"
+                )
         return self
 
     def plan(self, stage: EvaluationStage) -> EvaluationStagePlan:

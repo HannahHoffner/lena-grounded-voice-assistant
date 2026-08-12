@@ -13,6 +13,7 @@ import app.config as config
 import app.multilingual_review as multilingual_review
 from app.config import Settings
 from app.live_evaluation import EvaluationStage, load_live_scenario_catalog, require_live_authorization
+from app.live_evaluation_plan import GitState
 from app.providers.llm import BlabladorProvider
 
 
@@ -202,6 +203,7 @@ def test_live_smoke_rejects_changed_model_before_runner_or_provider(
     arguments[arguments.index("test-model")] = "different-model"
     monkeypatch.setattr(sys, "argv", arguments)
     monkeypatch.setenv("LENA_ALLOW_LIVE_SMOKE", "true")
+    monkeypatch.setattr(multilingual_review, "collect_git_state", lambda: GitState(commit="0" * 40, dirty=False))
     monkeypatch.setattr(multilingual_review, "load_settings", lambda: _provider_settings(tmp_path))
     monkeypatch.setattr(
         multilingual_review,
@@ -226,6 +228,7 @@ def test_live_smoke_rejects_when_only_one_stage_model_diverges(
     arguments = _live_arguments(confirm=True)
     monkeypatch.setattr(sys, "argv", arguments)
     monkeypatch.setenv("LENA_ALLOW_LIVE_SMOKE", "true")
+    monkeypatch.setattr(multilingual_review, "collect_git_state", lambda: GitState(commit="0" * 40, dirty=False))
     monkeypatch.setattr(
         multilingual_review,
         "load_settings",
@@ -241,6 +244,37 @@ def test_live_smoke_rejects_when_only_one_stage_model_diverges(
         multilingual_review.main()
 
 
+def test_live_smoke_rejects_dirty_worktree_before_settings_or_runner(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """AP1-Invariante: Ein Lauf auf einem nicht committeten Stand ist nicht
+
+    reproduzierbar und muss vor jeder Settings-/Providerinitialisierung
+    abgelehnt werden (siehe app/live_evaluation_plan.py::collect_git_state).
+    """
+    arguments = _live_arguments(confirm=True)
+    monkeypatch.setattr(sys, "argv", arguments)
+    monkeypatch.setenv("LENA_ALLOW_LIVE_SMOKE", "true")
+    monkeypatch.setattr(
+        multilingual_review,
+        "collect_git_state",
+        lambda: GitState(commit="f" * 40, dirty=True),
+    )
+    monkeypatch.setattr(
+        multilingual_review,
+        "load_settings",
+        lambda: (_ for _ in ()).throw(AssertionError("settings_must_not_load")),
+    )
+    monkeypatch.setattr(
+        multilingual_review,
+        "run_interpreter_live_gate",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("runner_must_not_start")),
+    )
+
+    with pytest.raises(SystemExit, match="dirty_worktree"):
+        multilingual_review.main()
+
+
 def test_live_smoke_rejects_changed_provider_domain_before_runner(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -249,6 +283,7 @@ def test_live_smoke_rejects_changed_provider_domain_before_runner(
     arguments[arguments.index("provider.example")] = "unexpected.example"
     monkeypatch.setattr(sys, "argv", arguments)
     monkeypatch.setenv("LENA_ALLOW_LIVE_SMOKE", "true")
+    monkeypatch.setattr(multilingual_review, "collect_git_state", lambda: GitState(commit="0" * 40, dirty=False))
     monkeypatch.setattr(multilingual_review, "load_settings", lambda: _provider_settings(tmp_path))
     monkeypatch.setattr(
         multilingual_review,

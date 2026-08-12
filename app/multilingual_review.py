@@ -19,7 +19,7 @@ from .i18n import write_json
 from .interpreter import INTERPRETER_CONTRACT_VERSION, INTERPRETER_PROMPT_VERSION, Need
 from .kb_loader import load_active_knowledge_base
 from .live_evaluation import EvaluationStage, LiveRunLimits, require_live_authorization
-from .live_evaluation_plan import build_live_dry_run
+from .live_evaluation_plan import build_live_dry_run, collect_git_state
 from .live_evaluation_runner import (
     run_end_to_end_live_gate,
     run_interpreter_live_gate,
@@ -226,6 +226,13 @@ def main() -> None:
         stage = EvaluationStage(args.stage)
         limits = _limits(args)
         require_live_authorization(confirm_live=args.confirm_live, stage=stage, limits=limits)
+        # Ein Lauf auf einem nicht committeten Stand ist nicht reproduzierbar
+        # (siehe AP1/Thesis Abschnitt 5.9/6.7): Commit und Dirty-Status werden
+        # hier geprüft, bevor Settings oder ein Provider initialisiert werden,
+        # unabhängig davon, ob der Runner selbst (z. B. unter Pytest mit
+        # Test-Doubles) auf einem dirty Arbeitsbaum lauffähig bleiben muss.
+        if collect_git_state().dirty:
+            raise SystemExit("live_smoke_dirty_worktree")
         print(json.dumps({
             "live_stage": stage.value,
             "expected_model": args.expected_model,
