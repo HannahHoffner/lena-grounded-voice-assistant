@@ -126,9 +126,17 @@ class BlabladorProvider:
         self.base_url = settings.blablador_base_url or ""
         self.api_key = settings.blablador_api_key or ""
         self.model = settings.blablador_model or ""
-        self.interpreter_model = settings.blablador_interpreter_model or self.model
-        self.selector_model = settings.blablador_selector_model or self.model
-        self.formulator_model = settings.blablador_formulator_model or self.model
+        self.interpreter_model = settings.effective_interpreter_model or ""
+        self.selector_model = settings.effective_selector_model or ""
+        self.formulator_model = settings.effective_formulator_model or ""
+        # Vom Provider je Stufe zuletzt zurückgemeldete Modellkennung (Antwortfeld
+        # "model"), nicht die gesendete Alias-Anfrage. None, solange die Stufe in
+        # dieser Providerinstanz noch keine erfolgreiche Antwort hatte.
+        self.last_confirmed_models: dict[str, str | None] = {
+            "interpreter": None,
+            "selector": None,
+            "formulator": None,
+        }
         self.timeout = settings.blablador_timeout_seconds
         self.interpreter_timeout = settings.llm_interpreter_timeout_seconds
         self.selector_timeout = settings.llm_selector_timeout_seconds
@@ -161,9 +169,13 @@ class BlabladorProvider:
         """Begrenzt einen asynchronen Provideraufruf auf eine Gesamtdauer."""
         try:
             async with asyncio.timeout(timeout_seconds):
-                return await self._post(payload)
+                response = await self._post(payload)
         except (TimeoutError, httpx.TimeoutException) as exc:
             raise ProviderTimeoutError(f"Blablador {stage} timed out") from exc
+        confirmed_model = response.get("model")
+        if isinstance(confirmed_model, str) and confirmed_model.strip():
+            self.last_confirmed_models[stage] = confirmed_model.strip()
+        return response
 
     async def interpret_query(
         self,

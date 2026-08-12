@@ -36,6 +36,7 @@ from .live_evaluation import (
     LiveRunLimits,
     LiveScenario,
     load_live_scenario_catalog,
+    redact_model_identifier,
 )
 from .live_evaluation_plan import build_run_manifest
 from .live_evaluation_runtime import (
@@ -112,12 +113,46 @@ def _error_metrics(code: str) -> dict[str, bool]:
     }
 
 
-def _provider_identity(provider: Any) -> tuple[str, str, str | None]:
+def _provider_identity(provider: Any) -> tuple[str, str, str, str, str | None]:
+    """Identität der drei tatsächlich gesendeten Stufenmodelle, nicht des gemeinsamen Basiswerts.
+
+    ``BlabladorProvider`` sendet pro Stufe ``interpreter_model``/``selector_model``/
+    ``formulator_model`` (siehe ``app/providers/llm.py``); nur deren Abgleich mit den
+    aus ``Settings`` erwarteten Stufenwerten (``_expected_identity``) erkennt eine
+    Konfigurationsänderung zuverlässig. Der frühere Abgleich allein über den
+    gemeinsamen ``model``-Basiswert übersah Abweichungen der Stufen-Overrides.
+    """
     return (
         str(getattr(provider, "name", "")),
-        str(getattr(provider, "model", "")),
+        str(getattr(provider, "interpreter_model", "")),
+        str(getattr(provider, "selector_model", "")),
+        str(getattr(provider, "formulator_model", "")),
         urlsplit(str(getattr(provider, "base_url", ""))).hostname,
     )
+
+
+def _expected_identity(settings: Settings) -> tuple[str, str, str, str, str | None]:
+    """Erwartete Identität aus denselben Stufen-Fallbacks wie ``BlabladorProvider``."""
+    return (
+        "blablador",
+        settings.effective_interpreter_model or "",
+        settings.effective_selector_model or "",
+        settings.effective_formulator_model or "",
+        urlsplit(settings.blablador_base_url or "").hostname,
+    )
+
+
+def _confirmed_model(provider: Any, component: str) -> str:
+    """Liest die vom Provider zuletzt für diese Stufe zurückgemeldete, redigierte Kennung.
+
+    Unterscheidet sich von ``_provider_identity``: Dort wird die *gesendete* Anfrage
+    geprüft (Konfigurationsabgleich), hier die vom Provider in der Antwort tatsächlich
+    *bestätigte* Modellkennung (Providerseitige Alias-Auflösung, siehe
+    ``BlabladorProvider.last_confirmed_models``).
+    """
+    confirmed = getattr(provider, "last_confirmed_models", None)
+    value = confirmed.get(component) if isinstance(confirmed, dict) else None
+    return redact_model_identifier(value) if value else "not_yet_confirmed"
 
 
 async def run_interpreter_live_gate(
@@ -147,7 +182,7 @@ async def run_interpreter_live_gate(
     )
     store.initialize(manifest)
     counter = AtomicRunCounter(limits, clock=clock)
-    expected_identity = ("blablador", settings.blablador_model or "", urlsplit(settings.blablador_base_url or "").hostname)
+    expected_identity = _expected_identity(settings)
     status = "completed"
     abort_reason: str | None = None
     content_mismatches = 0
@@ -190,6 +225,7 @@ async def run_interpreter_live_gate(
                     "technically_valid": True,
                     "linguistic_review_pending": True,
                     "duration_ms": round((clock() - started) * 1_000, 2),
+                    "confirmed_model_identifier": _confirmed_model(provider, "interpreter"),
                 }
                 store.append_result(result)
                 if critical:
@@ -206,6 +242,7 @@ async def run_interpreter_live_gate(
                     "technically_valid": False,
                     "linguistic_review_pending": True,
                     "duration_ms": round((clock() - started) * 1_000, 2),
+                    "confirmed_model_identifier": _confirmed_model(provider, "interpreter"),
                 })
                 store.append_error(scenario_id=scenario.scenario_id, code=exc.code)
                 counter.record_failure()
@@ -303,10 +340,6 @@ def _infer_need(offer: OfferRecord) -> Need:
     return Need.GENERAL_HELP
 
 
-def _provider_identity_of(provider: Any) -> tuple[str, str, str | None]:
-    return _provider_identity(provider)
-
-
 async def run_selector_formulator_live_gate(
     settings: Settings,
     limits: LiveRunLimits,
@@ -335,7 +368,7 @@ async def run_selector_formulator_live_gate(
     )
     store.initialize(manifest)
     counter = AtomicRunCounter(limits, clock=clock)
-    expected_identity = ("blablador", settings.blablador_model or "", urlsplit(settings.blablador_base_url or "").hostname)
+    expected_identity = _expected_identity(settings)
     status = "completed"
     abort_reason: str | None = None
     content_mismatches = 0
@@ -344,12 +377,12 @@ async def run_selector_formulator_live_gate(
 
     try:
         provider = provider_factory(settings)
-        if _provider_identity_of(provider) != expected_identity:
+        if _provider_identity(provider) != expected_identity:
             raise EvaluationLimitReached("live_evaluation_provider_identity_mismatch")
 
         for scenario in catalog.scenarios_for(EvaluationStage.SELECTOR_FORMULATOR):
             current_scenario_id = scenario.scenario_id
-            if _provider_identity_of(provider) != expected_identity:
+            if _provider_identity(provider) != expected_identity:
                 raise EvaluationLimitReached("live_evaluation_provider_identity_changed")
             counter.reserve_request()
             started = clock()
@@ -445,6 +478,7 @@ async def _run_selector_scenario(
             "critical_content_error": False,
             "technically_valid": False,
             "error_code": exc.code,
+            "confirmed_model_identifier": _confirmed_model(provider, "selector"),
         }
     selectable_ids = {item.offer_id for item in decision.selectable_candidates}
     ok = set(result.selected_ids) <= selectable_ids
@@ -455,6 +489,7 @@ async def _run_selector_scenario(
         "content_mismatches": [] if ok else ["selected_ids_from_candidates"],
         "critical_content_error": False,
         "technically_valid": True,
+        "confirmed_model_identifier": _confirmed_model(provider, "selector"),
     }
 
 
@@ -501,6 +536,7 @@ async def _run_formulator_scenario(
             "critical_content_error": False,
             "technically_valid": False,
             "error_code": exc.code,
+            "confirmed_model_identifier": _confirmed_model(provider, "formulator"),
         }
     return {
         **base,
@@ -514,6 +550,7 @@ async def _run_formulator_scenario(
         "content_mismatches": [],
         "critical_content_error": False,
         "technically_valid": True,
+        "confirmed_model_identifier": _confirmed_model(provider, "formulator"),
     }
 
 
@@ -635,6 +672,10 @@ async def _run_e2e_scenario(
     metrics, mismatches, critical, unverified = _evaluate_e2e(
         scenario, response, dialogue_opened_during_flow=dialogue_opened
     )
+    # Momentaufnahme nach Abschluss des Ablaufs, keine Zuordnung zu einem einzelnen Turn:
+    # QueryService.query() kann Interpreter, Selector und Formulator innerhalb eines Turns
+    # bündeln (siehe _record_component_calls), daher nur je Stufe der zuletzt bestätigte Wert.
+    provider = getattr(service, "blablador", None)
     return {
         "scenario_id": scenario.scenario_id,
         "component": "end_to_end",
@@ -648,6 +689,11 @@ async def _run_e2e_scenario(
         "technically_valid": True,
         "linguistic_review_pending": True,
         "duration_ms": round((clock() - started) * 1_000, 2),
+        "last_confirmed_model_identifiers": {
+            "interpreter": _confirmed_model(provider, "interpreter"),
+            "selector": _confirmed_model(provider, "selector"),
+            "formulator": _confirmed_model(provider, "formulator"),
+        },
     }
 
 
@@ -693,7 +739,7 @@ async def run_end_to_end_live_gate(
     )
     store.initialize(manifest)
     counter = AtomicRunCounter(limits, clock=clock)
-    expected_identity = ("blablador", settings.blablador_model or "", urlsplit(settings.blablador_base_url or "").hostname)
+    expected_identity = _expected_identity(settings)
     status = "completed"
     abort_reason: str | None = None
     content_mismatches = 0
@@ -703,11 +749,11 @@ async def run_end_to_end_live_gate(
     with tempfile.TemporaryDirectory(prefix="lena-live-eval-e2e-") as scratch:
         try:
             service, provider = await _build_isolated_service(settings, Path(scratch), provider_factory)
-            if _provider_identity_of(provider) != expected_identity:
+            if _provider_identity(provider) != expected_identity:
                 raise EvaluationLimitReached("live_evaluation_provider_identity_mismatch")
             for scenario in catalog.scenarios_for(EvaluationStage.END_TO_END):
                 current_scenario_id = scenario.scenario_id
-                if _provider_identity_of(provider) != expected_identity:
+                if _provider_identity(provider) != expected_identity:
                     raise EvaluationLimitReached("live_evaluation_provider_identity_changed")
                 result = await _run_e2e_scenario(scenario, service, counter, clock)
                 content_mismatches += bool(result["content_mismatches"])
@@ -778,7 +824,7 @@ async def run_stability_live_gate(
     )
     store.initialize(manifest)
     counter = AtomicRunCounter(limits, clock=clock)
-    expected_identity = ("blablador", settings.blablador_model or "", urlsplit(settings.blablador_base_url or "").hostname)
+    expected_identity = _expected_identity(settings)
     status = "completed"
     abort_reason: str | None = None
     content_mismatches = 0
@@ -790,14 +836,14 @@ async def run_stability_live_gate(
     with tempfile.TemporaryDirectory(prefix="lena-live-eval-stability-") as scratch:
         try:
             service, provider = await _build_isolated_service(settings, Path(scratch), provider_factory)
-            if _provider_identity_of(provider) != expected_identity:
+            if _provider_identity(provider) != expected_identity:
                 raise EvaluationLimitReached("live_evaluation_provider_identity_mismatch")
             for scenario_id in STABILITY_SCENARIO_IDS:
                 scenario = by_id[scenario_id]
                 single_turn_scenario = scenario.model_copy(update={"synthetic_inputs": scenario.synthetic_inputs[:1]})
                 for repetition in range(1, STABILITY_REPETITIONS + 1):
                     current_scenario_id = f"{scenario_id}#{repetition}"
-                    if _provider_identity_of(provider) != expected_identity:
+                    if _provider_identity(provider) != expected_identity:
                         raise EvaluationLimitReached("live_evaluation_provider_identity_changed")
                     result = await _run_e2e_scenario(single_turn_scenario, service, counter, clock)
                     result["repetition"] = repetition

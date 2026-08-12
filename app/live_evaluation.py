@@ -196,6 +196,16 @@ class LiveScenarioCatalog(StrictModel):
         return [by_id[item] for item in self.plan(stage).scenario_ids]
 
 
+def redact_model_identifier(value: str | None) -> str:
+    """Reduziert eine Modellkennung auf ein sicheres, kurzes Zeichenrepertoire.
+
+    Gemeinsam genutzt von der providerfreien Planvorschau, dem Run-Manifest
+    und der laufzeitseitigen Erfassung der vom Provider zurückgemeldeten
+    Modellkennung, damit alle drei Stellen identisch redigieren.
+    """
+    return re.sub(r"[^A-Za-z0-9._:/-]", "_", value or "not_configured")[:100] or "not_configured"
+
+
 def _catalog_path() -> Path:
     return packaged_bootstrap_data_root() / "evaluation" / "live_scenarios.json"
 

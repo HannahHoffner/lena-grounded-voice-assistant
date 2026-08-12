@@ -153,6 +153,21 @@ class Settings:
         )
 
     @property
+    def effective_interpreter_model(self) -> str | None:
+        """Modell, das ``BlabladorProvider`` für die Interpreterstufe tatsächlich sendet."""
+        return self.blablador_interpreter_model or self.blablador_model
+
+    @property
+    def effective_selector_model(self) -> str | None:
+        """Modell, das ``BlabladorProvider`` für die Selectorstufe tatsächlich sendet."""
+        return self.blablador_selector_model or self.blablador_model
+
+    @property
+    def effective_formulator_model(self) -> str | None:
+        """Modell, das ``BlabladorProvider`` für die Formulatorstufe tatsächlich sendet."""
+        return self.blablador_formulator_model or self.blablador_model
+
+    @property
     def speech_transcription_configured(self) -> bool:
         return bool(
             self.speech_transcription_base_url

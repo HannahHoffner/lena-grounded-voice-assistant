@@ -64,7 +64,14 @@ from app.providers.llm import InterpreterError
 from app.resources import packaged_bootstrap_data_root
 
 
-def _settings(tmp_path: Path, *, model: str = "test-model") -> Settings:
+def _settings(
+    tmp_path: Path,
+    *,
+    model: str = "test-model",
+    interpreter_model: str | None = None,
+    selector_model: str | None = None,
+    formulator_model: str | None = None,
+) -> Settings:
     bootstrap = packaged_bootstrap_data_root()
     return Settings(
         app_root=tmp_path,
@@ -75,6 +82,9 @@ def _settings(tmp_path: Path, *, model: str = "test-model") -> Settings:
         blablador_model=model,
         blablador_timeout_seconds=30,
         blablador_max_context_chars=50_000,
+        blablador_interpreter_model=interpreter_model,
+        blablador_selector_model=selector_model,
+        blablador_formulator_model=formulator_model,
         bootstrap_data_dir=bootstrap,
         data_dir=tmp_path / "data",
         runtime_dir=tmp_path / "runtime",
@@ -117,6 +127,9 @@ class FakeInterpreterProvider:
 
     def __init__(self, settings: Settings) -> None:
         self.model = settings.blablador_model
+        self.interpreter_model = settings.effective_interpreter_model
+        self.selector_model = settings.effective_selector_model
+        self.formulator_model = settings.effective_formulator_model
         self.base_url = settings.blablador_base_url
         self.by_query = {
             scenario.synthetic_inputs[0]: _interpretation(scenario.expectation.required, scenario.language)
@@ -192,12 +205,39 @@ def test_redacted_configuration_reads_only_allowed_non_secret_names(tmp_path: Pa
     serialized = result.model_dump_json()
 
     assert result.redacted_model_identifier == "alias-safe"
+    assert result.redacted_interpreter_model_identifier == "alias-safe"
+    assert result.redacted_selector_model_identifier == "alias-safe"
+    assert result.redacted_formulator_model_identifier == "alias-safe"
+    assert result.model_assignment == "shared_across_llm_stages"
     assert result.provider_base_domain == "provider.example"
     assert result.configured_timeouts["interpreter"] == 12
     assert "must-never-appear" not in serialized
     assert "private" not in serialized
     assert "hidden" not in serialized
     assert "api_key" not in serialized.casefold()
+
+
+def test_redacted_configuration_detects_per_stage_model_overrides(tmp_path: Path) -> None:
+    """Regressionstest für den WP9B-Reviewbefund: Die providerfreie Vorschau
+
+    (``live-dry-run``) muss Stufen-Overrides erkennen und ausweisen, statt wie
+    zuvor unabhängig davon immer ``shared_across_llm_stages`` zu melden.
+    """
+    (tmp_path / ".env").write_text("BLABLADOR_MODEL=alias-large\n", encoding="utf-8")
+    (tmp_path / ".env.local").write_text(
+        "BLABLADOR_INTERPRETER_MODEL=alias-fast\n"
+        "BLABLADOR_SELECTOR_MODEL=alias-fast\n"
+        "BLABLADOR_FORMULATOR_MODEL=alias-fast\n",
+        encoding="utf-8",
+    )
+
+    result = load_redacted_live_configuration(tmp_path, {})
+
+    assert result.redacted_model_identifier == "alias-large"
+    assert result.redacted_interpreter_model_identifier == "alias-fast"
+    assert result.redacted_selector_model_identifier == "alias-fast"
+    assert result.redacted_formulator_model_identifier == "alias-fast"
+    assert result.model_assignment == "per_stage_overrides"
 
 
 def test_dry_run_is_provider_free_read_only_and_inventories_all_runtime_sources(
@@ -460,6 +500,32 @@ def test_manifest_is_reproducible_and_contains_no_secret(tmp_path: Path) -> None
     assert "api_key" not in serialized.casefold()
 
 
+def test_manifest_records_per_stage_model_identifiers_separately(tmp_path: Path) -> None:
+    """Regressionstest für den WP9B-Reviewbefund: Das Manifest muss die drei
+
+    tatsächlich gesendeten Stufenmodelle einzeln ausweisen, nicht nur den
+    gemeinsamen Basiswert, damit ein Bericht wie ``run_2f1d4f2810c944aeafa9affd29b98927``
+    (Formulator lief auf ``alias-large``, obwohl die Anwendung ``alias-fast``
+    verwendet) beim Lesen sofort erkennbar wäre.
+    """
+    settings = _settings(tmp_path, model="alias-large", formulator_model="alias-fast")
+    kb = __import__("app.kb_loader", fromlist=["load_active_knowledge_base"]).load_active_knowledge_base(settings)
+    plan = load_live_scenario_catalog().plan(EvaluationStage.INTERPRETER)
+
+    manifest = build_run_manifest(
+        run_id=new_run_id(),
+        stage=EvaluationStage.INTERPRETER,
+        settings=settings,
+        kb=kb,
+        limits=plan.live_limits,
+    )
+
+    assert manifest["redacted_model_identifier"] == "alias-large"
+    assert manifest["redacted_interpreter_model_identifier"] == "alias-large"
+    assert manifest["redacted_selector_model_identifier"] == "alias-large"
+    assert manifest["redacted_formulator_model_identifier"] == "alias-fast"
+
+
 def test_interpreter_runner_executes_exactly_fifteen_calls_and_no_following_stage(tmp_path: Path) -> None:
     settings = _settings(tmp_path)
     plan = load_live_scenario_catalog().plan(EvaluationStage.INTERPRETER)
@@ -477,7 +543,11 @@ def test_interpreter_runner_executes_exactly_fifteen_calls_and_no_following_stag
     report = settings.runtime_dir / result["report_directory"]
     assert not (settings.runtime_dir / "sessions").exists()
     assert not (settings.runtime_dir / "logs").exists()
-    assert len((report / "stage-results.jsonl").read_text(encoding="utf-8").splitlines()) == 15
+    lines = (report / "stage-results.jsonl").read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 15
+    # FakeInterpreterProvider bestätigt keine Providerantwort, daher der explizite
+    # "noch nicht bestätigt"-Wert statt einer geratenen oder leeren Kennung.
+    assert all(json.loads(line)["confirmed_model_identifier"] == "not_yet_confirmed" for line in lines)
 
 
 def test_interpreter_runner_aborts_at_third_contract_failure(tmp_path: Path) -> None:
@@ -524,6 +594,32 @@ def test_provider_identity_mismatch_aborts_before_first_call(tmp_path: Path) -> 
             plan.live_limits,
             provider_factory=lambda configured: FakeInterpreterProvider(
                 _settings(tmp_path, model="different-model")
+            ),
+        )
+    )
+
+    assert result["status"] == "aborted"
+    assert result["abort_reason"] == "live_evaluation_provider_identity_mismatch"
+    assert result["counts"]["provider_calls"] == 0
+
+
+def test_provider_identity_mismatch_detects_per_stage_model_drift(tmp_path: Path) -> None:
+    """Regressionstest für den WP9B-Reviewbefund (Abschnitt 6.7 der Thesis):
+
+    Ein Abgleich nur über den gemeinsamen Basiswert (``settings.blablador_model``)
+    übersah eine abweichende Stufen-Override, solange der Basiswert gleich blieb —
+    genau der Fall, der die Live-Evaluation unbemerkt gegen ``alias-large`` statt
+    des tatsächlich per Stufen-Override konfigurierten ``alias-fast`` laufen ließ.
+    """
+    settings = _settings(tmp_path, interpreter_model="alias-fast")
+    plan = load_live_scenario_catalog().plan(EvaluationStage.INTERPRETER)
+
+    result = asyncio.run(
+        run_interpreter_live_gate(
+            settings,
+            plan.live_limits,
+            provider_factory=lambda configured: FakeInterpreterProvider(
+                _settings(tmp_path, interpreter_model="alias-large")
             ),
         )
     )
@@ -585,6 +681,9 @@ class FakeSelectorFormulatorProvider:
 
     def __init__(self, settings: Settings) -> None:
         self.model = settings.blablador_model
+        self.interpreter_model = settings.effective_interpreter_model
+        self.selector_model = settings.effective_selector_model
+        self.formulator_model = settings.effective_formulator_model
         self.base_url = settings.blablador_base_url
         self.selector_calls = 0
         self.formulator_calls = 0
@@ -653,6 +752,9 @@ class FakeFullPipelineProvider:
 
     def __init__(self, settings: Settings) -> None:
         self.model = settings.blablador_model
+        self.interpreter_model = settings.effective_interpreter_model
+        self.selector_model = settings.effective_selector_model
+        self.formulator_model = settings.effective_formulator_model
         self.base_url = settings.blablador_base_url
         self._by_query: dict[str, QueryInterpretation] = {}
         safety_case_status = {

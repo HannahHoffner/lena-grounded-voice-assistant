@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import math
 import os
-import re
 from collections.abc import Mapping
 from datetime import UTC, datetime
 from pathlib import Path
@@ -36,6 +35,7 @@ from .live_evaluation import (
     StrictModel,
     live_scenario_hash,
     load_live_scenario_catalog,
+    redact_model_identifier,
 )
 from .llm_selection import (
     SELECTOR_CONTRACT_VERSION,
@@ -53,7 +53,10 @@ class RedactedLiveConfiguration(StrictModel):
     provider_name: Literal["blablador", "template"]
     provider_base_domain: str | None
     redacted_model_identifier: str
-    model_assignment: Literal["shared_across_llm_stages"]
+    redacted_interpreter_model_identifier: str
+    redacted_selector_model_identifier: str
+    redacted_formulator_model_identifier: str
+    model_assignment: Literal["shared_across_llm_stages", "per_stage_overrides"]
     configured_timeouts: dict[str, float]
     global_budget_seconds: float
     temperature: Literal[0] = 0
@@ -63,6 +66,7 @@ class RedactedLiveConfiguration(StrictModel):
 
 _SAFE_CONFIG_NAMES = (
     "REWRITE_PROVIDER", "LENA_REWRITE_PROVIDER", "BLABLADOR_MODEL", "LENA_LLM_MODEL",
+    "BLABLADOR_INTERPRETER_MODEL", "BLABLADOR_SELECTOR_MODEL", "BLABLADOR_FORMULATOR_MODEL",
     "BLABLADOR_BASE_URL", "LENA_LLM_BASE_URL",
     "LLM_INTERPRETER_TIMEOUT_SECONDS", "LLM_SELECTOR_TIMEOUT_SECONDS",
     "LLM_FORMULATOR_TIMEOUT_SECONDS", "LLM_REQUEST_BUDGET_SECONDS",
@@ -105,7 +109,25 @@ def load_redacted_live_configuration(
     provider = (values.get("REWRITE_PROVIDER") or values.get("LENA_REWRITE_PROVIDER") or "template").casefold()
     provider = provider if provider in {"template", "blablador"} else "template"
     raw_model = values.get("BLABLADOR_MODEL") or values.get("LENA_LLM_MODEL") or "not_configured"
-    model = re.sub(r"[^A-Za-z0-9._:/-]", "_", raw_model)[:100] or "not_configured"
+    model = redact_model_identifier(raw_model)
+    # Stufen-Overrides folgen genau dem Fallback, den BlabladorProvider real anwendet
+    # (Settings.effective_interpreter_model/_selector_model/_formulator_model): eigener
+    # Wert, sonst der gemeinsame Basiswert. Ohne diesen Abgleich zeigte die Vorschau
+    # weiterhin "shared_across_llm_stages", obwohl die Anwendung längst Stufen-Overrides
+    # verwendet.
+    raw_interpreter_override = values.get("BLABLADOR_INTERPRETER_MODEL")
+    raw_selector_override = values.get("BLABLADOR_SELECTOR_MODEL")
+    raw_formulator_override = values.get("BLABLADOR_FORMULATOR_MODEL")
+    interpreter_model = redact_model_identifier(raw_interpreter_override or raw_model)
+    selector_model = redact_model_identifier(raw_selector_override or raw_model)
+    formulator_model = redact_model_identifier(raw_formulator_override or raw_model)
+    # Maßgeblich ist, ob überhaupt ein Stufen-Override konfiguriert ist, nicht ob die
+    # resultierenden Werte zufällig übereinstimmen (aktuell sind alle drei "alias-fast").
+    model_assignment = (
+        "per_stage_overrides"
+        if any((raw_interpreter_override, raw_selector_override, raw_formulator_override))
+        else "shared_across_llm_stages"
+    )
     raw_base_url = values.get("BLABLADOR_BASE_URL") or values.get("LENA_LLM_BASE_URL") or ""
     base_domain = urlsplit(raw_base_url).hostname
     try:
@@ -116,7 +138,10 @@ def load_redacted_live_configuration(
         provider_name=provider,
         provider_base_domain=base_domain,
         redacted_model_identifier=model,
-        model_assignment="shared_across_llm_stages",
+        redacted_interpreter_model_identifier=interpreter_model,
+        redacted_selector_model_identifier=selector_model,
+        redacted_formulator_model_identifier=formulator_model,
+        model_assignment=model_assignment,
         configured_timeouts={
             "interpreter": _safe_float(values, "LLM_INTERPRETER_TIMEOUT_SECONDS", 15.0),
             "selector": _safe_float(values, "LLM_SELECTOR_TIMEOUT_SECONDS", 10.0),
@@ -264,7 +289,13 @@ def build_run_manifest(
         "synthetic_scenario_catalog_version": LIVE_SCENARIO_CATALOG_VERSION,
         "scenario_hash": live_scenario_hash(),
         "provider_name": "blablador",
-        "redacted_model_identifier": re.sub(r"[^A-Za-z0-9._:/-]", "_", settings.blablador_model or "not_configured")[:100],
+        # "redacted_model_identifier" bleibt der gemeinsame Basiswert (Rückwärtskompatibilität
+        # bestehender Reports). Für den tatsächlichen Identitätsabgleich sind ausschließlich die
+        # drei Stufenwerte maßgeblich, da BlabladorProvider pro Stufe eigene Overrides sendet.
+        "redacted_model_identifier": redact_model_identifier(settings.blablador_model),
+        "redacted_interpreter_model_identifier": redact_model_identifier(settings.effective_interpreter_model),
+        "redacted_selector_model_identifier": redact_model_identifier(settings.effective_selector_model),
+        "redacted_formulator_model_identifier": redact_model_identifier(settings.effective_formulator_model),
         "interpreter_contract_version": INTERPRETER_CONTRACT_VERSION,
         "interpreter_prompt_version": INTERPRETER_PROMPT_VERSION,
         "selector_contract_version": SELECTOR_CONTRACT_VERSION,

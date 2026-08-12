@@ -19,7 +19,7 @@ from app.providers.llm import BlabladorProvider
 ROOT = Path(__file__).resolve().parents[1]
 
 
-def _provider_settings(tmp_path: Path) -> Settings:
+def _provider_settings(tmp_path: Path, *, formulator_model: str | None = None) -> Settings:
     return Settings(
         app_root=tmp_path,
         kb_path=ROOT / "data" / "canonical" / "offers.json",
@@ -29,6 +29,7 @@ def _provider_settings(tmp_path: Path) -> Settings:
         blablador_model="test-model",
         blablador_timeout_seconds=1,
         blablador_max_context_chars=50_000,
+        blablador_formulator_model=formulator_model,
         wfs_auto_sync=False,
         toilet_auto_sync=False,
         interaction_logging_enabled=False,
@@ -60,6 +61,30 @@ def test_explicit_test_settings_can_initialize_provider_without_transport(
 
     assert provider.name == "blablador"
     assert provider.model == "test-model"
+
+
+def test_provider_captures_last_confirmed_model_per_stage(tmp_path: Path) -> None:
+    """Die vom Provider in der Antwort zurückgemeldete Modellkennung (Antwortfeld
+    ``model``) wird je Stufe erfasst, unabhängig von der gesendeten Alias-Anfrage.
+    Siehe docs/live-provider-evaluation.md und Abschnitt 6.7 der Thesis: Erst diese
+    Erfassung macht die vom Provider bestätigte Modellkennung überhaupt auswertbar.
+    """
+    provider = BlabladorProvider(_provider_settings(tmp_path))
+    assert provider.last_confirmed_models == {"interpreter": None, "selector": None, "formulator": None}
+
+    async def fake_post(_: dict) -> dict:
+        return {"model": "alias-fast-2026-08-01", "choices": [{"message": {"content": "{}"}}]}
+
+    provider._post = fake_post  # type: ignore[method-assign]
+    asyncio.run(
+        provider._request_with_timeout({"model": "alias-fast"}, timeout_seconds=1, stage="interpreter")
+    )
+
+    assert provider.last_confirmed_models == {
+        "interpreter": "alias-fast-2026-08-01",
+        "selector": None,
+        "formulator": None,
+    }
 
 
 def test_unmocked_http_transport_fails_immediately(tmp_path: Path) -> None:
@@ -178,6 +203,34 @@ def test_live_smoke_rejects_changed_model_before_runner_or_provider(
     monkeypatch.setattr(sys, "argv", arguments)
     monkeypatch.setenv("LENA_ALLOW_LIVE_SMOKE", "true")
     monkeypatch.setattr(multilingual_review, "load_settings", lambda: _provider_settings(tmp_path))
+    monkeypatch.setattr(
+        multilingual_review,
+        "run_interpreter_live_gate",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(AssertionError("runner_must_not_start")),
+    )
+
+    with pytest.raises(SystemExit, match="model_identifier_mismatch"):
+        multilingual_review.main()
+
+
+def test_live_smoke_rejects_when_only_one_stage_model_diverges(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Regressionstest für den WP9B-Reviewbefund: Ein abweichender Stufen-Override
+
+    (hier Formulator) muss das Gate auch dann stoppen, wenn der gemeinsame
+    Basiswert unverändert bleibt. Der frühere Abgleich ausschließlich über
+    ``settings.blablador_model`` hätte diesen Fall unbemerkt durchgelassen.
+    """
+    arguments = _live_arguments(confirm=True)
+    monkeypatch.setattr(sys, "argv", arguments)
+    monkeypatch.setenv("LENA_ALLOW_LIVE_SMOKE", "true")
+    monkeypatch.setattr(
+        multilingual_review,
+        "load_settings",
+        lambda: _provider_settings(tmp_path, formulator_model="different-model"),
+    )
     monkeypatch.setattr(
         multilingual_review,
         "run_interpreter_live_gate",

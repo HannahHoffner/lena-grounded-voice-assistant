@@ -41,11 +41,27 @@ redigierte Planstand ist:
 | Timeout I / S / F | `15` / `10` / `30` Sekunden |
 | globales E2E-LLM-Budget | `45` Sekunden je Nutzeranfrage |
 
-Alle drei Stufen verwenden derzeit `Settings.blablador_model`. Getrennte
-Modelle sind mit der aktuellen Konfiguration nicht einstellbar. WP9B verändert
-diese Konfiguration nicht. API-Key, Authorization-Header, vollständige URLs,
-Queryparameter und Inhalte von `.env` oder `.env.local` werden weder ausgegeben
-noch in Reports übernommen.
+Interpreter-, Selector- und Formulatormodell werden einzeln aus
+`Settings.effective_interpreter_model`/`_selector_model`/`_formulator_model`
+gelesen (`BLABLADOR_INTERPRETER_MODEL`/`_SELECTOR_MODEL`/`_FORMULATOR_MODEL`,
+sonst Fallback auf den gemeinsamen Basiswert `BLABLADOR_MODEL`/`LENA_LLM_MODEL`)
+— denselben Fallback, den `BlabladorProvider` für reale Anfragen verwendet. Vor
+dem Laden der normalen Settings zeigt `live-dry-run` deshalb zusätzlich
+`model_assignment` (`shared_across_llm_stages` oder `per_stage_overrides`) und
+die drei redigierten Stufenkennungen einzeln. Ein autorisierter Lauf gleicht
+vor jedem Providercall exakt diese drei Stufenwerte ab (`_provider_identity`/
+`_expected_identity` in `app/live_evaluation_runner.py`), nicht mehr nur den
+gemeinsamen Basiswert; eine Abweichung auch nur einer einzelnen Stufe stoppt
+den Lauf mit `live_evaluation_provider_identity_mismatch` bzw.
+`_changed`. Zusätzlich erfasst `BlabladorProvider` je Stufe die vom Provider in
+der Antwort tatsächlich zurückgemeldete Modellkennung (Antwortfeld `model`,
+nicht der gesendete Alias) und schreibt sie redigiert als
+`confirmed_model_identifier` je Ergebnis in `stage-results.jsonl`
+(End-to-End/Stability: `last_confirmed_model_identifiers` je Stufe, als
+Momentaufnahme nach Ablaufende, nicht je Turn zugeordnet). WP9B verändert die
+Laufzeitkonfiguration selbst nicht. API-Key, Authorization-Header, vollständige
+URLs, Queryparameter und Inhalte von `.env` oder `.env.local` werden weder
+ausgegeben noch in Reports übernommen.
 
 ## Vier getrennte Stufen
 
@@ -167,8 +183,9 @@ runtime/live-evaluations/<run-id>/
 `runtime/` ist durch `.gitignore` ausgeschlossen. Zulässige Dateien sind
 `manifest.json`, `summary.json`, `stage-results.jsonl` und
 `redacted-errors.jsonl`. Sie werden atomar geschrieben und enthalten nur
-synthetische Eingaben, validierte strukturierte Ergebnisse, Versionen, Limits
-und redigierte Fehler. Header, Keys, Tokens und reale Anwendungsdaten werden
+synthetische Eingaben, validierte strukturierte Ergebnisse, Versionen, Limits,
+redigierte Fehler sowie redigierte gesendete und vom Provider bestätigte
+Modellkennungen je Stufe. Header, Keys, Tokens und reale Anwendungsdaten werden
 nicht gespeichert. Rohantworten werden nicht automatisch in Git,
 Dokumentation, Thesis oder Präsentation übernommen.
 

@@ -234,7 +234,18 @@ def main() -> None:
             "automatically_starts_next_stage": False,
         }, ensure_ascii=False, indent=2))
         settings = load_settings()
-        if settings.blablador_model != args.expected_model:
+        # Prüft die drei tatsächlich gesendeten Stufenmodelle (siehe
+        # Settings.effective_interpreter_model/_selector_model/_formulator_model), nicht nur
+        # den gemeinsamen Basiswert: BlabladorProvider kann pro Stufe eigene Overrides senden,
+        # die vom Basiswert abweichen. Weichen die Stufen voneinander ab, kann ein einzelnes
+        # --expected-model sie nicht eindeutig beschreiben; das Kommando bricht dann bewusst ab,
+        # statt eine Stufe stillschweigend ungeprüft zu lassen.
+        effective_models = {
+            settings.effective_interpreter_model,
+            settings.effective_selector_model,
+            settings.effective_formulator_model,
+        }
+        if effective_models != {args.expected_model}:
             raise SystemExit("live_smoke_model_identifier_mismatch")
         if urlsplit(settings.blablador_base_url or "").hostname != args.expected_provider_domain:
             raise SystemExit("live_smoke_provider_domain_mismatch")
