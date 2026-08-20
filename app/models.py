@@ -248,7 +248,7 @@ class QueryInteraction(BaseModel):
     selector_used: bool = False
     selection_source: str | None = None
     selector_bypass_reason: str | None = None
-    selector_eligible_count: int = Field(default=0, ge=0, le=26)
+    selector_eligible_count: int = Field(default=0, ge=0, le=64)
     selector_final_count: int = Field(default=0, ge=0, le=4)
     selector_fallback_used: bool = False
     selector_error_code: str | None = None
@@ -291,6 +291,11 @@ class ClarificationBlock(BaseModel):
     multiple_facts_allowed: bool
     submit_label: str = Field(min_length=1, max_length=80)
     choices: list[ClarificationChoice] = Field(default_factory=list, max_length=6)
+    # Prompt und Auswahlmoeglichkeiten als ein zusammenhaengender, vorlesbarer
+    # Text (live gemeldet: die Kaesten selbst wurden nie vorgelesen, nur der
+    # Prompt). Muss serverseitig in `speakable_texts` derselben Runde stehen,
+    # siehe QueryService.query() -- sonst lehnt /api/speech/synthesize ihn ab.
+    spoken_text: str = Field(min_length=1, max_length=1200)
 
 
 class QueryResponse(BaseModel):

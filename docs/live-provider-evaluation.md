@@ -2,9 +2,27 @@
 
 ## Status und Aussagegrenzen
 
-- Status: `prepared_not_executed`
-- Reale Provideraufrufe in der Vorbereitung: `0`
-- Live-Ausführung autorisiert: nein
+- `live-dry-run` bleibt providerfrei und meldet dafür weiterhin fest
+  `status: prepared_not_executed` / `live_provider_calls_authorized: false`
+  (`app/live_evaluation_plan.py`) -- das ist ein unveränderlicher Vertrag des
+  Dry-Run-Befehls selbst, unabhängig von tatsächlich ausgeführten Läufen.
+- Ein separat autorisierter `live-smoke`-Lauf hat seit 2026-08-14 einmalig
+  reale Provideraufrufe für die Stufe `interpreter` gemacht (siehe "Ausgeführte
+  Läufe" unten). `selector-formulator`, `end-to-end` und `stability` wurden
+  weiterhin nicht ausgeführt.
+
+## Ausgeführte Läufe
+
+| Lauf-ID | Stufe | Datum | Commit | Ergebnis |
+|---|---|---|---|---|
+| `run_e5ef56937b0d47e3a409d43d3ce4db09` | `interpreter` | 2026-08-14 | `fbcc85a` (clean) | 15/15 Requests technisch valide, 0 Fehler, `content_gate_passed=false` (1/15 inhaltliche Abweichung im Feld `need` bei `i_de_acute`, `acute_risk_status` selbst korrekt `detected`, damit ohne sicherheitsrelevante Auswirkung -- `_safety_stop()` liest bei `detected` nur `acute_risk_status`), 0 kritische inhaltliche Fehler |
+
+Der zugehörige Report (`manifest.json`, `summary.json`, `stage-results.jsonl`)
+lag unter `runtime/live-evaluations/run_e5ef56937b0d47e3a409d43d3ce4db09/` und
+wurde versehentlich bei einem nachfolgenden Aufräumschritt gelöscht (`runtime/`
+ist gitignored, daher kein Verlust für die Versionsgeschichte); die Kennzahlen
+oben sind aus der Sitzung übernommen, in der der Lauf stattfand. Ein erneuter
+Lauf reproduziert einen gleichwertigen Report unter einer neuen Lauf-ID.
 
 WP9B prüft später mit ausschließlich synthetischen Textanfragen, ob die real
 konfigurierten Blablador-Modelle die Interpreter-, Selector- und

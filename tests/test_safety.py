@@ -31,7 +31,7 @@ def _interpretation(
 ) -> QueryInterpretation:
     return QueryInterpretation.model_validate(
         {
-            "contract_version": "3",
+            "contract_version": "4",
             "need": need.value,
             "explicit_service_requests": [],
             "scope_status": scope.value,
@@ -250,9 +250,18 @@ def test_llm_failure_uses_conditional_safety_fallback_without_inventing_detected
         json={"query": "A completely unrelated question", "language": "en"},
     ).json()
 
+    # Seit der Untersuchung zu unbemerkten technischen Fallbacks (Zeile 5)
+    # enthält der Text zusätzlich den deterministischen Hilfebus-Kontakt statt
+    # eines reinen "versuche es erneut"-Hinweises; der bedingte 112-Hinweis
+    # bleibt Teil des Texts.
+    offer = next(offer for offer in app.state.kb.offers if "general_help_referral_first" in offer.priority_rules)
+    phone = ", ".join(offer.phone_numbers) or "—"
+    times = "; ".join(offer.opening_hours_raw or offer.standzeiten_raw) or "—"
     assert body["provider"] == "template"
-    assert body["answer"] == safety_text(Language.EN, SafetyTextKind.TECHNICAL)
+    assert body["answer"] == safety_text(Language.EN, SafetyTextKind.TECHNICAL_HILFEBUS, phone=phone, times=times)
+    assert body["answer"].count("112") == 1
     assert body["answer_type"] == "technical_fallback"
+    assert [card["id"] for card in body["cards"]] == [offer.id]
 
 
 def test_missing_localized_safety_text_uses_controlled_german_fallback(

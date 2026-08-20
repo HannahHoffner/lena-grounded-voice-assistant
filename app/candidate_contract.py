@@ -50,8 +50,9 @@ class ReasonCode(str, Enum):
     DISTRICT_ALIAS_MATCH = "district_alias_match"
     EXPLICIT_TARGET_MATCH = "explicit_target_match"
     GENERAL_SLEEP_CONTACT_PRIORITY = "general_sleep_contact_priority"
-    U27_REFERRAL_PRIORITY = "u27_referral_priority"
-    U27_SUPPLEMENTAL_ONLY = "u27_supplemental_only"
+    MINOR_SLEEP_PRIORITY = "minor_sleep_priority"
+    MINOR_CRISIS_PRIORITY = "minor_crisis_priority"
+    YOUTH_INTENT_REQUIRED = "youth_intent_required"
     CURATED_PRIORITY = "curated_priority"
     DOCUMENTED_SCHEDULE = "documented_schedule"
     NEED_NOT_SUPPORTED = "need_not_supported"
@@ -74,7 +75,8 @@ class RuleCode(str, Enum):
     UI_HINT_OVERRIDDEN = "ui_hint_overridden"
     ALIAS_LIMIT = "alias_limit"
     NEED_AND_SERVICE_EVIDENCE = "need_and_service_evidence"
-    U27_ROUTING = "u27_routing"
+    MINOR_SLEEP_ROUTING = "minor_sleep_routing"
+    EXPLICIT_YOUTH_ROUTING = "explicit_youth_routing"
     GENERAL_SLEEP_RUECKE_FIRST = "general_sleep_ruecke_first"
     DRUG_SPECIFIC_REQUIRES_EXPLICIT = "drug_specific_requires_explicit"
     HELENE_RESTRICTED_ACCESS = "helene_restricted_access"
@@ -122,9 +124,9 @@ class CandidateDecision(SelectionModel):
     need: Need
     facts_used: FactsUsed
     mandatory_candidates: list[CandidateItem] = Field(default_factory=list, max_length=4)
-    selectable_candidates: list[CandidateItem] = Field(default_factory=list, max_length=26)
-    conditional_candidates: list[CandidateItem] = Field(default_factory=list, max_length=26)
-    excluded_candidates: list[ExcludedItem] = Field(default_factory=list, max_length=26)
+    selectable_candidates: list[CandidateItem] = Field(default_factory=list, max_length=64)
+    conditional_candidates: list[CandidateItem] = Field(default_factory=list, max_length=64)
+    excluded_candidates: list[ExcludedItem] = Field(default_factory=list, max_length=64)
     missing_information: list[MissingFact] = Field(default_factory=list, max_length=8)
     clarification_recommended: bool
     selection_status: SelectionStatus
@@ -165,7 +167,7 @@ class CandidateDecision(SelectionModel):
 class AliasSelectionContext(SelectionModel):
     alias: str
     alias_kind: Literal["organization", "offer"]
-    offer_ids: list[str] = Field(min_length=1, max_length=26)
+    offer_ids: list[str] = Field(min_length=1, max_length=64)
     district_narrowed: bool = False
 
 

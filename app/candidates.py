@@ -44,7 +44,11 @@ def _facts(interpretation: QueryInterpretation) -> FactsUsed:
 
 
 def _requested_capabilities(interpretation: QueryInterpretation, need: Need) -> set[str]:
-    explicit = {item.value for item in interpretation.explicit_service_requests}
+    explicit = {
+        item.value
+        for item in interpretation.explicit_service_requests
+        if item != RequestedService.YOUTH_SUPPORT
+    }
     if explicit:
         return explicit
     return {
@@ -83,6 +87,11 @@ class CandidateSelector:
             rules.append(RuleCode.UI_HINT_OVERRIDDEN)
             conflicts.append(SelectionConflict(field="need", preferred_value=need.value, ignored_value=context.ui_need_hint.value))
         facts = _facts(interpretation)
+        explicit_services = set(interpretation.explicit_service_requests)
+        explicit_youth = RequestedService.YOUTH_SUPPORT in explicit_services
+        explicit_protection = RequestedService.PROTECTION in explicit_services
+        if explicit_youth:
+            rules.append(RuleCode.EXPLICIT_YOUTH_ROUTING)
         if need == Need.TOILET:
             return self._terminal(need, facts, SelectionStatus.UNSUPPORTED_NEED, [*rules, RuleCode.TOILET_UNSUPPORTED])
         if need == Need.DRINKING_WATER:
@@ -101,7 +110,9 @@ class CandidateSelector:
         excluded: list[ExcludedItem] = []
         global_missing: set[MissingFact] = set()
         alias_ids = set(context.alias.offer_ids) if context.alias else None
-        u27 = facts.age_group == AgeGroup.UNDER_27 or (facts.age is not None and facts.age <= 26)
+        minor = facts.age_group == AgeGroup.UNDER_18 or (
+            facts.age is not None and facts.age <= 17
+        )
         unsupported = [
             hint.value[:80] for hint in interpretation.uncertain_hints
             if hint.field.value == "other" and any(
@@ -115,6 +126,16 @@ class CandidateSelector:
         for offer in offers:
             if alias_ids is not None and offer.id not in alias_ids:
                 excluded.append(ExcludedItem(offer_id=offer.id, reason_codes=[ReasonCode.ALIAS_SCOPE_MISMATCH]))
+                continue
+            youth_alias_match = bool(alias_ids is not None and offer.id in alias_ids)
+            if (
+                "youth_explicit_only" in offer.priority_rules
+                and not explicit_youth
+                and not youth_alias_match
+            ):
+                excluded.append(
+                    ExcludedItem(offer_id=offer.id, reason_codes=[ReasonCode.YOUTH_INTENT_REQUIRED])
+                )
                 continue
             direct_match = bool(requested.intersection(offer.capabilities)) and (
                 need.value in offer.needs
@@ -133,6 +154,7 @@ class CandidateSelector:
                 need == Need.SLEEP
                 and "general_help_referral_first" in offer.priority_rules
                 and (facts.gender in {Gender.FEMALE, Gender.MALE} or facts.drug_use == ThreeWayStatus.YES)
+                and not minor
             ):
                 referral_match = False
             if need == Need.GENERAL_HELP and not interpretation.explicit_service_requests:
@@ -149,29 +171,44 @@ class CandidateSelector:
                 reasons.append(ReasonCode.ALIAS_MATCH)
                 if context.alias.district_narrowed:
                     reasons.append(ReasonCode.DISTRICT_ALIAS_MATCH)
-            if need == Need.FOOD:
-                rules.append(RuleCode.FOOD_AGE_UNRESTRICTED)
-            else:
-                if offer.minimum_age is not None:
-                    if facts.age is None:
-                        if facts.age_group == AgeGroup.NOT_UNDER_27 and offer.minimum_age <= 27:
-                            reasons.append(ReasonCode.EXPLICIT_TARGET_MATCH)
-                        else:
-                            missing.add(MissingFact.AGE)
-                            reasons.append(ReasonCode.AGE_NOT_ESTABLISHED)
-                    elif facts.age < offer.minimum_age:
+            # FOOD_AGE_UNRESTRICTED gilt bewusst nur fuer minimum_age (Erwachsenen-
+            # Angebote wie Diakonie/Schwanenteich): Essensausgabe ist fuer alle da,
+            # auch wenn die institutionelle Zustaendigkeit (Beratung, Fallzuordnung)
+            # formal bei Erwachsenen liegt (siehe
+            # docs/exec-plans/fix-food-age-restriction.md). maximum_age
+            # Jugendangebote bis 26 bleiben dagegen altersgebunden. Zusaetzlich
+            # passieren sie das vorangestellte Intent-Gate nur bei ausdruecklichem
+            # Jugendbedarf oder einem exakten Alias; Alter allein aktiviert sie nicht.
+            if offer.minimum_age is not None:
+                if need == Need.FOOD:
+                    rules.append(RuleCode.FOOD_AGE_UNRESTRICTED)
+                elif facts.age is None:
+                    if (
+                        facts.age_group in {AgeGroup.ADULT, AgeGroup.NOT_UNDER_27}
+                        and offer.minimum_age <= 27
+                    ) or (
+                        facts.age_group == AgeGroup.UNDER_27
+                        and offer.minimum_age <= 18
+                    ):
+                        reasons.append(ReasonCode.EXPLICIT_TARGET_MATCH)
+                    else:
+                        missing.add(MissingFact.AGE)
+                        reasons.append(ReasonCode.AGE_NOT_ESTABLISHED)
+                elif facts.age < offer.minimum_age:
+                    blocked = ReasonCode.AGE_OUTSIDE_RANGE
+            if offer.maximum_age is not None:
+                if facts.age is None:
+                    if facts.age_group == AgeGroup.UNDER_18 and offer.maximum_age >= 17:
+                        reasons.append(ReasonCode.EXPLICIT_TARGET_MATCH)
+                    elif facts.age_group == AgeGroup.UNDER_27 and offer.maximum_age == 26:
+                        reasons.append(ReasonCode.EXPLICIT_TARGET_MATCH)
+                    elif facts.age_group == AgeGroup.NOT_UNDER_27 and offer.maximum_age <= 26:
                         blocked = ReasonCode.AGE_OUTSIDE_RANGE
-                if offer.maximum_age is not None:
-                    if facts.age is None:
-                        if facts.age_group == AgeGroup.UNDER_27 and offer.maximum_age == 26:
-                            reasons.append(ReasonCode.EXPLICIT_TARGET_MATCH)
-                        elif facts.age_group == AgeGroup.NOT_UNDER_27 and offer.maximum_age <= 26:
-                            blocked = ReasonCode.AGE_OUTSIDE_RANGE
-                        else:
-                            missing.add(MissingFact.AGE)
-                            reasons.append(ReasonCode.AGE_NOT_ESTABLISHED)
-                    elif facts.age > offer.maximum_age:
-                        blocked = ReasonCode.AGE_OUTSIDE_RANGE
+                    else:
+                        missing.add(MissingFact.AGE)
+                        reasons.append(ReasonCode.AGE_NOT_ESTABLISHED)
+                elif facts.age > offer.maximum_age:
+                    blocked = ReasonCode.AGE_OUTSIDE_RANGE
             if offer.eligible_genders:
                 if facts.gender == Gender.UNKNOWN:
                     missing.add(MissingFact.GENDER)
@@ -218,8 +255,14 @@ class CandidateSelector:
                     schedule_matched = True
             elif matching_capability:
                 rules.append(RuleCode.DOCUMENTED_TIME_ONLY)
-                schedule = schedule_matches(offer.service_schedules[matching_capability], facts, current)
-                if schedule is False:
+                strict_current_schedule = need == Need.DRINKING_WATER
+                schedule = schedule_matches(
+                    offer.service_schedules[matching_capability],
+                    facts,
+                    current,
+                    use_current_when_unspecified=strict_current_schedule,
+                )
+                if schedule is False or (strict_current_schedule and schedule is not True):
                     blocked = ReasonCode.TIME_CONDITION_NOT_MET
                 else:
                     reasons.append(ReasonCode.DOCUMENTED_SCHEDULE)
@@ -232,11 +275,20 @@ class CandidateSelector:
             priority = 50
             if schedule_matched:
                 priority = 10
-            if u27 and "u27_referral_first" in offer.priority_rules:
-                rules.append(RuleCode.U27_ROUTING)
-                reasons.append(ReasonCode.U27_REFERRAL_PRIORITY)
-                priority = 0 if "u27_primary_contact" in offer.priority_rules else 5
-            elif need == Need.SLEEP and "general_sleep_contact_first" in offer.priority_rules and facts.drug_use != ThreeWayStatus.YES:
+            if minor and need == Need.SLEEP and "minor_sleep_first" in offer.priority_rules:
+                rules.append(RuleCode.MINOR_SLEEP_ROUTING)
+                reasons.append(ReasonCode.MINOR_SLEEP_PRIORITY)
+                priority = 0
+            elif minor and need == Need.SLEEP and "minor_crisis_first" in offer.priority_rules:
+                rules.append(RuleCode.MINOR_SLEEP_ROUTING)
+                reasons.append(
+                    ReasonCode.MINOR_CRISIS_PRIORITY
+                    if explicit_protection
+                    else ReasonCode.CURATED_PRIORITY
+                )
+                priority = 0 if explicit_protection else 5
+                role = CandidateRole.REFERRAL_CONTACT
+            elif need == Need.SLEEP and "general_sleep_contact_first" in offer.priority_rules and facts.drug_use != ThreeWayStatus.YES and not minor:
                 rules.append(RuleCode.GENERAL_SLEEP_RUECKE_FIRST)
                 reasons.append(ReasonCode.GENERAL_SLEEP_CONTACT_PRIORITY)
                 priority = 0
@@ -246,10 +298,7 @@ class CandidateSelector:
             elif need == Need.GENERAL_HELP and "general_help_referral_first" in offer.priority_rules:
                 reasons.append(ReasonCode.CURATED_PRIORITY)
                 priority = 0
-            if u27 and need == Need.SLEEP and offer.minimum_age == 18 and role == CandidateRole.DIRECT_SERVICE:
-                reasons.append(ReasonCode.U27_SUPPLEMENTAL_ONLY)
-                role = CandidateRole.CONDITIONAL_CANDIDATE
-                priority = 30
+                role = CandidateRole.REFERRAL_CONTACT
             if context.alias and context.alias.alias_kind == "organization" and len(context.alias.offer_ids) > 1:
                 matching_ids = [item for item in offers if item.id in context.alias.offer_ids and (need.value in item.needs or need.value in item.referral_needs)]
                 if len(matching_ids) > 1 and not context.alias.district_narrowed:
@@ -273,10 +322,8 @@ class CandidateSelector:
             binding_priority = (
                 ReasonCode.GENERAL_SLEEP_CONTACT_PRIORITY in item.reason_codes
                 or ReasonCode.CURATED_PRIORITY in item.reason_codes
-                or (
-                    ReasonCode.U27_REFERRAL_PRIORITY in item.reason_codes
-                    and "u27_primary_contact" in offer.priority_rules
-                )
+                or ReasonCode.MINOR_SLEEP_PRIORITY in item.reason_codes
+                or ReasonCode.MINOR_CRISIS_PRIORITY in item.reason_codes
             )
             unique_alias_match = bool(context.alias and len(selected) == 1)
             (mandatory if binding_priority or unique_alias_match else selectable).append(item)

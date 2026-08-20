@@ -17,6 +17,7 @@ flowchart LR
     C[Active-Pointer einmal lesen] --> K[(data/wfs/releases/ID/offers.json)]
     K --> Q
     V[(schema-validierter Kurationskatalog)] --> Q
+    E[(verifizierte paketierte Betreiberangebote)] --> Q
     S --> I[Übersetzungen]
     S --> X[Sessions]
     S --> G[Strukturierte Dialogpolitik]
@@ -73,6 +74,20 @@ Saisonfenster nur feste Brunnen. Der LLM-Selector wird mit dem redigierten Grund
 Evidence und Karten, alle zulässigen Geometrien erreichen die Karte. Ein
 erkanntes Stadtteilfeld bleibt für dieses Ranking wirkungslos.
 
+Zeitgebundene soziale Wasserleistungen müssen vor dieser räumlichen Projektion
+positiv zum angefragten Zeitbezug oder, ohne Zeitangabe, zur aktuellen
+Europe/Berlin-Zeit passen. So kann der mobile Hilfebus nur während seiner
+belegten Sonntagsstandzeit als Wasserort am Hauptbahnhof erscheinen. In
+allgemeinen Hilfefällen bleibt er dagegen ein telefonischer `referral_contact`
+mit den belegten mobilen Einsatzzeiten; seine Organisationsadresse wird nicht
+als Nutzerstandort oder Marker projiziert.
+
+Dasselbe Prinzip gilt für mobile Touren ohne verifizierte Einzelkoordinaten:
+TiMMi ToHelp bleibt ein ServiceOffer mit einer kuratierten Donnerstagsroute.
+Standzeiten und Erkennungshinweis gelangen aus der gemeinsamen Runtime-KB in
+Evidence, Karte und TTS; die alte WFS-Punktgeometrie wird weder als aktueller
+Tourstopp noch für eine Entfernungswertung verwendet.
+
 `app/curation.py` validiert Organisationen, Standorte, getrennte
 Leistungsangebote, Organisations- und Angebotsaliase, Quellenreferenzen und
 Kurationsentscheidungen. Der Katalog ist an Release-ID und Hash eines
@@ -80,6 +95,16 @@ unveränderlichen normalisierten WFS-Stands gebunden. Erst seine Projektion wird
 von Aliasauflösung, Kandidatenbegrenzung, Formulator, Karten und Map-Markern gemeinsam verwendet.
 Ein abweichender aktiver WFS-Stand wird in Health als ausstehende Quelländerung
 gemeldet und nicht ungeprüft in die Runtime-Sicht übernommen.
+
+Zwei Jugendnotangebote des VKKJ stammen nicht aus dem WFS. Sie liegen deshalb
+als eigene, schema-validierte Betreiberquelle in
+`app/resources/bootstrap/official/verified_offers.json`. Der Loader prüft
+Quellenreferenzen, Positivschema und Dateihash, verbindet die Records erst
+danach mit dem exakt gebundenen WFS-Stand und erzeugt weiterhin genau eine
+kuratierte Runtime-Projektion. Der Kurationskatalog bindet auch diesen Hash;
+der gemeinsame Session-Fingerprint ändert sich bei einer Änderung der
+Betreiberquelle. Ein fehlender, ungültiger oder abweichender Betreiberstand
+führt zu einem kontrollierten Fehler, niemals zu einer Teilprojektion.
 
 `app/candidate_contract.py` definiert den strikten, versionierten Vertrag der
 Kandidatenstufe. `app/candidates.py` wendet ausschließlich positiv kuratierte
@@ -109,7 +134,8 @@ Versuchszahl, Ablaufzeit und Runtime-Fingerprint. `app/dialogue_flow.py` bildet
 Buttons deterministisch auf Bedarf oder ausdrückliche Fakten ab; Freitext und
 STT-Transkripte laufen mit einem minimalen offenen Dialogkontext erneut durch
 den Interpreter. Beide Wege verwenden danach denselben `CandidateSelector`.
-Die explizite Altersgruppe bildet „unter 27“ ab, ohne ein Alter zu erfinden.
+Die explizite Altersgruppe trennt `under_18` von den Erwachsenenbereichen
+18–26 und ab 27, ohne ein numerisches Alter zu erfinden.
 
 Die aktive Politik kennt Schlafzielgruppe, eine einmalige Schlaf-Altersfrage,
 A1/Schoppi-Leistungsart, Mobile/Kübel-Ort, allgemeinen Bedarf und den
@@ -122,6 +148,18 @@ Originating-Need normalisiert. Bleibt die Lage unklar, stammen Telefon und
 Zeiten des Hilfebus ausschließlich aus dem kuratierten Runtime-Datensatz.
 Akutrisiko oder Out-of-Scope schließen den Dialog vorher ohne Hilfebus oder
 Angebote.
+
+Für Schlafbedarf gilt keine U27-Priorität mehr. Bei 14 bis 17 Jahren ist die
+Kontakt- und Notschlafstelle für Jugendliche der direkte erste Dienst und der
+Jugendnotdienst ein ergänzender Schutz- und Vermittlungskontakt. Bei 12 bis 13
+Jahren wird nur der Jugendnotdienst als belegter erster Kontakt verwendet; bei
+`under_18` ohne Zahl bleibt die Notschlafstelle bis zur Altersklärung bedingt.
+Ein ausdrücklicher Schutz- oder Krisenbedarf priorisiert den Jugendnotdienst.
+Ab 18 führt der Schlafpfad nach den kuratierten Erwachsenenregeln zu Rücke
+beziehungsweise bei ausdrücklich bekannter weiblicher Zielperson zu Scharni.
+Jugendtreffs und Jugendstreetwork bis einschließlich 26 werden unabhängig
+davon nur durch ausdrücklichen Jugendbedarf oder einen exakten Alias aktiviert;
+ein Alter allein genügt nicht.
 
 Bei `acute_risk_status=detected` beendet `QueryService` den normalen Pfad
 unmittelbar und gibt den zentralen sprachabhängigen 112-Text ohne Karten aus.

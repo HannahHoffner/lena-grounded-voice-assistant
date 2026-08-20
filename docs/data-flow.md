@@ -61,12 +61,15 @@ Choice-Antworten dürfen nicht gleichzeitig Freitext oder Kategorie enthalten.
 Sitzungsverlauf und optionale Kartendaten. Pydantic begrenzt die Frage auf 1000
 Zeichen und normalisiert Whitespace.
 
-Der Interpretervertrag Version 3 unterscheidet `need`, ausdrücklich angefragte
+Der Interpretervertrag Version 4 unterscheidet `need`, ausdrücklich angefragte
 Einzelleistungen, `scope_status`, `input_language`, ausdrücklich genannte Fakten, begrenzte unsichere Hinweise,
 potenziell fehlende Informationen, ein unverbindliches Klärungssignal und
 `acute_risk_status`. Unbekannte sensible Eigenschaften bleiben `unknown` oder
-`null`. `age_group` speichert eine ausdrücklich genannte U27-Grenze, ohne ein
-exaktes Alter abzuleiten. Bei offenem Dialog enthält der Interpreterpayload nur
+`null`. `age_group` trennt ausdrücklich minderjährig (`under_18`), erwachsen
+ohne engere Altersangabe, 18 bis 26 und ab 27, ohne ein exaktes Alter
+abzuleiten. `youth_support` entsteht nur aus einer ausdrücklichen Suche nach
+Jugendhilfe beziehungsweise einem exakten Jugendangebotsalias, niemals allein
+aus einem bekannten Alter. Bei offenem Dialog enthält der Interpreterpayload nur
 Dialogart, angefragte Felder, erlaubte Choice-Bedeutungen und bereits
 ausdrücklich bekannte Fakten; keine Angebotsdatensätze oder IDs. Prompt- und
 Vertragsversion stehen in `/api/health`; vollständige
@@ -173,12 +176,35 @@ kuratierten Aliaszuordnungen – nur als noch nicht validierte Bedingung im
 Entscheid vermerkt. Kapazität, garantierte Aufnahme und geografische Nähe werden
 nicht bewertet.
 
+Im Schlafpfad ersetzt eine Minderjährigenentscheidung die frühere
+U27-Verweispriorität. Exaktes Alter 14–17 bindet die Jugend-Notschlafstelle als
+direkte Leistung vor dem Jugendnotdienst als Schutz-/Vermittlungskontakt.
+Exaktes Alter 12–13 lässt die ab 14 belegte Notschlafstelle nicht zu. Bei bloß
+bekanntem `under_18` bleibt sie bedingt, während der Jugendnotdienst erreichbar
+bleibt. Ab 18 gelten Rücke beziehungsweise Scharni; bestehende Jugendangebote
+bis 26 passieren das separate Intent-Gate nur bei explizitem Jugendbezug.
+
 Die vollständige Entscheidung wird nicht in das Forschungsprotokoll kopiert.
 Persistiert wird lediglich `candidate_selection_status`; Fakten, bedingte und
 ausgeschlossene IDs, Reason Codes und freie Nutzerdetails bleiben flüchtig. Der
 Formulator erhält ausschließlich den Evidence-Vertrag aus finalen IDs, Rollen
 und freigegebenen Fakten; Grundcodes und die vollständige Entscheidung bleiben
 außerhalb des Prompts.
+
+Vier eng begrenzte Antworten innerhalb eines laufenden Dialogs formulieren
+bewusst nicht über den Formulator, sondern nutzen feste, lokalisierte
+Textbausteine (`dialogue.answers.*`): die Schlaf-Folgefrage nach Geschlecht
+ohne Altersangabe (`SLEEP_AGE`-Übergang), der aufgelöste Bezirkskontakt
+(`ORGANIZATION_DISTRICT`), der aufgelöste Organisationsdienst
+(`ORGANIZATION_NEED`) sowie ein eindeutiger Organisations-Alias-Treffer ganz
+ohne Dialog. In allen vier Fällen steht der Kandidat bereits eindeutig fest
+(genau ein `conditional_candidate` bzw. ein eindeutiger Alias) und es besteht
+kein Auswahl- oder Formulierungsspielraum mehr; nur der erste Fall ist
+schlafplatzspezifisch, die übrigen drei gelten für jeden Bedarfstyp. Das ist
+eine bewusste, aber nicht in Kapitel 4 als sicherheitskritisch benannte
+Ausnahme vom sonst durchgängigen Formulator-Einsatz für grounded Antworten
+(entschieden im Rahmen der Untersuchung zu unbemerkten technischen
+Fallbacks, siehe Fundstellen in `app/service.py`).
 
 ## Öffentliche Toiletten und räumliche Ergebnisordnung
 
@@ -231,7 +257,12 @@ neun externe und alle mobilen Punkte bleiben in Release und Diff, gelangen aber
 nicht in Runtime, LLM, Karten oder Marker.
 
 Bei `Need.DRINKING_WATER` begrenzt der soziale `CandidateSelector` weiterhin
-nur Angebote mit positiv belegter Wasserleistung. Die anschließende gemeinsame
+nur Angebote mit positiv belegter Wasserleistung. Ein zusätzlich strukturiert
+belegtes Leistungszeitfenster ist dabei verbindlich: Ohne ausdrückliche
+Zeitangabe wird es gegen die aktuelle Europe/Berlin-Zeit geprüft. Der Hilfebus
+ist deshalb als Wasserstelle ausschließlich Sonntag 20:00–21:00 Uhr an der
+Westseite des Hauptbahnhofs zulässig; ein ausdrücklich auf Sonntag bezogener
+Wasserwunsch darf ihn mit genau dieser Standzeit nennen. Die anschließende gemeinsame
 Wasserprojektion ergänzt saisonal zulässige feste Brunnen, erhält fachlich
 verbindliche soziale Resultate und sortiert danach nach HBF-Luftlinie und
 stabiler ID. Sie umgeht den LLM-Selector. Eine ausdrückliche Brunnenanfrage
@@ -249,6 +280,21 @@ Bei Essen setzt `app.result_time` ohne expliziten Tag den Leipziger Kalendertag
 ein. Fach- und Pflichtprioritäten bleiben vor der Entfernung; belegte
 Ausgabezeiten und tatsächliche Standorte gehen Büroadresse und HBF-Distanz vor.
 Ein mobiler Datensatz ohne verifizierten Standpunkt erzeugt keinen Büromarker.
+TiMMi ToHelp (ID 16) bleibt dabei genau ein mobiles Leistungsangebot. Die
+Kurationsschicht ergänzt aus dem offiziellen Tourplan drei ungefähre
+Donnerstagsstationen (ca. 16:00 Uhr Dittrichring, ca. 16:30 Uhr Lennéanlage,
+ca. 17:30 Uhr Nikolaistraße) und den Erkennungshinweis auf das bunte Team mit
+zwei Bollerwagen. `thursday_16_19` begrenzt Essen, Trinkwasser, Hygiene und
+Kleidung weiterhin deterministisch. Weil keine verifizierten Koordinaten für
+die einzelnen mobilen Stopps vorliegen, erzeugt die Route weder einen
+Büromarker noch geschätzte Tourmarker oder eine Entfernungswertung; die
+unveränderte WFS-Adresse bleibt ausschließlich in Quelle und Provenienz.
+Das gilt auch für den Hilfebus außerhalb seiner Sonntagsstandzeit: Bei
+allgemeinen oder nicht anderweitig abgedeckten Hilfebedarfen ist er ein mobiler
+telefonischer Verweiskontakt. Antwort und Karte verwenden die belegten
+täglichen Einsatzzeiten aus der Runtime-KB, blenden die Büroadresse als
+Nutzerstandort aus und erzeugen keinen Marker. Rohadresse und Provenienz bleiben
+unverändert gespeichert.
 
 ## WFS-Aktualisierung
 
@@ -359,8 +405,12 @@ Skriptprüfungen ersetzen keine menschliche Sprachprüfung.
 HTTP-Adapter erlaubt WebM, Ogg, MP4, MPEG/MP3 und WAV, prüft das konfigurierte
 Byte-Limit vor und während des Streamings und ruft erst danach
 `SpeechTranscriber` auf. Zu große Bodies ergeben 413, explizit nicht erlaubte
-Medientypen 415 und leere Bodies 422. Gültiges Audio wird an einen
-konfigurierten OpenAI-kompatiblen Transkriptionsendpunkt gesendet.
+Medientypen 415 und leere Bodies 422. `SpeechTranscriber` dekodiert die
+Browsercontainer im Speicher und normalisiert sie zu mono PCM16 mit 16 kHz in
+einem RIFF/WAV-Container. Nur dieses WAV wird an den konfigurierten
+OpenAI-kompatiblen Transkriptionsendpunkt gesendet. Die dekodierte Aufnahme ist
+zusätzlich auf 120 Sekunden begrenzt; nicht dekodierbares Audio ergibt 422 und
+eine Überschreitung der dekodierten Dauer 413, jeweils vor dem Provideraufruf.
 
 `POST /api/speech/synthesize` erwartet den Pydantic-Vertrag mit `text`, einer
 unterstützten `language` und `session_id`. Der Text muss exakt der letzten
@@ -374,7 +424,8 @@ aus. Unmittelbar vor beiden Syntheseprovidern ersetzt `normalize_tts_text()`
 das Token `112` durch sprachabhängig einzeln gesprochene Ziffern; im Browser
 und in `QueryResponse` bleibt `112` sichtbar.
 
-STT und TTS haben je eine Gesamtgrenze um den tatsächlichen Provideraufruf. Ein
+STT und TTS haben je eine Gesamtgrenze um die Verarbeitung und den
+tatsächlichen Provideraufruf. Ein
 STT-Timeout liefert kein Transkript und löst daher keinen Query- oder
 Interaktionsdatensatz aus. TTS wird erst nach der sichtbaren Textantwort
 aufgerufen; sein Timeout verändert das bereits korrekte Textprotokoll nicht.

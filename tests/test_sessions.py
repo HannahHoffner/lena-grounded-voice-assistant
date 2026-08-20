@@ -159,8 +159,8 @@ def test_dialog_claim_is_single_use_even_across_store_instances(tmp_path) -> Non
         session_timeout_seconds=180,
     )
     session = store.set_dialog(session, dialog)
-    first, claimed = store.claim_dialog(session, dialog_id=dialog.dialog_id, choice_values=["under_27"])
+    first, claimed = store.claim_dialog(session, dialog_id=dialog.dialog_id, choice_values=["under_18"])
 
     assert claimed.status.value == "processing"
     with pytest.raises(DialogRequestError):
-        SessionStore(store.path).claim_dialog(first, dialog_id=dialog.dialog_id, choice_values=["under_27"])
+        SessionStore(store.path).claim_dialog(first, dialog_id=dialog.dialog_id, choice_values=["under_18"])

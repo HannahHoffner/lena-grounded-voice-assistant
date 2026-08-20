@@ -22,7 +22,7 @@ Toiletten- oder Trinkbrunnenquellenaufruf lässt den Test sofort fehlschlagen.
 |---|---|
 | `tests/test_api.py` | Health, Query-API, LLM-Stufen und Fallbacks |
 | `tests/test_interpreter.py` | versionierter Vertrag, fünf Sprachen, Fakten/Hinweise, Aliase, Sessionkontext, Injection, Parserfehler, Scope und Akutrisiko-Reihenfolge |
-| `tests/test_candidates.py` | strikter Kandidatenvertrag, Leistungen, Rollen, Zielgruppen, Aliasbegrenzung, U27, Zeitregeln, Reason Codes und sprachunabhängige Entscheidungen |
+| `tests/test_candidates.py` | strikter Kandidatenvertrag, Leistungen, Rollen, Zielgruppen, Aliasbegrenzung, U18-Schlafmatrix, explizites Jugend-Intent-Gate, Zeitregeln, Reason Codes und sprachunabhängige Entscheidungen |
 | `tests/test_llm_selection.py` | Selectorvertrag und -prompt, Positivlisteninventar, Mandatory/Selectable, ID-Angriffe, Mehrsprachigkeit, Bypässe und Providerfehler |
 | `tests/test_formulation.py` | Evidence- und Satzvertrag, Grounding, Rollen, Karten, fünf Sprachen, OOS-/Hilfebus-Policies, Promptangriffe, Gesamtbudget und TTS-Textbindung |
 | `tests/test_dialogue.py` | Dialogvertrag, Schlafmatrix, A1/Schoppi, Mobile/Kübel, Hilfebus, Buttons, Text/STT, Sprache/Thema, Fehler, Replay, TTL, Datenschutz und I18n-Status |
@@ -30,6 +30,7 @@ Toiletten- oder Trinkbrunnenquellenaufruf lässt den Test sofort fehlschlagen.
 | `tests/test_kb_loader.py` | Markdown- und kanonisches JSON-Laden |
 | `tests/test_curation.py` | Kurationsschema, Provenienz, Aliasauflösung, Scharni-Override, Rohdatenerhalt und Ausschluss aus allen Runtime-Verbrauchern |
 | `tests/test_runtime_loader.py` | verpflichtende Kuration, exakt gebundener lokaler/Paket-Fallback, Pointer-/Releasefehler und Runtime-Fingerabdruck |
+| `tests/test_official_offer_source.py` | strikt validierte VKKJ-Betreiberquelle, Quellenreferenzen, Hashbindung, minimiertes Feldinventar und Ablehnung WFS-artiger Rohfelder |
 | `tests/test_retrieval.py` | isolierte lexikalische Legacy-Hilfen; nicht der aktive primäre Kandidatenpfad |
 | `tests/test_sessions.py` | Session-Lebenszyklus, Dialogpersistenz, einmaliges Claiming, Sprachwechselerhalt und Invalidierung bei Wissensstandswechsel |
 | `tests/test_session_persistence.py` | atomare Writes, Parallelzugriffe, TTL/Kapazität, Recovery und API-Fehlerrobustheit |
@@ -42,7 +43,7 @@ Toiletten- oder Trinkbrunnenquellenaufruf lässt den Test sofort fehlschlagen.
 | `tests/test_provider_timeouts.py` | LLM-, Speech-, WFS- und Übersetzungs-Timeouts sowie Fallbacks |
 | `tests/test_provider_isolation.py` | `.env`-Isolation, Transportblockade und dreifache Live-Smoke-Freigabe |
 | `tests/test_live_evaluation.py` | WP9B-Stufenkatalog, feste Erwartungen, Payloadinventar, harte Limits, atomare Reports, Redaktion, providerfreier Dry-Run und isolierter Stufe-1-Runner |
-| `tests/test_translation_quality.py` | Statusmodell, Hash-/Kurationsbindung, Runtime-Policies, 26-Angebote-Inventar, CLI/Review, vollständiger Dry-Run, gemeinsame Sprachressourcen, Szenariokatalog, Live-Opt-in und STT/TTS |
+| `tests/test_translation_quality.py` | Statusmodell, Hash-/Kurationsbindung, Runtime-Policies, aktives Übersetzungsinventar mit deutschem Fallback für neue ungeprüfte Angebote, CLI/Review, vollständiger Dry-Run, gemeinsame Sprachressourcen, Szenariokatalog, Live-Opt-in und STT/TTS |
 | `tests/test_public_toilets.py` | amtliches CSV-Schema, Fail-safe-Kosten/Geometrie, Diff, Promotion/Rollback/Fallback, Runtime, API, Evidence, fünf Sprachen und Health |
 | `tests/test_drinking_fountains.py` | Wasserwerke-KML, amtliche Grenzprüfung, Manifest/Fallback, Ausschlüsse, Saison, kombinierte Wasserresultate, HBF-Ranking, fünf Sprachen, Evidence/Grounding, Frontend und Health |
 | `tests/test_result_ordering.py` | Europe/Berlin-Zeitfenster, mobile Standorte, Fach-/Mandatory-Priorität, HBF-Luftlinie und stabile Ordnung |

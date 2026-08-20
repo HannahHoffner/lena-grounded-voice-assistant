@@ -79,10 +79,10 @@ def interpretation_from_choices(
     need = dialog.originating_need
     services: list[RequestedService] = []
     if dialog.dialog_type == DialogType.SLEEP_TARGET_GROUP:
-        if "female" in values:
+        if "under_18" in values:
+            facts.age_group = AgeGroup.UNDER_18
+        elif "female" in values:
             facts.gender = Gender.FEMALE
-        if "under_27" in values:
-            facts.age_group = AgeGroup.UNDER_27
     elif dialog.dialog_type == DialogType.ORGANIZATION_NEED:
         if values == ["sleep"]:
             need = Need.SLEEP
@@ -118,7 +118,7 @@ def interpretation_from_choices(
     else:
         risk_status = AcuteRiskStatus.NOT_DETECTED
     return QueryInterpretation(
-        contract_version="3",
+        contract_version="4",
         need=need,
         explicit_service_requests=services,
         scope_status=ScopeStatus.IN_SCOPE,

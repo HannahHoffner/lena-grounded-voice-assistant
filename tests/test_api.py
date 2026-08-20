@@ -61,7 +61,7 @@ def _interpretation(
     explicit_facts.update(facts or {})
     return QueryInterpretation.model_validate(
         {
-            "contract_version": "3",
+            "contract_version": "4",
             "need": need.value,
             "explicit_service_requests": [item.value for item in services or []],
             "scope_status": scope.value,
@@ -187,7 +187,9 @@ def test_health_and_frontend_work() -> None:
     health = client.get("/api/health")
     assert health.status_code == 200
     assert health.json()["kb_loaded"] is True
-    assert health.json()["offer_count"] == 26
+    assert health.json()["offer_count"] == 28
+    assert health.json()["official_offer_source"]["status"] == "verified"
+    assert health.json()["official_offer_source"]["record_count"] == 2
     assert health.json()["active_provider"] == "template"
     assert health.json()["llm_selector_available"] is False
     assert health.json()["selector_contract_version"] == "1"
@@ -506,10 +508,16 @@ def test_blablador_failure_falls_back_without_exposing_error(monkeypatch: pytest
         "/api/query", json={"query": "Where can I get food?", "language": "en", "category": None}
     ).json()
 
+    # Seit der Untersuchung zu unbemerkten technischen Fallbacks (Zeile 5)
+    # enthält der Text zusätzlich den deterministischen Hilfebus-Kontakt statt
+    # eines reinen "versuche es erneut"-Hinweises, sofern die Wissensbasis ihn
+    # liefert.
+    offer = next(offer for offer in app.state.kb.offers if "general_help_referral_first" in offer.priority_rules)
     assert body["status"] == "error"
     assert body["provider"] == "template"
     assert "secret" not in body["answer"]
-    assert body["cards"] == []
+    assert [card["id"] for card in body["cards"]] == [offer.id]
+    assert body["cards"][0]["address"] is None
     assert body["map_data"] is None
     assert calls == 1  # Interpreterfehler darf keinen Formulatoraufruf auslösen.
 
@@ -565,7 +573,11 @@ def test_provider_rejects_unsupported_numbers(monkeypatch: pytest.MonkeyPatch) -
 def test_provider_accepts_source_time_with_different_range_wording(monkeypatch: pytest.MonkeyPatch) -> None:
     app = create_app(settings("blablador"))
     provider: BlabladorProvider = app.state.service.blablador
-    offer = next(item for item in app.state.kb.offers if "Care Bags" in item.name)
+    # Angebot 16 (TiMMi ToHelp - Projekt "Care Bags") zeigt seit dem
+    # Organisations-display_name-Fallback (Untersuchung zu unbemerkten
+    # Fallbacks, Folgefix) den kuratierten Kurznamen "TiMMi ToHelp" statt des
+    # vollen Quellnamens; per ID statt per Namensteilstring auswählen.
+    offer = next(item for item in app.state.kb.offers if item.id == "16")
     evidence = _evidence_for(app, offer, query="food")
     time_fact = next(
         fact for fact in evidence.selected_offers[0].facts
@@ -653,7 +665,7 @@ def test_interpreter_then_candidate_selector_formulates_from_curated_records() -
             return CandidateSelectionResponse(
                 contract_version="1",
                 selection_status="selected",
-                selected_ids=[kwargs["decision"].selectable_candidates[0].offer_id],
+                selected_ids=[kwargs["decision"].selectable_candidates[-1].offer_id],
             )
 
         async def formulate_answer(self, **kwargs) -> ProviderAnswer:
@@ -710,7 +722,7 @@ def test_map_destinations_not_cited_in_the_answer_are_still_localized() -> None:
             return CandidateSelectionResponse(
                 contract_version="1",
                 selection_status="selected",
-                selected_ids=[kwargs["decision"].selectable_candidates[0].offer_id],
+                selected_ids=[kwargs["decision"].selectable_candidates[-1].offer_id],
             )
 
         async def formulate_answer(self, **kwargs) -> ProviderAnswer:
@@ -731,7 +743,13 @@ def test_map_destinations_not_cited_in_the_answer_are_still_localized() -> None:
     destinations = body["map_data"]["destinations"]
     assert len(destinations) > len(cited_ids), "test needs at least one uncited destination to be meaningful"
 
+    # Jedes nicht zitierte Ziel muss korrekt lokalisiert sein; dass sich die
+    # Lokalisierung ueberhaupt vom deutschen Original unterscheidet, muss aber
+    # nur bei mindestens einem gelten -- einzelne kurze Bezeichnungen (z. B.
+    # "Hilfebus") bleiben in der maschinellen EN-Uebersetzung legitim
+    # unveraendert, weil es keine idiomatische Entsprechung gibt.
     kb_by_id = app.state.service.kb.by_id()
+    any_distinct = False
     for destination in destinations:
         if destination["id"] in cited_ids:
             continue
@@ -740,9 +758,8 @@ def test_map_destinations_not_cited_in_the_answer_are_still_localized() -> None:
             offer, Language.EN, app.state.service.translation_catalog, app.state.service.translation_policy
         )
         assert destination["description"] == expected.short_description
-        assert destination["description"] != offer.short_description, (
-            f"offer {offer.id} has no EN translation fixture to distinguish localized from raw -- pick another id"
-        )
+        any_distinct = any_distinct or destination["description"] != offer.short_description
+    assert any_distinct, "test needs at least one uncited destination with a distinct EN translation to be meaningful"
 
 
 def test_formulator_retries_once_after_grounding_failure_then_succeeds() -> None:
@@ -848,7 +865,7 @@ def test_structured_dialog_follow_up_excludes_natural_language_session_turns() -
             evidence = kwargs["evidence"]
             captured["formulator_query"] = evidence.current_query
             return ProviderAnswer(
-                answer="Wende dich an Jugendstreetwork.",
+                answer="Wende dich an den Jugendnotdienst.",
                 card_ids=[item.offer_id for item in evidence.selected_offers],
                 answer_type=evidence.answer_type,
             )
@@ -863,7 +880,7 @@ def test_structured_dialog_follow_up_excludes_natural_language_session_turns() -
     ).json()
 
     assert second["provider"] == "blablador"
-    assert [card["id"] for card in second["cards"]] == ["17.1"]
+    assert [card["id"] for card in second["cards"]] == ["vkkj_jugendnotdienst", "21"]
     assert captured["interpreter_history"] == []
     assert captured["formulator_query"] == "Ich bin erst 12."
 
@@ -980,7 +997,7 @@ def test_interpreter_prompt_has_versions_context_and_no_offer_index(monkeypatch:
     assert interpretation.need == Need.SLEEP
     assert interpretation.acute_risk_status == AcuteRiskStatus.NOT_DETECTED
     assert "acute_risk_status" in payload["messages"][0]["content"]
-    assert user_prompt["contract_version"] == "3"
+    assert user_prompt["contract_version"] == "4"
     assert user_prompt["prompt_version"] == INTERPRETER_PROMPT_VERSION
     assert user_prompt["current_query"] == "Wo kann ich übernachten?"
     assert user_prompt["recent_user_messages"] == ["Ich brauche Hilfe"]

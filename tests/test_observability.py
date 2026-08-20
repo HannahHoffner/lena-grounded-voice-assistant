@@ -37,7 +37,7 @@ def _interpretation(
 ) -> QueryInterpretation:
     return QueryInterpretation.model_validate(
         {
-            "contract_version": "3",
+            "contract_version": "4",
             "need": need.value,
             "explicit_service_requests": [],
             "scope_status": scope.value,
@@ -82,7 +82,8 @@ def _records(path: Path) -> list[dict[str, object]]:
 
 def test_unavailable_interpreter_writes_minimal_redacted_safety_interaction(tmp_path: Path) -> None:
     settings = _settings(tmp_path)
-    response = TestClient(create_app(settings)).post(
+    app = create_app(settings)
+    response = TestClient(app).post(
         "/api/query",
         json={"query": "Wo bekomme ich Essen?", "language": "de"},
     )
@@ -94,7 +95,12 @@ def test_unavailable_interpreter_writes_minimal_redacted_safety_interaction(tmp_
     assert record["language"] == "de"
     assert record["input_mode"] == "text"
     assert record["route"] == "interpreter_error"
-    assert record["source_ids"] == []
+    # Seit der Untersuchung zu unbemerkten technischen Fallbacks (Zeile 5)
+    # zitiert der technische Fallback den Hilfebus-Kontakt als echtes Angebot
+    # (source_ids ist damit korrekt nicht mehr leer, siehe assert_technical_
+    # hilfebus_stop in test_safety_policy.py für den analogen Fall).
+    hilfebus_offer = next(offer for offer in app.state.kb.offers if "general_help_referral_first" in offer.priority_rules)
+    assert record["source_ids"] == [hilfebus_offer.id]
     assert record["candidate_result_count"] == 0
     assert record["acute_risk_detected"] is False
     assert record["fallback_used"] is True
@@ -223,7 +229,8 @@ def test_provider_failure_stores_controlled_fallback_and_logs_event(
     assert record["route"] == "interpreter_error"
     assert record["interpreter_error_code"] == "interpreter_http_error"
     assert record["selector_bypass_reason"] == "interpreter_unavailable"
-    assert record["source_ids"] == []
+    hilfebus_offer = next(offer for offer in app.state.kb.offers if "general_help_referral_first" in offer.priority_rules)
+    assert record["source_ids"] == [hilfebus_offer.id]
     assert "query.interpreter.failed" in app_logs
     assert "query.fallback.used" in app_logs
     assert "request.completed" in app_logs
@@ -292,7 +299,8 @@ def test_no_results_path_stores_final_response(tmp_path: Path) -> None:
 
     assert record["assistant_answer"] == response.json()["answer"]
     assert record["route"] == "interpreter_error"
-    assert record["source_ids"] == []
+    hilfebus_offer = next(offer for offer in app.state.kb.offers if "general_help_referral_first" in offer.priority_rules)
+    assert record["source_ids"] == [hilfebus_offer.id]
 
 
 def test_disabled_interaction_logging_creates_no_file(tmp_path: Path) -> None:

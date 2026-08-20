@@ -411,7 +411,11 @@ def load_settings() -> Settings:
         ),
         speech_transcription_base_url=speech_base_url or _optional_env("BLABLADOR_BASE_URL", "LENA_LLM_BASE_URL"),
         speech_transcription_api_key=speech_api_key or _optional_env("BLABLADOR_API_KEY", "LENA_LLM_API_KEY"),
-        speech_transcription_model=speech_model or "whisper-large-v3",
+        # "whisper-large-v3" ist auf Blablador kein registriertes Modell (404
+        # "No backend for model whisper-large-v3", live geprueft am 14.08.2026);
+        # der tatsaechliche Modellalias dort ist "faster-whisper-large-v3"
+        # (siehe GET /v1/models).
+        speech_transcription_model=speech_model or "faster-whisper-large-v3",
         speech_transcription_timeout_seconds=speech_timeout,
         speech_synthesis_base_url=(
             synthesis_base_url

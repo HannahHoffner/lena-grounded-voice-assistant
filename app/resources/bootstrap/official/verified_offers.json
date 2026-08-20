@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "source_version": "vkkj-2026-08-20",
+  "sources": [
+    {
+      "id": "vkkj_youth_night_shelter_web",
+      "title": "Kontakt- und Notschlafstelle für Jugendliche",
+      "url": "https://www.vkkj.de/verzeichnis/visitenkarte.php?mandat=240969",
+      "retrieved_at": "2026-08-20T00:00:00+02:00"
+    },
+    {
+      "id": "vkkj_youth_emergency_service_web",
+      "title": "Jugendnotdienst",
+      "url": "https://www.vkkj.de/verzeichnis/visitenkarte.php?mandat=230429",
+      "retrieved_at": "2026-08-20T00:00:00+02:00"
+    }
+  ],
+  "offers": [
+    {
+      "id": "vkkj_notschlafstelle",
+      "source_index": 10001,
+      "source_title": "Kontakt- und Notschlafstelle für Jugendliche",
+      "name": "Kontakt- und Notschlafstelle für Jugendliche",
+      "source_category": "Offizielle Betreiberwebsite",
+      "short_description": "Kurzfristige Kontakt- und Übernachtungsstelle für Jugendliche von 14 bis unter 18 Jahren.",
+      "district": "Reudnitz-Thonberg",
+      "address": "Breite Straße 10, 04317 Leipzig",
+      "header_address": "Breite Straße 10, 04317 Leipzig",
+      "services": [
+        "Notschlafstelle täglich von 22:00 bis 10:00 Uhr",
+        "Schutzraum, Krisenintervention und Versorgung",
+        "Niedrigschwellige Beratung und Unterstützung"
+      ],
+      "opening_hours_raw": ["Täglich 22:00–10:00 Uhr"],
+      "standzeiten_raw": [],
+      "phone_numbers": ["0341 9948 288"],
+      "emails": ["jugend-notschlafstelle@leipzig.de"],
+      "website": "https://www.vkkj.de/verzeichnis/visitenkarte.php?mandat=240969",
+      "notes": ["Kapazität und Aufnahme müssen direkt bei der Einrichtung erfragt werden."],
+      "raw_fields": {},
+      "raw_text": "Kontakt- und Notschlafstelle für Jugendliche; Breite Straße 10, 04317 Leipzig; für Jugendliche von 14 bis unter 18 Jahren; täglich 22:00–10:00 Uhr.",
+      "geometry": null,
+      "source_feature_id": "vkkj:240969",
+      "source_updated_at": null,
+      "source_hash": null,
+      "curation_hash": null,
+      "raw_properties": {},
+      "source_reference_ids": ["vkkj_youth_night_shelter_web"]
+    },
+    {
+      "id": "vkkj_jugendnotdienst",
+      "source_index": 10002,
+      "source_title": "Jugendnotdienst",
+      "name": "Jugendnotdienst",
+      "source_category": "Offizielle Betreiberwebsite",
+      "short_description": "Schutz-, Krisen- und Inobhutnahmedienst für Kinder und Jugendliche.",
+      "district": "Grünau-Mitte",
+      "address": "Ringstraße 4, 04209 Leipzig",
+      "header_address": "Ringstraße 4, 04209 Leipzig",
+      "services": [
+        "Schutzraum und Krisenhilfe für Minderjährige",
+        "Inobhutnahmeangebot für 12- bis unter 18-Jährige",
+        "Beratung und Unterstützung für Kinder, Jugendliche und Bezugspersonen"
+      ],
+      "opening_hours_raw": ["Rund um die Uhr"],
+      "standzeiten_raw": [],
+      "phone_numbers": ["0341 9948280", "0172 576 86 48"],
+      "emails": ["jnd@leipzig.de"],
+      "website": "https://www.vkkj.de/verzeichnis/visitenkarte.php?mandat=230429",
+      "notes": ["Aufnahme und konkrete Unterbringung müssen direkt mit dem Jugendnotdienst geklärt werden."],
+      "raw_fields": {},
+      "raw_text": "Jugendnotdienst; Ringstraße 4, 04209 Leipzig; Schutz- und Inobhutnahmeangebot für 12 bis unter 18 Jahre; rund um die Uhr erreichbar.",
+      "geometry": null,
+      "source_feature_id": "vkkj:230429",
+      "source_updated_at": null,
+      "source_hash": null,
+      "curation_hash": null,
+      "raw_properties": {},
+      "source_reference_ids": ["vkkj_youth_emergency_service_web"]
+    }
+  ]
+}

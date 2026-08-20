@@ -90,7 +90,7 @@ class _ToiletInterpreter:
     async def interpret_query(self, **_kwargs):
         return QueryInterpretation.model_validate(
             {
-                "contract_version": "3",
+                "contract_version": "4",
                 "need": "toilet",
                 "explicit_service_requests": [],
                 "scope_status": "in_scope",
@@ -446,7 +446,7 @@ def test_no_safe_toilet_fallback_is_a_controlled_error(
 
 def test_packaged_bootstrap_and_composite_runtime_fingerprint(tmp_path: Path) -> None:
     first = load_active_knowledge_base(_settings(tmp_path))
-    assert len(first.offers) == 26
+    assert len(first.offers) == 28
     assert len(first.public_toilets) == 21
     assert not {"1", "2", "3", "4"}.intersection(offer.id for offer in first.offers)
     assert not set(offer.id for offer in first.offers).intersection(record.id for record in first.public_toilets)
@@ -489,7 +489,7 @@ def test_toilet_release_failure_does_not_break_social_runtime(
 
     monkeypatch.setattr("app.kb_loader.load_toilet_runtime", fail)
     kb = load_active_knowledge_base(settings)
-    assert len(kb.offers) == 26
+    assert len(kb.offers) == 28
     assert kb.public_toilets == ()
     assert kb.metadata["public_toilets"]["error_code"] == "toilet_bound_release_unavailable"
 
@@ -740,7 +740,7 @@ def test_toilet_path_uses_interpreter_and_formulator_but_never_llm_selector(tmp_
         async def interpret_query(self, **_kwargs):
             return QueryInterpretation.model_validate(
                 {
-                    "contract_version": "3",
+                    "contract_version": "4",
                     "need": "toilet",
                     "explicit_service_requests": [],
                     "scope_status": "in_scope",
@@ -820,19 +820,23 @@ def test_invalid_interpreter_output_fails_closed_before_toilet_results(
         json={"query": "Wo ist eine Toilette?", "language": language.value},
     ).json()
 
+    # Seit der Untersuchung zu unbemerkten technischen Fallbacks (Zeile 5)
+    # enthält der Text zusätzlich den deterministischen Hilfebus-Kontakt statt
+    # eines reinen "versuche es erneut"-Hinweises, sofern die Wissensbasis ihn
+    # liefert; der bedingte 112-Hinweis bleibt dabei erhalten.
+    offer = next(offer for offer in app.state.kb.offers if "general_help_referral_first" in offer.priority_rules)
+    phone = ", ".join(offer.phone_numbers) or "—"
+    times = "; ".join(offer.opening_hours_raw or offer.standzeiten_raw) or "—"
     assert body["status"] == "error"
     assert body["provider"] == "template"
-    assert body["answer"] == safety_text(language, SafetyTextKind.TECHNICAL)
-    assert body["cards"] == []
-    assert body["card_ids"] == []
-    assert body["spoken_result_ids"] == []
-    assert body["map_marker_ids"] == []
-    assert body["map_data"] is None
+    assert body["answer"] == safety_text(language, SafetyTextKind.TECHNICAL_HILFEBUS, phone=phone, times=times)
+    assert [card["id"] for card in body["cards"]] == [offer.id]
+    assert body["card_ids"] == [offer.id]
     assert calls == {"interpreter": 1, "selector": 0, "formulator": 0}
     record = json.loads(settings.interaction_log_path.read_text(encoding="utf-8"))
     assert record["route"] == "interpreter_error"
     assert record["interpreter_error_code"] == "interpreter_schema_error"
-    assert record["source_ids"] == []
+    assert record["source_ids"] == [offer.id]
 
 
 def test_missing_verified_toilets_never_falls_back_to_social_offers(tmp_path: Path) -> None:

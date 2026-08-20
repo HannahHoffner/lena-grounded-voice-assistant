@@ -34,6 +34,7 @@ BOOTSTRAP_FILES = {
     "app/resources/bootstrap/i18n/dynamic_scenarios.json",
     "app/resources/bootstrap/i18n/listening_review.json",
     "app/resources/bootstrap/i18n/offer_translations.json",
+    "app/resources/bootstrap/official/verified_offers.json",
     "app/resources/bootstrap/safety/scenarios.json",
     "app/resources/bootstrap/wfs/current.geojson",
     "app/resources/bootstrap/wfs/last_change_report.json",
@@ -154,6 +155,7 @@ def test_bootstrap_resources_are_complete_and_cwd_independent(tmp_path: Path, mo
         "i18n/dynamic_scenarios.json",
         "i18n/listening_review.json",
         "evaluation/live_scenarios.json",
+        "official/verified_offers.json",
         "toilets/active_release.json",
         "drinking_fountains/active_release.json",
     ):
@@ -226,12 +228,13 @@ assert 'site-packages' in str(Path(app.__file__).resolve()).casefold(), app.__fi
 assert settings.kb_path.is_file()
 assert settings.runtime_dir == Path(__import__('os').environ['LENA_RUNTIME_DIR']).resolve()
 assert settings.data_dir == Path(__import__('os').environ['LENA_DATA_DIR']).resolve()
-with TestClient(create_app(settings)) as client:
+app_instance = create_app(settings)
+with TestClient(app_instance) as client:
     assert client.get('/').status_code == 200
     assert client.get('/static/styles.css').status_code == 200
     health = client.get('/api/health').json()
     assert health['kb_loaded'] is True and health['data_release_id'].startswith('curation-')
-    assert health['offer_count'] == 26
+    assert health['offer_count'] == 28
     assert health['public_toilets']['record_count'] == 21
     assert health['public_toilets']['eligible_record_count'] == 20
     assert health['drinking_fountain_record_count'] == 35
@@ -241,17 +244,24 @@ with TestClient(create_app(settings)) as client:
     assert health['safety_policy_version'] == '1'
     assert health['technical_fallback_includes_emergency_guidance'] is True
     copy = client.get('/api/i18n/copy?language=pl').json()
-    assert copy['copy_version'] == '5' and copy['language'] == 'pl' and copy['texts']
+    assert copy['copy_version'] == '7' and copy['language'] == 'pl' and copy['texts']
+    # Seit Version 0.3.0 enthaelt der technische Fallback zusaetzlich den
+    # deterministischen Hilfebus-Kontakt statt eines reinen 112-Hinweises,
+    # sofern die Wissensbasis ihn liefert (Untersuchung Zeile 5).
+    hilfebus_id = next(o.id for o in app_instance.state.kb.offers if 'general_help_referral_first' in o.priority_rules)
     response = client.post('/api/query', json={'query': 'Wo gibt es Essen?', 'language': 'de'})
     assert response.status_code == 200
     assert response.json()['answer_type'] == 'technical_fallback'
-    assert response.json()['cards'] == [] and response.json()['map_data'] is None
+    assert [card['id'] for card in response.json()['cards']] == [hilfebus_id]
+    assert response.json()['map_data'] is None
     assert '112' in response.json()['answer']
     toilets = client.post('/api/query', json={'query': 'Wo ist eine Toilette?', 'language': 'de'}).json()
-    assert toilets['cards'] == [] and toilets['map_marker_ids'] == []
+    assert [card['id'] for card in toilets['cards']] == [hilfebus_id]
+    assert toilets['map_marker_ids'] == []
     assert toilets['answer_type'] == 'technical_fallback' and '112' in toilets['answer']
     fountains = client.post('/api/query', json={'query': 'Wo ist der nächste Trinkbrunnen?', 'language': 'de'}).json()
-    assert fountains['cards'] == [] and fountains['map_marker_ids'] == []
+    assert [card['id'] for card in fountains['cards']] == [hilfebus_id]
+    assert fountains['map_marker_ids'] == []
     assert fountains['answer_type'] == 'technical_fallback' and '112' in fountains['answer']
 assert (settings.runtime_dir / 'sessions.json').is_file()
 records = (settings.runtime_dir / 'logs' / 'interactions.jsonl').read_text(encoding='utf-8').splitlines()
@@ -300,7 +310,7 @@ with TestClient(create_app(load_settings())) as client:
     assert health['runtime_kb_status'] == 'degraded'
     assert health['source_status'] == 'pointer_error'
     assert health['runtime_source'] == 'packaged_bootstrap'
-    assert health['offer_count'] == 26
+    assert health['offer_count'] == 28
 """
     try:
         _run(str(python), "-c", fallback_script, cwd=outside, env=clean_env)

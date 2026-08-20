@@ -21,10 +21,10 @@
       "forbidden_claims": ["free_capacity", "guaranteed_admission"], "required_facts": ["Rücke"]
     },
     {
-      "scenario_id": "sleep_u27",
-      "synthetic_inputs": {"de": "Ich bin 24 und brauche einen Schlafplatz.", "en": "I am 24 and need a place to sleep.", "pl": "Mam 24 lata i potrzebuję noclegu.", "ro": "Am 24 de ani și am nevoie de un loc de dormit.", "ru": "Мне 24 года, и мне нужен ночлег."},
-      "expected_need": "sleep", "expected_candidate_roles": ["referral_contact"], "expected_offer_ids": ["17.1"], "expected_answer_type": "grounded_referral",
-      "forbidden_claims": ["streetwork_is_accommodation"], "required_facts": ["Jugendstreetwork", "referral_role"]
+      "scenario_id": "sleep_minor",
+      "synthetic_inputs": {"de": "Ich bin 17 und brauche einen Schlafplatz.", "en": "I am 17 and need a place to sleep.", "pl": "Mam 17 lat i potrzebuję noclegu.", "ro": "Am 17 ani și am nevoie de un loc de dormit.", "ru": "Мне 17 лет, и мне нужен ночлег."},
+      "expected_need": "sleep", "expected_candidate_roles": ["direct_service", "referral_contact"], "expected_offer_ids": ["vkkj_notschlafstelle", "vkkj_jugendnotdienst"], "expected_answer_type": "grounded_result",
+      "forbidden_claims": ["adult_accommodation", "guaranteed_admission"], "required_facts": ["Kontakt- und Notschlafstelle", "Jugendnotdienst"]
     },
     {
       "scenario_id": "sleep_woman_27",

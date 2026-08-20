@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pytest
 from pydantic import ValidationError
@@ -14,12 +15,16 @@ from app.curation import load_curation_catalog, project_runtime_offers
 from app.interpreter import AcuteRiskStatus, Need, QueryInterpretation, RequestedService
 from app.kb_loader import load_knowledge_base
 from app.models import Category, OfferRecord
+from app.official_offer_source import load_official_offer_source
 
 
 ROOT = Path(__file__).resolve().parents[1]
 CATALOG = load_curation_catalog(ROOT / "app" / "resources" / "bootstrap" / "curation" / "social_offers.json")
 SOURCE = load_knowledge_base(ROOT / "data" / "wfs" / "releases" / "legacy-3b72f95a88f9" / "offers.json")
-OFFERS, ORGANIZATION_ALIASES = project_runtime_offers(SOURCE.offers, CATALOG)
+OFFICIAL_SOURCE, _ = load_official_offer_source(
+    ROOT / "app" / "resources" / "bootstrap" / "official" / "verified_offers.json"
+)
+OFFERS, ORGANIZATION_ALIASES = project_runtime_offers([*SOURCE.offers, *OFFICIAL_SOURCE.offers], CATALOG)
 SELECTOR = CandidateSelector()
 NOW = datetime(2026, 8, 3, 12, 0, tzinfo=UTC)  # Monday; rules receive an explicit clock.
 
@@ -29,6 +34,7 @@ def interpretation(
     *,
     services: list[RequestedService] | None = None,
     age: int | None = None,
+    age_group: str = "unknown",
     gender: str = "unknown",
     drug_use: str = "unknown",
     no_benefit: str = "unknown",
@@ -41,13 +47,14 @@ def interpretation(
 ) -> QueryInterpretation:
     return QueryInterpretation.model_validate(
         {
-                "contract_version": "3",
+                "contract_version": "4",
             "need": need.value,
             "explicit_service_requests": [item.value for item in services or []],
             "scope_status": "unclear" if need == Need.UNKNOWN else "in_scope",
             "input_language": language,
             "explicit_facts": {
                 "age": age,
+                "age_group": age_group,
                 "gender": gender,
                 "drug_use": drug_use,
                 "no_social_benefit_entitlement": no_benefit,
@@ -83,7 +90,7 @@ def conditional_ids(decision: CandidateDecision) -> list[str]:
 
 
 def test_runtime_taxonomy_is_complete_strict_and_excludes_social_office_records() -> None:
-    assert len(OFFERS) == 26
+    assert len(OFFERS) == 28
     assert not {"1", "2", "3", "4"}.intersection(offer.id for offer in OFFERS)
     assert all(offer.place_type and offer.capabilities for offer in OFFERS)
     with pytest.raises(ValidationError):
@@ -130,23 +137,53 @@ def test_general_sleep_uses_ruecke_as_referral_and_keeps_specific_offers_conditi
     assert "gender" in {item.value for item in decision.missing_information}
 
 
-@pytest.mark.parametrize("age", [16, 17, 18, 24, 26])
-def test_u27_sleep_routes_to_youth_referrals_with_rossplatz_first(age: int) -> None:
-    decision = decide(interpretation(Need.SLEEP, age=age, gender="female"))
-    assert ids(decision)[0] == "17.1"
-    assert decision.mandatory_candidates[0].offer_id == "17.1"
-    assert all(item.role == CandidateRole.REFERRAL_CONTACT for item in decision.candidates)
-    assert "8" not in ids(decision)
-    if age < 18:
-        assert "8" not in conditional_ids(decision)
-    else:
-        assert "8" in conditional_ids(decision)
+def test_minor_sleep_uses_verified_vkkj_services_and_hilfebus_referral() -> None:
+    age_17 = decide(interpretation(Need.SLEEP, age=17, gender="female"))
+    assert [item.offer_id for item in age_17.mandatory_candidates] == [
+        "vkkj_notschlafstelle",
+        "vkkj_jugendnotdienst",
+    ]
+    assert age_17.mandatory_candidates[0].role == CandidateRole.DIRECT_SERVICE
+    assert age_17.mandatory_candidates[1].role == CandidateRole.REFERRAL_CONTACT
+    assert "21" in ids(age_17)
+    assert "8" not in ids(age_17) + conditional_ids(age_17)
+
+    age_13 = decide(interpretation(Need.SLEEP, age=13))
+    assert age_13.mandatory_candidates[0].offer_id == "vkkj_jugendnotdienst"
+    assert "vkkj_notschlafstelle" not in ids(age_13) + conditional_ids(age_13)
+
+    unspecified_minor = decide(interpretation(Need.SLEEP, age_group="under_18"))
+    assert unspecified_minor.mandatory_candidates[0].offer_id == "vkkj_jugendnotdienst"
+    assert "vkkj_notschlafstelle" in conditional_ids(unspecified_minor)
 
 
-def test_age_27_ends_u27_priority_and_unknown_or_young_does_not_create_numeric_age() -> None:
-    adult = decide(interpretation(Need.SLEEP, age=27, gender="male"))
-    assert ids(adult)[0] == "7"
-    assert not any(item.offer_id.startswith("17.") for item in adult.candidates)
+def test_explicit_minor_protection_prioritizes_jugendnotdienst() -> None:
+    decision = decide(
+        interpretation(Need.SLEEP, age=17, services=[RequestedService.PROTECTION])
+    )
+    assert [item.offer_id for item in decision.mandatory_candidates][:2] == [
+        "vkkj_jugendnotdienst",
+        "vkkj_notschlafstelle",
+    ]
+    assert ReasonCode.MINOR_CRISIS_PRIORITY in decision.mandatory_candidates[0].reason_codes
+
+
+def test_adult_sleep_does_not_activate_youth_offers_and_vague_age_stays_unknown() -> None:
+    for age in (18, 24, 27):
+        adult = decide(interpretation(Need.SLEEP, age=age, gender="male"))
+        assert ids(adult)[0] == "7"
+        assert not any(
+            offer_id.startswith("vkkj_") or offer_id.startswith(("17.", "19.", "20."))
+            for offer_id in ids(adult) + conditional_ids(adult)
+        )
+    age_18_female = decide(interpretation(Need.SLEEP, age=18, gender="female"))
+    assert ids(age_18_female) == ["8"]
+    age_24 = decide(interpretation(Need.SLEEP, age=24, gender="female"))
+    assert ids(age_24) == ["8"]
+    assert not any(
+        next(offer for offer in OFFERS if offer.id == item.offer_id).place_type == "youth_streetwork"
+        for item in age_24.candidates
+    )
     young = decide(
         interpretation(Need.SLEEP, hints=[{"field": "age", "value": "young"}])
     )
@@ -197,7 +234,7 @@ def test_drug_specific_offers_require_explicit_drug_use_and_alias_does_not_infer
     assert ids(day_offer) == ["11"]
 
 
-def test_mobile_alias_never_guesses_team_but_gruenau_narrows_for_u27() -> None:
+def test_mobile_alias_never_guesses_team_but_gruenau_narrows_for_explicit_youth_need() -> None:
     ambiguous = decide(interpretation(Need.ADVICE, age=24), query="Kübel Beratung")
     assert ids(ambiguous) == []
     assert set(conditional_ids(ambiguous)) == {"19.1", "19.2", "19.3"}
@@ -219,32 +256,30 @@ def test_suedpol_alias_needs_a_district_and_connewitz_selects_its_curated_team()
     assert ReasonCode.DISTRICT_ALIAS_MATCH in narrowed.candidates[0].reason_codes
 
 
-def test_u27_primary_contact_priority_is_catalog_data_not_a_hardcoded_offer_id() -> None:
-    renamed = [
-        offer.model_copy(update={"id": "99.1"}) if offer.id == "17.1" else offer
-        for offer in OFFERS
-    ]
-    decision = SELECTOR.select(
-        interpretation(Need.SLEEP, age=24, gender="female"),
-        renamed,
-        now=NOW,
-    )
+def test_youth_offers_require_explicit_youth_request_but_keep_age_limit() -> None:
+    ordinary = decide(interpretation(Need.ADVICE, age=24))
+    assert not any(offer_id.startswith(("17.", "19.", "20.")) for offer_id in ids(ordinary))
 
-    assert ids(decision)[0] == "99.1"
-    assert "u27_primary_contact" in next(
-        offer.priority_rules for offer in renamed if offer.id == "99.1"
+    explicit = decide(
+        interpretation(Need.ADVICE, age=24, services=[RequestedService.YOUTH_SUPPORT])
     )
+    assert "17.1" in ids(explicit)
+
+    too_old = decide(
+        interpretation(Need.ADVICE, age=27, services=[RequestedService.YOUTH_SUPPORT])
+    )
+    assert "17.1" not in ids(too_old) + conditional_ids(too_old)
 
 
 @pytest.mark.parametrize(
     ("service", "expected"),
     [
-        (RequestedService.FOOD, {"9", "10", "14", "16", "18", "21", "22"}),
+        (RequestedService.FOOD, {"9", "10", "14", "16", "21", "22"}),
         (RequestedService.HYGIENE, {"9", "10", "16"}),
-        (RequestedService.SHOWER, {"9", "10", "17.1", "17.2", "17.3", "18", "19.1", "19.2", "19.3"}),
-        (RequestedService.LAUNDRY, {"9", "10", "17.1", "17.2", "17.3", "18", "19.1", "19.2", "19.3"}),
-        (RequestedService.CLOTHING, {"9", "14", "16", "19.1", "19.2", "19.3", "21", "22"}),
-        (RequestedService.POSTAL, {"9", "10", "17.1", "17.2", "17.3", "18"}),
+        (RequestedService.SHOWER, {"9", "10"}),
+        (RequestedService.LAUNDRY, {"9", "10"}),
+        (RequestedService.CLOTHING, {"9", "14", "16", "21", "22"}),
+        (RequestedService.POSTAL, {"9", "10"}),
     ],
 )
 def test_basic_needs_use_only_positive_capability_evidence(service: RequestedService, expected: set[str]) -> None:
@@ -254,10 +289,101 @@ def test_basic_needs_use_only_positive_capability_evidence(service: RequestedSer
 
 def test_water_is_not_food_and_uses_only_documented_drinks_or_water() -> None:
     decision = decide(interpretation(Need.DRINKING_WATER, services=[RequestedService.DRINKING_WATER]))
-    assert set(ids(decision)) == {"16", "21", "22"}
+    assert set(ids(decision)) == {"22"}
     assert {"7", "11"} <= set(conditional_ids(decision))
     assert all(offer_id not in {"1", "2", "3", "4"} for offer_id in ids(decision))
     assert all(next(offer for offer in OFFERS if offer.id == offer_id).place_type != "drinking_fountain" for offer_id in ids(decision))
+
+
+@pytest.mark.parametrize(
+    ("now", "hilfebus_expected"),
+    [
+        (datetime(2026, 8, 14, 13, 32, tzinfo=ZoneInfo("Europe/Berlin")), False),
+        (datetime(2026, 8, 16, 19, 59, tzinfo=ZoneInfo("Europe/Berlin")), False),
+        (datetime(2026, 8, 16, 20, 0, tzinfo=ZoneInfo("Europe/Berlin")), True),
+        (datetime(2026, 8, 16, 21, 0, tzinfo=ZoneInfo("Europe/Berlin")), True),
+        (datetime(2026, 8, 16, 21, 1, tzinfo=ZoneInfo("Europe/Berlin")), False),
+    ],
+)
+def test_hilfebus_water_requires_its_sunday_stand_window(
+    now: datetime,
+    hilfebus_expected: bool,
+) -> None:
+    value = interpretation(Need.DRINKING_WATER, services=[RequestedService.DRINKING_WATER])
+    context = build_selection_context(
+        query="Ich habe Durst.",
+        interpretation=value,
+        offers=OFFERS,
+        organization_aliases=ORGANIZATION_ALIASES,
+        ui_category=None,
+    )
+    decision = SELECTOR.select(value, OFFERS, context=context, now=now)
+
+    assert ("21" in ids(decision)) is hilfebus_expected
+
+
+@pytest.mark.parametrize(
+    ("day", "time", "expected"),
+    [
+        ("thursday", None, True),
+        ("thursday", "16:30", True),
+        ("thursday", "19:01", False),
+        ("friday", None, False),
+    ],
+)
+@pytest.mark.parametrize(
+    ("need", "service"),
+    [
+        (Need.FOOD, RequestedService.FOOD),
+        (Need.DRINKING_WATER, RequestedService.DRINKING_WATER),
+        (Need.GENERAL_HELP, RequestedService.HYGIENE),
+        (Need.GENERAL_HELP, RequestedService.CLOTHING),
+    ],
+)
+def test_timmitohelp_basic_supplies_remain_bound_to_thursday_route(
+    day: str,
+    time: str | None,
+    expected: bool,
+    need: Need,
+    service: RequestedService,
+) -> None:
+    value = interpretation(
+        need,
+        services=[service],
+        day=day,
+        time=time,
+    )
+    context = build_selection_context(
+        query="Ich brauche Essen.",
+        interpretation=value,
+        offers=OFFERS,
+        organization_aliases=ORGANIZATION_ALIASES,
+        ui_category=None,
+    )
+    decision = SELECTOR.select(value, OFFERS, context=context, now=NOW)
+
+    assert ("16" in ids(decision)) is expected
+
+
+def test_explicit_sunday_water_request_keeps_documented_hilfebus_stand() -> None:
+    decision = decide(
+        interpretation(
+            Need.DRINKING_WATER,
+            services=[RequestedService.DRINKING_WATER],
+            day="sunday",
+        )
+    )
+
+    assert "21" in ids(decision)
+
+
+def test_hilfebus_is_referral_contact_for_uncovered_basic_help() -> None:
+    decision = decide(
+        interpretation(Need.GENERAL_HELP, services=[RequestedService.CLOTHING])
+    )
+    hilfebus = next(item for item in decision.mandatory_candidates if item.offer_id == "21")
+
+    assert hilfebus.role == CandidateRole.REFERRAL_CONTACT
 
 
 def test_food_need_ignores_age_restriction_even_when_offer_requires_adults() -> None:
@@ -368,8 +494,9 @@ def test_reason_and_rule_code_contracts_are_stable_and_machine_readable() -> Non
         "district_alias_match",
         "explicit_target_match",
         "general_sleep_contact_priority",
-        "u27_referral_priority",
-        "u27_supplemental_only",
+        "minor_sleep_priority",
+        "minor_crisis_priority",
+        "youth_intent_required",
         "curated_priority",
         "documented_schedule",
         "need_not_supported",

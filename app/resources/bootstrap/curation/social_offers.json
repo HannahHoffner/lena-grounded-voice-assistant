@@ -1,8 +1,9 @@
 {
   "schema_version": 1,
-  "catalog_version": "prototype-2026-08-01-wp3",
+  "catalog_version": "prototype-2026-08-20-timmitohelp-route",
   "approved_source_release_id": "legacy-3b72f95a88f9",
   "approved_source_hash": "3b72f95a88f98c57778f50beaa4c66af61b58493fe995feb1deb6f7756d7bf9c",
+  "approved_official_source_hash": "b864c075da3ff6ef3a4c8f9771cb688759db268af1a55db3907ae026cb4ee7c6",
   "review_policy": {
     "review_interval": null,
     "review_policy_status": "not_yet_formally_defined",
@@ -90,6 +91,11 @@
       "id": "uvo",
       "source_name": "Umfeldnahe Versorgung von Menschen ohne festen Wohnsitz",
       "display_name": "UVO"
+    },
+    {
+      "id": "vkkj",
+      "source_name": "Verbund Kommunaler Kinder- und Jugendhilfe",
+      "display_name": "VKKJ Leipzig"
     }
   ],
   "locations": [
@@ -188,6 +194,14 @@
     {
       "id": "medizin_taubestrasse",
       "address": "Taubestr. 2, 04347 Leipzig"
+    },
+    {
+      "id": "vkkj_breite_strasse",
+      "address": "Breite Straße 10, 04317 Leipzig"
+    },
+    {
+      "id": "vkkj_ringstrasse",
+      "address": "Ringstraße 4, 04209 Leipzig"
     }
   ],
   "service_offers": [
@@ -594,12 +608,29 @@
         "hygiene"
       ],
       "curation_decision_ids": [
-        "prototype_core"
+        "prototype_core",
+        "timmitohelp_thursday_route"
       ],
       "source_reference_ids": [
         "wfs_legacy_release",
-        "methodology_chapter"
-      ]
+        "methodology_chapter",
+        "timmitohelp_tourplan_pdf"
+      ],
+      "runtime_overrides": {
+        "address": null,
+        "header_address": null,
+        "standzeiten_raw": [
+          "Donnerstag ca. 16:00 Uhr: Dittrichring",
+          "Donnerstag ca. 16:30 Uhr: Lennéanlage",
+          "Donnerstag ca. 17:30 Uhr: Nikolaistraße"
+        ],
+        "notes": [
+          "Die mobile Verteilung findet donnerstags ungefähr zwischen 16:00 und 19:00 Uhr statt; geringe Abweichungen sind möglich.",
+          "Halte Ausschau nach dem bunten Team mit zwei Bollerwagen.",
+          "TiMMi ToHelp verteilt Lebensmittel, Getränke, Hygieneartikel und weitere Hilfsgüter, bietet aber keine Sozialberatung an."
+        ],
+        "geometry": null
+      }
     },
     {
       "id": "17.1",
@@ -612,7 +643,7 @@
       "target_groups": ["under_27"],
       "maximum_age": 26,
       "referral_needs": ["sleep", "general_help"],
-      "priority_rules": ["u27_referral_first", "u27_primary_contact"],
+      "priority_rules": ["youth_explicit_only"],
       "search_phrases": [
         "Roßplatz",
         "Rossplatz",
@@ -642,7 +673,7 @@
       "target_groups": ["under_27"],
       "maximum_age": 26,
       "referral_needs": ["sleep", "general_help"],
-      "priority_rules": ["u27_referral_first"],
+      "priority_rules": ["youth_explicit_only"],
       "search_phrases": [
         "Streetwork Ost",
         "Eisenbahnstraße"
@@ -671,7 +702,7 @@
       "target_groups": ["under_27"],
       "maximum_age": 26,
       "referral_needs": ["sleep", "general_help"],
-      "priority_rules": ["u27_referral_first"],
+      "priority_rules": ["youth_explicit_only"],
       "search_phrases": [
         "Streetwork Nord",
         "Georg-Schumann-Straße"
@@ -700,7 +731,7 @@
       "target_groups": ["under_27"],
       "maximum_age": 26,
       "referral_needs": ["sleep", "general_help"],
-      "priority_rules": ["u27_referral_first"],
+      "priority_rules": ["youth_explicit_only"],
       "needs": [
         "advice",
         "food",
@@ -726,7 +757,7 @@
       "target_groups": ["under_27"],
       "maximum_age": 26,
       "referral_needs": ["sleep", "general_help"],
-      "priority_rules": ["u27_referral_first"],
+      "priority_rules": ["youth_explicit_only"],
       "search_phrases": [
         "Team Westen",
         "Alt-West",
@@ -758,7 +789,7 @@
       "target_groups": ["under_27"],
       "maximum_age": 26,
       "referral_needs": ["sleep", "general_help"],
-      "priority_rules": ["u27_referral_first"],
+      "priority_rules": ["youth_explicit_only"],
       "search_phrases": [
         "Team Grünau",
         "Grünau",
@@ -790,7 +821,7 @@
       "target_groups": ["under_27"],
       "maximum_age": 26,
       "referral_needs": ["sleep", "general_help"],
-      "priority_rules": ["u27_referral_first"],
+      "priority_rules": ["youth_explicit_only"],
       "search_phrases": [
         "Team Südost",
         "Südost",
@@ -822,7 +853,7 @@
       "target_groups": ["under_27"],
       "maximum_age": 26,
       "referral_needs": ["sleep", "general_help"],
-      "priority_rules": ["u27_referral_first"],
+      "priority_rules": ["youth_explicit_only"],
       "search_phrases": [
         "suedpol",
         "Südpol",
@@ -852,7 +883,7 @@
       "target_groups": ["under_27"],
       "maximum_age": 26,
       "referral_needs": ["sleep", "general_help"],
-      "priority_rules": ["u27_referral_first"],
+      "priority_rules": ["youth_explicit_only"],
       "search_phrases": [
         "suedpol",
         "Südpol",
@@ -877,6 +908,7 @@
       "organization_id": "szl_suchtzentrum",
       "location_id": "safe_demmeringstrasse",
       "offer_type": "mobile_basic_support",
+      "display_name": "Hilfebus",
       "place_type": "help_bus",
       "capabilities": ["food", "drinking_water", "clothing", "counselling", "referral", "mobile_outreach"],
       "target_groups": ["adults", "people_experiencing_homelessness"],
@@ -997,6 +1029,40 @@
         "wfs_legacy_release",
         "methodology_chapter"
       ]
+    },
+    {
+      "id": "vkkj_notschlafstelle",
+      "source_id": "vkkj_notschlafstelle",
+      "organization_id": "vkkj",
+      "location_id": "vkkj_breite_strasse",
+      "offer_type": "youth_overnight_accommodation",
+      "display_name": "Kontakt- und Notschlafstelle für Jugendliche",
+      "place_type": "emergency_accommodation",
+      "capabilities": ["overnight_stay", "counselling", "protection"],
+      "target_groups": ["minors"],
+      "minimum_age": 14,
+      "maximum_age": 17,
+      "priority_rules": ["minor_sleep_first"],
+      "needs": ["sleep", "advice"],
+      "curation_decision_ids": ["vkkj_minor_sleep_services"],
+      "source_reference_ids": ["vkkj_youth_night_shelter_web"]
+    },
+    {
+      "id": "vkkj_jugendnotdienst",
+      "source_id": "vkkj_jugendnotdienst",
+      "organization_id": "vkkj",
+      "location_id": "vkkj_ringstrasse",
+      "offer_type": "youth_emergency_service",
+      "display_name": "Jugendnotdienst",
+      "place_type": "youth_emergency_service",
+      "capabilities": ["counselling", "referral", "protection"],
+      "target_groups": ["minors"],
+      "maximum_age": 17,
+      "referral_needs": ["sleep", "general_help"],
+      "priority_rules": ["minor_crisis_first"],
+      "needs": ["advice", "general_help"],
+      "curation_decision_ids": ["vkkj_minor_sleep_services"],
+      "source_reference_ids": ["vkkj_youth_emergency_service_web"]
     }
   ],
   "organization_aliases": [
@@ -1092,6 +1158,28 @@
       "title": "Impressum des Übernachtungshauses",
       "url": "https://obdachlosenhaus.de/impressum/",
       "retrieved_at": "2026-08-01"
+    },
+    {
+      "id": "vkkj_youth_night_shelter_web",
+      "source_type": "official_website",
+      "title": "Kontakt- und Notschlafstelle für Jugendliche",
+      "url": "https://www.vkkj.de/verzeichnis/visitenkarte.php?mandat=240969",
+      "retrieved_at": "2026-08-20"
+    },
+    {
+      "id": "vkkj_youth_emergency_service_web",
+      "source_type": "official_website",
+      "title": "Jugendnotdienst",
+      "url": "https://www.vkkj.de/verzeichnis/visitenkarte.php?mandat=230429",
+      "retrieved_at": "2026-08-20"
+    },
+    {
+      "id": "timmitohelp_tourplan_pdf",
+      "source_type": "official_website",
+      "title": "TiMMi ToHelp Tourplan",
+      "url": "https://timmitohelp.de/downloads/",
+      "retrieved_at": "2026-08-20",
+      "content_hash": "64155c223575dc152f420f0ebdca7822d5d4b015740e7b34ab7557bbafdbf4d2"
     }
   ],
   "curation_decisions": [
@@ -1267,7 +1355,7 @@
         "20.1",
         "20.2"
       ],
-      "reason": "Jugendstreetwork-, U27- und Roßplatz-Hinweise sind fachlich validierte Kurationsinformationen des Prototyps.",
+      "reason": "Die Altersgrenze bis einschließlich 26 bleibt für Jugendangebote erhalten. Diese Angebote werden jedoch nur bei ausdrücklich genanntem Jugendbedarf oder einem exakten Angebotsalias aktiviert; für Schlafanfragen gilt stattdessen die getrennte Minderjährigenlogik.",
       "source_reference_ids": [
         "methodology_chapter",
         "wfs_legacy_release"
@@ -1321,7 +1409,7 @@
         "17.1", "17.2", "17.3", "18", "19.1", "19.2", "19.3", "20.1", "20.2",
         "21", "22", "23", "24", "25"
       ],
-      "reason": "Die belegten WFS-Leistungen werden konservativ als Auswahlmerkmale normalisiert; U27-, Rücke-, Helene- und Aliasregeln bleiben davon getrennte, für den Prototyp geprüfte Kurationsentscheidungen.",
+      "reason": "Die belegten WFS-Leistungen werden konservativ als Auswahlmerkmale normalisiert; Minderjährigen-, Erwachsenen-, Rücke-, Helene- und Aliasregeln bleiben davon getrennte, für den Prototyp geprüfte Kurationsentscheidungen.",
       "source_reference_ids": [
         "wfs_legacy_release",
         "methodology_chapter"
@@ -1332,6 +1420,32 @@
       "recorded_by_role": "Forscherin und Entwicklerin von LENA",
       "evidence_reference": "4Approachneu.tex",
       "reviewed_at": null
+    },
+    {
+      "id": "vkkj_minor_sleep_services",
+      "decision_type": "include",
+      "affected_source_ids": ["vkkj_notschlafstelle", "vkkj_jugendnotdienst"],
+      "reason": "Die offiziellen VKKJ-Angebote ergänzen den Minderjährigenpfad. Bei reinem Schlafbedarf wird die Kontakt- und Notschlafstelle für 14- bis 17-Jährige zuerst genannt; bei Schutz- oder Krisenbezug der Jugendnotdienst.",
+      "source_reference_ids": ["vkkj_youth_night_shelter_web", "vkkj_youth_emergency_service_web"],
+      "review_status": "externally_verified",
+      "reviewed_by_role": null,
+      "evidence_type": "offizielle Betreiberwebsites und fachliche Festlegung der LENA-Entwicklerin",
+      "recorded_by_role": "Forscherin und Entwicklerin von LENA",
+      "evidence_reference": "VKKJ-Angebotsseiten und Fachfestlegung vom 20.08.2026",
+      "reviewed_at": "2026-08-20"
+    },
+    {
+      "id": "timmitohelp_thursday_route",
+      "decision_type": "override",
+      "affected_source_ids": ["16"],
+      "reason": "Der offizielle Tourplan konkretisiert die mobile Donnerstagsroute mit ungefähren Stationen und einer Erkennungshilfe. Die WFS-Adresse bleibt als unveränderter Quellenwert erhalten, wird aber nicht als dauerhafter Runtime-Standort dargestellt.",
+      "source_reference_ids": ["timmitohelp_tourplan_pdf", "wfs_legacy_release"],
+      "review_status": "externally_verified",
+      "reviewed_by_role": null,
+      "evidence_type": "offizieller Tourplan und fachliche Festlegung der LENA-Entwicklerin",
+      "recorded_by_role": "Forscherin und Entwicklerin von LENA",
+      "evidence_reference": "TiMMi-ToHelp-Tourplan, bereitgestellt am 20.08.2026",
+      "reviewed_at": "2026-08-20"
     }
   ]
 }

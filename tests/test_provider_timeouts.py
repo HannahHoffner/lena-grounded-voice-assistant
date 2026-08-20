@@ -29,7 +29,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 def _interpretation_payload(need: str = "food") -> dict[str, object]:
     return {
-            "contract_version": "3",
+            "contract_version": "4",
         "need": need,
         "explicit_service_requests": [],
         "scope_status": "in_scope",
@@ -177,7 +177,12 @@ def test_interpreter_timeout_fails_closed_with_conditional_safety_guidance(
     assert response.status_code == 200
     body = response.json()
     assert body["status"] == "error"
-    assert body["cards"] == []
+    # Seit der Untersuchung zu unbemerkten technischen Fallbacks (Zeile 5)
+    # enthält der Text zusätzlich den deterministischen Hilfebus-Kontakt statt
+    # eines reinen "versuche es erneut"-Hinweises, sofern die Wissensbasis ihn
+    # liefert; der bedingte 112-Hinweis bleibt dabei erhalten.
+    offer = next(offer for offer in app.state.kb.offers if "general_help_referral_first" in offer.priority_rules)
+    assert [card["id"] for card in body["cards"]] == [offer.id]
     assert body["map_data"] is None
     assert "112" in body["answer"]
     assert body["answer_type"] == "technical_fallback"
@@ -281,6 +286,7 @@ def test_stt_timeout_returns_503_and_creates_no_interaction(
 ) -> None:
     app = create_app(_settings(tmp_path))
     cancelled = asyncio.Event()
+    monkeypatch.setattr("app.speech._normalize_audio_to_wav", lambda audio: b"RIFF-test-wav")
 
     class BlockingClient:
         def __init__(self, **kwargs) -> None:

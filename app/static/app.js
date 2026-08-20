@@ -677,7 +677,13 @@ async function submitQuery(query, dialogSubmission = null) {
     resetSessionTimeout();
     byId("statusLine").textContent = "";
     byId("answerText").textContent = data.answer;
-    state.lastAnswer = data.answer || "";
+    // Bei einer Rückfrage wird zusätzlich zum sichtbaren Prompt auch jede
+    // Auswahlmöglichkeit vorgelesen (data.clarification.spoken_text) -- sonst
+    // sind die Kästen für eine sprachgeführte Nutzung nicht erreichbar. Der
+    // Server registriert genau diesen Text vorab als sprechbar für diese
+    // Runde (siehe QueryService.query()), sonst würde /api/speech/synthesize
+    // ihn ablehnen.
+    state.lastAnswer = data.clarification?.spoken_text || data.answer || "";
     byId("replayAnswerButton").hidden = !state.lastAnswer;
     renderQuestionEcho(data.question || displayQuestionFor(query));
     renderHistory(data.history || []);
@@ -689,7 +695,7 @@ async function submitQuery(query, dialogSubmission = null) {
     } else {
       byId("resultView").scrollIntoView({ behavior: "smooth", block: "start" });
     }
-    void speakText(data.answer, byId("replayAnswerButton"));
+    void speakText(state.lastAnswer, byId("replayAnswerButton"));
     state.category = null;
     renderCategories();
     byId("queryInput").value = "";
@@ -858,7 +864,10 @@ function ensureRecognition() {
   };
   recognition.onerror = (event) => {
     state.isListening = false;
-    state.keepRecognizedStatus = false;
+    // true, nicht false: updateVoiceStatusReady() unten wuerde die gerade
+    // gesetzte Fehlermeldung sonst im selben Zug wieder durch den generischen
+    // "bereit"-Text ueberschreiben (live gemeldet: Meldung blitzt nur kurz auf).
+    state.keepRecognizedStatus = true;
     byId("voiceStatus").textContent = event.error === "not-allowed" ? text().voiceDenied : text().voiceTryAgain;
     updateVoiceStatusReady();
   };
@@ -902,7 +911,9 @@ async function transcribeRecordedAudio(blob) {
       byId("voiceStatus").textContent = text().voiceTryAgain;
     }
   } catch (_) {
-    state.keepRecognizedStatus = false;
+    // true, nicht false: siehe recognition.onerror weiter oben -- sonst
+    // ueberschreibt updateVoiceStatusReady() die Fehlermeldung sofort wieder.
+    state.keepRecognizedStatus = true;
     byId("voiceStatus").textContent = text().voiceTryAgain;
     updateVoiceStatusReady();
   }
@@ -948,7 +959,9 @@ async function startServerRecording({ automatic = false } = {}) {
   } catch (_) {
     state.isListening = false;
     state.listeningMode = null;
-    state.keepRecognizedStatus = false;
+    // true, nicht false: siehe recognition.onerror weiter oben -- sonst
+    // ueberschreibt updateVoiceStatusReady() die Fehlermeldung sofort wieder.
+    state.keepRecognizedStatus = true;
     byId("voiceStatus").textContent = text().voiceDenied;
     updateVoiceStatusReady();
   }

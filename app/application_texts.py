@@ -17,12 +17,13 @@ from .translation_contract import LinguisticReviewStatus, ReviewRole
 
 
 APPLICATION_TEXT_SCHEMA_VERSION = "2"
-APPLICATION_COPY_VERSION = "5"
+APPLICATION_COPY_VERSION = "7"
 PLACEHOLDER_RE = re.compile(r"\{([a-z_]+)\}")
 SAFETY_TEXT_RESOURCE_IDS = {
     "safety.detected",
     "safety.uncertain",
     "safety.technical",
+    "safety.technical_hilfebus",
 }
 
 

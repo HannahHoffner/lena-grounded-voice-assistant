@@ -176,6 +176,11 @@ der paketierte Standardkatalog. Bei Pointer- oder Releasefehlern wird nur der
 exakt kataloggebundene lokale Release beziehungsweise der hashverifizierte
 Paket-Bootstrap verwendet; andernfalls startet die Anwendung ohne Angebote und
 meldet einen redigierten Fehlercode.
+Zwei Jugendnotangebote werden getrennt davon aus paketierten, verifizierten
+VKKJ-Betreiberangaben geladen. Sie imitieren keine WFS-Datensätze: Ihr eigener
+Quellenhash und ihre offiziellen URLs sind an denselben Kurations- und
+Runtime-Fingerprint gebunden, bevor sie in die einzige Runtime-Sicht gelangen.
+Die Quelle wird im Nutzerpfad nicht live abgerufen.
 Blablador beziehungsweise ein OpenAI-kompatibler Speech-Endpunkt sind optional.
 `edge-tts` wird standardmäßig für Sprachsynthese verwendet und benötigt eine
 Netzwerkverbindung. Leaflet wird lokal aus `app/static/vendor/` ausgeliefert; die
@@ -221,7 +226,9 @@ ausdrückliche Datensatzlizenz ist nicht ausgewiesen; der Release speichert dahe
 - Trinkbrunnen werden nur von April bis Oktober als direkte Runtime-Ergebnisse
   verwendet. LENA kennt weder ihren aktuellen technischen Zustand noch eine
   taggenaue Einschaltung. Mobile Brunnen und externe Standorte sind ausgeschlossen.
-- Server-STT und beide TTS-Varianten benötigen externe Dienste.
+- Server-STT und beide TTS-Varianten benötigen externe Dienste. Browseraudio
+  wird serverseitig im Speicher zu PCM16/16-kHz-WAV normalisiert; deshalb muss
+  die deklarierte PyAV-Laufzeitabhängigkeit installiert sein.
 - Externe Provider sind zeitlich begrenzt. Bei Edge-TTS beendet Cancellation den
   lokalen Stream, garantiert aber keinen Abbruch bereits gestarteter externer Arbeit.
 - Interpreter, Selector und Formulator haben eigene Grenzen von 15, 10 und 30

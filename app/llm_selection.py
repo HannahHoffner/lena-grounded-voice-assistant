@@ -15,7 +15,13 @@ from .models import Language, OfferRecord
 SELECTOR_CONTRACT_VERSION = "1"
 SELECTOR_PROMPT_VERSION = "2"
 MAX_SELECTOR_RESPONSE_CHARS = 1_000
-SelectorOfferId = Annotated[str, StringConstraints(pattern=r"^[0-9]+(?:\.[0-9]+)?$", max_length=20)]
+SelectorOfferId = Annotated[
+    str,
+    StringConstraints(
+        pattern=r"^(?:[0-9]+(?:\.[0-9]+)?|vkkj_[a-z0-9_]+)$",
+        max_length=64,
+    ),
+]
 
 SELECTOR_SYSTEM_PROMPT = f"""You are the constrained selection stage for LENA, a Leipzig support-service application.
 Select only IDs from CANDIDATES. Every candidate is already deterministically eligible.
@@ -80,7 +86,7 @@ class SelectorUserPayload(SelectorModel):
     requested_language: Language
     current_query: str = Field(max_length=1_000)
     structured_need: SelectorNeedView
-    candidates: list[SelectorCandidateView] = Field(min_length=2, max_length=26)
+    candidates: list[SelectorCandidateView] = Field(min_length=2, max_length=64)
     maximum_selected_ids: int = Field(ge=0, le=4)
 
 

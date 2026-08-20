@@ -149,7 +149,11 @@ def _card(
     translation_catalog,
     translation_policy: TranslationRuntimePolicy,
 ) -> OfferCard:
-    return localize_offer_card(offer, language, translation_catalog, translation_policy)
+    card = localize_offer_card(offer, language, translation_catalog, translation_policy)
+    # Die Quelladresse des mobilen Hilfebus bleibt in Runtime/Provenienz, ist
+    # aber kein Nutzerstandort. Sichtbar ist nur der separat belegte
+    # Sonntagsstand, wenn der konkrete Leistungs- und Zeitpfad ihn zulässt.
+    return card.model_copy(update={"address": None}) if offer.place_type == "help_bus" else card
 
 
 def _adopt_card_spoken_text(map_data: MapData | None, cards: list) -> None:
@@ -168,6 +172,12 @@ def _adopt_card_spoken_text(map_data: MapData | None, cards: list) -> None:
 
 def _general_help_contact(offers: list[OfferRecord]) -> OfferRecord | None:
     return next((offer for offer in offers if "general_help_referral_first" in offer.priority_rules), None)
+
+
+def _general_help_contact_times(offer: OfferRecord) -> str:
+    """Liefert mobile Einsatz-/Anrufzeiten vor einer einzelnen Standzeit."""
+
+    return "; ".join(offer.opening_hours_raw or offer.standzeiten_raw) or "—"
 
 
 def _template_found(language: Language, offers: list[OfferRecord]) -> str:
@@ -335,6 +345,20 @@ class QueryService:
         *,
         visible_question: str = "",
     ) -> _CoreOutcome:
+        """Interpreter nicht verfügbar oder fehlgeschlagen (kein Blablador, Timeout,
+        HTTP-, JSON-, Schema- oder Vertragsfehler, Budgeterschöpfung).
+
+        Gibt bewusst keinen reinen "versuche es erneut"-Text mehr aus, sondern den
+        deterministischen Hilfebus-Kontakt (kein LLM nötig, siehe
+        `_general_help_contact()`), sobald die Wissensbasis ihn liefert -- eine
+        technische Störung soll nicht zur Sackgasse werden. Der bedingte
+        112-Hinweis bleibt in jedem Fall Teil des Texts: `preflight_detects_immediate_danger()`
+        läuft zwar bereits vor jedem Interpreteraufruf, ist aber bewusst eng
+        gefasst (siehe `safety.py`) und fängt nicht jede echte Akutgefahr ab.
+        Ist kein Hilfebus-Angebot in der Wissensbasis vorhanden, bleibt es beim
+        bisherigen reinen 112-Text -- ebenso wie in `main.py`, wo mangels
+        geladener Wissensbasis ohnehin kein Kontakt ermittelbar ist.
+        """
         interaction.route = "interpreter_error"
         interaction.answer_type = AnswerType.TECHNICAL_FALLBACK.value
         interaction.safety_path = SafetyPath.INTERPRETER_FAILURE.value
@@ -342,9 +366,19 @@ class QueryService:
         interaction.safety_response_language = language
         interaction.fallback_used = True
         _record_selector_bypass(interaction, SelectorBypassReason.INTERPRETER_UNAVAILABLE)
+        offer = _general_help_contact(self.kb.offers)
+        cards: list[OfferCard] = []
+        if offer:
+            phone = ", ".join(offer.phone_numbers) or "—"
+            times = _general_help_contact_times(offer)
+            answer = safety_text(language, SafetyTextKind.TECHNICAL_HILFEBUS, phone=phone, times=times)
+            cards = [_card(offer, language, self.translation_catalog, self.translation_policy)]
+        else:
+            answer = safety_text(language, SafetyTextKind.TECHNICAL)
         return _CoreOutcome(
             QueryResponse(
-                answer=safety_text(language, SafetyTextKind.TECHNICAL),
+                answer=answer,
+                cards=cards,
                 language=language,
                 provider="template",
                 status="error",
@@ -405,7 +439,7 @@ class QueryService:
         """
         empty_facts = KnownExplicitFacts()
         return QueryInterpretation(
-            contract_version="3",
+            contract_version="4",
             need=Need.GENERAL_HELP,
             explicit_service_requests=[],
             scope_status=ScopeStatus.UNCLEAR,
@@ -509,6 +543,8 @@ class QueryService:
             speakable_texts += [
                 destination.spoken_text for destination in map_data.destinations if destination.spoken_text
             ]
+        if response.clarification:
+            speakable_texts.append(response.clarification.spoken_text)
         updated_session = self.sessions.add_turn(
             session,
             question=persisted_question,
@@ -839,6 +875,10 @@ class QueryService:
         if active_dialog:
             interaction.dialog_type = active_dialog.dialog_type.value
             interaction.dialog_attempt_count = active_dialog.attempt_count
+            # Bewusst ohne Formulator: Rücke/Scharni stehen bereits fest (Schlafen-
+            # spezifische Zielgruppenklärung), diese Antwort öffnet nur den nächsten
+            # Klärungsschritt (SLEEP_AGE) statt eine finale Antwort zu formulieren --
+            # kein Auswahl- oder Formulierungsspielraum, siehe Untersuchung Zeile 11.
             female_without_age = (
                 active_dialog.dialog_type == DialogType.SLEEP_TARGET_GROUP
                 and interpretation.explicit_facts.gender.value == "female"
@@ -880,6 +920,9 @@ class QueryService:
                     follow_up,
                     visible_question,
                 )
+            # Bewusst ohne Formulator: der Kandidat ist nach dem Bezirksdialog bereits
+            # eindeutig (genau ein conditional_candidate), unabhängig vom Bedarfstyp --
+            # kein Auswahl- oder Formulierungsspielraum, siehe Untersuchung Zeile 11.
             district_team = None
             if (
                 active_dialog.dialog_type == DialogType.ORGANIZATION_DISTRICT
@@ -904,6 +947,8 @@ class QueryService:
                     ),
                     visible_question=visible_question,
                 )
+            # Bewusst ohne Formulator: derselbe Grund wie bei district_team oben, nur
+            # für den Organisationsdienst-Dialog statt den Bezirksdialog.
             organization_offer = None
             if (
                 active_dialog.dialog_type == DialogType.ORGANIZATION_NEED
@@ -964,6 +1009,9 @@ class QueryService:
             fingerprint=self.kb.runtime_kb_fingerprint or "",
             timeout_seconds=self.settings.session_timeout_seconds,
         )
+        # Bewusst ohne Formulator: ein eindeutiger Organisations-Alias-Treffer ganz
+        # ohne Dialog (derselbe Grund wie district_team/organization_offer oben) --
+        # kein Auswahl- oder Formulierungsspielraum, siehe Untersuchung Zeile 11.
         direct_alias_offer = None
         if (
             not active_dialog
@@ -1559,7 +1607,7 @@ class QueryService:
         if not offer:
             return QueryResponse(answer=_fallback_text(language, "no_results"), language=language, provider="template", status="no_results")
         phone = ", ".join(offer.phone_numbers) or "—"
-        times = "; ".join(offer.standzeiten_raw or offer.opening_hours_raw) or "—"
+        times = _general_help_contact_times(offer)
         answer = dialogue_text(language, "answers", "hilfebus", phone=phone, times=times)
         return await self._formulate_or_fallback(
             query=query,

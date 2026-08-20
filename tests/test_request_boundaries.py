@@ -48,13 +48,18 @@ def test_query_limit_accepts_boundary_and_rejects_next_character() -> None:
 
 
 def test_category_only_query_remains_valid() -> None:
-    response = TestClient(create_app(_settings())).post(
+    app = create_app(_settings())
+    response = TestClient(app).post(
         "/api/query",
         json={"query": "", "category": "food", "language": "de"},
     )
 
+    # Seit der Untersuchung zu unbemerkten technischen Fallbacks (Zeile 5)
+    # enthält der Text zusätzlich den deterministischen Hilfebus-Kontakt statt
+    # eines reinen "versuche es erneut"-Hinweises.
+    hilfebus_offer = next(offer for offer in app.state.kb.offers if "general_help_referral_first" in offer.priority_rules)
     assert response.status_code == 200
-    assert response.json()["cards"] == []
+    assert [card["id"] for card in response.json()["cards"]] == [hilfebus_offer.id]
     assert response.json()["answer_type"] == "technical_fallback"
     assert "112" in response.json()["answer"]
 

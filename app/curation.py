@@ -50,6 +50,7 @@ PlaceType = Literal[
     "station_support",
     "public_toilet",
     "drinking_fountain",
+    "youth_emergency_service",
 ]
 Capability = Literal[
     "overnight_stay",
@@ -68,6 +69,7 @@ Capability = Literal[
     "day_stay",
     "contact",
     "mobile_outreach",
+    "protection",
 ]
 TargetGroup = Literal[
     "adults",
@@ -77,13 +79,15 @@ TargetGroup = Literal[
     "people_who_use_drugs",
     "people_experiencing_homelessness",
     "people_without_regular_healthcare",
+    "minors",
 ]
 ReferralNeed = Literal["food", "drinking_water", "sleep", "medical", "advice", "general_help"]
 PriorityRule = Literal[
     "general_sleep_contact_first",
-    "u27_referral_first",
-    "u27_primary_contact",
     "general_help_referral_first",
+    "minor_sleep_first",
+    "minor_crisis_first",
+    "youth_explicit_only",
 ]
 ScheduleRule = Literal[
     "tuesday_17_18",
@@ -172,6 +176,7 @@ class CurationCatalog(CurationModel):
     catalog_version: str
     approved_source_release_id: str
     approved_source_hash: str
+    approved_official_source_hash: str | None = None
     review_policy: ReviewPolicy
     organizations: list[Organization]
     locations: list[Location]
@@ -277,6 +282,7 @@ def project_runtime_offers(
     for alias in catalog.offer_aliases:
         offer_aliases.setdefault(alias.service_offer_id, []).append(alias.alias)
     decisions = {decision.id: decision for decision in catalog.curation_decisions}
+    organizations_by_id = {organization.id: organization for organization in catalog.organizations}
 
     projected: list[OfferRecord] = []
     for configured in catalog.service_offers:
@@ -289,12 +295,21 @@ def project_runtime_offers(
         aliases = offer_aliases.get(configured.id, [])
         org_aliases = organization_aliases.get(configured.organization_id, [])
         review_statuses = [decisions[item].review_status for item in configured.curation_decision_ids]
+        # Ein Angebot ohne eigenen kuratierten display_name (z. B. "Scharni" statt
+        # "Advent-Wohlfahrtswerk e. V.") uebernimmt den kuratierten Kurznamen seiner
+        # Organisation. Vorher wurde `catalog.organizations[].display_name` an
+        # keiner Stelle der Runtime gelesen -- Formulator, Karten und Vorlesetext
+        # zitierten dadurch den vollen Rechtsnamen aus der WFS-Quelle
+        # (z. B. "Caritasverband Leipzig e. V. Oekumenische Bahnhofsmission"
+        # statt "Bahnhofsmission Leipzig").
+        organization = organizations_by_id.get(configured.organization_id)
+        effective_display_name = configured.display_name or (organization.display_name if organization else None)
         update = {
             **configured.runtime_overrides,
             "organization_id": configured.organization_id,
             "location_id": configured.location_id,
             "offer_type": configured.offer_type,
-            "display_name": configured.display_name,
+            "display_name": effective_display_name,
             "organization_aliases": org_aliases,
             "offer_aliases": aliases,
             "search_phrases": configured.search_phrases,
@@ -323,8 +338,8 @@ def project_runtime_offers(
                 separators=(",", ":"),
             ).encode("utf-8")
             update["curation_hash"] = hashlib.sha256(override_bytes).hexdigest()
-        if configured.display_name:
-            update["name"] = configured.display_name
+        if effective_display_name:
+            update["name"] = effective_display_name
         projected.append(OfferRecord.model_validate({**source.model_dump(mode="python"), **update}))
 
     bindings: list[OrganizationAliasBinding] = []

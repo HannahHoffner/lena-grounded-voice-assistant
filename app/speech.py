@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import asyncio
 import importlib.util
+import io
 import re
+import wave
 from dataclasses import dataclass
 
+import av
 import httpx
 
 from .config import Settings
@@ -55,19 +58,75 @@ EMERGENCY_NUMBER_SPEECH = {
     Language.RU: "один один два",
 }
 
+# Live beobachtet: ein kompaktes "H(:MM)-H(:MM)"-Zeitspannenmuster (z. B.
+# "12-13:30 Uhr", von Formulator oder Quelldaten teils ohne oder mit
+# Leerzeichen um den Trennzeichen geschrieben) wird von den Edge-Neural-Stimmen
+# ziffernweise vorgelesen ("eins zwei bis eins drei dreißig Uhr") statt als
+# Uhrzeit ("zwölf bis dreizehn Uhr dreißig"). Ein einzelner klar durch
+# Leerzeichen abgesetzter Zwei-Punkt-Bindestrich wird dagegen zuverlässig als
+# Zahl erkannt; das Muster wird daher vor der Synthese in Zahl + gesprochenes
+# Trennwort + Zahl aufgelöst. Das Trennzeichen ist bewusst kein reiner ASCII-
+# Bindestrich (U+002D): der Formulator schreibt Zeitspannen live reproduziert
+# mit einem geschützten Halbgeviertstrich (U+2011, "09:00‑10:00"), einzelne
+# Quelldaten nutzen einen Halbgeviertstrich (U+2013, "06:00 – 22:00") -- eine
+# frühere Fassung matchte nur U+002D und griff dadurch beim häufigsten Fall
+# (Formulatorantworten) nie. Eine menschliche Hörprüfung wird damit nicht
+# behauptet (siehe docs/safety-and-error-policy.md zum selben Vorbehalt bei
+# der Notrufnummer); dies behebt nur die konkret gemeldeten/beobachteten
+# Trennzeichen.
+_TIME_RANGE_SEPARATOR_SPEECH = {
+    Language.DE: "bis",
+    Language.EN: "to",
+    Language.PL: "do",
+    Language.RO: "până la",
+    Language.RU: "до",
+}
+_DASH_CHARS = "-‐‑‒–—−"
+_TIME_RANGE_RE = re.compile(
+    rf"(?<!\d)(\d{{1,2}}(?::\d{{2}})?)\s*[{_DASH_CHARS}]\s*(\d{{1,2}}(?::\d{{2}})?)(?!\d)"
+)
+
 
 def normalize_tts_text(text: str, language: Language) -> str:
-    """Spricht die Notrufnummer als einzelne Ziffern, ohne den Sichttext zu ändern."""
+    """Löst Notrufnummer und kompakte Uhrzeit-Spannen in eine sprechbare Form auf, ohne den Sichttext zu ändern."""
     normalized = " ".join(text.split())
+    separator = _TIME_RANGE_SEPARATOR_SPEECH[language]
+    normalized = _TIME_RANGE_RE.sub(rf"\1 {separator} \2", normalized)
     return re.sub(rf"\b{re.escape(EMERGENCY_NUMBER)}\b", EMERGENCY_NUMBER_SPEECH[language], normalized)
 
 
 class SpeechTranscriptionError(RuntimeError):
-    pass
+    """Basisklasse fuer redigierbare STT-Fehler ohne Providerinhalte."""
+
+    code = "stt_failed"
+
+
+class SpeechTranscriptionAudioError(SpeechTranscriptionError):
+    """Die uebergebene Browseraufnahme konnte nicht sicher dekodiert werden."""
+
+    code = "stt_audio_invalid"
+
+
+class SpeechTranscriptionAudioTooLongError(SpeechTranscriptionAudioError):
+    """Die dekodierte Aufnahme ueberschreitet die lokale Laufzeitgrenze."""
+
+    code = "stt_audio_too_long"
+
+
+class SpeechTranscriptionProviderError(SpeechTranscriptionError):
+    """Der externe STT-Dienst hat den normalisierten Request abgelehnt."""
+
+    code = "stt_provider_http_error"
+
+    def __init__(self, *, upstream_status: int | None = None) -> None:
+        super().__init__(self.code)
+        self.upstream_status = upstream_status
 
 
 class SpeechTranscriptionTimeoutError(SpeechTranscriptionError):
     """Kennzeichnet eine abgelaufene STT-Gesamtgrenze."""
+
+    code = "stt_timeout"
 
 
 class SpeechSynthesisError(RuntimeError):
@@ -80,7 +139,7 @@ class SpeechSynthesisTimeoutError(SpeechSynthesisError):
 
 @dataclass(frozen=True)
 class SpeechTranscriber:
-    """Sendet rohe Audiodaten an einen konfigurierten Transkriptionsdienst."""
+    """Normalisiert Browseraudio und sendet ausschliesslich PCM-WAV an STT."""
     settings: Settings
 
     @property
@@ -98,8 +157,6 @@ class SpeechTranscriber:
         if not audio:
             raise SpeechTranscriptionError("No audio was supplied")
 
-        filename = _filename_for_content_type(content_type)
-        files = {"file": (filename, audio, content_type or "audio/webm")}
         data = {
             "model": self.settings.speech_transcription_model or "",
             "language": LANGUAGE_HINTS.get(language, language.value),
@@ -111,6 +168,12 @@ class SpeechTranscriber:
 
         try:
             async with asyncio.timeout(self.settings.speech_transcription_timeout_seconds):
+                # MediaRecorder liefert je nach Browser WebM/Opus, Ogg oder MP4.
+                # Der konfigurierte Blablador-Endpunkt akzeptiert diese Container
+                # nicht verlaesslich und erwartet aktuell RIFF/WAV. Die zentrale
+                # Normalisierung haelt den Browservertrag deshalb providerneutral.
+                normalized_audio = await asyncio.to_thread(_normalize_audio_to_wav, audio)
+                files = {"file": ("speech.wav", normalized_audio, "audio/wav")}
                 async with httpx.AsyncClient(
                     timeout=httpx.Timeout(self.settings.speech_transcription_timeout_seconds)
                 ) as client:
@@ -118,8 +181,12 @@ class SpeechTranscriber:
                     response.raise_for_status()
         except (TimeoutError, httpx.TimeoutException) as exc:
             raise SpeechTranscriptionTimeoutError("Speech transcription timed out") from exc
+        except SpeechTranscriptionAudioError:
+            raise
+        except httpx.HTTPStatusError as exc:
+            raise SpeechTranscriptionProviderError(upstream_status=exc.response.status_code) from exc
         except httpx.HTTPError as exc:
-            raise SpeechTranscriptionError("Speech transcription request failed") from exc
+            raise SpeechTranscriptionProviderError() from exc
 
         try:
             payload = response.json()
@@ -221,14 +288,49 @@ class SpeechSynthesizer:
         return audio
 
 
-def _filename_for_content_type(content_type: str) -> str:
-    lowered = content_type.casefold()
-    if "mp4" in lowered:
-        return "speech.mp4"
-    if "mpeg" in lowered or "mp3" in lowered:
-        return "speech.mp3"
-    if "wav" in lowered:
-        return "speech.wav"
-    if "ogg" in lowered:
-        return "speech.ogg"
-    return "speech.webm"
+_STT_SAMPLE_RATE = 16_000
+_STT_MAX_DECODED_SECONDS = 120
+_STT_MAX_SAMPLES = _STT_SAMPLE_RATE * _STT_MAX_DECODED_SECONDS
+
+
+def _normalize_audio_to_wav(audio: bytes) -> bytes:
+    """Dekodiert akzeptierte Audiocontainer zu mono PCM16/16 kHz im Speicher.
+
+    Die dekodierte Dauer wird unabhaengig von der komprimierten Requestgroesse
+    begrenzt. Weder Eingabe noch WAV werden auf die Festplatte geschrieben.
+    """
+
+    output = io.BytesIO()
+    sample_count = 0
+    try:
+        with av.open(io.BytesIO(audio), mode="r") as container:
+            audio_stream = next((stream for stream in container.streams if stream.type == "audio"), None)
+            if audio_stream is None:
+                raise SpeechTranscriptionAudioError("stt_audio_invalid")
+            resampler = av.AudioResampler(format="s16", layout="mono", rate=_STT_SAMPLE_RATE)
+            with wave.open(output, "wb") as wav_file:
+                wav_file.setnchannels(1)
+                wav_file.setsampwidth(2)
+                wav_file.setframerate(_STT_SAMPLE_RATE)
+                for frame in container.decode(audio_stream):
+                    for converted in resampler.resample(frame):
+                        sample_count = _write_pcm_frame(wav_file, converted, sample_count)
+                for converted in resampler.resample(None):
+                    sample_count = _write_pcm_frame(wav_file, converted, sample_count)
+    except SpeechTranscriptionAudioError:
+        raise
+    except (av.error.FFmpegError, EOFError, OSError, ValueError) as exc:
+        raise SpeechTranscriptionAudioError("stt_audio_invalid") from exc
+
+    if sample_count == 0:
+        raise SpeechTranscriptionAudioError("stt_audio_invalid")
+    return output.getvalue()
+
+
+def _write_pcm_frame(wav_file: wave.Wave_write, frame: av.AudioFrame, sample_count: int) -> int:
+    next_count = sample_count + frame.samples
+    if next_count > _STT_MAX_SAMPLES:
+        raise SpeechTranscriptionAudioTooLongError("stt_audio_too_long")
+    pcm = bytes(frame.planes[0])[: frame.samples * 2]
+    wav_file.writeframesraw(pcm)
+    return next_count

@@ -101,11 +101,20 @@ def _new_release(settings: Settings, mutation: str, *, promote: bool = True):
 
 
 def _assert_bound_runtime(kb, *, source_status: str, runtime_source: str) -> None:
-    assert len(kb.offers) == 26
+    assert len(kb.offers) == 28
     assert {offer.id for offer in kb.offers}.isdisjoint(EXCLUDED_IDS)
     assert kb.source_hash == BOUND_SOURCE_HASH
     assert kb.metadata["source_status"] == source_status
     assert kb.metadata["runtime_source"] == runtime_source
+    official = kb.metadata["official_offer_source"]
+    assert official["source_version"] == "vkkj-2026-08-20"
+    assert official["record_count"] == 2
+    assert len(official["source_hash"]) == 64
+    assert all(
+        offer.source_hash == official["source_hash"]
+        for offer in kb.offers
+        if offer.id.startswith("vkkj_")
+    )
 
 
 def test_active_bound_release_is_the_healthy_runtime_source(tmp_path: Path) -> None:

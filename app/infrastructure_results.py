@@ -323,7 +323,7 @@ def drinking_water_map_data(
         ))
     order = {result.id: index for index, result in enumerate(results)}
     destinations.sort(key=lambda destination: (
-        order.get(destination.id.split("-stand-", 1)[0], len(order)),
+        order.get(destination.id.partition(":")[0], len(order)),
         destination.distance_meters if destination.distance_meters is not None else 10**9,
         destination.id,
     ))

@@ -83,21 +83,42 @@ Budgeterschöpfung und ein nicht verfügbarer Interpreter fallen geschlossen aus
 
 - kein CandidateSelector, Selector oder Formulator;
 - keine lexikalische Fachklassifikation;
-- keine Angebote, Karten, Marker oder Hilfebus-Ergänzung;
+- keine themenbezogenen Angebote oder Kartenergebnisse;
 - lokalisierter technischer Text mit der bedingten Aussage, bei unmittelbarer
   Gefahr 112 zu rufen.
 
 Ein Fehler behauptet nicht, dass Gefahr erkannt wurde. Die Nummer und alle
 sichtbaren Safety-Texte stammen aus zentralen versionierten Ressourcen.
 
+Seit Version 0.3.0 ist dieser Text kein Sackgassentext mehr: Ist in der
+Wissensbasis ein Hilfebus-Kontakt hinterlegt (`priority_rules` enthält
+`general_help_referral_first`, siehe `_general_help_contact()` in
+`app/service.py`), enthält der Text zusätzlich dessen Telefonnummer und
+Einsatzzeiten (`safety.technical_hilfebus`) sowie eine zugehörige
+Angebotskarte und einen Kartenmarker -- ausschließlich aus bereits geladenen,
+deterministischen Wissensbasisdaten, ohne jeden weiteren Providerkontakt. Der
+bedingte 112-Hinweis bleibt dabei unverändert Teil des Texts (weiterhin genau
+einmal, zentral geprüft), weil der vorgelagerte Preflight bewusst eng gefasst
+ist und nicht jede tatsächliche Akutgefahr abfängt. Ist kein Hilfebus-Kontakt
+in der Wissensbasis vorhanden -- oder ist gar keine Wissensbasis geladen
+(`POST /api/query` ohne aktiven `QueryService`, siehe `app/main.py`) --, bleibt
+es beim bisherigen reinen 112-Text (`safety.technical`) ohne Karte oder
+Marker. Der Sofortstopp bei erkannter oder unsicherer Akutgefahr
+(`acute_risk`/`acute_risk_clarification`) ist von dieser Änderung nicht
+betroffen und bleibt weiterhin ohne Karten, Karten-IDs oder Marker.
+
 ## API, Frontend, TTS und Datenminimierung
 
 `POST /api/query` kennzeichnet die Pfade als `acute_risk`,
-`acute_risk_clarification` oder `technical_fallback`. Safety-Antworten enthalten
-leere Karten-, Karten-ID- und Markerlisten. Das Frontend leert bestehende Layer,
-zeigt eine textliche Safety-Überschrift und ein zusätzliches Symbol, verwendet
-native Dialogbuttons und genau einen Alert-Ausgabekanal. Es erzeugt keinen
-`tel:`-Link.
+`acute_risk_clarification` oder `technical_fallback`. `acute_risk` und
+`acute_risk_clarification` enthalten weiterhin leere Karten-, Karten-ID- und
+Markerlisten. `technical_fallback` enthält seit Version 0.3.0 die
+Hilfebus-Karte und einen Kartenmarker, sofern die Wissensbasis den Kontakt
+liefert (siehe oben); das Frontend rendert diese Karte und Markierung wie bei
+jeder anderen Antwort. Das Frontend leert in jedem Fall zunächst bestehende
+Layer, zeigt eine textliche Safety-Überschrift und ein zusätzliches Symbol,
+verwendet native Dialogbuttons und genau einen Alert-Ausgabekanal. Es erzeugt
+keinen `tel:`-Link.
 
 TTS akzeptiert weiterhin nur den letzten sichtbaren Antworttext derselben
 Session und Sprache. Technische Normalisierung spricht 112 ziffernweise; eine

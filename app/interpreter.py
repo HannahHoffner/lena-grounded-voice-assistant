@@ -13,25 +13,25 @@ from .curation import OrganizationAliasBinding
 from .models import Category, ChatTurn, Language, OfferRecord
 
 
-INTERPRETER_CONTRACT_VERSION = "3"
-INTERPRETER_PROMPT_VERSION = "6"
+INTERPRETER_CONTRACT_VERSION = "4"
+INTERPRETER_PROMPT_VERSION = "7"
 MAX_INTERPRETER_INPUT_CHARS = 2_000
 MAX_INTERPRETER_RESPONSE_CHARS = 8_000
 MAX_INTERPRETER_CONTEXT_TURNS = 4
 
 
 INTERPRETER_SYSTEM_PROMPT = """You are LENA's query interpreter for a closed Leipzig support domain.
-Return exactly one JSON object that conforms to contract version 3. Do not use Markdown or prose.
+Return exactly one JSON object that conforms to contract version 4. Do not use Markdown or prose.
 
 The JSON object has exactly these top-level keys, no others: contract_version, need, explicit_service_requests, scope_status, input_language, explicit_facts, uncertain_hints, potentially_missing_information, clarification_may_be_needed, acute_risk_status.
-- contract_version: always the literal string "3".
+- contract_version: always the literal string "4".
 - need: one value, see the need list below.
 - explicit_service_requests: array of 0-4 unique values, see the service list below.
 - scope_status: one of in_scope, out_of_scope, unclear.
 - input_language: the language of the user's current message (this can differ from the requested interface language), one of de, en, pl, ro, ru, mixed, unknown.
 - explicit_facts: a nested object with exactly these keys, no others: age, age_group, gender, drug_use, no_social_benefit_entitlement, district, requested_day, requested_time.
   - age: an integer from 0 to 120, or null.
-  - age_group: one of under_27, not_under_27, unknown.
+  - age_group: one of under_18, adult, under_27, not_under_27, unknown. adult means explicitly at least 18 with no narrower adult range; under_27 means age 18 through 26.
   - gender: one of female, male, non_binary, diverse, unknown.
   - drug_use: one of yes, no, unknown.
   - no_social_benefit_entitlement: one of yes, no, unknown.
@@ -46,11 +46,11 @@ Never add, omit, rename, or flatten any of these keys; explicit_facts must alway
 
 Classify need as food, drinking_water, sleep, medical, advice, toilet, general_help, or unknown. The domain covers food/basic needs, drinking water, overnight accommodation, medical help, advice/social support/streetwork, toilets, and a still-unspecified general request for help. Clearly unrelated requests are out_of_scope; incomprehensible or unresolved requests are unclear. unknown does not itself mean out_of_scope. A question about LENA's abilities is a controlled system question, not a service request.
 
-List explicitly requested services separately in explicit_service_requests, using only overnight_stay, food, drinking_water, hygiene, shower, laundry, clothing, postal, medical_care, wound_care, counselling, day_stay, or contact. Include a service only when the user explicitly asks for it; do not expand food into hygiene or infer a service from an institution alias. Keep the broader need and the concrete service distinct.
+List explicitly requested services separately in explicit_service_requests, using only overnight_stay, food, drinking_water, hygiene, shower, laundry, clothing, postal, medical_care, wound_care, counselling, day_stay, contact, youth_support, or protection. youth_support requires an explicit request for a youth service, youth centre, youth streetwork, or a named youth organization; a numeric age alone never establishes youth_support. protection requires an explicit request for a protected place, immediate youth welfare support, or help because the person cannot safely return home. Include a service only when the user explicitly asks for it; do not expand food into hygiene or infer a service from an unrelated institution alias. Keep the broader need and the concrete service distinct.
 
 Record only facts explicitly stated about the person who needs help. Never infer age, gender, drug use, or social-benefit entitlement from names, language, writing style, an institution, or earlier offers. Use unknown or null when absent. Put tentative implications only in uncertain_hints. Do not infer a missing benefit entitlement from having no money. The newest explicit correction wins. On a clear topic change, do not carry unrelated constraints forward. A language change alone does not erase still-relevant explicit context.
 
-Use age_group=under_27 only when the person explicitly says they are under 27, and not_under_27 only when they explicitly say they are at least 27. A numeric age determines the matching age_group; never invent a numeric age from an age group. When OPEN_DIALOG is present, interpret the current message in that exact dialogue. For the sleep choices female and under_27, wording equivalent to "both" explicitly sets both facts, while wording equivalent to "neither" sets gender only when explicit and age_group=not_under_27. The open dialogue never overrides a clear new need.
+Use age_group=under_18 only when the person explicitly says they are under 18, under_27 only when they explicitly say they are 18 through 26 or under 27 while also clearly adult, and not_under_27 only when they explicitly say they are at least 27. A numeric age determines the matching age_group; never invent a numeric age from an age group. When OPEN_DIALOG is present, interpret the current message in that exact dialogue. For the sleep choices, under_18 means only age_group=under_18, and female means only gender=female and never implies an age or adulthood. The open dialogue never overrides a clear new need.
 
 For no_social_benefit_entitlement, yes means the person explicitly lacks entitlement and no means the person explicitly has entitlement. For drug_use, yes or no also requires an explicit statement.
 
@@ -98,6 +98,8 @@ class RequestedService(str, Enum):
     COUNSELLING = "counselling"
     DAY_STAY = "day_stay"
     CONTACT = "contact"
+    YOUTH_SUPPORT = "youth_support"
+    PROTECTION = "protection"
 
 
 class ScopeStatus(str, Enum):
@@ -137,6 +139,8 @@ class ThreeWayStatus(str, Enum):
 
 
 class AgeGroup(str, Enum):
+    UNDER_18 = "under_18"
+    ADULT = "adult"
     UNDER_27 = "under_27"
     NOT_UNDER_27 = "not_under_27"
     UNKNOWN = "unknown"
@@ -199,7 +203,13 @@ class ExplicitFacts(StrictContractModel):
     def validate_age_group(self) -> "ExplicitFacts":
         if self.age is None:
             return self
-        expected = AgeGroup.UNDER_27 if self.age <= 26 else AgeGroup.NOT_UNDER_27
+        expected = (
+            AgeGroup.UNDER_18
+            if self.age <= 17
+            else AgeGroup.UNDER_27
+            if self.age <= 26
+            else AgeGroup.NOT_UNDER_27
+        )
         if self.age_group not in {AgeGroup.UNKNOWN, expected}:
             raise ValueError("numeric age and age_group disagree")
         self.age_group = expected

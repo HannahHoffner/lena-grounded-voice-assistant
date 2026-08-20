@@ -119,13 +119,28 @@ def _weekday(day: RequestedDay | None, now: datetime) -> int | None:
     return list(RequestedDay)[:7].index(day)
 
 
-def schedule_matches(rule: str, facts: FactsUsed, now: datetime) -> bool | None:
-    """Prüft nur katalogzugelassene Einsatzzeitregeln gegen explizite Zeitfakten."""
+def schedule_matches(
+    rule: str,
+    facts: FactsUsed,
+    now: datetime,
+    *,
+    use_current_when_unspecified: bool = False,
+) -> bool | None:
+    """Prüft katalogzugelassene Einsatzzeiten gegen Anfrage oder aktuelle Zeit.
+
+    Der Opt-in ist für Leistungen gedacht, die ohne belegtes aktuelles
+    Zeitfenster nicht als gegenwärtiger Ort ausgegeben werden dürfen. Andere
+    Candidate-Pfade behalten die bisherige dreiwertige Semantik.
+    """
     weekday = _weekday(facts.requested_day, now)
     minutes = None
     if facts.requested_time:
         hour, minute = (int(value) for value in facts.requested_time.split(":"))
         minutes = hour * 60 + minute
+    if use_current_when_unspecified and weekday is None:
+        weekday = now.weekday()
+        if minutes is None:
+            minutes = now.hour * 60 + now.minute
     if weekday is None and minutes is None:
         return None
     rules: dict[str, tuple[set[int], int | None, int | None]] = {

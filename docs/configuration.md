@@ -15,7 +15,10 @@ und Sessionvariablen weiterhin akzeptiert.
 | `REWRITE_PROVIDER` | nein | `template` | `blablador` aktiviert den Interpreter; `template` führt freie Anfragen fail-closed ohne Angebote aus |
 | `BLABLADOR_BASE_URL` | für Blablador | – | OpenAI-kompatible Basis-URL |
 | `BLABLADOR_API_KEY` | für Blablador | – | Zugangstoken; niemals committen |
-| `BLABLADOR_MODEL` | für Blablador | – | Modell-ID oder Alias |
+| `BLABLADOR_MODEL` | für Blablador | – | gemeinsames Modell für alle drei Stufen, sofern keine Stufe unten überschrieben wird |
+| `BLABLADOR_INTERPRETER_MODEL` | nein | `BLABLADOR_MODEL` | Stufenmodell für den Interpreter; empfohlen `alias-fast` (siehe unten) |
+| `BLABLADOR_SELECTOR_MODEL` | nein | `BLABLADOR_MODEL` | Stufenmodell für die kontrollierte Auswahl; empfohlen `alias-fast` |
+| `BLABLADOR_FORMULATOR_MODEL` | nein | `BLABLADOR_MODEL` | Stufenmodell für die Formulierung; empfohlen `alias-fast` |
 | `LLM_INTERPRETER_TIMEOUT_SECONDS` | nein | `15` | Gesamtgrenze für den strukturierten LLM-Interpreter, mindestens 0,1 s |
 | `LLM_SELECTOR_TIMEOUT_SECONDS` | nein | `10` | Gesamtgrenze für die kontrollierte LLM-Auswahl, mindestens 0,1 s |
 | `LLM_FORMULATOR_TIMEOUT_SECONDS` | nein | `30` | Gesamtgrenze für Formulator und Übersetzungswartung, mindestens 0,1 s |
@@ -37,7 +40,7 @@ und Sessionvariablen weiterhin akzeptiert.
 |---|---:|---|---|
 | `SPEECH_TRANSCRIPTION_BASE_URL` | für STT | Blablador-URL | Audio-Endpunkt-Basis |
 | `SPEECH_TRANSCRIPTION_API_KEY` | für STT | Blablador-Key | Zugangstoken |
-| `SPEECH_TRANSCRIPTION_MODEL` | nein | `whisper-large-v3` | STT-Modell |
+| `SPEECH_TRANSCRIPTION_MODEL` | nein | `faster-whisper-large-v3` | STT-Modell |
 | `STT_TIMEOUT_SECONDS` | nein | `45` | STT-Gesamt- und HTTPX-Transportgrenze, mindestens 0,1 s |
 | `SPEECH_TRANSCRIPTION_TIMEOUT_SECONDS` | nein | – | Legacy-Name für `STT_TIMEOUT_SECONDS` |
 | `SPEECH_TRANSCRIPTION_MAX_BYTES` | nein | `10485760` | maximales Audio; Bereich 1024–26214400 Bytes |
@@ -140,28 +143,58 @@ Einzelprozessbetrieb und sind keine prozessübergreifende Kapazitätssteuerung.
 
 Ein Interpreter-Timeout sowie HTTP-, JSON-, Schema-, Vertrags-, Budget- oder
 Verfügbarkeitsfehler führen fail-closed zum lokalisierten technischen Hinweis
-mit bedingter 112-Angabe. CandidateSelector, Infrastruktur, Selector und
-Formulator werden nicht gestartet. Ein Selector-Timeout verwirft die
-gesamte Modellantwort, verwendet nur die deterministische Kandidatenreihenfolge
-und sperrt denselben Provider für den Formulator dieser Anfrage. Ein
-Formulator-Timeout verwendet den vorhandenen Template-Fallback. Es gibt keinen
-automatischen LLM-Retry. Die drei Stufengrenzen summieren sich nominell auf 55
-Sekunden; `LLM_REQUEST_BUDGET_SECONDS` begrenzt die tatsächliche kumulierte
-Providerwartezeit standardmäßig auf 45 Sekunden. Jede Stufe erhält höchstens
-das Restbudget. Ist es erschöpft, wird die nächste Stufe nicht gestartet und
-der kontrollierte deterministische beziehungsweise Templatepfad verwendet.
+mit bedingter 112-Angabe -- seit Version 0.3.0 zusätzlich mit dem
+deterministischen Hilfebus-Kontakt (Telefon, Zeiten, Karte), sofern die
+Wissensbasis ihn liefert (siehe
+[Safety- und Fehlerpolitik](safety-and-error-policy.md)). CandidateSelector,
+Infrastruktur, Selector und Formulator werden nicht gestartet. Ein
+Selector-Timeout verwirft die gesamte Modellantwort, verwendet nur die
+deterministische Kandidatenreihenfolge und sperrt denselben Provider für den
+Formulator dieser Anfrage. Ein Formulator-Timeout verwendet den vorhandenen
+Template-Fallback. Es gibt keinen automatischen LLM-Retry (außer dem einen
+Formulator-Retry bei einem Grounding-/Parsingfehler, nicht bei einem
+Transportfehler). Die drei Stufengrenzen sind bewusst so zu wählen, dass sie
+einzeln nicht über `LLM_REQUEST_BUDGET_SECONDS` liegen (Standard: 15 + 10 + 30
+= 55 Sekunden nominell, aber 45 Sekunden Budget) -- `LLMRequestBudget` klemmt
+jede Stufe ohnehin auf `min(Stufenlimit, Restbudget)`, ein Stufenlimit über dem
+Budget ist aber irreführend und lässt eine einzelne langsame Stufe (typischerweise
+den Interpreter) das gesamte Budget verbrauchen, bevor die folgenden Stufen
+überhaupt starten. Der veraltete Legacy-Schalter `BLABLADOR_TIMEOUT_SECONDS`
+(bzw. `LENA_LLM_TIMEOUT_SECONDS`) sollte aus demselben Grund vermieden werden,
+da er kaskadierend sowohl Interpreter- als auch Formulator-Stufenlimit setzt.
+Ist es erschöpft, wird die nächste Stufe nicht gestartet und der kontrollierte
+deterministische beziehungsweise Templatepfad verwendet.
 
-Für WP9B wird diese Konfiguration nicht verändert. Interpreter, Selector und
-Formulator verwenden derzeit gemeinsam `BLABLADOR_MODEL`; getrennte
-Stufenmodelle sind nicht konfigurierbar. Der providerfreie Evaluationsplan liest
-nur eine feste Positivliste nicht geheimer Planwerte und gibt von der Basis-URL
-nur den Hostnamen aus. `LENA_ALLOW_LIVE_SMOKE=true` ist keine dauerhafte
-Anwendungskonfiguration, sondern eine von mehreren jeweils neu zu setzenden
-Live-Freigaben. Ohne Stufe, Bestätigungsflag, erwartete Provideridentität und
-alle stufengebundenen Limits endet der Lauf vor Settings und Provider. Siehe
+Interpreter, Selector und Formulator können über `BLABLADOR_INTERPRETER_MODEL`,
+`BLABLADOR_SELECTOR_MODEL` und `BLABLADOR_FORMULATOR_MODEL` getrennte
+Stufenmodelle verwenden; unkonfiguriert fällt jede Stufe auf das gemeinsame
+`BLABLADOR_MODEL` zurück. Empfohlen ist aktuell `alias-fast` für alle drei
+Stufen: ein informeller Test am 2026-08-06 fand `alias-large` nach ~50 s
+hängend mit Verbindungsabbruch (3/3 Versuchen) und `alias-huge` mit in
+`content` leakendem `<think>`-Reasoning, das den strikten JSON-Parser bricht;
+`alias-fast` lieferte sauberes, geerdetes JSON. Der erste offizielle
+WP9B-Live-Smoke-Gate für die Interpreter-Stufe (Lauf
+`run_e5ef56937b0d47e3a409d43d3ce4db09`, 2026-08-14, Commit `fbcc85a`)
+bestätigt das für die Interpreter-Stufe: 15/15 technisch valide, 0
+Fehler, 0 kritische inhaltliche Fehler.
+
+Für WP9B wird diese Konfiguration nicht verändert. Der providerfreie
+Evaluationsplan liest nur eine feste Positivliste nicht geheimer Planwerte und
+gibt von der Basis-URL nur den Hostnamen aus. `LENA_ALLOW_LIVE_SMOKE=true` ist
+keine dauerhafte Anwendungskonfiguration, sondern eine von mehreren jeweils
+neu zu setzenden Live-Freigaben. Ohne Stufe, Bestätigungsflag, erwartete
+Provideridentität und alle stufengebundenen Limits endet der Lauf vor
+Settings und Provider. Siehe
 [Kontrollierte Live-Provider-Evaluation](live-provider-evaluation.md).
 
-STT- und TTS-Timeouts ergeben generische HTTP-503-Antworten. WFS trennt
+STT- und TTS-Timeouts ergeben generische HTTP-503-Antworten. Server-STT
+normalisiert die vom Browser gelieferten WebM-, Ogg-, MP4-, MP3- oder
+WAV-Aufnahmen unabhängig von der Endung zu mono PCM16/16-kHz-WAV, bevor der
+externe Endpunkt aufgerufen wird. Der laufende Server muss nach einer
+Installation oder Aktualisierung mit der deklarierten PyAV-Abhängigkeit neu
+gestartet werden. Nicht dekodierbares Audio ergibt HTTP 422; Provider- und
+Timeoutdetails bleiben öffentlich redigiert und werden technisch nur als
+Fehlercode, Dauer und gegebenenfalls Upstream-Status protokolliert. WFS trennt
 Verbindungs- und Lesetimeout; vor vollständigem Download und Validierung wird
 kein aktiver Datenstand verändert.
 

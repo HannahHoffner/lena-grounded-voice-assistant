@@ -51,6 +51,8 @@ from .speech import (
     SpeechSynthesisError,
     SpeechSynthesisTimeoutError,
     SpeechTranscriber,
+    SpeechTranscriptionAudioError,
+    SpeechTranscriptionAudioTooLongError,
     SpeechTranscriptionError,
     SpeechTranscriptionTimeoutError,
 )
@@ -271,6 +273,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         fountain_state = load_drinking_fountain_state(settings)
         toilet_metadata = active_kb.metadata.get("public_toilets", {}) if active_kb else {}
         fountain_metadata = active_kb.metadata.get("drinking_fountains", {}) if active_kb else {}
+        official_offer_metadata = active_kb.metadata.get("official_offer_source", {}) if active_kb else {}
         return {
             "status": "ok" if active_kb else "error",
             "kb_loaded": active_kb is not None,
@@ -389,6 +392,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 "background_check": app.state.last_drinking_fountain_check,
             },
             "curation": (active_kb.metadata.get("curation") if active_kb else None),
+            "official_offer_source": {
+                "source_version": official_offer_metadata.get("source_version"),
+                "source_hash": official_offer_metadata.get("source_hash"),
+                "record_count": official_offer_metadata.get("record_count", 0),
+                "status": "verified" if official_offer_metadata else "unavailable",
+            },
             "source_change_pending": (
                 active_kb.metadata.get("source_change_pending", False) if active_kb else False
             ),
@@ -446,11 +455,29 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 content_type=content_type,
                 language=language,
             )
+        except SpeechTranscriptionAudioError as exc:
+            LOGGER.warning(
+                "stt.audio_rejected",
+                extra={
+                    "duration_ms": round((perf_counter() - started_at) * 1000, 2),
+                    "error_code": exc.code,
+                },
+            )
+            status_code = 413 if isinstance(exc, SpeechTranscriptionAudioTooLongError) else 422
+            detail = "Audio duration too long" if status_code == 413 else "Audio could not be decoded"
+            raise HTTPException(status_code=status_code, detail=detail) from exc
         except SpeechTranscriptionError as exc:
             event = "stt.timeout" if isinstance(exc, SpeechTranscriptionTimeoutError) else "stt.failed"
+            log_context: dict[str, object] = {
+                "duration_ms": round((perf_counter() - started_at) * 1000, 2),
+                "error_code": exc.code,
+            }
+            upstream_status = getattr(exc, "upstream_status", None)
+            if upstream_status is not None:
+                log_context["upstream_status"] = upstream_status
             LOGGER.warning(
                 event,
-                extra={"duration_ms": round((perf_counter() - started_at) * 1000, 2)},
+                extra=log_context,
             )
             raise HTTPException(status_code=503, detail="Speech transcription failed") from exc
         LOGGER.info(

@@ -22,6 +22,7 @@ from app.interpreter import (
     Need,
     QueryInterpretation,
     RequestedService,
+    AgeGroup,
     ScopeStatus,
 )
 from app.llm_selection import SELECTOR_PROMPT_VERSION
@@ -71,7 +72,13 @@ def _result(
     }
     explicit.update(facts or {})
     if explicit["age"] is not None and "age_group" not in (facts or {}):
-        explicit["age_group"] = "under_27" if int(explicit["age"]) <= 26 else "not_under_27"
+        explicit["age_group"] = (
+            "under_18"
+            if int(explicit["age"]) <= 17
+            else "under_27"
+            if int(explicit["age"]) <= 26
+            else "not_under_27"
+        )
     missing_values = missing or []
     return {
         "contract_version": INTERPRETER_CONTRACT_VERSION,
@@ -85,6 +92,27 @@ def _result(
         "clarification_may_be_needed": bool(missing_values),
         "acute_risk_status": risk.value,
     }
+
+
+@pytest.mark.parametrize(
+    ("age", "expected"),
+    [(17, AgeGroup.UNDER_18), (18, AgeGroup.UNDER_27), (26, AgeGroup.UNDER_27), (27, AgeGroup.NOT_UNDER_27)],
+)
+def test_numeric_age_uses_minor_and_adult_age_groups(age: int, expected: AgeGroup) -> None:
+    interpretation = QueryInterpretation.model_validate(
+        _result(Need.SLEEP, facts={"age": age, "age_group": expected.value})
+    )
+    assert interpretation.explicit_facts.age_group == expected
+
+
+def test_interpreter_contract_allows_explicit_youth_support_without_offer_ids() -> None:
+    payload = _result(Need.ADVICE)
+    payload["explicit_service_requests"] = [RequestedService.YOUTH_SUPPORT.value]
+    interpretation = QueryInterpretation.model_validate(payload)
+
+    assert interpretation.explicit_service_requests == [RequestedService.YOUTH_SUPPORT]
+    assert "offer" not in interpretation.model_dump_json().casefold()
+    assert "a numeric age alone never establishes youth_support" in INTERPRETER_SYSTEM_PROMPT
 
 
 async def _provider_result(
@@ -569,7 +597,7 @@ def test_open_dialog_context_is_structured_minimal_and_contains_no_offer_ids(
         originating_need=Need.SLEEP,
         originating_services=[],
         requested_fields=["age_group", "gender"],
-        allowed_choice_values=["female", "under_27"],
+        allowed_choice_values=["under_18", "female"],
         known_explicit_facts={
             "age": None,
             "age_group": "unknown",
@@ -591,7 +619,7 @@ def test_open_dialog_context_is_structured_minimal_and_contains_no_offer_ids(
     user = json.loads(captured["payload"]["messages"][1]["content"])
 
     assert user["open_dialog"]["dialog_type"] == "sleep_target_group"
-    assert user["open_dialog"]["allowed_choice_values"] == ["female", "under_27"]
+    assert user["open_dialog"]["allowed_choice_values"] == ["under_18", "female"]
     assert "offer" not in json.dumps(user["open_dialog"], ensure_ascii=False).casefold()
     assert "OPEN_DIALOG" in captured["payload"]["messages"][0]["content"]
     assert not any(alias["alias"] in {"Sozialamt", "1", "2", "3", "4"} for alias in user["known_aliases"])

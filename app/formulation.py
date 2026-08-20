@@ -33,7 +33,7 @@ FactId = Annotated[str, StringConstraints(pattern=r"^f_[0-9a-f]{16}$")]
 OfferId = Annotated[
     str,
     StringConstraints(
-        pattern=r"^(?:[0-9]+(?:\.[0-9]+)?|toilet:[0-9]{4}|drinking_fountain:[a-z0-9-]+)$",
+        pattern=r"^(?:[0-9]+(?:\.[0-9]+)?|vkkj_[a-z0-9_]+|toilet:[0-9]{4}|drinking_fountain:[a-z0-9-]+)$",
         max_length=100,
     ),
 ]

@@ -24,6 +24,7 @@ from app.safety import (
     preflight_detects_immediate_danger,
     safety_text,
 )
+from app.service import _general_help_contact
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -53,7 +54,7 @@ def interpretation(
 ) -> QueryInterpretation:
     return QueryInterpretation.model_validate(
         {
-            "contract_version": "3",
+            "contract_version": "4",
             "need": need.value,
             "explicit_service_requests": ["overnight_stay"] if need == Need.SLEEP else [],
             "scope_status": scope.value,
@@ -116,6 +117,27 @@ def assert_safety_stop(body: dict[str, object], language: Language, kind: Safety
     assert body["card_ids"] == []
     assert body["map_marker_ids"] == []
     assert body["map_data"] is None
+    assert body["clarification"] is None
+    assert body["answer"].count("112") == 1
+
+
+def assert_technical_hilfebus_stop(body: dict[str, object], app, language: Language) -> None:
+    """Wie assert_safety_stop, aber für den Interpreter-Ausfall mit Hilfebus-Kontakt.
+
+    Seit der Untersuchung zu unbemerkten technischen Fallbacks (Zeile 5) enthält
+    der reine 112-Text zusätzlich den deterministischen Hilfebus-Kontakt, sobald
+    die Wissensbasis ihn liefert -- siehe `_technical_safety_fallback()` in
+    `app/service.py` und `docs/safety-and-error-policy.md`.
+    """
+    offer = _general_help_contact(app.state.kb.offers)
+    assert offer is not None, "Testfixtur ohne Hilfebus-Kontakt in der Wissensbasis"
+    phone = ", ".join(offer.phone_numbers) or "—"
+    times = "; ".join(offer.opening_hours_raw or offer.standzeiten_raw) or "—"
+    expected_answer = safety_text(language, SafetyTextKind.TECHNICAL_HILFEBUS, phone=phone, times=times)
+    assert body["answer"] == expected_answer
+    assert body["answer_type"] == "technical_fallback"
+    assert [card["id"] for card in body["cards"]] == [offer.id]
+    assert body["card_ids"] == [offer.id]
     assert body["clarification"] is None
     assert body["answer"].count("112") == 1
 
@@ -506,7 +528,7 @@ def test_interpreter_failures_are_closed_with_conditional_112(
     app.state.service.blablador = provider
     body = post(TestClient(app), "synthetic normal request").json()
 
-    assert_safety_stop(body, Language.DE, SafetyTextKind.TECHNICAL)
+    assert_technical_hilfebus_stop(body, app, Language.DE)
     assert body["status"] == "error"
     assert provider.selector_calls == provider.formulator_calls == 0
 
@@ -514,7 +536,7 @@ def test_interpreter_failures_are_closed_with_conditional_112(
 def test_unavailable_interpreter_is_fail_closed_and_not_lexically_routed(tmp_path: Path) -> None:
     app = create_app(settings(tmp_path))
     body = post(TestClient(app), "Ich brauche Essen.").json()
-    assert_safety_stop(body, Language.DE, SafetyTextKind.TECHNICAL)
+    assert_technical_hilfebus_stop(body, app, Language.DE)
 
 
 def test_safety_session_and_interaction_log_redact_danger_text(tmp_path: Path) -> None:

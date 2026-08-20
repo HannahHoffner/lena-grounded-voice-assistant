@@ -8,6 +8,7 @@ import shutil
 from dataclasses import replace
 from datetime import datetime, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import pytest
 from fastapi.testclient import TestClient
@@ -122,7 +123,7 @@ def _settings(tmp_path: Path, **changes: object) -> Settings:
 
 def _interpretation(need: Need = Need.DRINKING_WATER, *, district: str | None = None):
     return QueryInterpretation(
-        contract_version="3",
+        contract_version="4",
         need=need,
         explicit_service_requests=[],
         scope_status=ScopeStatus.IN_SCOPE,
@@ -510,6 +511,49 @@ def test_template_api_limits_cards_but_maps_every_seasonally_eligible_fountain(t
     assert "funktioniert gerade" not in body["answer"].casefold()
 
 
+def test_generic_water_request_excludes_hilfebus_outside_sunday_stand_time(tmp_path: Path) -> None:
+    settings = _settings(tmp_path)
+    kb = load_active_knowledge_base(settings)
+    service = QueryService(
+        settings,
+        kb,
+        clock=lambda: datetime(2026, 8, 14, 13, 32, tzinfo=ZoneInfo("Europe/Berlin")),
+    )
+    service.blablador = _WaterInterpreter()
+
+    response = asyncio.run(
+        service.query(QueryRequest(query="Ich habe Durst.", language=Language.DE))
+    )
+
+    assert "21" not in response.card_ids
+    assert "21" not in response.spoken_result_ids
+    assert not any(marker_id.startswith("21:") for marker_id in response.map_marker_ids)
+    assert "Hilfebus" not in response.answer
+
+
+def test_generic_water_request_uses_hilfebus_during_sunday_stand_time(tmp_path: Path) -> None:
+    settings = _settings(tmp_path)
+    kb = load_active_knowledge_base(settings)
+    service = QueryService(
+        settings,
+        kb,
+        clock=lambda: datetime(2026, 8, 16, 20, 30, tzinfo=ZoneInfo("Europe/Berlin")),
+    )
+    service.blablador = _WaterInterpreter()
+
+    response = asyncio.run(
+        service.query(QueryRequest(query="Ich habe Durst.", language=Language.DE))
+    )
+
+    assert response.card_ids[0] == "21"
+    assert response.cards[0].address is None
+    assert response.map_marker_ids[0] == "21:hbf-west"
+    assert response.map_data is not None
+    stand = response.map_data.destinations[0]
+    assert "Westseite" in stand.address
+    assert "20:00" in " ".join(stand.opening_hours)
+
+
 @pytest.mark.parametrize(
     ("language", "plain", "with_district"),
     [
@@ -612,9 +656,16 @@ def test_interpreter_error_fails_closed_and_formulator_failure_uses_only_templat
         async def interpret_query(self, **_kwargs):
             raise InterpreterError("interpreter_schema_error")
 
+    # Seit der Untersuchung zu unbemerkten technischen Fallbacks (Zeile 5)
+    # enthält der technische Fallback zusätzlich den deterministischen
+    # Hilfebus-Kontakt statt eines reinen "versuche es erneut"-Hinweises.
+    hilfebus_offer = next(offer for offer in kb.offers if "general_help_referral_first" in offer.priority_rules)
     service.blablador = InvalidInterpreter()
     failed = asyncio.run(service.query(QueryRequest(query="Trinkbrunnen", language=Language.DE)))
-    assert failed.status == "error" and failed.cards == [] and failed.map_data is None
+    assert failed.status == "error"
+    assert [card.id for card in failed.cards] == [hilfebus_offer.id]
+    assert failed.cards[0].address is None
+    assert failed.map_data is None
 
     class InvalidFormulator:
         async def interpret_query(self, **_kwargs):

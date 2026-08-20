@@ -43,7 +43,7 @@ def _interpretation(
 ) -> QueryInterpretation:
     return QueryInterpretation.model_validate(
         {
-            "contract_version": "3",
+            "contract_version": "4",
             "need": need.value,
             "explicit_service_requests": [item.value for item in services or []],
             "scope_status": "in_scope" if in_scope or need != Need.UNKNOWN else "out_of_scope",
@@ -136,6 +136,68 @@ def test_organization_aliases_cover_all_related_offers(curated_kb) -> None:
 
     assert bindings["Schoppi"] == bindings["A1"] == {"6", "11"}
     assert bindings["Mobile"] == bindings["Kübel"] == {"19.1", "19.2", "19.3"}
+
+
+def test_timmitohelp_route_is_curated_without_overwriting_wfs_or_inventing_markers(curated_kb) -> None:
+    route = [
+        "Donnerstag ca. 16:00 Uhr: Dittrichring",
+        "Donnerstag ca. 16:30 Uhr: Lennéanlage",
+        "Donnerstag ca. 17:30 Uhr: Nikolaistraße",
+    ]
+    offer = curated_kb.by_id()["16"]
+    source = load_knowledge_base(SOURCE_PATH).by_id()["16"]
+    catalog = load_curation_catalog(CURATION_PATH)
+    reference = next(item for item in catalog.source_references if item.id == "timmitohelp_tourplan_pdf")
+
+    assert offer.standzeiten_raw == route
+    assert offer.address is None and offer.geometry is None
+    assert "Halte Ausschau nach dem bunten Team mit zwei Bollerwagen." in offer.notes
+    assert offer.service_schedules == {
+        "food": "thursday_16_19",
+        "drinking_water": "thursday_16_19",
+        "hygiene": "thursday_16_19",
+        "clothing": "thursday_16_19",
+    }
+    assert build_map_data([offer], language=Language.DE, service="food") is None
+    assert source.address == "Dittrichring 15, 04109 Leipzig"
+    assert source.geometry is not None
+    assert any("16:00" in note and "19:00" in note for note in source.notes)
+    assert reference.content_hash == "64155c223575dc152f420f0ebdca7822d5d4b015740e7b34ab7557bbafdbf4d2"
+
+    evidence = build_formulator_evidence(
+        query="Wo ist TiMMi ToHelp am Donnerstag?",
+        language=Language.DE,
+        answer_type=AnswerType.GROUNDED_RESULT,
+        need=Need.FOOD,
+        offers=[offer],
+        roles={offer.id: CandidateRole.DIRECT_SERVICE},
+    )
+    facts = evidence.selected_offers[0].facts
+    assert [fact.value for fact in facts if fact.fact_type == FactType.STAND_TIME] == route
+    assert any(
+        fact.fact_type == FactType.NOTE and "zwei Bollerwagen" in fact.value
+        for fact in facts
+    )
+
+
+def test_timmitohelp_machine_localizations_are_current_without_human_approval(curated_kb) -> None:
+    catalog = load_translation_catalog(curated_settings(Path(".")), curated_kb)
+    offer = curated_kb.by_id()["16"]
+
+    assert catalog.integrity_errors == ()
+    for language in (Language.EN, Language.PL, Language.RO, Language.RU):
+        record = catalog.store.entries["16"].translations[language]
+        card = localize_offer_card(
+            offer,
+            language,
+            catalog,
+            TranslationRuntimePolicy.REVIEWED_OR_MACHINE,
+        )
+        assert record.linguistic_review_status.value == "machine"
+        assert record.reviewed_by_role is None and record.reviewed_at is None
+        assert card.address is None
+        assert card.standzeiten_raw == offer.standzeiten_raw
+        assert card.notes == record.fields.notes
 
 
 @pytest.mark.parametrize("query", ["Schoppi schlafen", "A1 übernachten", "Schoppi Notschlafstelle"])
@@ -333,12 +395,12 @@ def test_excluded_ids_are_absent_from_every_runtime_projection(curated_kb) -> No
     assert all(set(item.model_dump()) == {"alias", "alias_kind", "may_refer_to_multiple_services"} for item in interpreter_aliases)
     assert not any(hasattr(item, "offer_ids") for item in interpreter_aliases)
     assert EXCLUDED_IDS <= normalized_source_ids
-    assert len(runtime_ids) == 26
+    assert len(runtime_ids) == 28
 
 
 def test_health_exposes_pending_review_policy_and_runtime_exclusions(tmp_path: Path) -> None:
     health = TestClient(create_app(curated_settings(tmp_path))).get("/api/health").json()
-    assert health["offer_count"] == 26
+    assert health["offer_count"] == 28
     assert health["source_kind"] == "curated_wfs"
     assert health["curation"]["excluded_source_ids"] == ["1", "2", "3", "4"]
     assert len(health["curation"]["catalog_content_hash"]) == 64
@@ -372,7 +434,7 @@ def test_runtime_curation_cannot_be_disabled(
         replace(curated_settings(tmp_path), curation_path=configured_path)
     )
 
-    assert len(kb.offers) == 26
+    assert len(kb.offers) == 28
     assert {offer.id for offer in kb.offers}.isdisjoint(EXCLUDED_IDS)
     assert kb.source_kind == "curated_wfs"
     assert kb.runtime_kb_fingerprint
@@ -435,7 +497,7 @@ def test_all_formulator_offer_payloads_use_exact_positive_field_sets(curated_kb)
     evidence_fields = set(FormulatorEvidence.model_fields)
     offer_fields = set(EvidenceOffer.model_fields)
     fact_fields = set(EvidenceFact.model_fields)
-    assert len(formulator) == 26
+    assert len(formulator) == 28
     assert all(set(item) == evidence_fields for item in formulator)
     assert all(set(item["selected_offers"][0]) == offer_fields for item in formulator)
     assert all(

@@ -21,6 +21,7 @@ from .curation import (
     project_runtime_offers,
 )
 from .models import OfferRecord
+from .official_offer_source import OfficialSourceError, load_official_offer_source
 from .resources import packaged_bootstrap_data_root
 from .drinking_fountain_releases import (
     DrinkingFountainReleaseError,
@@ -378,6 +379,7 @@ def _runtime_fingerprint(
     source_hash: str,
     catalog_version: str,
     catalog_hash: str,
+    official_source_hash: str,
     toilet_release_id: str,
     toilet_source_hash: str,
     toilet_normalization_version: str,
@@ -391,6 +393,7 @@ def _runtime_fingerprint(
             "catalog_version": catalog_version,
             "source_hash": source_hash,
             "source_release_id": release_id,
+            "official_source_hash": official_source_hash,
             "toilet_normalization_version": toilet_normalization_version,
             "toilet_release_id": toilet_release_id,
             "toilet_source_hash": toilet_source_hash,
@@ -450,8 +453,17 @@ def load_active_knowledge_base(settings: Settings) -> KnowledgeBase:
             )
 
     try:
-        offers, aliases = project_runtime_offers(approved.offers, catalog)
-    except CurationError as exc:
+        official_source, official_source_hash = load_official_offer_source(
+            packaged_bootstrap_data_root() / "official" / "verified_offers.json"
+        )
+        if (
+            catalog.approved_official_source_hash is not None
+            and official_source_hash != catalog.approved_official_source_hash
+        ):
+            raise CurationError("Official offer source hash does not match curation")
+        source_offers = [*approved.offers, *official_source.offers]
+        offers, aliases = project_runtime_offers(source_offers, catalog)
+    except (CurationError, OfficialSourceError) as exc:
         raise KnowledgeBaseError(
             "Curated runtime projection is invalid",
             code="runtime_kb_unavailable",
@@ -591,6 +603,7 @@ def load_active_knowledge_base(settings: Settings) -> KnowledgeBase:
         source_hash=catalog.approved_source_hash,
         catalog_version=catalog.catalog_version,
         catalog_hash=catalog.content_hash or catalog.approved_source_hash,
+        official_source_hash=official_source_hash,
         toilet_release_id=toilet_release_id,
         toilet_source_hash=toilet_source_hash,
         toilet_normalization_version=TOILET_NORMALIZATION_VERSION,
@@ -616,6 +629,11 @@ def load_active_knowledge_base(settings: Settings) -> KnowledgeBase:
         "runtime_kb_fingerprint": fingerprint,
         "public_toilets": toilet_metadata,
         "drinking_fountains": fountain_metadata,
+        "official_offer_source": {
+            "source_version": official_source.source_version,
+            "source_hash": official_source_hash,
+            "record_count": len(official_source.offers),
+        },
     }
     return KnowledgeBase(
         path=approved.path,

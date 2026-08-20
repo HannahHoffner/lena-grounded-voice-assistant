@@ -66,13 +66,14 @@ def _evidence(
     app,
     *,
     offer_ids: tuple[str, ...] = ("8",),
+    offers: list | None = None,
     language: Language = Language.DE,
     answer_type: AnswerType = AnswerType.GROUNDED_RESULT,
     roles: dict[str, CandidateRole] | None = None,
     mandatory_ids: set[str] | None = None,
     query: str = "Ich brauche Hilfe.",
 ):
-    offers = [app.state.kb.by_id()[offer_id] for offer_id in offer_ids]
+    offers = offers if offers is not None else [app.state.kb.by_id()[offer_id] for offer_id in offer_ids]
     role_map = roles or {offer.id: CandidateRole.DIRECT_SERVICE for offer in offers}
     return build_formulator_evidence(
         query=query,
@@ -130,7 +131,7 @@ def _response(
 def _interpretation(need: Need) -> QueryInterpretation:
     return QueryInterpretation.model_validate(
         {
-            "contract_version": "3",
+            "contract_version": "4",
             "need": need.value,
             "explicit_service_requests": [],
             "scope_status": "in_scope",
@@ -311,9 +312,14 @@ def test_sentence_with_e_v_abbreviation_is_not_treated_as_multiple_sentences(app
     darf nicht fälschlich als Satzbruch (mehrere Sätze) gelten. Live
     reproduziert: 18 Angebote im Katalog enthalten "e. V." im Namen; jede
     Formulierung, die den Namen (auch nur teilweise) zitierte, schlug an
-    dieser Prüfung fehl und erzwang den statischen Template-Fallback.
+    dieser Prüfung fehl und erzwang den statischen Template-Fallback. Seit dem
+    Fix für rohe Organisations-Rechtsnamen (Untersuchung zu unbemerkten
+    Fallbacks, Folgefix) zeigt kein reales Angebot mehr "e. V." im
+    Anzeigenamen; das Szenario wird daher mit einem synthetisch benannten
+    Angebot nachgestellt statt mit echten Katalogdaten.
     """
-    evidence = _evidence(app, offer_ids=("24",))
+    offer = app.state.kb.by_id()["24"].model_copy(update={"display_name": "CABL e. V."})
+    evidence = _evidence(app, offers=[offer])
     name_fact = _fact(evidence, FactType.DISPLAY_NAME)
     assert "e. V." in name_fact.value
     response = _response(
@@ -332,9 +338,15 @@ def test_offer_name_containing_menschen_is_not_treated_as_target_assertion(app) 
     amtlichen Namen von Angebot 25 ("... von Menschen ohne festen Wohnsitz")
     zitierte, wurde faelschlich als unbelegte Zielgruppenbehauptung abgelehnt
     und erzwang den generischen Template-Fallback ("Diese Angebote passen zu
-    deiner Frage: ...").
+    deiner Frage: ..."). Seit dem Fix für rohe Organisations-Rechtsnamen
+    (Untersuchung zu unbemerkten Fallbacks, Folgefix) zeigt Angebot 25 den
+    kuratierten Kurznamen "UVO"; das Szenario wird daher mit einem
+    synthetisch benannten Angebot nachgestellt statt mit echten Katalogdaten.
     """
-    evidence = _evidence(app, offer_ids=("25",))
+    offer = app.state.kb.by_id()["25"].model_copy(
+        update={"display_name": "Umfeldnahe Versorgung von Menschen ohne festen Wohnsitz"}
+    )
+    evidence = _evidence(app, offers=[offer])
     name = _fact(evidence, FactType.DISPLAY_NAME)
     assert "Menschen" in name.value
     response = _response(

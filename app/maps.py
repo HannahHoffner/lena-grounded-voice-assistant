@@ -85,7 +85,11 @@ def offer_stand_destinations(
         if service is None
         else set()
     )
-    if offer.place_type == "help_bus" and "sunday_20_21" in schedule_rules:
+    if (
+        offer.place_type == "help_bus"
+        and service in {"food", "drinking_water"}
+        and "sunday_20_21" in schedule_rules
+    ):
         return [
             _stand_destination(
                 offer,
@@ -183,7 +187,7 @@ def uses_stand_location_instead_of_office(offer: OfferRecord, *, service: str | 
         if service is None
         else set()
     )
-    return (offer.place_type == "help_bus" and service in {None, "food", "drinking_water"}) or bool(
+    return offer.place_type == "help_bus" or bool(
         stand_only_rules.intersection(relevant_rules)
     )
 

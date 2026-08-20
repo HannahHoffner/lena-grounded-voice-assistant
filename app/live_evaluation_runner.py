@@ -810,7 +810,7 @@ async def run_end_to_end_live_gate(
 
 
 STABILITY_SCENARIO_IDS: tuple[str, ...] = (
-    "e_food_time", "e_sleep_u27", "e_toilet", "e_water", "e_acute_uncertain", "e_prompt_injection",
+    "e_food_time", "e_sleep_minor", "e_toilet", "e_water", "e_acute_uncertain", "e_prompt_injection",
 )
 STABILITY_REPETITIONS = 3
 

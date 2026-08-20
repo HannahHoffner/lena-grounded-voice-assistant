@@ -114,7 +114,12 @@ def new_dialog(
 ) -> DialogState:
     current = now or datetime.now(UTC)
     definitions = {
-        DialogType.SLEEP_TARGET_GROUP: (["age_group", "gender"], ["female", "under_27"], True, 2),
+        DialogType.SLEEP_TARGET_GROUP: (
+            ["age_group", "gender"],
+            ["under_18", "female"],
+            False,
+            2,
+        ),
         DialogType.SLEEP_AGE: (["age"], [], False, 2),
         DialogType.ORGANIZATION_NEED: (["need"], ["sleep", "day_support"], False, 1),
         DialogType.ORGANIZATION_DISTRICT: (["district"], [], False, 1),
@@ -148,6 +153,16 @@ def new_dialog(
 
 def clarification_block(dialog: DialogState, language: Language) -> ClarificationBlock:
     prompt = application_text(language, f"dialogue.prompts.{dialog.dialog_type.value}")
+    choices = [
+        ClarificationChoice(
+            value=choice.value,
+            label=application_text(language, f"dialogue.choices.{choice.value}"),
+        )
+        for choice in dialog.choices
+    ]
+    # Ein Satz je Auswahlmoeglichkeit, nach dem Prompt -- die Kaesten sind sonst
+    # rein visuell und fuer eine sprachgefuehrte Nutzung nicht erreichbar.
+    spoken_text = " ".join([prompt, *(f"{choice.label}." for choice in choices)])
     return ClarificationBlock(
         dialog_id=dialog.dialog_id,
         type=dialog.dialog_type.value,
@@ -156,13 +171,8 @@ def clarification_block(dialog: DialogState, language: Language) -> Clarificatio
         allow_speech=True,
         multiple_facts_allowed=dialog.allow_multiple_choices,
         submit_label=application_text(language, "dialogue.submit_label"),
-        choices=[
-            ClarificationChoice(
-                value=choice.value,
-                label=application_text(language, f"dialogue.choices.{choice.value}"),
-            )
-            for choice in dialog.choices
-        ],
+        choices=choices,
+        spoken_text=spoken_text,
     )
 
 

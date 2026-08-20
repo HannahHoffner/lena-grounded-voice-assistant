@@ -35,13 +35,18 @@ from app.llm_selection import (
 )
 from app.main import create_app
 from app.models import Language
+from app.official_offer_source import load_official_offer_source
 from app.providers.llm import BlabladorProvider, ProviderAnswer
+from app.result_ordering import order_social_results
 
 
 ROOT = Path(__file__).resolve().parents[1]
 CATALOG = load_curation_catalog(ROOT / "app" / "resources" / "bootstrap" / "curation" / "social_offers.json")
 SOURCE = load_knowledge_base(ROOT / "data" / "wfs" / "releases" / "legacy-3b72f95a88f9" / "offers.json")
-OFFERS, ORGANIZATION_ALIASES = project_runtime_offers(SOURCE.offers, CATALOG)
+OFFICIAL_SOURCE, _ = load_official_offer_source(
+    ROOT / "app" / "resources" / "bootstrap" / "official" / "verified_offers.json"
+)
+OFFERS, ORGANIZATION_ALIASES = project_runtime_offers([*SOURCE.offers, *OFFICIAL_SOURCE.offers], CATALOG)
 NOW = datetime(2026, 8, 3, 12, 0, tzinfo=UTC)
 
 
@@ -60,7 +65,7 @@ def interpretation(
 ) -> QueryInterpretation:
     return QueryInterpretation.model_validate(
         {
-            "contract_version": "3",
+            "contract_version": "4",
             "need": need.value,
             "explicit_service_requests": [item.value for item in services or []],
             "scope_status": "in_scope",
@@ -128,9 +133,12 @@ def test_candidate_contract_separates_all_four_classes_and_binding_priorities() 
         ]
     )
 
-    u27 = decision(interpretation(Need.SLEEP, age=24, gender="female"))
-    assert [item.offer_id for item in u27.mandatory_candidates] == ["17.1"]
-    assert [item.offer_id for item in u27.selectable_candidates][:2] == ["17.2", "17.3"]
+    minor = decision(interpretation(Need.SLEEP, age=17, gender="female"))
+    assert [item.offer_id for item in minor.mandatory_candidates] == [
+        "vkkj_notschlafstelle",
+        "vkkj_jugendnotdienst",
+    ]
+    assert [item.offer_id for item in minor.selectable_candidates] == ["21"]
 
 
 def test_selector_payload_is_a_positive_list_without_conditional_or_raw_fields() -> None:
@@ -247,19 +255,19 @@ def test_bypasses_and_mandatory_prefix_are_deterministic() -> None:
     assert mandatory_outcome and mandatory_outcome.selection_source == SelectionSource.MANDATORY_ONLY
     assert mandatory_outcome.bypass_reason == SelectorBypassReason.MANDATORY_CANDIDATES_ONLY
 
-    u27 = decision(interpretation(Need.SLEEP, age=24, gender="female"))
+    minor = decision(interpretation(Need.SLEEP, age=17, gender="female"))
     response = CandidateSelectionResponse(
         contract_version="1",
         selection_status="selected",
-        selected_ids=["17.3", "17.2"],
+        selected_ids=["21"],
     )
-    outcome = selected_outcome(u27, response)
-    assert outcome.final_ids == ["17.1", "17.2", "17.3"]
+    outcome = selected_outcome(minor, response)
+    assert outcome.final_ids == ["vkkj_notschlafstelle", "vkkj_jugendnotdienst", "21"]
     mandatory_survives_empty = selected_outcome(
-        u27,
+        minor,
         CandidateSelectionResponse(contract_version="1", selection_status="no_selection", selected_ids=[]),
     )
-    assert mandatory_survives_empty.final_ids == ["17.1"]
+    assert mandatory_survives_empty.final_ids == ["vkkj_notschlafstelle", "vkkj_jugendnotdienst"]
     none = selected_outcome(
         decision(interpretation(Need.MEDICAL)),
         CandidateSelectionResponse(contract_version="1", selection_status="no_selection", selected_ids=[]),
@@ -267,8 +275,12 @@ def test_bypasses_and_mandatory_prefix_are_deterministic() -> None:
     assert none.final_ids == []
     with pytest.raises(SelectorError, match="selector_invalid_id"):
         selected_outcome(
-            u27,
-            CandidateSelectionResponse(contract_version="1", selection_status="selected", selected_ids=["17.1"]),
+            minor,
+            CandidateSelectionResponse(
+                contract_version="1",
+                selection_status="selected",
+                selected_ids=["vkkj_notschlafstelle"],
+            ),
         )
 
 
@@ -310,7 +322,11 @@ def test_provider_rejects_contract_and_prompt_injection_outputs(content: str, er
 
 def test_provider_payload_separates_untrusted_query_and_contains_no_mandatory_ids() -> None:
     provider = BlabladorProvider(settings())
-    value = interpretation(Need.SLEEP, age=24, gender="female")
+    value = interpretation(
+        Need.ADVICE,
+        age=24,
+        services=[RequestedService.YOUTH_SUPPORT],
+    )
     current = decision(value)
     captured: dict[str, object] = {}
 
@@ -338,7 +354,9 @@ def test_provider_payload_separates_untrusted_query_and_contains_no_mandatory_id
     assert user["contract_version"] == SELECTOR_CONTRACT_VERSION
     assert user["prompt_version"] == SELECTOR_PROMPT_VERSION
     assert user["current_query"].startswith("{")
-    assert "17.1" not in {item["id"] for item in user["candidates"]}
+    assert not {item["id"] for item in user["candidates"]}.intersection(
+        item.offer_id for item in current.mandatory_candidates
+    )
     assert all(item["id"] in {candidate.offer_id for candidate in current.selectable_candidates} for item in user["candidates"])
 
 
@@ -395,8 +413,9 @@ def test_selector_error_uses_whole_deterministic_decision_as_fallback() -> None:
 def test_domain_paths_reach_selector_only_after_deterministic_evidence() -> None:
     water_value = interpretation(Need.DRINKING_WATER, services=[RequestedService.DRINKING_WATER])
     water = decision(water_value)
-    water_payload = selector_payload("Trinkwasser", Language.DE, water_value, water, OFFERS)
-    assert {item.id for item in water_payload.candidates} == {"16", "21", "22"}
+    assert [item.offer_id for item in water.selectable_candidates] == ["22"]
+    water_outcome = bypass_outcome(water, selector_available=True, interpreter_succeeded=True)
+    assert water_outcome.bypass_reason == SelectorBypassReason.SINGLE_CANDIDATE
 
     wound = decision(
         interpretation(
@@ -475,6 +494,22 @@ def test_service_passes_only_validated_food_selection_to_formulator() -> None:
             captured["conditional"] = [item.offer_id for item in decision_value.conditional_candidates]
             chosen = [item.offer_id for item in decision_value.selectable_candidates[:2]]
             captured["chosen"] = chosen
+            # decision.selectable_candidates ist nach (priority_tier, offer_id)
+            # sortiert, order_social_results (die tatsaechliche Endreihenfolge)
+            # nach (priority_tier, HBF-Luftlinie) -- beides faellt nur zufaellig
+            # zusammen. Die erwartete Reihenfolge daher unabhaengig ueber
+            # dieselbe Funktion wie app/service.py berechnen statt "chosen"
+            # direkt zu erwarten.
+            offers_by_id = {offer.id: offer for offer in kwargs["offers"]}
+            priority_tiers = {item.offer_id: item.priority_tier for item in decision_value.candidates}
+            captured["expected_order"] = [
+                offer.id
+                for offer in order_social_results(
+                    [offers_by_id[offer_id] for offer_id in chosen],
+                    service=decision_value.need.value,
+                    priority_tiers=priority_tiers,
+                )
+            ]
             return CandidateSelectionResponse(
                 contract_version="1",
                 selection_status="selected",
@@ -496,15 +531,15 @@ def test_service_passes_only_validated_food_selection_to_formulator() -> None:
 
     app.state.service.blablador = FoodProvider()
     body = TestClient(app).post("/api/query", json={"query": "Wo bekomme ich Essen?"}).json()
-    # decision.selectable_candidates ist bereits nach (priority_tier, offer_id)
-    # sortiert; der Selector liefert die IDs absichtlich umgekehrt zurück, um
-    # zu prüfen, dass die Anwendung nicht dessen Reihenfolge übernimmt,
-    # sondern über order_social_results erneut die kanonische Reihenfolge
-    # herstellt (siehe app/result_ordering.py) — deshalb hier unreversed.
-    assert captured["formulator_ids"] == captured["chosen"]
+    # Der Selector liefert die IDs absichtlich umgekehrt zurück, um zu prüfen,
+    # dass die Anwendung weder dessen Reihenfolge noch die von
+    # decision.selectable_candidates übernimmt, sondern über
+    # order_social_results erneut die kanonische, HBF-distanzbasierte
+    # Reihenfolge herstellt (siehe app/result_ordering.py).
+    assert captured["formulator_ids"] == captured["expected_order"]
     assert not set(captured["formulator_ids"]).intersection(captured["conditional"])
     assert captured["evidence"].evidence_version == "3"
-    assert [card["id"] for card in body["cards"]] == captured["chosen"]
+    assert [card["id"] for card in body["cards"]] == captured["expected_order"]
 
 
 def test_safety_and_out_of_scope_stop_before_selector() -> None:

@@ -37,6 +37,12 @@ class SafetyTextKind(str, Enum):
     DETECTED = "detected"
     UNCERTAIN = "uncertain"
     TECHNICAL = "technical"
+    # Nur für den Fall "Interpreter nicht verfügbar/fehlgeschlagen", wenn eine
+    # Wissensbasis geladen ist und der deterministische Hilfebus-Kontakt
+    # (siehe `_general_help_contact()` in service.py) ermittelt werden konnte.
+    # Ersetzt in diesem Fall den reinen 112-Text durch einen konkreten,
+    # sofort nutzbaren Kontakt, ohne den bedingten 112-Hinweis zu streichen.
+    TECHNICAL_HILFEBUS = "technical_hilfebus"
 
 
 _IMMEDIATE_SENTENCE_PATTERNS = tuple(
@@ -106,13 +112,13 @@ def safety_dialog_explicit_denial(query: str, language: Language) -> bool:
     return normalized in _EXPLICIT_DIALOG_DENIALS[language]
 
 
-def safety_text(language: Language, kind: SafetyTextKind) -> str:
+def safety_text(language: Language, kind: SafetyTextKind, **values: str) -> str:
     """Liefert einen zentralen Text und fällt zuletzt sichtbar auf 112 zurück."""
 
     resource_id = f"safety.{kind.value}"
     for candidate in (language, Language.DE):
         try:
-            text = application_text(candidate, resource_id)
+            text = application_text(candidate, resource_id, **values)
         except RuntimeError:
             continue
         if text.count(EMERGENCY_NUMBER) == 1:

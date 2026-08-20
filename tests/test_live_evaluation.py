@@ -111,7 +111,7 @@ def _interpretation(required: dict[str, Any], language: str) -> QueryInterpretat
     if need == "unknown" and required.get("scope_status") != "out_of_scope":
         need = "general_help"
     return QueryInterpretation(
-        contract_version="3",
+        contract_version="4",
         need=Need(need),
         explicit_service_requests=[],
         scope_status=ScopeStatus(required.get("scope_status", "in_scope")),
@@ -268,7 +268,7 @@ def test_dry_run_is_provider_free_read_only_and_inventories_all_runtime_sources(
     assert result["status"] == "prepared_not_executed"
     assert result["live_provider_calls_authorized"] is False
     assert result["runtime_counts"] == {
-        "social_offers": 26,
+        "social_offers": 28,
         "public_toilets": 21,
         "drinking_fountains": 21,
     }

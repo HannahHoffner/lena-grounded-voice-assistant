@@ -176,7 +176,7 @@ def test_runtime_policies_never_use_invalid_or_unreviewed_content_as_reviewed(tm
 
 def test_all_runtime_cards_preserve_names_and_operational_facts(tmp_path: Path) -> None:
     _, kb, catalog = _runtime(tmp_path)
-    assert len(kb.offers) == 26
+    assert len(kb.offers) == 28
     assert {"1", "2", "3", "4"}.isdisjoint(kb.by_id())
     for offer in kb.offers:
         for language in Language:
@@ -212,8 +212,18 @@ def test_all_runtime_cards_preserve_names_and_operational_facts(tmp_path: Path) 
 def test_translation_integrity_is_positive_list_and_accepts_all_active_records(tmp_path: Path) -> None:
     _, kb, catalog = _runtime(tmp_path)
     invalid_records: list[tuple[str, str]] = []
+    missing_records: list[str] = []
     for offer in kb.offers:
-        entry = catalog.store.entries[offer.id]
+        entry = catalog.store.entries.get(offer.id)
+        if entry is None:
+            missing_records.append(offer.id)
+            for language in (Language.EN, Language.PL, Language.RO, Language.RU):
+                card = localize_offer_card(
+                    offer, language, catalog, TranslationRuntimePolicy.REVIEWED_OR_MACHINE
+                )
+                assert card.short_description == offer.short_description
+                assert card.services == offer.services
+            continue
         for language, record in entry.translations.items():
             assert set(record.fields.model_dump()) == {
                 "short_description",
@@ -226,6 +236,7 @@ def test_translation_integrity_is_positive_list_and_accepts_all_active_records(t
             else:
                 invalid_records.append((offer.id, language.value))
     assert invalid_records == []
+    assert missing_records == []
     summary = status_or_validate(_settings(tmp_path), validate_only=True)
     assert summary["valid"] is True
     assert summary["active_runtime_policy"] == "reviewed_or_machine"
@@ -240,7 +251,9 @@ def test_regenerated_records_remain_machine_without_human_review_metadata(tmp_pa
     _, kb, catalog = _runtime(tmp_path)
     checked = 0
     for offer in kb.offers:
-        entry = catalog.store.entries[offer.id]
+        entry = catalog.store.entries.get(offer.id)
+        if entry is None:
+            continue
         for language, record in entry.translations.items():
             if record.linguistic_review_status != LinguisticReviewStatus.MACHINE:
                 continue
@@ -256,6 +269,27 @@ def test_regenerated_records_remain_machine_without_human_review_metadata(tmp_pa
             assert card.opening_hours_raw == record.fields.opening_hours_raw
             assert card.notes == record.fields.notes
     assert checked > 0
+
+
+def test_vkkj_cards_are_machine_translated_in_every_supported_target_language(tmp_path: Path) -> None:
+    _, kb, catalog = _runtime(tmp_path)
+
+    for offer_id in ("vkkj_notschlafstelle", "vkkj_jugendnotdienst"):
+        offer = kb.by_id()[offer_id]
+        entry = catalog.store.entries[offer_id]
+        assert set(entry.translations) == {Language.EN, Language.PL, Language.RO, Language.RU}
+        for language, record in entry.translations.items():
+            assert record.linguistic_review_status == LinguisticReviewStatus.MACHINE
+            assert record.factual_integrity_status == FactualIntegrityStatus.VALID
+            assert record.reviewed_by_role is None
+            assert record.reviewed_at is None
+            card = localize_offer_card(
+                offer, language, catalog, TranslationRuntimePolicy.REVIEWED_OR_MACHINE
+            )
+            assert card.short_description == record.fields.short_description
+            assert card.services == record.fields.services
+            assert card.opening_hours_raw == record.fields.opening_hours_raw
+            assert card.notes == record.fields.notes
 
 
 def test_translation_provider_payload_contains_only_public_positive_list(tmp_path: Path) -> None:
