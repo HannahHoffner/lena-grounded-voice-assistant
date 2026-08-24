@@ -18,6 +18,22 @@
 | `run_7484e6b2e8564f349e9c275fe474c72c` | `interpreter` | 2026-08-24 | `293bd17a6d22dd8f0bb630842ac1892dec06516e` (clean) | Nach 6/15 Requests und 6 Provideraufrufen kontrolliert abgebrochen: 3 deutschsprachige Ergebnisse technisch vertragskonform; danach 3-mal `interpreter_http_error`; 1 nicht kritische Inhaltsabweichung im Feld `need` bei `i_de_acute`, während `acute_risk_status=detected` korrekt war; 0 kritische Inhaltsfehler. |
 | `run_e5ef56937b0d47e3a409d43d3ce4db09` | `interpreter` | 2026-08-14 | `fbcc85a` (clean) | 15/15 Requests technisch valide, 0 Fehler, `content_gate_passed=false` (1/15 inhaltliche Abweichung im Feld `need` bei `i_de_acute`, `acute_risk_status` selbst korrekt `detected`, damit ohne sicherheitsrelevante Auswirkung -- `_safety_stop()` liest bei `detected` nur `acute_risk_status`), 0 kritische inhaltliche Fehler |
 
+Ein späterer Stufe-2-Lauf auf Commit `d0d2018b` diente als technischer
+Diagnoselauf: Alle sechs Selectorantworten waren vertragskonform, der Lauf
+stoppte aber nach drei ungültigen Formulatorantworten an der gebundenen
+Fehlergrenze. Dieser Zwischenlauf ist keine freigabefähige Modellevaluation und
+wird nicht als Ergebnis der Masterarbeit verwendet. Er zeigte zwei technische
+Lücken: Der Prompt nannte die vom Validator erzwungene Zuordnung von
+`answer_type` zu erstem `claim_type` nicht, und der isolierte Runner ließ anders
+als `QueryService` den Übersetzungskatalog beim Evidence-Aufbau weg.
+
+Formulatorprompt `8` beschreibt deshalb nun die zulässigen ersten Claimtypen und
+Referenzinvarianten explizit, ohne Groundingregeln zu lockern. Stufe 2 baut ihre
+Evidence außerdem mit demselben `TranslationCatalog` und derselben
+`TRANSLATION_RUNTIME_POLICY` wie die Anwendung. Eine erneute reale Stufe 2 ist
+erst nach sauberem Commit und gesonderter Freigabe zulässig; die providerfreien
+Tests ersetzen dieses Live-Gate nicht.
+
 Der aktuelle Report liegt unter
 `runtime/live-evaluations/run_7484e6b2e8564f349e9c275fe474c72c/`.
 Sein Manifest bindet den vollständigen Commit, `git_dirty=false`,
@@ -82,7 +98,7 @@ redigierte Planstand ist:
 | Interpreter Vertrag / Prompt | `4` / `8` |
 | Selector Vertrag / Prompt | `1` / `2` |
 | Evidence-Vertrag | `3` |
-| Formulator Vertrag / Prompt | `2` / `7` |
+| Formulator Vertrag / Prompt | `2` / `8` |
 | Safety-Policy | `1` |
 | Temperatur | `0` |
 | Response-Format | `json_object` |

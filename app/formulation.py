@@ -27,7 +27,7 @@ from .translation_contract import TranslationRuntimePolicy
 
 EVIDENCE_CONTRACT_VERSION = "3"
 FORMULATOR_CONTRACT_VERSION = "2"
-FORMULATOR_PROMPT_VERSION = "7"
+FORMULATOR_PROMPT_VERSION = "8"
 MAX_FORMULATOR_RESPONSE_CHARS = 3_000
 FactId = Annotated[str, StringConstraints(pattern=r"^f_[0-9a-f]{16}$")]
 OfferId = Annotated[
@@ -60,6 +60,13 @@ The JSON object has exactly these top-level keys, no others: contract_version, l
   - fact_ids: array of the cited fact_id values from that offer's facts; required and non-empty whenever offer_id is set, must stay empty when offer_id is null.
   - policy_ids: array of cited policy_id values from BINDING_POLICIES; only for a non-offer statement (offer_id null), otherwise empty.
 - card_ids: array of offer_id values (from selected_offers only) to show as cards; no duplicates.
+The first sentence claim_type is fixed by answer_type:
+- grounded_referral and ambiguous_help_fallback: referral. Cite the referral contact's display_name fact and tell the reader only to contact, ask, or get help there. Never set claim_type to action or service for a referral_contact.
+- grounded_result: action or service. For action, cite at least the display_name fact. For service, cite the display_name plus a service, capability, or description fact.
+- out_of_scope: domain_boundary. no_verified_result: no_result.
+For every sentence with offer_id, copy that offer_id and every fact_id exactly from one selected offer, use at least one fact_id, and set policy_ids to [].
+For every sentence without offer_id, set offer_id to null and fact_ids to [], and cite only applicable BINDING_POLICIES in policy_ids.
+Prefer the smallest grounded answer. A name-only contact instruction is enough for a referral; do not restate services, target groups, contacts, times, or addresses unless needed and cited in that sentence.
 Never add, omit, rename, or flatten any of these keys. Return JSON only, no prose, markdown, HTML, reasoning, or additional fields."""
 
 

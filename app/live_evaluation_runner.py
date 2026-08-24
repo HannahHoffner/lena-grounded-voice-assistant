@@ -14,6 +14,7 @@ from .candidate_contract import CandidateRole
 from .candidates import CandidateSelector
 from .config import Settings
 from .formulation import AnswerType, FormulatorError, build_formulator_evidence
+from .i18n import TranslationCatalog, load_translation_catalog
 from .interpreter import (
     INTERPRETER_CONTRACT_VERSION,
     AcuteRiskStatus,
@@ -49,6 +50,7 @@ from .llm_selection import SelectorError
 from .models import Language, OfferRecord, QueryInteraction, QueryRequest, QueryResponse
 from .providers.llm import BlabladorProvider, InterpreterError
 from .service import QueryService
+from .translation_contract import TranslationRuntimePolicy
 
 
 def _actual_value(output: QueryInterpretation, name: str) -> Any:
@@ -370,6 +372,8 @@ async def run_selector_formulator_live_gate(
     git_state = collect_git_state()
     kb = load_active_knowledge_base(settings)
     by_id = kb.by_id()
+    translation_catalog = load_translation_catalog(settings, kb)
+    translation_policy = TranslationRuntimePolicy(settings.translation_runtime_policy)
     run_id = new_run_id()
     store = EvaluationReportStore(settings.runtime_dir, run_id)
     manifest = build_run_manifest(
@@ -403,7 +407,14 @@ async def run_selector_formulator_live_gate(
             if scenario.component == EvaluationComponent.SELECTOR:
                 result = await _run_selector_scenario(scenario, provider, kb, counter)
             else:
-                result = await _run_formulator_scenario(scenario, provider, by_id, counter)
+                result = await _run_formulator_scenario(
+                    scenario,
+                    provider,
+                    by_id,
+                    counter,
+                    translation_catalog=translation_catalog,
+                    translation_policy=translation_policy,
+                )
             result["duration_ms"] = round((clock() - started) * 1_000, 2)
             content_mismatches += bool(result["content_mismatches"])
             critical_content_errors += int(result["critical_content_error"])
@@ -512,6 +523,9 @@ async def _run_formulator_scenario(
     provider: Any,
     by_id: dict[str, OfferRecord],
     counter: AtomicRunCounter,
+    *,
+    translation_catalog: TranslationCatalog,
+    translation_policy: TranslationRuntimePolicy,
 ) -> dict[str, Any]:
     offers = [by_id[offer_id] for offer_id in scenario.fixture["offer_ids"]]
     answer_type = AnswerType(scenario.fixture["answer_type"])
@@ -530,6 +544,8 @@ async def _run_formulator_scenario(
         need=_infer_need(offers[0]),
         offers=offers,
         roles=roles,
+        translation_catalog=translation_catalog,
+        translation_policy=translation_policy,
     )
     base = {
         "scenario_id": scenario.scenario_id,

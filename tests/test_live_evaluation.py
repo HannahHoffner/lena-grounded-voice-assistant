@@ -15,6 +15,7 @@ from app.candidate_contract import CandidateRole
 from app.config import Settings
 from app.formulation import (
     AnswerType,
+    FactType,
     build_drinking_water_evidence,
     build_formulator_evidence,
     build_public_toilet_evidence,
@@ -815,6 +816,42 @@ def test_selector_formulator_runner_executes_six_selector_and_ten_formulator_cal
     assert result["next_stage_started"] is False
     report = settings.runtime_dir / result["report_directory"]
     assert len((report / "stage-results.jsonl").read_text(encoding="utf-8").splitlines()) == 16
+
+
+def test_selector_formulator_runner_uses_runtime_localized_formulator_evidence(tmp_path: Path) -> None:
+    """The isolated gate must measure the same localized evidence as QueryService."""
+    settings = _settings(tmp_path)
+    plan = load_live_scenario_catalog().plan(EvaluationStage.SELECTOR_FORMULATOR)
+    captured: dict[str, Any] = {}
+
+    class CapturingProvider(FakeSelectorFormulatorProvider):
+        async def formulate_answer(self, *, evidence: Any, **kwargs: Any) -> ProviderAnswer:
+            captured[evidence.current_query] = evidence
+            return await super().formulate_answer(evidence=evidence, **kwargs)
+
+    result = asyncio.run(
+        run_selector_formulator_live_gate(
+            settings,
+            plan.live_limits,
+            provider_factory=CapturingProvider,
+        )
+    )
+
+    assert result["status"] == "completed"
+    english = captured["I need a place for women to sleep."]
+    description = next(
+        fact.value
+        for fact in english.selected_offers[0].facts
+        if fact.fact_type == FactType.DESCRIPTION
+    )
+    service = next(
+        fact.value
+        for fact in english.selected_offers[0].facts
+        if fact.fact_type == FactType.SERVICE
+    )
+    assert description == "Emergency shelter for single adult women in acute involuntary homelessness."
+    assert service == "Sleeping place"
+    assert "Notunterkunft" not in english.model_dump_json()
 
 
 def test_selector_formulator_runner_records_selector_failures(tmp_path: Path) -> None:

@@ -157,10 +157,10 @@ def test_versions_prompt_and_health_are_observable(app) -> None:
     health = TestClient(app).get("/api/health").json()
     assert EVIDENCE_CONTRACT_VERSION == "3"
     assert FORMULATOR_CONTRACT_VERSION == "2"
-    assert FORMULATOR_PROMPT_VERSION == "7"
+    assert FORMULATOR_PROMPT_VERSION == "8"
     assert health["evidence_contract_version"] == "3"
     assert health["formulator_contract_version"] == "2"
-    assert health["formulator_prompt_version"] == "7"
+    assert health["formulator_prompt_version"] == "8"
     assert health["llm_request_budget_seconds"] == 45.0
     for rule in (
         "Use only EVIDENCE facts",
@@ -201,6 +201,21 @@ def test_formulator_prompt_names_every_contract_field_and_exact_contract_version
         assert field_name in FORMULATOR_SYSTEM_PROMPT, f"missing field {field_name!r}"
     for field_name in FormulatedSentence.model_fields:
         assert field_name in FORMULATOR_SYSTEM_PROMPT, f"missing sentence field {field_name!r}"
+
+
+def test_formulator_prompt_matches_enforced_first_claim_and_reference_rules() -> None:
+    """The prompt must not invite structures rejected by the grounding contract."""
+    for rule in (
+        "grounded_referral and ambiguous_help_fallback: referral",
+        "Never set claim_type to action or service for a referral_contact",
+        "grounded_result: action or service",
+        "out_of_scope: domain_boundary",
+        "no_verified_result: no_result",
+        "set policy_ids to []",
+        "set offer_id to null and fact_ids to []",
+        "Prefer the smallest grounded answer",
+    ):
+        assert rule in FORMULATOR_SYSTEM_PROMPT
 
 
 def test_evidence_is_a_positive_list_for_only_final_runtime_offers(app) -> None:
