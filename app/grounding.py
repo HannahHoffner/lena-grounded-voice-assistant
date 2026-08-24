@@ -14,6 +14,7 @@ from .formulation import (
     FormulatorError,
     FormulatorEvidence,
     FormulatorResponse,
+    GroundingDiagnosticCode,
 )
 from .interpreter import Need
 from .models import Language
@@ -164,6 +165,25 @@ def _canonical(value: str) -> str:
     return " ".join(value.casefold().split())
 
 
+def _ungrounded(diagnostic_code: GroundingDiagnosticCode) -> FormulatorError:
+    return FormulatorError(
+        "formulator_ungrounded_claim",
+        diagnostic_code=diagnostic_code,
+    )
+
+
+def _contains_exact_literal(text: str, literal: str, *, ignore_case: bool = False) -> bool:
+    """Findet einen vollständigen Literalwert statt eines Wortpräfixes.
+
+    Kuratierte Namen dürfen nicht flektiert oder um zusätzliche Wortzeichen
+    erweitert werden. Der optionale case-insensitive Lauf dient nur dazu, eine
+    mögliche Namensnennung zu erkennen; die anschließende Freigabe bleibt
+    case-sensitiv.
+    """
+    flags = re.IGNORECASE if ignore_case else 0
+    return re.search(rf"(?<!\w){re.escape(literal)}(?!\w)", text, flags) is not None
+
+
 def _strip_evidence_literals(text: str, evidence: FormulatorEvidence) -> str:
     stripped = text
     literals = [
@@ -204,12 +224,12 @@ def _validate_policy_answer(text: str, evidence: FormulatorEvidence) -> None:
         anchors = DOMAIN_BOUNDARY_ANCHORS[evidence.requested_language]
         domain_stems = SUPPORTED_DOMAIN_STEMS[evidence.requested_language]
         if not any(anchor in folded for anchor in anchors):
-            raise FormulatorError("formulator_ungrounded_claim")
+            raise _ungrounded(GroundingDiagnosticCode.DOMAIN_BOUNDARY_MISSING)
         if sum(stem in folded for stem in domain_stems) < 3:
-            raise FormulatorError("formulator_ungrounded_claim")
+            raise _ungrounded(GroundingDiagnosticCode.SUPPORTED_DOMAINS_MISSING)
     elif evidence.answer_type == AnswerType.NO_VERIFIED_RESULT:
         if not any(anchor in folded for anchor in NO_RESULT_ANCHORS[evidence.requested_language]):
-            raise FormulatorError("formulator_ungrounded_claim")
+            raise _ungrounded(GroundingDiagnosticCode.NO_RESULT_BOUNDARY_MISSING)
 
 
 def _validate_operational_tokens(text: str, facts: list[EvidenceFact]) -> None:
@@ -217,27 +237,27 @@ def _validate_operational_tokens(text: str, facts: list[EvidenceFact]) -> None:
     cited_folded = cited.casefold()
     for url in URL_RE.findall(text):
         if url.rstrip(".,;)") not in {item.rstrip(".,;)") for item in URL_RE.findall(cited)}:
-            raise FormulatorError("formulator_ungrounded_claim")
+            raise _ungrounded(GroundingDiagnosticCode.URL_NOT_CITED)
     for email in EMAIL_RE.findall(text):
         if email.casefold() not in {item.casefold() for item in EMAIL_RE.findall(cited)}:
-            raise FormulatorError("formulator_ungrounded_claim")
+            raise _ungrounded(GroundingDiagnosticCode.EMAIL_NOT_CITED)
     for _address in ADDRESS_RE.findall(text):
         if _address not in cited:
-            raise FormulatorError("formulator_ungrounded_claim")
+            raise _ungrounded(GroundingDiagnosticCode.ADDRESS_NOT_CITED)
     for time_value in TIME_RE.findall(text):
         if time_value not in TIME_RE.findall(cited):
-            raise FormulatorError("formulator_ungrounded_claim")
+            raise _ungrounded(GroundingDiagnosticCode.TIME_NOT_CITED)
     cited_numbers = set(NUMBER_RE.findall(cited))
     if any(number not in cited_numbers for number in NUMBER_RE.findall(text)):
-        raise FormulatorError("formulator_ungrounded_claim")
+        raise _ungrounded(GroundingDiagnosticCode.NUMBER_NOT_CITED)
     for phone in (fact.value for fact in facts if fact.fact_type == FactType.PHONE):
         groups = NUMBER_RE.findall(phone)
         text_groups = NUMBER_RE.findall(text)
         if groups and all(group in text_groups for group in groups) and phone not in text:
-            raise FormulatorError("formulator_ungrounded_claim")
+            raise _ungrounded(GroundingDiagnosticCode.PHONE_NOT_EXACT)
     cited_money = MONEY_RE.findall(cited)
     if any(value not in cited_money for value in MONEY_RE.findall(text)):
-        raise FormulatorError("formulator_ungrounded_claim")
+        raise _ungrounded(GroundingDiagnosticCode.PRICE_NOT_CITED)
     mentioned_days = {
         day_index
         for day_index, names in WEEKDAYS.items()
@@ -249,11 +269,11 @@ def _validate_operational_tokens(text: str, facts: list[EvidenceFact]) -> None:
         if any(re.search(rf"\b{re.escape(name)}\b", cited, re.IGNORECASE) for name in names)
     }
     if not mentioned_days.issubset(cited_days):
-        raise FormulatorError("formulator_ungrounded_claim")
+        raise _ungrounded(GroundingDiagnosticCode.WEEKDAY_NOT_CITED)
     if any(claim in text.casefold() for claim in UNSAFE_CLAIMS):
-        raise FormulatorError("formulator_ungrounded_claim")
+        raise _ungrounded(GroundingDiagnosticCode.UNSAFE_REALTIME_CLAIM)
     if "€" in text and "€" not in cited_folded:
-        raise FormulatorError("formulator_ungrounded_claim")
+        raise _ungrounded(GroundingDiagnosticCode.CURRENCY_NOT_CITED)
 
 
 def _validate_sentence(
@@ -296,16 +316,16 @@ def _validate_sentence(
                 fact.fact_type in {FactType.SERVICE, FactType.CAPABILITY, FactType.DESCRIPTION}
                 for fact in cited_facts
             ):
-                raise FormulatorError("formulator_ungrounded_claim")
+                raise _ungrounded(GroundingDiagnosticCode.SERVICE_ROLE_MISMATCH)
         if sentence.claim_type == ClaimType.REFERRAL and offer.candidate_role != "referral_contact":
             raise FormulatorError("formulator_contract_violation")
         if offer.candidate_role == "referral_contact" and sentence.claim_type in {ClaimType.ACTION, ClaimType.SERVICE}:
-            raise FormulatorError("formulator_ungrounded_claim")
+            raise _ungrounded(GroundingDiagnosticCode.REFERRAL_ROLE_MISMATCH)
         if SERVICE_ASSERTION_RE.search(text) and not any(
             fact.fact_type in {FactType.SERVICE, FactType.CAPABILITY, FactType.DESCRIPTION}
             for fact in cited_facts
         ):
-            raise FormulatorError("formulator_ungrounded_claim")
+            raise _ungrounded(GroundingDiagnosticCode.SERVICE_FACT_MISSING)
         if TARGET_ASSERTION_RE.search(text) and not any(
             fact.fact_type in {
                 FactType.TARGET_GROUP,
@@ -316,25 +336,39 @@ def _validate_sentence(
             }
             for fact in cited_facts
         ):
-            raise FormulatorError("formulator_ungrounded_claim")
+            raise _ungrounded(GroundingDiagnosticCode.TARGET_FACT_MISSING)
         if sentence.claim_type == ClaimType.FACT and not any(
             fact.fact_type not in {FactType.DISPLAY_NAME, FactType.ALIAS}
             for fact in cited_facts
         ):
-            raise FormulatorError("formulator_ungrounded_claim")
+            raise _ungrounded(GroundingDiagnosticCode.FACT_CLAIM_MISSING)
+
+        for fact in cited_facts:
+            if fact.fact_type in {FactType.DISPLAY_NAME, FactType.ALIAS} and not _contains_exact_literal(
+                text,
+                fact.value,
+            ):
+                raise _ungrounded(GroundingDiagnosticCode.PROPER_NAME_NOT_EXACT)
 
         for candidate in evidence.selected_offers:
             naming_facts = [
                 fact for fact in candidate.facts
                 if fact.fact_type in {FactType.DISPLAY_NAME, FactType.ALIAS} and len(fact.value) >= 2
             ]
-            mentioned = [fact for fact in naming_facts if fact.value.casefold() in text.casefold()]
+            name_like = [fact for fact in naming_facts if fact.value.casefold() in text.casefold()]
+            if any(not _contains_exact_literal(text, fact.value) for fact in name_like):
+                raise _ungrounded(GroundingDiagnosticCode.PROPER_NAME_NOT_EXACT)
+            mentioned = [
+                fact
+                for fact in naming_facts
+                if _contains_exact_literal(text, fact.value, ignore_case=True)
+            ]
             if mentioned and candidate.offer_id != sentence.offer_id:
                 raise FormulatorError("formulator_invalid_fact")
             if mentioned and not {fact.fact_id for fact in mentioned}.intersection(sentence.fact_ids):
                 raise FormulatorError("formulator_invalid_fact")
-            if mentioned and any(fact.value not in text for fact in mentioned):
-                raise FormulatorError("formulator_ungrounded_claim")
+            if mentioned and any(not _contains_exact_literal(text, fact.value) for fact in mentioned):
+                raise _ungrounded(GroundingDiagnosticCode.PROPER_NAME_NOT_EXACT)
 
     _validate_operational_tokens(text, cited_facts)
     return text
@@ -388,7 +422,7 @@ def validate_formulation(
                 for fact_id in sentence.fact_ids
             }
             if fee is None or fee.fact_id not in cited_ids or fee.value not in answer:
-                raise FormulatorError("formulator_ungrounded_claim")
+                raise _ungrounded(GroundingDiagnosticCode.REQUIRED_FEE_MISSING)
 
     if evidence.need == Need.DRINKING_WATER and evidence.selected_offers:
         primary = evidence.selected_offers[0]
@@ -404,7 +438,7 @@ def validate_formulation(
             fact.fact_id in first_sentence.fact_ids and fact.value in first_sentence.text
             for fact in primary_names
         ):
-            raise FormulatorError("formulator_ungrounded_claim")
+            raise _ungrounded(GroundingDiagnosticCode.PRIMARY_NAME_MISSING)
 
     first_claim = response.sentences[0].claim_type
     expected_first = {

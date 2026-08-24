@@ -16,6 +16,8 @@ from app.config import Settings
 from app.formulation import (
     AnswerType,
     FactType,
+    FormulatorError,
+    GroundingDiagnosticCode,
     build_drinking_water_evidence,
     build_formulator_evidence,
     build_public_toilet_evidence,
@@ -650,6 +652,35 @@ def test_report_store_rejects_unallowlisted_or_inconsistent_provider_diagnostics
             code="interpreter_http_error",
             provider_failure_kind="upstream_5xx",
         )
+    with pytest.raises(ValueError, match="not allowlisted"):
+        store.append_error(
+            scenario_id="synthetic",
+            code="formulator_ungrounded_claim",
+            grounding_diagnostic_code="secret model output",
+        )
+    with pytest.raises(ValueError, match="requires an ungrounded formulator error"):
+        store.append_error(
+            scenario_id="synthetic",
+            code="formulator_schema_error",
+            grounding_diagnostic_code=GroundingDiagnosticCode.PROPER_NAME_NOT_EXACT.value,
+        )
+
+
+def test_report_store_persists_only_allowlisted_grounding_diagnostic(tmp_path: Path) -> None:
+    store = EvaluationReportStore(tmp_path, new_run_id())
+    store.initialize({"synthetic": True})
+    store.append_error(
+        scenario_id="synthetic",
+        code="formulator_ungrounded_claim",
+        grounding_diagnostic_code=GroundingDiagnosticCode.PROPER_NAME_NOT_EXACT.value,
+    )
+
+    record = json.loads((store.path / "redacted-errors.jsonl").read_text(encoding="utf-8"))
+    assert record == {
+        "error_code": "formulator_ungrounded_claim",
+        "grounding_diagnostic_code": "proper_name_not_exact",
+        "scenario_id": "synthetic",
+    }
 
 
 def test_interpreter_runner_separates_contract_and_content_gate(tmp_path: Path) -> None:
@@ -800,6 +831,15 @@ class FailingSelectorFormulatorProvider(FakeSelectorFormulatorProvider):
         raise SelectorError("selector_invalid_id")
 
 
+class DiagnosticFailingFormulatorProvider(FakeSelectorFormulatorProvider):
+    async def formulate_answer(self, **_kwargs: Any) -> ProviderAnswer:
+        self.formulator_calls += 1
+        raise FormulatorError(
+            "formulator_ungrounded_claim",
+            diagnostic_code=GroundingDiagnosticCode.PROPER_NAME_NOT_EXACT,
+        )
+
+
 def test_selector_formulator_runner_executes_six_selector_and_ten_formulator_calls(tmp_path: Path) -> None:
     settings = _settings(tmp_path)
     plan = load_live_scenario_catalog().plan(EvaluationStage.SELECTOR_FORMULATOR)
@@ -866,6 +906,37 @@ def test_selector_formulator_runner_records_selector_failures(tmp_path: Path) ->
 
     assert result["status"] in {"completed", "aborted"}
     assert result["counts"]["failures"] >= 1
+
+
+def test_selector_formulator_runner_persists_redacted_grounding_diagnostics(tmp_path: Path) -> None:
+    settings = _settings(tmp_path)
+    plan = load_live_scenario_catalog().plan(EvaluationStage.SELECTOR_FORMULATOR)
+
+    result = asyncio.run(
+        run_selector_formulator_live_gate(
+            settings,
+            plan.live_limits,
+            provider_factory=DiagnosticFailingFormulatorProvider,
+        )
+    )
+
+    assert result["status"] == "aborted"
+    report = settings.runtime_dir / result["report_directory"]
+    stage_records = [
+        json.loads(line)
+        for line in (report / "stage-results.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    failed = [item for item in stage_records if item.get("error_code") == "formulator_ungrounded_claim"]
+    assert len(failed) == 3
+    assert all(item["grounding_diagnostic_code"] == "proper_name_not_exact" for item in failed)
+    error_records = [
+        json.loads(line)
+        for line in (report / "redacted-errors.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    grounding_errors = [item for item in error_records if "grounding_diagnostic_code" in item]
+    assert len(grounding_errors) == 3
+    assert all(set(item) == {"scenario_id", "error_code", "grounding_diagnostic_code"}
+               for item in grounding_errors)
 
 
 class FakeFullPipelineProvider:

@@ -27,6 +27,7 @@ from app.formulation import (
     FormulatedSentence,
     FormulatorError,
     FormulatorResponse,
+    GroundingDiagnosticCode,
     build_formulator_evidence,
 )
 from app.application_texts import application_text
@@ -306,10 +307,19 @@ def test_curated_phone_name_and_price_format_must_remain_exact(app) -> None:
         validate_formulation(changed_phone, scharni)
 
     changed_name = _response(scharni, text="Geh zu scharni.")
-    with pytest.raises(FormulatorError, match="formulator_ungrounded_claim"):
+    with pytest.raises(FormulatorError, match="formulator_ungrounded_claim") as changed_name_error:
         validate_formulation(changed_name, scharni)
+    assert changed_name_error.value.diagnostic_code == GroundingDiagnosticCode.PROPER_NAME_NOT_EXACT
 
     ruecke = _evidence(app, offer_ids=("7",))
+    ruecke_name = _fact(ruecke, FactType.DISPLAY_NAME)
+    valid_name = _response(ruecke, text="Kontaktiere Rücke.", fact_ids=[ruecke_name.fact_id])
+    assert validate_formulation(valid_name, ruecke).answer == "Kontaktiere Rücke."
+    changed_suffix = _response(ruecke, text="Kontaktiere Rücken.", fact_ids=[ruecke_name.fact_id])
+    with pytest.raises(FormulatorError, match="formulator_ungrounded_claim") as suffix_error:
+        validate_formulation(changed_suffix, ruecke)
+    assert suffix_error.value.diagnostic_code == GroundingDiagnosticCode.PROPER_NAME_NOT_EXACT
+
     price = _fact(ruecke, FactType.SERVICE, contains="5,00")
     changed_price = _response(
         ruecke,
@@ -317,8 +327,12 @@ def test_curated_phone_name_and_price_format_must_remain_exact(app) -> None:
         claim_type=ClaimType.SERVICE,
         fact_ids=[_fact(ruecke, FactType.DISPLAY_NAME).fact_id, price.fact_id],
     )
-    with pytest.raises(FormulatorError, match="formulator_ungrounded_claim"):
+    with pytest.raises(FormulatorError, match="formulator_ungrounded_claim") as price_error:
         validate_formulation(changed_price, ruecke)
+    assert price_error.value.diagnostic_code in {
+        GroundingDiagnosticCode.NUMBER_NOT_CITED,
+        GroundingDiagnosticCode.PRICE_NOT_CITED,
+    }
 
 
 def test_sentence_with_e_v_abbreviation_is_not_treated_as_multiple_sentences(app) -> None:

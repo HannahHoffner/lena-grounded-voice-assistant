@@ -237,12 +237,44 @@ class FormulatorResponse(StrictModel):
         return self
 
 
+class GroundingDiagnosticCode(str, Enum):
+    """Geschlossene, inhaltsfreie Regelklassen für lokale Evaluationsreports."""
+
+    DOMAIN_BOUNDARY_MISSING = "domain_boundary_missing"
+    SUPPORTED_DOMAINS_MISSING = "supported_domains_missing"
+    NO_RESULT_BOUNDARY_MISSING = "no_result_boundary_missing"
+    URL_NOT_CITED = "url_not_cited"
+    EMAIL_NOT_CITED = "email_not_cited"
+    ADDRESS_NOT_CITED = "address_not_cited"
+    TIME_NOT_CITED = "time_not_cited"
+    NUMBER_NOT_CITED = "number_not_cited"
+    PHONE_NOT_EXACT = "phone_not_exact"
+    PRICE_NOT_CITED = "price_not_cited"
+    WEEKDAY_NOT_CITED = "weekday_not_cited"
+    UNSAFE_REALTIME_CLAIM = "unsafe_realtime_claim"
+    CURRENCY_NOT_CITED = "currency_not_cited"
+    SERVICE_ROLE_MISMATCH = "service_role_mismatch"
+    REFERRAL_ROLE_MISMATCH = "referral_role_mismatch"
+    SERVICE_FACT_MISSING = "service_fact_missing"
+    TARGET_FACT_MISSING = "target_fact_missing"
+    FACT_CLAIM_MISSING = "fact_claim_missing"
+    PROPER_NAME_NOT_EXACT = "proper_name_not_exact"
+    REQUIRED_FEE_MISSING = "required_fee_missing"
+    PRIMARY_NAME_MISSING = "primary_name_missing"
+
+
 class FormulatorError(RuntimeError):
     """Redigierter, maschinenlesbarer Fehler der Formulierungsstufe."""
 
-    def __init__(self, code: str) -> None:
+    def __init__(
+        self,
+        code: str,
+        *,
+        diagnostic_code: GroundingDiagnosticCode | None = None,
+    ) -> None:
         super().__init__(code)
         self.code = code
+        self.diagnostic_code = diagnostic_code
 
 
 def _normalized(value: str) -> str:

@@ -284,6 +284,15 @@ Modellkennungen je Stufe. Header, Keys, Tokens und reale Anwendungsdaten werden
 nicht gespeichert. Rohantworten werden nicht automatisch in Git,
 Dokumentation, Thesis oder Präsentation übernommen.
 
+Bei `formulator_ungrounded_claim` darf der lokale Stufe-2-Report zusätzlich
+einen geschlossenen `grounding_diagnostic_code` enthalten. Diese Werte benennen
+nur die ausgelöste Validatorregel, beispielsweise `proper_name_not_exact`,
+`service_fact_missing` oder `unsafe_realtime_claim`. Der Reportstore akzeptiert
+ausschließlich die im Code definierten Enumwerte und verwirft freie Strings.
+Modelltext, Faktenwerte, Namen, Kontakte und Exceptionmeldungen werden dadurch
+nicht gespeichert. Der normale Anwendungspfad gibt weiterhin nur den groben,
+redigierten Formulatorfehler aus.
+
 Seit Version 0.2.0 speichert `manifest.json` zusätzlich `git_commit`,
 `git_dirty`, `software_version` und `provider_base_domain`
 (`build_run_manifest()` in `app/live_evaluation_plan.py`). Damit ist jeder

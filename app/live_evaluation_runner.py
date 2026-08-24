@@ -420,7 +420,11 @@ async def run_selector_formulator_live_gate(
             critical_content_errors += int(result["critical_content_error"])
             store.append_result(result)
             if not result["technically_valid"]:
-                store.append_error(scenario_id=scenario.scenario_id, code=result.get("error_code", "unknown"))
+                store.append_error(
+                    scenario_id=scenario.scenario_id,
+                    code=result.get("error_code", "unknown"),
+                    grounding_diagnostic_code=result.get("grounding_diagnostic_code"),
+                )
                 counter.record_failure()
     except EvaluationLimitReached as exc:
         status = "aborted"
@@ -558,7 +562,7 @@ async def _run_formulator_scenario(
     try:
         answer = await provider.formulate_answer(evidence=evidence)
     except FormulatorError as exc:
-        return {
+        failed = {
             **base,
             "structured_output": None,
             "metrics": {"grounding_valid": False, "requested_language_correct": False},
@@ -568,6 +572,9 @@ async def _run_formulator_scenario(
             "error_code": exc.code,
             "confirmed_model_identifier": _confirmed_model(provider, "formulator"),
         }
+        if exc.diagnostic_code is not None:
+            failed["grounding_diagnostic_code"] = exc.diagnostic_code.value
+        return failed
     return {
         **base,
         "structured_output": {

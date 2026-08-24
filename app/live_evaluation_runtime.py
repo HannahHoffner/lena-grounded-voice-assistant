@@ -10,6 +10,7 @@ from pathlib import Path
 from time import monotonic
 from typing import Any
 
+from .formulation import GroundingDiagnosticCode
 from .live_evaluation import (
     LIVE_REPORT_SUBDIRECTORY,
     RUN_ID_RE,
@@ -19,6 +20,7 @@ from .live_evaluation import (
 from .providers.diagnostics import HTTP_STATUS_FAILURE_KINDS, SAFE_PROVIDER_FAILURE_KINDS
 
 _HTTP_STATUS_FAILURE_VALUES = frozenset(item.value for item in HTTP_STATUS_FAILURE_KINDS)
+_SAFE_GROUNDING_DIAGNOSTICS = frozenset(item.value for item in GroundingDiagnosticCode)
 
 
 class EvaluationLimitReached(RuntimeError):
@@ -126,6 +128,7 @@ class EvaluationReportStore:
         code: str,
         provider_failure_kind: str | None = None,
         upstream_status: int | None = None,
+        grounding_diagnostic_code: str | None = None,
     ) -> None:
         record: dict[str, Any] = {"scenario_id": scenario_id, "error_code": code[:80]}
         if provider_failure_kind is not None:
@@ -140,6 +143,12 @@ class EvaluationReportStore:
             record["upstream_status"] = upstream_status
         elif provider_failure_kind in _HTTP_STATUS_FAILURE_VALUES:
             raise ValueError("HTTP failure kind requires upstream status")
+        if grounding_diagnostic_code is not None:
+            if code != "formulator_ungrounded_claim":
+                raise ValueError("grounding diagnostic requires an ungrounded formulator error")
+            if grounding_diagnostic_code not in _SAFE_GROUNDING_DIAGNOSTICS:
+                raise ValueError("grounding diagnostic is not allowlisted")
+            record["grounding_diagnostic_code"] = grounding_diagnostic_code
         self._errors.append(record)
         self._write_jsonl("redacted-errors.jsonl", self._errors)
 
