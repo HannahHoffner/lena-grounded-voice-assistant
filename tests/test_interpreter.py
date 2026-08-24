@@ -622,6 +622,18 @@ def test_prompt_names_every_contract_field_including_nested_explicit_facts() -> 
     assert "input_language" in INTERPRETER_SYSTEM_PROMPT
 
 
+def test_prompt_version_8_defines_risk_scope_and_need_without_weakening_safety_priority() -> None:
+    assert INTERPRETER_PROMPT_VERSION == "8"
+    assert "primarily a concrete or possible immediate danger statement" in INTERPRETER_SYSTEM_PROMPT
+    assert "set scope_status to in_scope" in INTERPRETER_SYSTEM_PROMPT
+    assert "scope_status may remain out_of_scope; safety still has priority" in INTERPRETER_SYSTEM_PROMPT
+    assert "For a risk-only message without an explicit service need" in INTERPRETER_SYSTEM_PROMPT
+    assert "set need to general_help or unknown" in INTERPRETER_SYSTEM_PROMPT
+    assert "self-harm, suicide, or violence wording alone does not establish medical need" in (
+        INTERPRETER_SYSTEM_PROMPT
+    )
+
+
 def test_prompt_keeps_untrusted_input_separate_and_sends_only_minimal_aliases(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

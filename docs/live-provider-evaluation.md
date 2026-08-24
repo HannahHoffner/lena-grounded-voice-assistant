@@ -45,6 +45,16 @@ Requestdaten werden weder in `stage-results.jsonl` noch in
 weiterhin ausschließlich `interpreter_http_error`; die Zusatzdiagnose dient nur
 der lokalen, ignorierten Live-Evaluation.
 
+Der abgeschlossene Lauf `run_710dc865c58c4b25af8f16cad85184ca`
+verwendete Interpreterprompt `7`. Danach wurde ausschließlich die
+Interpreteranweisung zu Safety-Nebenfeldern präzisiert: Eine primäre reine
+Gefahrenaussage soll `scope_status=in_scope` und ohne ausdrücklich medizinische
+Angabe `need=general_help|unknown` ergeben. Eine primäre fachfremde Anfrage mit
+separatem Risikosignal darf weiterhin `out_of_scope` bleiben; die
+deterministische Safety-Priorität ist unverändert. Diese Änderung ist als
+Promptversion `8` nachvollziehbar und noch nicht live evaluiert. Vertrag `4`,
+Szenariokatalog und vorab festgelegte Erwartungen wurden nicht verändert.
+
 WP9B prüft stufenweise mit ausschließlich synthetischen Textanfragen, ob die real
 konfigurierten Blablador-Modelle die Interpreter-, Selector- und
 Formulatorverträge einhalten. Die Evaluation ist keine Produktivfreigabe,
@@ -69,7 +79,7 @@ redigierte Planstand ist:
 | Interpretermodell | `alias-fast` |
 | Selectormodell | `alias-fast` |
 | Formulatormodell | `alias-fast` |
-| Interpreter Vertrag / Prompt | `4` / `7` |
+| Interpreter Vertrag / Prompt | `4` / `8` |
 | Selector Vertrag / Prompt | `1` / `2` |
 | Evidence-Vertrag | `3` |
 | Formulator Vertrag / Prompt | `2` / `7` |
