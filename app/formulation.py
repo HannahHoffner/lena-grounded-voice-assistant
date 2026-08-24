@@ -27,7 +27,7 @@ from .translation_contract import TranslationRuntimePolicy
 
 EVIDENCE_CONTRACT_VERSION = "3"
 FORMULATOR_CONTRACT_VERSION = "2"
-FORMULATOR_PROMPT_VERSION = "8"
+FORMULATOR_PROMPT_VERSION = "9"
 MAX_FORMULATOR_RESPONSE_CHARS = 3_000
 FactId = Annotated[str, StringConstraints(pattern=r"^f_[0-9a-f]{16}$")]
 OfferId = Annotated[
@@ -67,6 +67,13 @@ The first sentence claim_type is fixed by answer_type:
 For every sentence with offer_id, copy that offer_id and every fact_id exactly from one selected offer, use at least one fact_id, and set policy_ids to [].
 For every sentence without offer_id, set offer_id to null and fact_ids to [], and cite only applicable BINDING_POLICIES in policy_ids.
 Prefer the smallest grounded answer. A name-only contact instruction is enough for a referral; do not restate services, target groups, contacts, times, or addresses unless needed and cited in that sentence.
+current_query is never evidence. Do not copy or paraphrase a requested service, target group, age, gender, access condition, address, contact, time, or availability claim from current_query as a fact.
+Use these safe defaults unless more detail is both necessary and cited:
+- For a referral_contact, write only a short contact/ask instruction plus the exact display_name.
+- For a direct_service, write only a short go/contact instruction plus the exact display_name.
+If visible text names or describes a service or need, that same sentence's fact_ids must include a matching service, capability, or description fact.
+If visible text names or describes a target group, gender, age, or access condition, that same sentence's fact_ids must include a matching target_group, eligible_gender, minimum_age, maximum_age, or access fact.
+If you cannot identify the required matching fact_id with certainty, omit the detail. Never use current_query to fill the gap.
 Never add, omit, rename, or flatten any of these keys. Return JSON only, no prose, markdown, HTML, reasoning, or additional fields."""
 
 

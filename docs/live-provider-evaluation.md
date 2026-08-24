@@ -27,12 +27,17 @@ Lücken: Der Prompt nannte die vom Validator erzwungene Zuordnung von
 `answer_type` zu erstem `claim_type` nicht, und der isolierte Runner ließ anders
 als `QueryService` den Übersetzungskatalog beim Evidence-Aufbau weg.
 
-Formulatorprompt `8` beschreibt deshalb nun die zulässigen ersten Claimtypen und
-Referenzinvarianten explizit, ohne Groundingregeln zu lockern. Stufe 2 baut ihre
-Evidence außerdem mit demselben `TranslationCatalog` und derselben
-`TRANSLATION_RUNTIME_POLICY` wie die Anwendung. Eine erneute reale Stufe 2 ist
-erst nach sauberem Commit und gesonderter Freigabe zulässig; die providerfreien
-Tests ersetzen dieses Live-Gate nicht.
+Formulatorprompt `8` ergänzte deshalb die zulässigen ersten Claimtypen und
+Referenzinvarianten, ohne Groundingregeln zu lockern. Eine nachfolgende
+allowlist-basierte Diagnose zeigte weiterhin fehlende Service- beziehungsweise
+Zielgruppenreferenzen. Prompt `9` stellt daher zusätzlich klar, dass
+`current_query` keine Faktenquelle ist: Der sichere Standard nennt nur Handlung
+und exakten Angebotsnamen; Service- oder Zielgruppendetails sind nur mit einer
+passenden Faktenklasse im selben Satz zulässig und entfallen andernfalls.
+Stufe 2 baut ihre Evidence außerdem mit demselben `TranslationCatalog` und
+derselben `TRANSLATION_RUNTIME_POLICY` wie die Anwendung. Eine erneute reale
+Stufe 2 ist erst nach sauberem Commit und gesonderter Freigabe zulässig; die
+providerfreien Tests ersetzen dieses Live-Gate nicht.
 
 Der aktuelle Report liegt unter
 `runtime/live-evaluations/run_7484e6b2e8564f349e9c275fe474c72c/`.
@@ -98,7 +103,7 @@ redigierte Planstand ist:
 | Interpreter Vertrag / Prompt | `4` / `8` |
 | Selector Vertrag / Prompt | `1` / `2` |
 | Evidence-Vertrag | `3` |
-| Formulator Vertrag / Prompt | `2` / `8` |
+| Formulator Vertrag / Prompt | `2` / `9` |
 | Safety-Policy | `1` |
 | Temperatur | `0` |
 | Response-Format | `json_object` |
