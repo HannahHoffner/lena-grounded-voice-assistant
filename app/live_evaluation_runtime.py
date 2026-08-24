@@ -16,6 +16,9 @@ from .live_evaluation import (
     EvaluationComponent,
     LiveRunLimits,
 )
+from .providers.diagnostics import HTTP_STATUS_FAILURE_KINDS, SAFE_PROVIDER_FAILURE_KINDS
+
+_HTTP_STATUS_FAILURE_VALUES = frozenset(item.value for item in HTTP_STATUS_FAILURE_KINDS)
 
 
 class EvaluationLimitReached(RuntimeError):
@@ -116,8 +119,28 @@ class EvaluationReportStore:
         self._results.append(result)
         self._write_jsonl("stage-results.jsonl", self._results)
 
-    def append_error(self, *, scenario_id: str, code: str) -> None:
-        self._errors.append({"scenario_id": scenario_id, "error_code": code[:80]})
+    def append_error(
+        self,
+        *,
+        scenario_id: str,
+        code: str,
+        provider_failure_kind: str | None = None,
+        upstream_status: int | None = None,
+    ) -> None:
+        record: dict[str, Any] = {"scenario_id": scenario_id, "error_code": code[:80]}
+        if provider_failure_kind is not None:
+            if provider_failure_kind not in SAFE_PROVIDER_FAILURE_KINDS:
+                raise ValueError("provider failure kind is not allowlisted")
+            record["provider_failure_kind"] = provider_failure_kind
+        if upstream_status is not None:
+            if type(upstream_status) is not int or not 100 <= upstream_status <= 599:
+                raise ValueError("upstream status is invalid")
+            if provider_failure_kind not in _HTTP_STATUS_FAILURE_VALUES:
+                raise ValueError("upstream status requires an HTTP failure kind")
+            record["upstream_status"] = upstream_status
+        elif provider_failure_kind in _HTTP_STATUS_FAILURE_VALUES:
+            raise ValueError("HTTP failure kind requires upstream status")
+        self._errors.append(record)
         self._write_jsonl("redacted-errors.jsonl", self._errors)
 
     def finalize(self, summary: dict[str, Any]) -> None:

@@ -6,25 +6,46 @@
   `status: prepared_not_executed` / `live_provider_calls_authorized: false`
   (`app/live_evaluation_plan.py`) -- das ist ein unveränderlicher Vertrag des
   Dry-Run-Befehls selbst, unabhängig von tatsächlich ausgeführten Läufen.
-- Ein separat autorisierter `live-smoke`-Lauf hat seit 2026-08-14 einmalig
-  reale Provideraufrufe für die Stufe `interpreter` gemacht (siehe "Ausgeführte
-  Läufe" unten). `selector-formulator`, `end-to-end` und `stability` wurden
-  weiterhin nicht ausgeführt.
+- Am 2026-08-24 wurde eine neue, commitgebundene Interpreterstufe gegen den
+  aktuellen sauberen HEAD ausgeführt (siehe "Ausgeführte Läufe"). Sie endete
+  kontrolliert an der vorab festgelegten Fehlergrenze. Deshalb wurden die drei
+  Folgestufen nicht gestartet.
 
 ## Ausgeführte Läufe
 
 | Lauf-ID | Stufe | Datum | Commit | Ergebnis |
 |---|---|---|---|---|
+| `run_7484e6b2e8564f349e9c275fe474c72c` | `interpreter` | 2026-08-24 | `293bd17a6d22dd8f0bb630842ac1892dec06516e` (clean) | Nach 6/15 Requests und 6 Provideraufrufen kontrolliert abgebrochen: 3 deutschsprachige Ergebnisse technisch vertragskonform; danach 3-mal `interpreter_http_error`; 1 nicht kritische Inhaltsabweichung im Feld `need` bei `i_de_acute`, während `acute_risk_status=detected` korrekt war; 0 kritische Inhaltsfehler. |
 | `run_e5ef56937b0d47e3a409d43d3ce4db09` | `interpreter` | 2026-08-14 | `fbcc85a` (clean) | 15/15 Requests technisch valide, 0 Fehler, `content_gate_passed=false` (1/15 inhaltliche Abweichung im Feld `need` bei `i_de_acute`, `acute_risk_status` selbst korrekt `detected`, damit ohne sicherheitsrelevante Auswirkung -- `_safety_stop()` liest bei `detected` nur `acute_risk_status`), 0 kritische inhaltliche Fehler |
 
-Der zugehörige Report (`manifest.json`, `summary.json`, `stage-results.jsonl`)
-lag unter `runtime/live-evaluations/run_e5ef56937b0d47e3a409d43d3ce4db09/` und
+Der aktuelle Report liegt unter
+`runtime/live-evaluations/run_7484e6b2e8564f349e9c275fe474c72c/`.
+Sein Manifest bindet den vollständigen Commit, `git_dirty=false`,
+Softwareversion, Szenariohash, Runtime-KB-Fingerprint, Prompt- und
+Vertragsversionen sowie die Laufgrenzen. Keine Folgestufe wurde automatisch
+gestartet. Die drei `interpreter_http_error` dieses Laufs enthalten noch keinen
+HTTP-Status oder Transporttyp. Der damalige Client und Reportstore haben alle
+`httpx.HTTPError` bewusst auf denselben redigierten Runtimecode reduziert; eine
+konkretere Ursache kann deshalb nicht nachträglich rekonstruiert werden. Der
+frühere Report
+`runtime/live-evaluations/run_e5ef56937b0d47e3a409d43d3ce4db09/` lag lokal vor und
 wurde versehentlich bei einem nachfolgenden Aufräumschritt gelöscht (`runtime/`
 ist gitignored, daher kein Verlust für die Versionsgeschichte); die Kennzahlen
 oben sind aus der Sitzung übernommen, in der der Lauf stattfand. Ein erneuter
 Lauf reproduziert einen gleichwertigen Report unter einer neuen Lauf-ID.
 
-WP9B prüft später mit ausschließlich synthetischen Textanfragen, ob die real
+Neue Interpreterläufe ergänzen bei technischen Providerfehlern eine strikt
+allowlist-basierte Diagnose. `provider_failure_kind` unterscheidet
+`rate_limited`, `upstream_4xx`, `upstream_5xx`, `upstream_http_error`,
+`connection_error`, `protocol_error`, `transport_error` und `provider_error`.
+Nur bei einer tatsächlichen HTTP-Antwort wird zusätzlich der numerische
+`upstream_status` gespeichert. Antwortkörper, Header, URL, Exceptiontext und
+Requestdaten werden weder in `stage-results.jsonl` noch in
+`redacted-errors.jsonl` übernommen. Der normale Anwendungspfad verwendet
+weiterhin ausschließlich `interpreter_http_error`; die Zusatzdiagnose dient nur
+der lokalen, ignorierten Live-Evaluation.
+
+WP9B prüft stufenweise mit ausschließlich synthetischen Textanfragen, ob die real
 konfigurierten Blablador-Modelle die Interpreter-, Selector- und
 Formulatorverträge einhalten. Die Evaluation ist keine Produktivfreigabe,
 medizinische oder klinische Validierung, SAFE-Freigabe, muttersprachliche
@@ -48,15 +69,15 @@ redigierte Planstand ist:
 | Interpretermodell | `alias-fast` |
 | Selectormodell | `alias-fast` |
 | Formulatormodell | `alias-fast` |
-| Interpreter Vertrag / Prompt | `3` / `6` |
+| Interpreter Vertrag / Prompt | `4` / `7` |
 | Selector Vertrag / Prompt | `1` / `2` |
 | Evidence-Vertrag | `3` |
 | Formulator Vertrag / Prompt | `2` / `7` |
 | Safety-Policy | `1` |
 | Temperatur | `0` |
 | Response-Format | `json_object` |
-| maximale Ausgabetokens I / S / F | `700` / `300` / `800` |
-| Timeout I / S / F | `15` / `10` / `30` Sekunden |
+| maximale Ausgabetokens I / S / F | `700` / `300` / `900` |
+| Timeout I / S / F | `15` / `30` / `30` Sekunden |
 | globales E2E-LLM-Budget | `45` Sekunden je Nutzeranfrage |
 
 Interpreter-, Selector- und Formulatormodell werden einzeln aus
@@ -83,9 +104,9 @@ ausgegeben noch in Reports übernommen.
 
 ## Vier getrennte Stufen
 
-Keine Stufe startet automatisch eine andere. In diesem Vorbereitungsstand ist
-nur der spätere Interpreterlauf technisch ausführbar; die Stufen 2 bis 4 sind
-bis zu einer gesonderten Implementierung und Freigabe zusätzlich gesperrt.
+Keine Stufe startet automatisch eine andere. Alle vier Runner sind technisch
+implementiert; jede Stufe benötigt dennoch eine eigene Freigabe und darf erst
+nach dem vorgesehenen Gate der vorherigen Stufe ausgeführt werden.
 
 | Stufe | Umfang | Provideraufrufe min. / max. | max. Providerwartezeit | harte Laufzeit | Abbruchgrenze |
 |---|---:|---:|---:|---:|---:|
@@ -120,7 +141,7 @@ inhaltliche Fehlklassifikationen werden getrennt ausgewiesen.
 ## Datenminimierung je Providerstufe
 
 Das Feldinventar wird direkt aus den schema-validierten Positivlistenmodellen
-abgeleitet und providerfrei gegen alle 26 sozialen Angebote, 21 Toiletten und
+abgeleitet und providerfrei gegen alle 28 sozialen Angebote, 21 Toiletten und
 21 Trinkbrunnen geprüft.
 
 | Stufe | Zulässige Daten | Ausgeschlossen |
@@ -245,10 +266,10 @@ Prüfprotokoll eindeutig einem Commit und einer Softwareversion zuordenbar; ein
 Lauf auf einem dirty Arbeitsbaum wird ohnehin bereits vor dem Start abgelehnt
 (siehe oben).
 
-## Befehl für eine später gesondert freigegebene Stufe 1
+## Befehl für eine gesondert freigegebene Stufe 1
 
-Der folgende Befehl ist dokumentiert, aber in der Vorbereitung ausdrücklich
-nicht auszuführen:
+Der folgende Befehl wurde für den aktuellen Lauf verwendet. Ein erneuter Lauf
+benötigt erneut eine ausdrückliche Freigabe:
 
 ```powershell
 $env:LENA_ALLOW_LIVE_SMOKE = "true"

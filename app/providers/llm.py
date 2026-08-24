@@ -50,6 +50,11 @@ from ..models import (
     Language,
     OfferRecord,
 )
+from .diagnostics import (
+    HTTP_STATUS_FAILURE_KINDS,
+    ProviderFailureKind,
+    classify_provider_failure,
+)
 
 LOGGER = logging.getLogger(__name__)
 
@@ -66,9 +71,34 @@ class ProviderTimeoutError(ProviderError):
 class InterpreterError(ProviderError):
     """Redigierbarer, maschinenlesbarer Fehler der Interpretationsstufe."""
 
-    def __init__(self, code: str) -> None:
+    def __init__(
+        self,
+        code: str,
+        *,
+        provider_failure_kind: ProviderFailureKind | None = None,
+        upstream_status: int | None = None,
+    ) -> None:
+        if upstream_status is not None and (
+            type(upstream_status) is not int or not 100 <= upstream_status <= 599
+        ):
+            raise ValueError("upstream_status must be a valid HTTP status")
+        if upstream_status is not None and provider_failure_kind not in HTTP_STATUS_FAILURE_KINDS:
+            raise ValueError("upstream_status requires an HTTP failure kind")
+        if provider_failure_kind in HTTP_STATUS_FAILURE_KINDS and upstream_status is None:
+            raise ValueError("HTTP failure kind requires upstream_status")
         super().__init__(code)
         self.code = code
+        self.provider_failure_kind = provider_failure_kind
+        self.upstream_status = upstream_status
+
+
+def _interpreter_http_error(exc: BaseException) -> InterpreterError:
+    failure_kind, upstream_status = classify_provider_failure(exc)
+    return InterpreterError(
+        "interpreter_http_error",
+        provider_failure_kind=failure_kind,
+        upstream_status=upstream_status,
+    )
 
 
 @dataclass(frozen=True)
@@ -225,7 +255,7 @@ class BlabladorProvider:
         except InterpreterError:
             raise
         except (httpx.HTTPError, ProviderError) as exc:
-            raise InterpreterError("interpreter_http_error") from exc
+            raise _interpreter_http_error(exc) from exc
         except (TypeError, ValueError) as exc:
             raise InterpreterError("interpreter_invalid_json") from exc
 

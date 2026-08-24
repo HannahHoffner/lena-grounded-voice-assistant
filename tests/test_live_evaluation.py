@@ -59,7 +59,7 @@ from app.live_evaluation_runner import (
     run_stability_live_gate,
 )
 from app.llm_selection import CandidateSelectionResponse, SelectorError, SelectorSelectionStatus
-from app.providers.llm import ProviderAnswer
+from app.providers.llm import ProviderAnswer, ProviderFailureKind
 from app.live_evaluation_runtime import (
     AtomicRunCounter,
     EvaluationLimitReached,
@@ -156,6 +156,16 @@ class FailingInterpreterProvider(FakeInterpreterProvider):
     async def interpret_query(self, **_kwargs: Any) -> QueryInterpretation:
         self.calls += 1
         raise InterpreterError("interpreter_schema_error")
+
+
+class DiagnosticFailingInterpreterProvider(FakeInterpreterProvider):
+    async def interpret_query(self, **_kwargs: Any) -> QueryInterpretation:
+        self.calls += 1
+        raise InterpreterError(
+            "interpreter_http_error",
+            provider_failure_kind=ProviderFailureKind.RATE_LIMITED,
+            upstream_status=429,
+        )
 
 
 class UnexpectedFailingInterpreterProvider(FakeInterpreterProvider):
@@ -579,6 +589,66 @@ def test_interpreter_runner_aborts_at_third_contract_failure(tmp_path: Path) -> 
     assert result["counts"]["interpreter_calls"] == 3
     assert result["counts"]["failures"] == 3
     assert result["next_stage_started"] is False
+
+
+def test_interpreter_runner_persists_only_redacted_http_diagnostics(tmp_path: Path) -> None:
+    settings = _settings(tmp_path)
+    plan = load_live_scenario_catalog().plan(EvaluationStage.INTERPRETER)
+
+    result = asyncio.run(
+        run_interpreter_live_gate(
+            settings,
+            plan.live_limits,
+            provider_factory=DiagnosticFailingInterpreterProvider,
+        )
+    )
+
+    assert result["status"] == "aborted"
+    assert result["abort_reason"] == "live_evaluation_failure_limit"
+    report = settings.runtime_dir / result["report_directory"]
+    error_records = [
+        json.loads(line)
+        for line in (report / "redacted-errors.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    scenario_errors = [item for item in error_records if item["error_code"] == "interpreter_http_error"]
+    assert len(scenario_errors) == 3
+    assert all(item["provider_failure_kind"] == "rate_limited" for item in scenario_errors)
+    assert all(item["upstream_status"] == 429 for item in scenario_errors)
+    assert all(set(item) <= {"scenario_id", "error_code", "provider_failure_kind", "upstream_status"}
+               for item in error_records)
+
+    stage_records = [
+        json.loads(line)
+        for line in (report / "stage-results.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    assert len(stage_records) == 3
+    assert all(item["provider_failure_kind"] == "rate_limited" for item in stage_records)
+    assert all(item["upstream_status"] == 429 for item in stage_records)
+
+
+def test_report_store_rejects_unallowlisted_or_inconsistent_provider_diagnostics(tmp_path: Path) -> None:
+    store = EvaluationReportStore(tmp_path, new_run_id())
+    store.initialize({"synthetic": True})
+
+    with pytest.raises(ValueError, match="not allowlisted"):
+        store.append_error(
+            scenario_id="synthetic",
+            code="interpreter_http_error",
+            provider_failure_kind="secret provider detail",
+        )
+    with pytest.raises(ValueError, match="requires an HTTP failure kind"):
+        store.append_error(
+            scenario_id="synthetic",
+            code="interpreter_http_error",
+            provider_failure_kind="connection_error",
+            upstream_status=503,
+        )
+    with pytest.raises(ValueError, match="requires upstream status"):
+        store.append_error(
+            scenario_id="synthetic",
+            code="interpreter_http_error",
+            provider_failure_kind="upstream_5xx",
+        )
 
 
 def test_interpreter_runner_separates_contract_and_content_gate(tmp_path: Path) -> None:

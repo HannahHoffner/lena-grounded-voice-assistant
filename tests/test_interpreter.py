@@ -28,7 +28,12 @@ from app.interpreter import (
 from app.llm_selection import SELECTOR_PROMPT_VERSION
 from app.main import create_app
 from app.models import Category, ChatTurn, Language
-from app.providers.llm import BlabladorProvider, InterpreterError, ProviderAnswer
+from app.providers.llm import (
+    BlabladorProvider,
+    InterpreterError,
+    ProviderAnswer,
+    ProviderFailureKind,
+)
 from app.application_texts import application_text
 from app.safety import SafetyTextKind, safety_text
 
@@ -509,6 +514,95 @@ def test_http_error_is_redacted_to_structured_interpreter_error(monkeypatch: pyt
             )
         )
     assert raised.value.code == "interpreter_http_error"
+    assert raised.value.provider_failure_kind is ProviderFailureKind.CONNECTION_ERROR
+    assert raised.value.upstream_status is None
+    assert "secret" not in str(raised.value)
+
+
+@pytest.mark.parametrize(
+    ("status", "expected_kind"),
+    [
+        (401, ProviderFailureKind.UPSTREAM_4XX),
+        (429, ProviderFailureKind.RATE_LIMITED),
+        (503, ProviderFailureKind.UPSTREAM_5XX),
+    ],
+)
+def test_http_status_error_preserves_only_safe_status_and_classification(
+    monkeypatch: pytest.MonkeyPatch,
+    status: int,
+    expected_kind: ProviderFailureKind,
+) -> None:
+    app = create_app(_settings())
+    provider: BlabladorProvider = app.state.service.blablador
+
+    async def response(_: dict) -> dict:
+        request = httpx.Request("POST", "https://secret.example.invalid/private?token=secret")
+        upstream = httpx.Response(status, request=request, text="secret provider response")
+        raise httpx.HTTPStatusError("secret upstream detail", request=request, response=upstream)
+
+    monkeypatch.setattr(provider, "_post", response)
+    with pytest.raises(InterpreterError) as raised:
+        asyncio.run(
+            provider.interpret_query(
+                query="Hilfe",
+                language=Language.DE,
+                category=None,
+                aliases=[],
+            )
+        )
+
+    error = raised.value
+    assert error.code == "interpreter_http_error"
+    assert error.provider_failure_kind is expected_kind
+    assert error.upstream_status == status
+    assert str(error) == "interpreter_http_error"
+
+
+def test_protocol_error_is_distinct_from_connection_error(monkeypatch: pytest.MonkeyPatch) -> None:
+    app = create_app(_settings())
+    provider: BlabladorProvider = app.state.service.blablador
+
+    async def response(_: dict) -> dict:
+        request = httpx.Request("POST", "https://example.invalid")
+        raise httpx.RemoteProtocolError("secret protocol detail", request=request)
+
+    monkeypatch.setattr(provider, "_post", response)
+    with pytest.raises(InterpreterError) as raised:
+        asyncio.run(
+            provider.interpret_query(
+                query="Hilfe",
+                language=Language.DE,
+                category=None,
+                aliases=[],
+            )
+        )
+
+    assert raised.value.provider_failure_kind is ProviderFailureKind.PROTOCOL_ERROR
+    assert raised.value.upstream_status is None
+    assert "secret" not in str(raised.value)
+
+
+def test_other_request_error_uses_generic_transport_class(monkeypatch: pytest.MonkeyPatch) -> None:
+    app = create_app(_settings())
+    provider: BlabladorProvider = app.state.service.blablador
+
+    async def response(_: dict) -> dict:
+        request = httpx.Request("POST", "https://example.invalid")
+        raise httpx.ReadError("secret read detail", request=request)
+
+    monkeypatch.setattr(provider, "_post", response)
+    with pytest.raises(InterpreterError) as raised:
+        asyncio.run(
+            provider.interpret_query(
+                query="Hilfe",
+                language=Language.DE,
+                category=None,
+                aliases=[],
+            )
+        )
+
+    assert raised.value.provider_failure_kind is ProviderFailureKind.TRANSPORT_ERROR
+    assert raised.value.upstream_status is None
     assert "secret" not in str(raised.value)
 
 

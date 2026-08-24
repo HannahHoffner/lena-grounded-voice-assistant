@@ -233,6 +233,9 @@ async def run_interpreter_live_gate(
                 if critical:
                     counter.record_failure()
             except InterpreterError as exc:
+                provider_failure_kind = (
+                    exc.provider_failure_kind.value if exc.provider_failure_kind is not None else None
+                )
                 store.append_result({
                     "scenario_id": scenario.scenario_id,
                     "language": scenario.language,
@@ -245,8 +248,15 @@ async def run_interpreter_live_gate(
                     "linguistic_review_pending": True,
                     "duration_ms": round((clock() - started) * 1_000, 2),
                     "confirmed_model_identifier": _confirmed_model(provider, "interpreter"),
+                    "provider_failure_kind": provider_failure_kind,
+                    "upstream_status": exc.upstream_status,
                 })
-                store.append_error(scenario_id=scenario.scenario_id, code=exc.code)
+                store.append_error(
+                    scenario_id=scenario.scenario_id,
+                    code=exc.code,
+                    provider_failure_kind=provider_failure_kind,
+                    upstream_status=exc.upstream_status,
+                )
                 counter.record_failure()
     except EvaluationLimitReached as exc:
         status = "aborted"
