@@ -45,6 +45,12 @@ Anführungszeichen. Der tatsächliche `display_name` wird darin unverändert aus
 Evidence eingesetzt; kein konkreter Angebotsname ist im Systemprompt hinterlegt.
 Auch diese Promptpräzisierung ändert weder Vertrag noch Groundingprüfung und gilt
 erst nach einem gesondert freigegebenen Live-Lauf als am realen Modell geprüft.
+Der zugehörige Lauf bestätigte das deutsche Muster, zeigte aber neue Schwankungen
+in einem rumänischen Referral- und einem russischen adversarialen Direct-Service-
+Fall. Prompt `12` bindet deshalb den ersten rollenbezogenen Handlungssatz in
+allen fünf Sprachen an ein festes lokalisiertes Muster. Zusätzliche operative
+Fakten bleiben in getrennten, jeweils belegten Sätzen möglich. Bei einer
+adversarialen Nutzeranweisung bleibt es beim einzelnen sicheren Mustersatz.
 Stufe 2 baut ihre Evidence außerdem mit demselben `TranslationCatalog` und
 derselben `TRANSLATION_RUNTIME_POLICY` wie die Anwendung. Eine erneute reale
 Stufe 2 ist erst nach sauberem Commit und gesonderter Freigabe zulässig; die

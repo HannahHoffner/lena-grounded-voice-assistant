@@ -158,10 +158,10 @@ def test_versions_prompt_and_health_are_observable(app) -> None:
     health = TestClient(app).get("/api/health").json()
     assert EVIDENCE_CONTRACT_VERSION == "3"
     assert FORMULATOR_CONTRACT_VERSION == "2"
-    assert FORMULATOR_PROMPT_VERSION == "11"
+    assert FORMULATOR_PROMPT_VERSION == "12"
     assert health["evidence_contract_version"] == "3"
     assert health["formulator_contract_version"] == "2"
-    assert health["formulator_prompt_version"] == "11"
+    assert health["formulator_prompt_version"] == "12"
     assert health["llm_request_budget_seconds"] == 45.0
     for rule in (
         "Use only EVIDENCE facts",
@@ -217,10 +217,7 @@ def test_formulator_prompt_matches_enforced_first_claim_and_reference_rules() ->
         "Prefer the smallest grounded answer",
         "current_query is never evidence",
         "For a referral_contact, write only a short contact/ask/get-help instruction plus the exact display_name",
-        "For a German referral_contact sentence, use exactly this complete visible sentence pattern",
-        "Melde dich bei „NAME“.",
-        "output that value inside the German quotation marks, not the word NAME",
-        "Do not put an article, ending, or other character inside the quotation marks",
+        "For every offer-grounded answer, the first visible sentence must use exactly one pattern",
         "For a direct_service, write only a short go/contact instruction plus the exact display_name",
         "fact_ids must include a matching service, capability, or description fact",
         "fact_ids must include a matching target_group, eligible_gender, minimum_age, maximum_age, or access fact",
@@ -233,6 +230,23 @@ def test_formulator_prompt_matches_enforced_first_claim_and_reference_rules() ->
         "every visible need or service has a matching cited fact in the same sentence",
     ):
         assert rule in FORMULATOR_SYSTEM_PROMPT
+    for pattern in (
+        "de referral_contact: Melde dich bei „NAME“.",
+        "en referral_contact: Contact “NAME”.",
+        "pl referral_contact: Skontaktuj się z „NAME”.",
+        "ro referral_contact: Contactează „NAME”.",
+        "ru referral_contact: Свяжись с «NAME».",
+        "de direct_service: Nutze „NAME“.",
+        "en direct_service: Use “NAME”.",
+        "pl direct_service: Skorzystaj z „NAME”.",
+        "ro direct_service: Folosește „NAME”.",
+        "ru direct_service: Воспользуйся «NAME».",
+    ):
+        assert pattern in FORMULATOR_SYSTEM_PROMPT
+    assert "Set claim_type to referral for every referral_contact pattern" in FORMULATOR_SYSTEM_PROMPT
+    assert "to action for every direct_service pattern" in FORMULATOR_SYSTEM_PROMPT
+    assert "Cite only its display_name fact in this first sentence" in FORMULATOR_SYSTEM_PROMPT
+    assert "return only this single safe first sentence" in FORMULATOR_SYSTEM_PROMPT
 
 
 def test_evidence_is_a_positive_list_for_only_final_runtime_offers(app) -> None:
