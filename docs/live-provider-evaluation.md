@@ -34,6 +34,12 @@ Zielgruppenreferenzen. Prompt `9` stellt daher zusätzlich klar, dass
 `current_query` keine Faktenquelle ist: Der sichere Standard nennt nur Handlung
 und exakten Angebotsnamen; Service- oder Zielgruppendetails sind nur mit einer
 passenden Faktenklasse im selben Satz zulässig und entfallen andernfalls.
+Ein weiterer kontrollierter Diagnoselauf zeigte, dass das Modell einen
+Angebotsnamen dennoch grammatisch veränderte und in einem Referral-Satz einen
+Bedarf ohne passende Leistungsreferenz formulierte. Prompt `10` behandelt
+Eigennamen deshalb ausdrücklich als unveränderliche, zeichengetreu zu kopierende
+Ausgabetokens und begrenzt den Referral-Minimalmodus auf Kontaktaufforderung plus
+exakten Anzeigenamen. Vertrag und Groundingprüfung bleiben unverändert streng.
 Stufe 2 baut ihre Evidence außerdem mit demselben `TranslationCatalog` und
 derselben `TRANSLATION_RUNTIME_POLICY` wie die Anwendung. Eine erneute reale
 Stufe 2 ist erst nach sauberem Commit und gesonderter Freigabe zulässig; die
