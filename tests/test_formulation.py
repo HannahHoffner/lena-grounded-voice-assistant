@@ -158,10 +158,10 @@ def test_versions_prompt_and_health_are_observable(app) -> None:
     health = TestClient(app).get("/api/health").json()
     assert EVIDENCE_CONTRACT_VERSION == "3"
     assert FORMULATOR_CONTRACT_VERSION == "2"
-    assert FORMULATOR_PROMPT_VERSION == "10"
+    assert FORMULATOR_PROMPT_VERSION == "11"
     assert health["evidence_contract_version"] == "3"
     assert health["formulator_contract_version"] == "2"
-    assert health["formulator_prompt_version"] == "10"
+    assert health["formulator_prompt_version"] == "11"
     assert health["llm_request_budget_seconds"] == 45.0
     for rule in (
         "Use only EVIDENCE facts",
@@ -217,6 +217,10 @@ def test_formulator_prompt_matches_enforced_first_claim_and_reference_rules() ->
         "Prefer the smallest grounded answer",
         "current_query is never evidence",
         "For a referral_contact, write only a short contact/ask/get-help instruction plus the exact display_name",
+        "For a German referral_contact sentence, use exactly this complete visible sentence pattern",
+        "Melde dich bei „NAME“.",
+        "output that value inside the German quotation marks, not the word NAME",
+        "Do not put an article, ending, or other character inside the quotation marks",
         "For a direct_service, write only a short go/contact instruction plus the exact display_name",
         "fact_ids must include a matching service, capability, or description fact",
         "fact_ids must include a matching target_group, eligible_gender, minimum_age, maximum_age, or access fact",

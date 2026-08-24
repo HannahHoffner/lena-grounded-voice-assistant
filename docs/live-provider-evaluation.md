@@ -40,6 +40,11 @@ Bedarf ohne passende Leistungsreferenz formulierte. Prompt `10` behandelt
 Eigennamen deshalb ausdrücklich als unveränderliche, zeichengetreu zu kopierende
 Ausgabetokens und begrenzt den Referral-Minimalmodus auf Kontaktaufforderung plus
 exakten Anzeigenamen. Vertrag und Groundingprüfung bleiben unverändert streng.
+Prompt `11` ergänzt für deutsche Referral-Sätze ein festes Muster mit deutschen
+Anführungszeichen. Der tatsächliche `display_name` wird darin unverändert aus der
+Evidence eingesetzt; kein konkreter Angebotsname ist im Systemprompt hinterlegt.
+Auch diese Promptpräzisierung ändert weder Vertrag noch Groundingprüfung und gilt
+erst nach einem gesondert freigegebenen Live-Lauf als am realen Modell geprüft.
 Stufe 2 baut ihre Evidence außerdem mit demselben `TranslationCatalog` und
 derselben `TRANSLATION_RUNTIME_POLICY` wie die Anwendung. Eine erneute reale
 Stufe 2 ist erst nach sauberem Commit und gesonderter Freigabe zulässig; die

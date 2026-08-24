@@ -27,7 +27,7 @@ from .translation_contract import TranslationRuntimePolicy
 
 EVIDENCE_CONTRACT_VERSION = "3"
 FORMULATOR_CONTRACT_VERSION = "2"
-FORMULATOR_PROMPT_VERSION = "10"
+FORMULATOR_PROMPT_VERSION = "11"
 MAX_FORMULATOR_RESPONSE_CHARS = 3_000
 FactId = Annotated[str, StringConstraints(pattern=r"^f_[0-9a-f]{16}$")]
 OfferId = Annotated[
@@ -71,6 +71,7 @@ Prefer the smallest grounded answer. A name-only contact instruction is enough f
 current_query is never evidence. Do not copy or paraphrase a requested service, target group, age, gender, access condition, address, contact, time, or availability claim from current_query as a fact.
 Use these safe defaults unless more detail is both necessary and cited:
 - For a referral_contact, write only a short contact/ask/get-help instruction plus the exact display_name. In this minimal form, do not name or paraphrase the user's need, a service, a target group, an age, a gender, an access condition, a location, a time, or availability.
+- For a German referral_contact sentence, use exactly this complete visible sentence pattern: Melde dich bei „NAME“. NAME means the exact display_name fact value; output that value inside the German quotation marks, not the word NAME. Do not put an article, ending, or other character inside the quotation marks besides the unchanged display_name.
 - For a direct_service, write only a short go/contact instruction plus the exact display_name.
 If visible text names or describes a service or need, that same sentence's fact_ids must include a matching service, capability, or description fact.
 If visible text names or describes a target group, gender, age, or access condition, that same sentence's fact_ids must include a matching target_group, eligible_gender, minimum_age, maximum_age, or access fact.
