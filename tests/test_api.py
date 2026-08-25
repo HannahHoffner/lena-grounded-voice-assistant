@@ -910,6 +910,14 @@ def test_structured_dialog_follow_up_excludes_natural_language_session_turns() -
 
     assert second["provider"] == "blablador"
     assert [card["id"] for card in second["cards"]] == ["vkkj_jugendnotdienst", "21"]
+    hilfebus = next(card for card in second["cards"] if card["id"] == "21")
+    curated_hilfebus = app.state.service.kb.by_id()["21"]
+    assert hilfebus["name"] == "Hilfebus"
+    assert hilfebus["phone_numbers"] == curated_hilfebus.phone_numbers
+    assert hilfebus["phone_numbers"]
+    assert hilfebus["opening_hours_raw"] == curated_hilfebus.opening_hours_raw
+    assert hilfebus["address"] is None
+    assert not any(marker_id.startswith("21:") for marker_id in second["map_marker_ids"])
     assert captured["interpreter_history"] == []
     assert captured["formulator_query"] == "Ich bin erst 12."
 

@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "catalog_version": "prototype-2026-08-25-vkkj-coordinates",
+  "catalog_version": "prototype-2026-08-25-leipziger-oase-display-name",
   "approved_source_release_id": "legacy-3b72f95a88f9",
   "approved_source_hash": "3b72f95a88f98c57778f50beaa4c66af61b58493fe995feb1deb6f7756d7bf9c",
   "approved_official_source_hash": "3974f094d32f503db9bd1d2d516c8d9cdfd1e776233f16561d47c799270a3c86",
@@ -440,6 +440,7 @@
       "organization_id": "diakonie_leipzig",
       "location_id": "leipziger_oase_nuernberger_strasse",
       "offer_type": "day_center",
+      "display_name": "Leipziger Oase",
       "place_type": "day_center",
       "capabilities": ["food", "hygiene", "counselling", "postal", "shower", "laundry", "medical_care", "day_stay"],
       "target_groups": ["adults", "people_experiencing_homelessness"],
@@ -451,7 +452,8 @@
         "day_stay"
       ],
       "curation_decision_ids": [
-        "prototype_core"
+        "prototype_core",
+        "leipziger_oase_source_display_name"
       ],
       "source_reference_ids": [
         "wfs_legacy_release",
@@ -1103,6 +1105,10 @@
   ],
   "offer_aliases": [
     {
+      "alias": "Leipziger Oase",
+      "service_offer_id": "10"
+    },
+    {
       "alias": "Rücke",
       "service_offer_id": "7"
     },
@@ -1421,6 +1427,23 @@
       "evidence_type": "WFS-Normalisierung und formative Stakeholder-Konsultation",
       "recorded_by_role": "Forscherin und Entwicklerin von LENA",
       "evidence_reference": "4Approachneu.tex",
+      "reviewed_at": null
+    },
+    {
+      "id": "leipziger_oase_source_display_name",
+      "decision_type": "alias",
+      "affected_source_ids": [
+        "10"
+      ],
+      "reason": "Leipziger Oase ist der im WFS-Quellennamen enthaltene leistungsbezogene Anzeigename des Tagestreffs; die Organisation bleibt davon getrennt Diakonie Leipzig.",
+      "source_reference_ids": [
+        "wfs_legacy_release"
+      ],
+      "review_status": "source_normalized",
+      "reviewed_by_role": null,
+      "evidence_type": "WFS-Quellenbezeichnung",
+      "recorded_by_role": "Forscherin und Entwicklerin von LENA",
+      "evidence_reference": "OpenData:wohnungslosenhilfe",
       "reviewed_at": null
     },
     {

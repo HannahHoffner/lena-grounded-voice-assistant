@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from app.application_texts import LanguageTextInventory, application_text_summary, load_application_texts
+from app.application_texts import LanguageTextInventory, application_text, application_text_summary, load_application_texts
 from app.config import load_settings
 from app.i18n import (
     TranslationCatalog,
@@ -207,6 +207,17 @@ def test_all_runtime_cards_preserve_names_and_operational_facts(tmp_path: Path) 
     assert helene_card.services == helene_record.fields.services
     assert "5,00 €" in json.dumps(helene_card.model_dump(), ensure_ascii=False)
     assert "2,50 €" in json.dumps(helene_card.model_dump(), ensure_ascii=False)
+
+    oase = kb.by_id()["10"]
+    for language in Language:
+        oase_card = localize_offer_card(
+            oase, language, catalog, TranslationRuntimePolicy.REVIEWED_OR_MACHINE
+        )
+        assert oase_card.name == "Leipziger Oase"
+        if language != Language.DE:
+            record = catalog.store.entries["10"].translations[language]
+            assert record.linguistic_review_status == LinguisticReviewStatus.MACHINE
+            assert record.factual_integrity_status == FactualIntegrityStatus.VALID
 
 
 def test_translation_integrity_is_positive_list_and_accepts_all_active_records(tmp_path: Path) -> None:
@@ -571,6 +582,41 @@ def test_application_resources_and_scenario_review_inventory_are_complete(tmp_pa
     assert report["synthetic_data_only"] is True
     assert report["live_smoke_plan"]["maximum_provider_calls"] == len(report["items"]) * 3
     assert all(item["manual_review_status"] == "not_reviewed" for item in report["items"])
+
+
+def test_result_copy_points_below_without_naming_cards_or_map() -> None:
+    resources = load_application_texts()
+    result_resource_ids = (
+        "dialogue.answers.organization_service_conditional",
+        "fallback.found",
+        "fallback.toilet_more_markers",
+        "fallback.water_more_markers",
+    )
+    forbidden_roots = {
+        Language.DE: ("karte",),
+        Language.EN: ("card", "map"),
+        Language.PL: ("kart", "map"),
+        Language.RO: ("card", "hart"),
+        Language.RU: ("карт",),
+    }
+    below_markers = {
+        Language.DE: "unten",
+        Language.EN: "below",
+        Language.PL: "poniżej",
+        Language.RO: "mai jos",
+        Language.RU: "ниже",
+    }
+
+    for language in Language:
+        texts = resources.languages[language].texts
+        for resource_id in result_resource_ids:
+            visible_text = texts[resource_id].casefold()
+            assert below_markers[language] in visible_text
+            assert all(root not in visible_text for root in forbidden_roots[language])
+
+    german_fallback = application_text(Language.DE, "fallback.found", names="Rücke, Scharni")
+    assert german_fallback.endswith("Mehr Infos stehen unten.")
+    assert "Karte" not in german_fallback
 
 
 def test_unreviewed_application_resource_rejects_partial_review_metadata() -> None:

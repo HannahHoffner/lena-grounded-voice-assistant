@@ -342,10 +342,9 @@ function createListenButton(spokenText) {
 }
 
 // `OfferCard` (data.cards) and `MapDestination` (data.map_data.destinations)
-// describe the same offers with slightly different field names. This is the
-// fallback used only when no map data is available at all (e.g. an offer
-// without usable coordinates) -- normally the richer, uncapped destination
-// list is what's rendered, see renderResultList().
+// describe offers with slightly different field names. Selected cards without
+// verified coordinates remain useful result information and are converted here
+// without inventing a marker or location.
 function offerCardAsDestination(card) {
   return {
     id: card.id,
@@ -368,6 +367,21 @@ function offerCardAsDestination(card) {
     seasonal_status: card.seasonal_status,
     spoken_text: card.spoken_text
   };
+}
+
+function destinationRepresentsCard(destination, card) {
+  const destinationId = String(destination.id || "");
+  return destinationId === card.id || destinationId.startsWith(`${card.id}:`);
+}
+
+function resultItems(cards, mapData) {
+  const destinations = mapData && Array.isArray(mapData.destinations)
+    ? mapData.destinations
+    : [];
+  const unmappedCards = cards.filter(
+    (card) => !destinations.some((destination) => destinationRepresentsCard(destination, card))
+  );
+  return [...destinations, ...unmappedCards.map(offerCardAsDestination)];
 }
 
 // One collapsible "Tafel" per offer/place. Collapsed: name, address, distance.
@@ -436,18 +450,14 @@ function buildOfferTile(item) {
   return tile;
 }
 
-// Renders every matched offer/place as a tile -- not just the (deliberately
-// narrower, strictly grounded) subset the answer text is built from. `cards`
-// is the fallback item source when no map is available; map_data carries the
-// full, richer set whenever a map is available (see build_map_data() on the
-// backend, which is intentionally uncapped).
+// Renders every mapped place plus selected offers that have no verified map
+// destination. A destination such as `21:hbf-west` represents its parent offer
+// `21`, so a verified stand and its generic offer card are not duplicated.
 function renderResultList(cards, mapData) {
   const container = byId("cardList");
   container.replaceChildren();
   state.resultTiles = new Map();
-  const items = mapData && mapData.destinations && mapData.destinations.length
-    ? mapData.destinations
-    : cards.map(offerCardAsDestination);
+  const items = resultItems(cards, mapData);
   for (const item of items) {
     const tile = buildOfferTile(item);
     state.resultTiles.set(item.id, tile);

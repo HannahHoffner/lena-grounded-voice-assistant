@@ -59,3 +59,13 @@ def test_safety_response_has_non_colour_label_single_alert_and_map_reset() -> No
     assert '.safety-result .answer-heading::before' in css
     assert 'content: "!"' in css
     assert "tel:112" not in app and "tel:112" not in html
+
+
+def test_selected_cards_without_map_destination_remain_visible() -> None:
+    app = (ROOT / "app" / "static" / "app.js").read_text(encoding="utf-8")
+
+    assert "function resultItems(cards, mapData)" in app
+    assert "destinationId === card.id" in app
+    assert "destinationId.startsWith(`${card.id}:`)" in app
+    assert "...unmappedCards.map(offerCardAsDestination)" in app
+    assert "const items = resultItems(cards, mapData);" in app

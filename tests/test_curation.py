@@ -128,6 +128,60 @@ def test_catalog_models_organization_location_and_distinct_service_offers() -> N
     assert offers["6"].id != offers["11"].id
 
 
+def test_leipziger_oase_is_offer_name_without_renaming_diakonie(curated_kb) -> None:
+    catalog = load_curation_catalog(CURATION_PATH)
+    configured = {offer.id: offer for offer in catalog.service_offers}
+    organizations = {organization.id: organization for organization in catalog.organizations}
+    decisions = {decision.id: decision for decision in catalog.curation_decisions}
+    runtime_oase = curated_kb.by_id()["10"]
+    runtime_streetwork = curated_kb.by_id()["14"]
+    source_oase = load_knowledge_base(SOURCE_PATH).by_id()["10"]
+
+    assert configured["10"].display_name == "Leipziger Oase"
+    assert organizations["diakonie_leipzig"].display_name == "Diakonie Leipzig"
+    assert runtime_oase.name == runtime_oase.display_name == "Leipziger Oase"
+    assert runtime_streetwork.name == runtime_streetwork.display_name == "Diakonie Leipzig"
+    assert source_oase.name == "Diakonisches Werk Innere Mission Leipzig e. V. Leipziger Oase"
+    assert source_oase.display_name is None
+    assert decisions["leipziger_oase_source_display_name"].review_status == "source_normalized"
+    assert decisions["leipziger_oase_source_display_name"].reviewed_at is None
+
+    hints = {
+        (hint.alias, hint.alias_kind): hint
+        for hint in interpreter_alias_hints(curated_kb.offers, curated_kb.organization_aliases)
+    }
+    assert hints[("Leipziger Oase", "offer")].may_refer_to_multiple_services is False
+    context = build_selection_context(
+        query="Wo ist die Leipziger Oase?",
+        interpretation=_interpretation(Need.GENERAL_HELP, in_scope=True),
+        offers=curated_kb.offers,
+        organization_aliases=curated_kb.organization_aliases,
+        ui_category=None,
+    )
+    assert context.alias is not None
+    assert context.alias.alias == "Leipziger Oase"
+    assert context.alias.alias_kind == "offer"
+    assert context.alias.offer_ids == ["10"]
+
+    map_data = build_map_data([runtime_oase], language=Language.DE)
+    assert map_data is not None
+    assert map_data.destinations[0].label == "Leipziger Oase"
+    evidence = build_formulator_evidence(
+        query="Was gibt es in der Leipziger Oase?",
+        language=Language.DE,
+        answer_type=AnswerType.GROUNDED_RESULT,
+        need=Need.GENERAL_HELP,
+        offers=[runtime_oase],
+        roles={"10": CandidateRole.DIRECT_SERVICE},
+    )
+    display_names = [
+        fact.value
+        for fact in evidence.selected_offers[0].facts
+        if fact.fact_type == FactType.DISPLAY_NAME
+    ]
+    assert display_names == ["Leipziger Oase"]
+
+
 def test_organization_aliases_cover_all_related_offers(curated_kb) -> None:
     bindings = {
         binding.alias: set(binding.offer_ids)

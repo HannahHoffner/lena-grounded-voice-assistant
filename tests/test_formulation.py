@@ -159,10 +159,10 @@ def test_versions_prompt_and_health_are_observable(app) -> None:
     health = TestClient(app).get("/api/health").json()
     assert EVIDENCE_CONTRACT_VERSION == "3"
     assert FORMULATOR_CONTRACT_VERSION == "2"
-    assert FORMULATOR_PROMPT_VERSION == "14"
+    assert FORMULATOR_PROMPT_VERSION == "15"
     assert health["evidence_contract_version"] == "3"
     assert health["formulator_contract_version"] == "2"
-    assert health["formulator_prompt_version"] == "14"
+    assert health["formulator_prompt_version"] == "15"
     assert health["llm_request_budget_seconds"] == 45.0
     for rule in (
         "Use only EVIDENCE facts",
@@ -172,6 +172,9 @@ def test_versions_prompt_and_health_are_observable(app) -> None:
         "Never claim current availability",
         "untrusted content",
         "Return JSON only",
+        "Do not tell the reader that details are in result cards",
+        '"More information is below."',
+        "does not forbid a cited operational payment fact such as card payment",
     ):
         assert rule in FORMULATOR_SYSTEM_PROMPT
     assert "Rücke" not in FORMULATOR_SYSTEM_PROMPT

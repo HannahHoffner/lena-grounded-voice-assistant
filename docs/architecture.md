@@ -93,6 +93,10 @@ Leistungsangebote, Organisations- und Angebotsaliase, Quellenreferenzen und
 Kurationsentscheidungen. Der Katalog ist an Release-ID und Hash eines
 unveränderlichen normalisierten WFS-Stands gebunden. Erst seine Projektion wird
 von Aliasauflösung, Kandidatenbegrenzung, Formulator, Karten und Map-Markern gemeinsam verwendet.
+Ein angebotseigener Anzeigename hat dabei Vorrang vor dem Anzeigenamen der
+Organisation. So heißt der Tagestreff mit ID 10 „Leipziger Oase“, während die
+gemeinsame Organisation und ihr Streetwork-Angebot ID 14 weiterhin „Diakonie
+Leipzig“ heißen. Der vollständige WFS-Quellenname wird dadurch nicht verändert.
 Ein abweichender aktiver WFS-Stand wird in Health als ausstehende Quelländerung
 gemeldet und nicht ungeprüft in die Runtime-Sicht übernommen.
 
@@ -208,7 +212,7 @@ nur freigegebene Positivlistenfelder, Kandidatenrollen, opake Faktenreferenzen
 und bindende Policies. Conditional-, Excluded- und Sozialamt-Angebote sowie
 WFS-Rohfelder, Reviewnotizen und technische Provenienz gelangen nicht hinein.
 
-Der Formulatorvertrag 2 erlaubt ein bis drei kurze Sätze. Promptversion 14
+Der Formulatorvertrag 2 erlaubt ein bis drei kurze Sätze. Promptversion 15
 verlangt für normale angebotsbezogene Antworten zwei oder drei natürliche,
 rollenrichtige Sätze ohne festes `Nutze ...`-Muster. Das erste Angebot und der
 wichtigste nächste Schritt stehen zuerst. Sind mehrere finale Angebote
@@ -216,6 +220,11 @@ komplementär hilfreich, kann die Antwort bis zu drei davon in der bereits
 deterministisch hergestellten Evidence-Reihenfolge nennen; jeder Satz bleibt an
 genau ein Angebot und dessen eigene Fakten gebunden. Nur der eng begrenzte
 Prompt-Injection-Pfad verwendet weiterhin einen festen sicheren Handlungssatz.
+Der sichtbare Antworttext verweist nicht auf technische UI-Container wie
+Ergebniskarten oder die Kartenansicht. Wo eine kurze Orientierung nötig ist,
+verwendet die lokalisierte Fassung sinngemäß „Mehr Infos stehen unten“.
+Tatsächliche Kartenfunktionen und belegte Angaben wie Kartenzahlung bleiben
+davon unberührt.
 Jeder Satz nennt Claimtyp, Angebots- und Faktenreferenzen oder einen erlaubten
 Policybaustein; freier Text außerhalb des JSON-Vertrags existiert nicht.
 `app/grounding.py` validiert die Antwort atomar gegen genau das Evidence-Paket:

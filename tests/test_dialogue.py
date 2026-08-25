@@ -448,7 +448,7 @@ def test_dialog_copy_has_five_languages_and_explicit_review_status_in_health(tmp
     client, _ = client_with(tmp_path, [])
     for language in ("de", "en", "pl", "ro", "ru"):
         copy = client.get(f"/api/dialogue/copy?language={language}").json()
-        assert copy["copy_version"] == "7"
+        assert copy["copy_version"] == "8"
         assert copy["prompts"]["general_need"]
     summary = client.get("/api/health").json()["application_texts"]
     assert summary["languages"]["de"]["review_pending"] > 0

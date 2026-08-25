@@ -137,7 +137,7 @@ validiert. Eine einzelne fremde ID verwirft die gesamte Antwort. Danach setzt
 die Anwendung Mandatory-Kandidaten vor die gewählte Menge und stellt die
 kuratierte stabile Reihenfolge wieder her. Erst daraus entsteht ein
 `FormulatorEvidence`-Paket mit Evidence-Version 3 und Formulatorpromptversion
-14. Es enthält
+15. Es enthält
 pro finalem Angebot Rolle, Mandatory-Status und ausschließlich freigegebene
 Fakten mit opaken Referenzen. Der Formulator sieht weder die übrige
 Kandidatenmenge noch Conditional-/Excluded-Einträge, Rohfelder,
@@ -149,7 +149,7 @@ Tag oder einer Uhrzeit bevorzugt er Kandidaten, deren strukturierter
 `schedule_match_status` bereits deterministisch `matched` ist; er darf keine
 Zeitpassung selbst ergänzen.
 
-Die Modellantwort folgt Formulatorvertrag 2. Promptversion 14 fordert bei
+Die Modellantwort folgt Formulatorvertrag 2. Promptversion 15 fordert bei
 normalen angebotsbezogenen Antworten zwei oder drei kurze natürliche Sätze. Das
 wichtigste Angebot steht zuerst, ist aber nicht mehr an ein festes
 `Nutze ...`-Muster gebunden. Mehrere finale, nützliche Alternativen können in
@@ -160,7 +160,11 @@ begrenzte Prompt-Injection-Pfad bleibt als sichere Ausnahme einsätzig und fest
 formuliert. Alle Sätze enthalten Claimtyp sowie Fakten- oder Policyreferenzen;
 die Antwort enthält höchstens vier Card-IDs. Das Backend baut den sichtbaren
 Text erst nach vollständiger Vertrags-, Sprach-, Rollen-, Fakten- und
-Kartenprüfung zusammen.
+Kartenprüfung zusammen. Sichtbare Modell- und Fallbacktexte verweisen dabei
+nicht auf „Karten“ oder andere technische Ergebniscontainer. Eine nötige
+Orientierung wird sprachabhängig als „Mehr Infos stehen unten“ ausgedrückt; die
+eigentliche Kartenansicht und fachliche Angaben zur Kartenzahlung sind davon
+nicht betroffen.
 Eine ungültige Referenz oder ein ungeerdeter operativer Fakt verwirft die
 gesamte Antwort. Verbindliche Karten und die finale Reihenfolge werden
 deterministisch aus dem Evidence-Paket wiederhergestellt und können durch
@@ -207,6 +211,15 @@ bis 26 passieren das separate Intent-Gate nur bei explizitem Jugendbezug.
 Werden die beiden VKKJ-Angebote final ausgegeben, entstehen ihre Marker aus den
 hashgebundenen WGS84-Koordinaten der offiziellen Betreiberseiten. Anschrift und
 Punkt bleiben dadurch derselben verifizierten Quelle zugeordnet.
+
+Die Ergebnisliste im Frontend verbindet die vollständigen validierten
+`map_data.destinations` mit final ausgewählten `cards`, für die keine
+verifizierte Geometrie vorliegt. Dadurch bleibt beispielsweise der Hilfebus bei
+einer U18-Schlafantwort mit seinen kuratierten Telefon- und Einsatzzeitangaben
+sichtbar, obwohl für seinen mobilen Einsatz kein allgemeiner Marker erzeugt
+wird. Angebotsgebundene Standpunkte wie `21:hbf-west` gelten als Darstellung
+des zugehörigen Angebots und verhindern eine doppelte Ergebnisinformation.
+Diese Zusammenführung erzeugt weder Koordinaten noch stationäre Adressen.
 
 Die vollständige Entscheidung wird nicht in das Forschungsprotokoll kopiert.
 Persistiert wird lediglich `candidate_selection_status`; Fakten, bedingte und
@@ -348,6 +361,10 @@ und Hash gebundenen Quellstands genau einmal referenzieren. Danach werden
 Organisation, Standort, Leistungsart, Aliase, Suchphrasen, Bedarfe und belegte
 Overrides auf neue `OfferRecord`-Instanzen projiziert. Rohtext, `raw_properties`
 und der normalisierte WFS-Release werden dabei nicht geschrieben oder verändert.
+Angebotsspezifische Anzeigenamen überschreiben nur in dieser Projektion den
+allgemeinen Organisationsanzeigenamen. Deshalb wird ID 10 als „Leipziger Oase“
+ausgegeben, ohne die Organisation „Diakonie Leipzig“, Angebot ID 14 oder den
+WFS-Quellennamen umzubenennen.
 
 Die Runtime-Quellreihenfolge ist strikt: exakt gebundener verifizierter lokaler
 Release, exakt passender manifest- und hashverifizierter Paket-Bootstrap,

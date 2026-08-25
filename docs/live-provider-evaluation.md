@@ -59,10 +59,13 @@ Promptänderung ist providerfrei getestet, aber noch nicht mit einem realen
 Modelllauf evaluiert.
 Selectorprompt `3` erlaubt ausdrücklich mehrere konkret passende oder
 komplementäre Kandidaten und bevorzugt bei explizitem Zeitbezug bereits
-strukturell als passend markierte Optionen. Formulatorprompt `14` entfernt das
+strukturell als passend markierte Optionen. Formulatorprompt `15` entfernt das
 starre Handlungsmuster für normale Antworten und erlaubt die natürliche,
 satzweise belegte Nennung von bis zu drei finalen Angeboten. Das feste Muster
-bleibt nur für den adversarialen Ein-Satz-Pfad erhalten. Beide Änderungen sind
+bleibt nur für den adversarialen Ein-Satz-Pfad erhalten. Sichtbare Antworten
+verweisen außerdem nicht auf technische Ergebniscontainer wie Karten oder die
+Kartenansicht, sondern bei Bedarf sprachabhängig auf weitere Informationen
+unterhalb der Antwort. Beide Änderungen sind
 providerfrei geprüft; ihre Befolgung durch das reale Modell ist noch nicht live
 evaluiert.
 Stufe 2 baut ihre Evidence außerdem mit demselben `TranslationCatalog` und
@@ -134,7 +137,7 @@ redigierte Planstand ist:
 | Interpreter Vertrag / Prompt | `4` / `8` |
 | Selector Vertrag / Prompt | `1` / `3` |
 | Evidence-Vertrag | `3` |
-| Formulator Vertrag / Prompt | `2` / `14` |
+| Formulator Vertrag / Prompt | `2` / `15` |
 | Safety-Policy | `1` |
 | Temperatur | `0` |
 | Response-Format | `json_object` |
