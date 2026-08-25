@@ -193,23 +193,31 @@ vorangestellt und die Modellmenge in der stabilen Candidate-Reihenfolge
 ausgegeben. Bei einem oder ausschließlich mandatory Kandidaten entfällt der
 zusätzliche Aufruf mit maschinenlesbarem Bypassgrund.
 
+Selectorprompt 3 fordert innerhalb der bereits zulässigen Menge mehrere
+komplementäre oder gleich passende Optionen, wenn sie einen konkreten Nutzen
+haben und die Ergebnisgrenze dies erlaubt. Bei ausdrücklichem Zeitbezug haben
+Kandidaten mit strukturiert passendem Zeitstatus Vorrang; dadurch wird keine
+neue Zeit- oder Eignungsentscheidung an das Modell delegiert.
+
 Der alte Adapter `Interpreterbedarf → Category → Retrieval`, der frühere
 ID-selektierende LLM-Router, der ungenutzte Kandidatenindex und die direkte
 erste-vier-Übergabe sind nicht mehr aktiv. `app/formulation.py` projiziert die
-höchstens vier finalen Runtime-Angebote in den Evidence-Vertrag 2. Er enthält
+höchstens drei sichtbaren finalen Runtime-Angebote in den Evidence-Vertrag 3.
+Er enthält
 nur freigegebene Positivlistenfelder, Kandidatenrollen, opake Faktenreferenzen
 und bindende Policies. Conditional-, Excluded- und Sozialamt-Angebote sowie
 WFS-Rohfelder, Reviewnotizen und technische Provenienz gelangen nicht hinein.
 
-Der Formulatorvertrag 2 erlaubt ein bis drei kurze Sätze. Promptversion 13
-verlangt für normale angebotsbezogene Antworten zwei oder drei Sätze: Auf den
-rollen- und sprachgebundenen Handlungssatz mit unverändertem Anzeigenamen folgt
-ein eigener Satz mit genau einer hilfreichen, belegten Angebotsinformation; ein
-dritter Satz darf eine weitere relevante operative Information nennen. Nur der
-eng begrenzte Prompt-Injection-Pfad bleibt absichtlich beim sicheren
-Handlungssatz. Jeder Satz nennt Claimtyp, Angebots- und Faktenreferenzen oder
-einen erlaubten Policybaustein; freier Text außerhalb des JSON-Vertrags
-existiert nicht.
+Der Formulatorvertrag 2 erlaubt ein bis drei kurze Sätze. Promptversion 14
+verlangt für normale angebotsbezogene Antworten zwei oder drei natürliche,
+rollenrichtige Sätze ohne festes `Nutze ...`-Muster. Das erste Angebot und der
+wichtigste nächste Schritt stehen zuerst. Sind mehrere finale Angebote
+komplementär hilfreich, kann die Antwort bis zu drei davon in der bereits
+deterministisch hergestellten Evidence-Reihenfolge nennen; jeder Satz bleibt an
+genau ein Angebot und dessen eigene Fakten gebunden. Nur der eng begrenzte
+Prompt-Injection-Pfad verwendet weiterhin einen festen sicheren Handlungssatz.
+Jeder Satz nennt Claimtyp, Angebots- und Faktenreferenzen oder einen erlaubten
+Policybaustein; freier Text außerhalb des JSON-Vertrags existiert nicht.
 `app/grounding.py` validiert die Antwort atomar gegen genau das Evidence-Paket:
 Rollen, Fakt-Angebot-Zuordnung, operative Zahlen, Adressen, Kontakte, URLs,
 Zeiten, Zielskript, Längen, interne IDs und Kartenbindung. Mandatory-Karten und

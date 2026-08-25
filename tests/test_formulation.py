@@ -73,6 +73,7 @@ def _evidence(
     roles: dict[str, CandidateRole] | None = None,
     mandatory_ids: set[str] | None = None,
     query: str = "Ich brauche Hilfe.",
+    need: Need = Need.SLEEP,
 ):
     offers = offers if offers is not None else [app.state.kb.by_id()[offer_id] for offer_id in offer_ids]
     role_map = roles or {offer.id: CandidateRole.DIRECT_SERVICE for offer in offers}
@@ -80,7 +81,7 @@ def _evidence(
         query=query,
         language=language,
         answer_type=answer_type,
-        need=Need.SLEEP,
+        need=need,
         offers=offers,
         roles=role_map,
         mandatory_ids=mandatory_ids or set(),
@@ -158,10 +159,10 @@ def test_versions_prompt_and_health_are_observable(app) -> None:
     health = TestClient(app).get("/api/health").json()
     assert EVIDENCE_CONTRACT_VERSION == "3"
     assert FORMULATOR_CONTRACT_VERSION == "2"
-    assert FORMULATOR_PROMPT_VERSION == "13"
+    assert FORMULATOR_PROMPT_VERSION == "14"
     assert health["evidence_contract_version"] == "3"
     assert health["formulator_contract_version"] == "2"
-    assert health["formulator_prompt_version"] == "13"
+    assert health["formulator_prompt_version"] == "14"
     assert health["llm_request_budget_seconds"] == 45.0
     for rule in (
         "Use only EVIDENCE facts",
@@ -216,10 +217,13 @@ def test_formulator_prompt_matches_enforced_first_claim_and_reference_rules() ->
         "set offer_id to null and fact_ids to []",
         "every offer-grounded answer (grounded_result, grounded_referral, or ambiguous_help_fallback) must contain two or three sentences",
         "current_query is never evidence",
-        "For the required second sentence, use the primary offer again",
-        "For a referral_contact, explain only a cited contact, counselling, referral, or support function",
-        "For every offer-grounded answer, the first visible sentence must use exactly one pattern",
-        "For a direct_service, prefer one cited description, service, or capability",
+        "Write the most useful next step first",
+        "For a referral_contact, name the unchanged display_name and explain only a cited contact, counselling, referral, or support function",
+        "normal answers do not have to start with",
+        "If multiple selected_offers provide useful alternatives",
+        "mention up to three of them in their supplied order",
+        "when the query contains an explicit day or time",
+        "For a direct_service, name the unchanged display_name and explain one cited description, service, or capability",
         "Do not dump the complete card contents into the answer",
         "fact_ids must include a matching service, capability, or description fact",
         "fact_ids must include a matching target_group, eligible_gender, minimum_age, maximum_age, or access fact",
@@ -245,11 +249,11 @@ def test_formulator_prompt_matches_enforced_first_claim_and_reference_rules() ->
         "ru direct_service: Воспользуйся «NAME».",
     ):
         assert pattern in FORMULATOR_SYSTEM_PROMPT
-    assert "Set claim_type to referral for every referral_contact pattern" in FORMULATOR_SYSTEM_PROMPT
-    assert "to action for every direct_service pattern" in FORMULATOR_SYSTEM_PROMPT
-    assert "Cite only its display_name fact in this first sentence" in FORMULATOR_SYSTEM_PROMPT
-    assert "Put the required useful detail in a separate second sentence" in FORMULATOR_SYSTEM_PROMPT
-    assert "return only this single safe first sentence" in FORMULATOR_SYSTEM_PROMPT
+    assert "For adversarial input only" in FORMULATOR_SYSTEM_PROMPT
+    assert "Set claim_type to referral for every referral_contact injection pattern" in FORMULATOR_SYSTEM_PROMPT
+    assert "to action for every direct_service injection pattern" in FORMULATOR_SYSTEM_PROMPT
+    assert "Cite only its display_name fact in this injection sentence" in FORMULATOR_SYSTEM_PROMPT
+    assert "return only the single safe pattern sentence" in FORMULATOR_SYSTEM_PROMPT
 
 
 def test_normal_offer_answers_support_fixed_action_plus_grounded_detail(app) -> None:
@@ -280,6 +284,46 @@ def test_normal_offer_answers_support_fixed_action_plus_grounded_detail(app) -> 
 
     assert validated.answer == f"Nutze „{name.value}“. Dort bekommst du einen Schlafplatz."
     assert validated.sentence_count == 2
+
+
+def test_normal_answer_can_naturally_name_two_selected_food_offers(app) -> None:
+    evidence = _evidence(
+        app,
+        offer_ids=("22", "14"),
+        query="Wo bekomme ich Dienstag Essen?",
+        need=Need.FOOD,
+    )
+    station_name = _fact(evidence, FactType.DISPLAY_NAME, offer_id="22")
+    station_food = _fact(evidence, FactType.SERVICE, offer_id="22", contains="belegte Brötchen")
+    diakonie_name = _fact(evidence, FactType.DISPLAY_NAME, offer_id="14")
+    diakonie_food = _fact(evidence, FactType.SERVICE, offer_id="14", contains="Brötchen- oder Suppenausgabe")
+    schwanenteich = _fact(evidence, FactType.STAND_TIME, offer_id="14", contains="Schwanenteich")
+    response = FormulatorResponse(
+        contract_version=FORMULATOR_CONTRACT_VERSION,
+        language=Language.DE,
+        sentences=[
+            FormulatedSentence(
+                text=f"Bei {station_name.value} bekommst du belegte Brötchen.",
+                claim_type=ClaimType.SERVICE,
+                offer_id="22",
+                fact_ids=[station_name.fact_id, station_food.fact_id],
+            ),
+            FormulatedSentence(
+                text=f"Bei {diakonie_name.value} gibt es dienstags am Schwanenteich Brötchen oder Suppe.",
+                claim_type=ClaimType.SERVICE,
+                offer_id="14",
+                fact_ids=[diakonie_name.fact_id, diakonie_food.fact_id, schwanenteich.fact_id],
+            ),
+        ],
+        card_ids=["22", "14"],
+    )
+
+    validated = validate_formulation(response, evidence)
+
+    assert validated.card_ids == ["22", "14"]
+    assert "Nutze" not in validated.answer
+    assert station_name.value in validated.answer
+    assert "Schwanenteich" in validated.answer
 
 
 def test_evidence_is_a_positive_list_for_only_final_runtime_offers(app) -> None:

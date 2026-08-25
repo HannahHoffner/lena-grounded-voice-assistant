@@ -345,6 +345,7 @@ def test_session_follow_up_keeps_chat_history() -> None:
 
 def test_tuesday_food_names_schwanenteich_stand_time() -> None:
     app = create_app(settings())
+    captured: dict[str, object] = {}
 
     class TuesdayProvider:
         async def interpret_query(self, **kwargs) -> QueryInterpretation:
@@ -354,8 +355,30 @@ def test_tuesday_food_names_schwanenteich_stand_time() -> None:
                 services=[RequestedService.FOOD],
             )
 
+        async def select_candidates(self, **kwargs) -> CandidateSelectionResponse:
+            candidate_ids = {item.offer_id for item in kwargs["decision"].selectable_candidates}
+            captured["selector_ids"] = candidate_ids
+            return CandidateSelectionResponse(
+                contract_version="1",
+                selection_status="selected",
+                selected_ids=[offer_id for offer_id in ("22", "14") if offer_id in candidate_ids],
+            )
+
         def context_fits(self, evidence) -> bool:
-            return False
+            return True
+
+        async def formulate_answer(self, **kwargs) -> ProviderAnswer:
+            evidence = kwargs["evidence"]
+            captured["evidence_ids"] = [offer.offer_id for offer in evidence.selected_offers]
+            return ProviderAnswer(
+                answer=(
+                    "Bei Bahnhofsmission Leipzig bekommst du belegte Brötchen. "
+                    "Bei Diakonie Leipzig gibt es dienstags am Schwanenteich Brötchen oder Suppe."
+                ),
+                card_ids=[offer.offer_id for offer in evidence.selected_offers],
+                sentence_count=2,
+                answer_type=evidence.answer_type,
+            )
 
     app.state.service.blablador = TuesdayProvider()
     client = TestClient(app)
@@ -363,7 +386,13 @@ def test_tuesday_food_names_schwanenteich_stand_time() -> None:
 
     card_ids = {card["id"] for card in body["cards"]}
     assert body["status"] == "ok"
+    assert {"14", "22"} <= captured["selector_ids"]
+    assert captured["evidence_ids"] == ["22", "14"]
+    assert "Bahnhofsmission Leipzig" in body["answer"]
+    assert "Schwanenteich" in body["answer"]
+    assert "Nutze" not in body["answer"]
     assert "14" in card_ids
+    assert "22" in card_ids
     card = next(card for card in body["cards"] if card["id"] == "14")
     assert "Schwanenteich" in json.dumps(card, ensure_ascii=False)
     assert "17:00" in json.dumps(card, ensure_ascii=False)

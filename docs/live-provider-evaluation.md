@@ -57,6 +57,14 @@ hilfreichen und referenzierten Angebotsinformation; ein dritter operativer Satz
 ist optional. Der Prompt-Injection-Pfad bleibt bewusst einsätzig. Diese
 Promptänderung ist providerfrei getestet, aber noch nicht mit einem realen
 Modelllauf evaluiert.
+Selectorprompt `3` erlaubt ausdrücklich mehrere konkret passende oder
+komplementäre Kandidaten und bevorzugt bei explizitem Zeitbezug bereits
+strukturell als passend markierte Optionen. Formulatorprompt `14` entfernt das
+starre Handlungsmuster für normale Antworten und erlaubt die natürliche,
+satzweise belegte Nennung von bis zu drei finalen Angeboten. Das feste Muster
+bleibt nur für den adversarialen Ein-Satz-Pfad erhalten. Beide Änderungen sind
+providerfrei geprüft; ihre Befolgung durch das reale Modell ist noch nicht live
+evaluiert.
 Stufe 2 baut ihre Evidence außerdem mit demselben `TranslationCatalog` und
 derselben `TRANSLATION_RUNTIME_POLICY` wie die Anwendung. Eine erneute reale
 Stufe 2 ist erst nach sauberem Commit und gesonderter Freigabe zulässig; die
@@ -124,9 +132,9 @@ redigierte Planstand ist:
 | Selectormodell | `alias-fast` |
 | Formulatormodell | `alias-fast` |
 | Interpreter Vertrag / Prompt | `4` / `8` |
-| Selector Vertrag / Prompt | `1` / `2` |
+| Selector Vertrag / Prompt | `1` / `3` |
 | Evidence-Vertrag | `3` |
-| Formulator Vertrag / Prompt | `2` / `13` |
+| Formulator Vertrag / Prompt | `2` / `14` |
 | Safety-Policy | `1` |
 | Temperatur | `0` |
 | Response-Format | `json_object` |

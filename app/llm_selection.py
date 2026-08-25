@@ -13,7 +13,7 @@ from .models import Language, OfferRecord
 
 
 SELECTOR_CONTRACT_VERSION = "1"
-SELECTOR_PROMPT_VERSION = "2"
+SELECTOR_PROMPT_VERSION = "3"
 MAX_SELECTOR_RESPONSE_CHARS = 1_000
 SelectorOfferId = Annotated[
     str,
@@ -27,6 +27,8 @@ SELECTOR_SYSTEM_PROMPT = f"""You are the constrained selection stage for LENA, a
 Select only IDs from CANDIDATES. Every candidate is already deterministically eligible.
 Mandatory candidates are not shown to you and must not be selected, removed, replaced, or reordered.
 Decide only which selectable candidates best match the explicit need and requested services.
+Select more than one candidate when each one is a useful, distinct, or complementary match and the maximum_selected_ids limit permits it. Do not reduce a useful set to one candidate merely because one general option is also suitable, and do not select every candidate without a concrete match.
+When the user explicitly requests a day or time, prefer candidates whose schedule_match_status is "matched" and include multiple such time-matched options when they provide useful alternatives.
 Use structured candidate fields as the primary evidence. Do not use general world knowledge.
 Do not infer unknown personal properties, eligibility, capacity, availability, facts, or contact details.
 Do not answer the user, explain, ask a question, or add facts.

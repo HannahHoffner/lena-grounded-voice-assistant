@@ -124,7 +124,7 @@ Kontakt bedingt anzeigen, ohne Zugang oder Zuständigkeit zu behaupten.
 
 ## Kontrollierte LLM-Auswahl
 
-Der Selectorvertrag und -prompt besitzen jeweils Version 1. Das Modell erhält
+Der Selectorvertrag besitzt Version 1, der Selectorprompt Version 3. Das Modell erhält
 die aktuelle untrusted Anfrage, die strukturierte Bedarfsart, notwendige Orts-
 und Zeitangaben sowie ausschließlich kompakte `SelectorCandidateView`-Objekte
 aus `selectable_candidates`. Kontakte, Adressen, URLs, WFS-Rohfelder,
@@ -136,21 +136,31 @@ Feldinventar, Typen, Enum, Duplikate, Höchstzahl und jede ID werden strikt
 validiert. Eine einzelne fremde ID verwirft die gesamte Antwort. Danach setzt
 die Anwendung Mandatory-Kandidaten vor die gewählte Menge und stellt die
 kuratierte stabile Reihenfolge wieder her. Erst daraus entsteht ein
-`FormulatorEvidence`-Paket mit Evidence-Version 2 und Promptversion 3. Es enthält
+`FormulatorEvidence`-Paket mit Evidence-Version 3 und Formulatorpromptversion
+14. Es enthält
 pro finalem Angebot Rolle, Mandatory-Status und ausschließlich freigegebene
 Fakten mit opaken Referenzen. Der Formulator sieht weder die übrige
 Kandidatenmenge noch Conditional-/Excluded-Einträge, Rohfelder,
 Kurationsbegründungen oder frühere Antworttexte.
 
-Die Modellantwort folgt Formulatorvertrag 2. Promptversion 13 fordert bei
-normalen angebotsbezogenen Antworten zwei oder drei kurze Sätze: Zuerst kommt
-der feste rollenrichtige Handlungssatz, danach ein eigener Satz mit genau einer
-hilfreichen Angebotsinformation und passender Faktenreferenz. Ein optionaler
-dritter Satz darf genau eine weitere relevante operative Angabe enthalten. Der
-eng begrenzte Prompt-Injection-Pfad bleibt als sichere Ausnahme einsätzig. Alle
-Sätze enthalten Claimtyp sowie Fakten- oder Policyreferenzen; die Antwort
-enthält höchstens vier Card-IDs. Das Backend baut den sichtbaren Text erst nach
-vollständiger Vertrags-, Sprach-, Rollen-, Fakten- und Kartenprüfung zusammen.
+Selectorprompt 3 hält mehrere konkret passende oder komplementäre Optionen in
+der Auswahl, wenn die bestehende Höchstgrenze dies zulässt. Bei einem expliziten
+Tag oder einer Uhrzeit bevorzugt er Kandidaten, deren strukturierter
+`schedule_match_status` bereits deterministisch `matched` ist; er darf keine
+Zeitpassung selbst ergänzen.
+
+Die Modellantwort folgt Formulatorvertrag 2. Promptversion 14 fordert bei
+normalen angebotsbezogenen Antworten zwei oder drei kurze natürliche Sätze. Das
+wichtigste Angebot steht zuerst, ist aber nicht mehr an ein festes
+`Nutze ...`-Muster gebunden. Mehrere finale, nützliche Alternativen können in
+Evidence-Reihenfolge mit je einem eigenen belegten Satz genannt werden. Bei
+explizitem Zeitbezug soll eine final ausgewählte Option mit passendem Zeitfakt
+nicht zugunsten ausschließlich allgemeiner Information entfallen. Der eng
+begrenzte Prompt-Injection-Pfad bleibt als sichere Ausnahme einsätzig und fest
+formuliert. Alle Sätze enthalten Claimtyp sowie Fakten- oder Policyreferenzen;
+die Antwort enthält höchstens vier Card-IDs. Das Backend baut den sichtbaren
+Text erst nach vollständiger Vertrags-, Sprach-, Rollen-, Fakten- und
+Kartenprüfung zusammen.
 Eine ungültige Referenz oder ein ungeerdeter operativer Fakt verwirft die
 gesamte Antwort. Verbindliche Karten und die finale Reihenfolge werden
 deterministisch aus dem Evidence-Paket wiederhergestellt und können durch

@@ -368,6 +368,33 @@ def test_selector_prompt_names_every_contract_field_and_exact_contract_version()
     assert f'"{SELECTOR_CONTRACT_VERSION}"' in SELECTOR_SYSTEM_PROMPT
     for field_name in CandidateSelectionResponse.model_fields:
         assert field_name in SELECTOR_SYSTEM_PROMPT, f"missing field {field_name!r}"
+    assert SELECTOR_PROMPT_VERSION == "3"
+    assert "Select more than one candidate" in SELECTOR_SYSTEM_PROMPT
+    assert "Do not reduce a useful set to one candidate" in SELECTOR_SYSTEM_PROMPT
+    assert 'schedule_match_status is "matched"' in SELECTOR_SYSTEM_PROMPT
+    assert "include multiple such time-matched options" in SELECTOR_SYSTEM_PROMPT
+
+
+def test_tuesday_food_selector_payload_exposes_all_time_matched_options() -> None:
+    value = interpretation(
+        Need.FOOD,
+        services=[RequestedService.FOOD],
+        day="tuesday",
+    )
+    current = decision(value, query="Wo bekomme ich Dienstag Essen?")
+    payload = selector_payload(
+        "Wo bekomme ich Dienstag Essen?",
+        Language.DE,
+        value,
+        current,
+        OFFERS,
+    )
+    candidates = {item.id: item for item in payload.candidates}
+
+    assert {"14", "22"} <= set(candidates)
+    assert candidates["14"].schedule_match_status == "matched"
+    assert candidates["22"].schedule_match_status == "matched"
+    assert payload.maximum_selected_ids == 4
 
 
 @pytest.mark.parametrize(
