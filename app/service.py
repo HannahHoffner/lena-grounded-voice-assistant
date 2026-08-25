@@ -35,7 +35,6 @@ from .dialogue import (
     DialogState,
     DialogStatus,
     DialogType,
-    KnownExplicitFacts,
     clarification_block,
     dialogue_text,
     load_dialogue_resource,
@@ -52,7 +51,6 @@ from .dialogue_flow import (
 )
 from .interpreter import (
     AcuteRiskStatus,
-    ExplicitFacts,
     InputLanguage,
     Need,
     QueryInterpretation,
@@ -428,33 +426,6 @@ class QueryService:
             visible_question,
         )
 
-    @staticmethod
-    def _preflight_risk_interpretation(language: Language) -> QueryInterpretation:
-        """Baut eine faktenfreie Platzhalterinterpretation für den Preflight-Safety-Dialog.
-
-        Der Preflight löst vor jedem Interpreteraufruf aus; es existiert noch
-        keine Bedarfs- oder Faktenerkennung für die aktuelle Anfrage. Der Bedarf
-        bleibt bewusst general_help, damit eine Verneinung in eine reguläre
-        Bedarfsklärung mündet, statt einen unbekannten Bedarf zu erfinden.
-        """
-        empty_facts = KnownExplicitFacts()
-        return QueryInterpretation(
-            contract_version="4",
-            need=Need.GENERAL_HELP,
-            explicit_service_requests=[],
-            scope_status=ScopeStatus.UNCLEAR,
-            input_language=InputLanguage(language.value),
-            explicit_facts=ExplicitFacts(
-                **empty_facts.model_dump(mode="python"),
-                requested_day=None,
-                requested_time=None,
-            ),
-            uncertain_hints=[],
-            potentially_missing_information=[],
-            clarification_may_be_needed=False,
-            acute_risk_status=AcuteRiskStatus.UNCERTAIN,
-        )
-
     async def query(self, payload: QueryRequest) -> QueryResponse:
         """Beantwortet eine Anfrage und aktualisiert ihren lokalen Sessionzustand.
 
@@ -584,11 +555,13 @@ class QueryService:
         )
 
         if query and preflight_detects_immediate_danger(query):
-            return self._safety_dialog(
+            return self._safety_stop(
                 language,
-                self._preflight_risk_interpretation(language),
                 interaction,
                 path=SafetyPath.PREFLIGHT_DETECTED,
+                kind=SafetyTextKind.DETECTED,
+                risk_status=AcuteRiskStatus.DETECTED,
+                visible_question=query,
             )
 
         # Kontrollierte Anwendungspolitik bleibt außerhalb des Interpretervertrags: ein reiner
@@ -727,9 +700,9 @@ class QueryService:
                 and safety_dialog_explicit_denial(query, language)
                 and interpretation.scope_status == ScopeStatus.IN_SCOPE
                 and (
-                    # Ein per Preflight geöffneter Dialog kennt noch keinen echten
-                    # Bedarf; jeder in derselben Verneinung neu erkannte Bedarf ist
-                    # dann kein Themenwechsel, sondern die erste echte Angabe.
+                    # Ein Safety-Dialog mit generischem Ausgangsbedarf kennt noch
+                    # keinen belastbaren Fachbedarf; eine ausdrückliche Verneinung
+                    # darf deshalb die erste echte Bedarfsangabe übernehmen.
                     active_dialog.originating_need == Need.GENERAL_HELP
                     or interpretation.need in {
                         active_dialog.originating_need,

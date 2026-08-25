@@ -30,7 +30,7 @@ Toiletten- oder Trinkbrunnenquellenaufruf lässt den Test sofort fehlschlagen.
 | `tests/test_kb_loader.py` | Markdown- und kanonisches JSON-Laden |
 | `tests/test_curation.py` | Kurationsschema, Provenienz, Aliasauflösung, Scharni-Override, Rohdatenerhalt und Ausschluss aus allen Runtime-Verbrauchern |
 | `tests/test_runtime_loader.py` | verpflichtende Kuration, exakt gebundener lokaler/Paket-Fallback, Pointer-/Releasefehler und Runtime-Fingerabdruck |
-| `tests/test_official_offer_source.py` | strikt validierte VKKJ-Betreiberquelle, Quellenreferenzen, Hashbindung, minimiertes Feldinventar und Ablehnung WFS-artiger Rohfelder |
+| `tests/test_official_offer_source.py` | strikt validierte VKKJ-Betreiberquelle, Quellenreferenzen, Hashbindung, minimiertes Feldinventar, verifizierte WGS84-Kartenpunkte, CRS-/Gebietsgrenzen und Ablehnung WFS-artiger Rohfelder |
 | `tests/test_retrieval.py` | isolierte lexikalische Legacy-Hilfen; nicht der aktive primäre Kandidatenpfad |
 | `tests/test_sessions.py` | Session-Lebenszyklus, Dialogpersistenz, einmaliges Claiming, Sprachwechselerhalt und Invalidierung bei Wissensstandswechsel |
 | `tests/test_session_persistence.py` | atomare Writes, Parallelzugriffe, TTL/Kapazität, Recovery und API-Fehlerrobustheit |
@@ -38,7 +38,7 @@ Toiletten- oder Trinkbrunnenquellenaufruf lässt den Test sofort fehlschlagen.
 | `tests/test_wfs_releases.py` | Manifest, Manipulationsschutz, atomarer Pointer, Migration, Konkurrenz und Rollback |
 | `tests/test_frontend_security.py` | statische Absicherung der Leaflet-Popup-Sinks |
 | `tests/test_safety.py` | Akutgefahr-Vertrag, kontrollierte Antwort und TTS |
-| `tests/test_safety_policy.py` | WP9A-Policyfakt, enger fünfsprachiger Preflight, Safety-Dialog, fail-closed Providerfehler, Redaktion und Health |
+| `tests/test_safety_policy.py` | enger fünfsprachiger Preflight-Sofortstopp, Safety-Dialog für unklare Fälle, fail-closed Providerfehler, Redaktion und Health |
 | `tests/test_observability.py` | technische Events, finale JSONL-Paare, Redaktionsgrenzen und Schreibfehler |
 | `tests/test_provider_timeouts.py` | LLM-, Speech-, WFS- und Übersetzungs-Timeouts sowie Fallbacks |
 | `tests/test_provider_isolation.py` | `.env`-Isolation, Transportblockade und dreifache Live-Smoke-Freigabe |

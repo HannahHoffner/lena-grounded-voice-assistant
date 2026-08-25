@@ -180,7 +180,9 @@ Zwei Jugendnotangebote werden getrennt davon aus paketierten, verifizierten
 VKKJ-Betreiberangaben geladen. Sie imitieren keine WFS-Datensätze: Ihr eigener
 Quellenhash und ihre offiziellen URLs sind an denselben Kurations- und
 Runtime-Fingerprint gebunden, bevor sie in die einzige Runtime-Sicht gelangen.
-Die Quelle wird im Nutzerpfad nicht live abgerufen.
+Die Quelle wird im Nutzerpfad nicht live abgerufen. Die Betreiberseiten
+veröffentlichen für beide Anschriften strukturierte WGS84-Koordinaten; nur
+diese hashgebundenen Punkte erzeugen die VKKJ-Kartenmarker.
 Blablador beziehungsweise ein OpenAI-kompatibler Speech-Endpunkt sind optional.
 `edge-tts` wird standardmäßig für Sprachsynthese verwendet und benötigt eine
 Netzwerkverbindung. Leaflet wird lokal aus `app/static/vendor/` ausgeliefert; die

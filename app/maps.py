@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .models import Language, MapData, MapDestination, MapOrigin, OfferRecord
-from .spatial import LEIPZIG_HBF, distance_from_hbf, utm33n_to_wgs84
+from .spatial import LEIPZIG_HBF, distance_from_hbf, is_valid_leipzig_coordinate, utm33n_to_wgs84
 from .spoken_text import offer_spoken_text
 
 
@@ -198,8 +198,15 @@ def offer_wgs84(offer: OfferRecord) -> tuple[float, float] | None:
     if not isinstance(coordinates, list | tuple) or len(coordinates) < 2:
         return None
     try:
-        easting = float(coordinates[0])
-        northing = float(coordinates[1])
+        first = float(coordinates[0])
+        second = float(coordinates[1])
     except (TypeError, ValueError):
         return None
-    return utm33n_to_wgs84(easting, northing)
+    crs = str(geometry.get("crs") or "urn:ogc:def:crs:EPSG::25833")
+    if crs == "urn:ogc:def:crs:OGC::CRS84":
+        latitude, longitude = second, first
+    elif crs == "urn:ogc:def:crs:EPSG::25833":
+        latitude, longitude = utm33n_to_wgs84(first, second)
+    else:
+        return None
+    return (latitude, longitude) if is_valid_leipzig_coordinate(latitude, longitude) else None

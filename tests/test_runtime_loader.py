@@ -107,7 +107,7 @@ def _assert_bound_runtime(kb, *, source_status: str, runtime_source: str) -> Non
     assert kb.metadata["source_status"] == source_status
     assert kb.metadata["runtime_source"] == runtime_source
     official = kb.metadata["official_offer_source"]
-    assert official["source_version"] == "vkkj-2026-08-20"
+    assert official["source_version"] == "vkkj-2026-08-25"
     assert official["record_count"] == 2
     assert len(official["source_hash"]) == 64
     assert all(

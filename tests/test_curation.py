@@ -392,6 +392,7 @@ def test_excluded_ids_are_absent_from_every_runtime_projection(curated_kb) -> No
 
     for consumer_ids in (runtime_ids, formulator_ids, retrieval_ids, card_ids, map_ids):
         assert consumer_ids.isdisjoint(EXCLUDED_IDS)
+    assert {"vkkj_notschlafstelle", "vkkj_jugendnotdienst"} <= map_ids
     assert all(set(item.model_dump()) == {"alias", "alias_kind", "may_refer_to_multiple_services"} for item in interpreter_aliases)
     assert not any(hasattr(item, "offer_ids") for item in interpreter_aliases)
     assert EXCLUDED_IDS <= normalized_source_ids
@@ -417,8 +418,11 @@ def test_health_exposes_pending_review_policy_and_runtime_exclusions(tmp_path: P
         "production_approval_status": "not_granted",
     }
     assert health["curation"]["coordinates_status"] == {
-        "8": "not_verified_after_address_change"
+        "8": "not_verified_after_address_change",
+        "vkkj_notschlafstelle": "verified_from_official_source",
+        "vkkj_jugendnotdienst": "verified_from_official_source",
     }
+    assert health["official_offer_source"]["source_version"] == "vkkj-2026-08-25"
     translations = health["translations"]
     assert translations["active_runtime_policy"] == "reviewed_or_machine"
     assert set(translations["languages"]) == {"en", "pl", "ro", "ru"}

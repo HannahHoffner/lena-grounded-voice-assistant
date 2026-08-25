@@ -158,10 +158,10 @@ def test_versions_prompt_and_health_are_observable(app) -> None:
     health = TestClient(app).get("/api/health").json()
     assert EVIDENCE_CONTRACT_VERSION == "3"
     assert FORMULATOR_CONTRACT_VERSION == "2"
-    assert FORMULATOR_PROMPT_VERSION == "12"
+    assert FORMULATOR_PROMPT_VERSION == "13"
     assert health["evidence_contract_version"] == "3"
     assert health["formulator_contract_version"] == "2"
-    assert health["formulator_prompt_version"] == "12"
+    assert health["formulator_prompt_version"] == "13"
     assert health["llm_request_budget_seconds"] == 45.0
     for rule in (
         "Use only EVIDENCE facts",
@@ -214,11 +214,13 @@ def test_formulator_prompt_matches_enforced_first_claim_and_reference_rules() ->
         "no_verified_result: no_result",
         "set policy_ids to []",
         "set offer_id to null and fact_ids to []",
-        "Prefer the smallest grounded answer",
+        "every offer-grounded answer (grounded_result, grounded_referral, or ambiguous_help_fallback) must contain two or three sentences",
         "current_query is never evidence",
-        "For a referral_contact, write only a short contact/ask/get-help instruction plus the exact display_name",
+        "For the required second sentence, use the primary offer again",
+        "For a referral_contact, explain only a cited contact, counselling, referral, or support function",
         "For every offer-grounded answer, the first visible sentence must use exactly one pattern",
-        "For a direct_service, write only a short go/contact instruction plus the exact display_name",
+        "For a direct_service, prefer one cited description, service, or capability",
+        "Do not dump the complete card contents into the answer",
         "fact_ids must include a matching service, capability, or description fact",
         "fact_ids must include a matching target_group, eligible_gender, minimum_age, maximum_age, or access fact",
         "If you cannot identify the required matching fact_id with certainty, omit the detail",
@@ -246,7 +248,38 @@ def test_formulator_prompt_matches_enforced_first_claim_and_reference_rules() ->
     assert "Set claim_type to referral for every referral_contact pattern" in FORMULATOR_SYSTEM_PROMPT
     assert "to action for every direct_service pattern" in FORMULATOR_SYSTEM_PROMPT
     assert "Cite only its display_name fact in this first sentence" in FORMULATOR_SYSTEM_PROMPT
+    assert "Put the required useful detail in a separate second sentence" in FORMULATOR_SYSTEM_PROMPT
     assert "return only this single safe first sentence" in FORMULATOR_SYSTEM_PROMPT
+
+
+def test_normal_offer_answers_support_fixed_action_plus_grounded_detail(app) -> None:
+    evidence = _evidence(app)
+    name = _fact(evidence, FactType.DISPLAY_NAME)
+    sleep = _fact(evidence, FactType.SERVICE, contains="Schlafplatz")
+    response = FormulatorResponse(
+        contract_version=FORMULATOR_CONTRACT_VERSION,
+        language=Language.DE,
+        sentences=[
+            FormulatedSentence(
+                text=f"Nutze „{name.value}“.",
+                claim_type=ClaimType.ACTION,
+                offer_id=evidence.selected_offers[0].offer_id,
+                fact_ids=[name.fact_id],
+            ),
+            FormulatedSentence(
+                text="Dort bekommst du einen Schlafplatz.",
+                claim_type=ClaimType.SERVICE,
+                offer_id=evidence.selected_offers[0].offer_id,
+                fact_ids=[sleep.fact_id],
+            ),
+        ],
+        card_ids=[evidence.selected_offers[0].offer_id],
+    )
+
+    validated = validate_formulation(response, evidence)
+
+    assert validated.answer == f"Nutze „{name.value}“. Dort bekommst du einen Schlafplatz."
+    assert validated.sentence_count == 2
 
 
 def test_evidence_is_a_positive_list_for_only_final_runtime_offers(app) -> None:

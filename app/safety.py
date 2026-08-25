@@ -17,7 +17,7 @@ from .policy_facts import EMERGENCY_NUMBER, EMERGENCY_POLICY
 from .resources import packaged_bootstrap_data_root
 
 
-SAFETY_POLICY_VERSION = "1"
+SAFETY_POLICY_VERSION = "2"
 SAFETY_PREFLIGHT_VERSION = "1"
 SAFETY_SCENARIO_CONTRACT_VERSION = "1"
 SUPPORTED_SAFETY_LANGUAGES = tuple(language.value for language in Language)
@@ -82,10 +82,12 @@ def preflight_detects_immediate_danger(query: str) -> bool:
     metaphorische oder zitierte Aussagen lösen die Prüfung nur dann nicht aus,
     wenn ihr Wortlaut von den engen Mustern abweicht (z. B. fehlendes "jetzt"
     oder ein eingeschobenes "nicht"); eine zitierte Aussage mit exakt
-    passendem Wortlaut kann fälschlich auslösen. Dieses Risiko ist bewusst zur
-    sicheren Seite (unnötiger Stopp statt übersehener Gefahr) in Kauf
-    genommen; die abschließende, kontextsensitive Einordnung bleibt beim
-    LLM-Interpreter, sofern die Prüfung hier nicht bereits auslöst.
+    passendem Wortlaut kann fälschlich auslösen. Ein Treffer gilt in der
+    Anwendungspolitik als unmittelbare Gefahr und führt deshalb ohne
+    Modellaufruf direkt zum kontrollierten 112-Text. Das verbleibende
+    False-Positive-Risiko ist der Preis für den fail-closed Sofortstopp; alle
+    nicht exakt passenden Formulierungen werden weiterhin vom Interpreter
+    kontextsensitiv als detected, uncertain oder not_detected eingeordnet.
     """
 
     normalized = _normalize_for_preflight(query)

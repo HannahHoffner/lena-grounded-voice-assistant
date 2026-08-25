@@ -51,6 +51,12 @@ Fall. Prompt `12` bindet deshalb den ersten rollenbezogenen Handlungssatz in
 allen fünf Sprachen an ein festes lokalisiertes Muster. Zusätzliche operative
 Fakten bleiben in getrennten, jeweils belegten Sätzen möglich. Bei einer
 adversarialen Nutzeranweisung bleibt es beim einzelnen sicheren Mustersatz.
+Prompt `13` behält diesen festen ersten Handlungssatz bei, verlangt für normale
+angebotsbezogene Antworten aber einen getrennten zweiten Satz mit genau einer
+hilfreichen und referenzierten Angebotsinformation; ein dritter operativer Satz
+ist optional. Der Prompt-Injection-Pfad bleibt bewusst einsätzig. Diese
+Promptänderung ist providerfrei getestet, aber noch nicht mit einem realen
+Modelllauf evaluiert.
 Stufe 2 baut ihre Evidence außerdem mit demselben `TranslationCatalog` und
 derselben `TRANSLATION_RUNTIME_POLICY` wie die Anwendung. Eine erneute reale
 Stufe 2 ist erst nach sauberem Commit und gesonderter Freigabe zulässig; die
@@ -120,7 +126,7 @@ redigierte Planstand ist:
 | Interpreter Vertrag / Prompt | `4` / `8` |
 | Selector Vertrag / Prompt | `1` / `2` |
 | Evidence-Vertrag | `3` |
-| Formulator Vertrag / Prompt | `2` / `9` |
+| Formulator Vertrag / Prompt | `2` / `13` |
 | Safety-Policy | `1` |
 | Temperatur | `0` |
 | Response-Format | `json_object` |

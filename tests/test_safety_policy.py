@@ -159,15 +159,8 @@ def test_versioned_synthetic_catalog_covers_all_languages_and_required_groups() 
     assert all(set(item.synthetic_inputs) == set(Language) for item in catalog.scenarios)
 
 
-def test_narrow_preflight_detects_catalogue_immediate_cases_without_provider(tmp_path) -> None:
-    """Ein Preflight-Treffer öffnet den bestätigenden Safety-Dialog, kein Sofort-Stopp.
-
-    Der enge Preflight läuft vor jedem Interpreteraufruf; ein Treffer kann nicht
-    zwischen einer echten Akutformulierung und einem exakt wortgleichen Zitat
-    unterscheiden. Ein sofortiger 112-Stopp ohne Rückfragemöglichkeit wäre daher
-    zu weitgehend; stattdessen wird dieselbe bestätigende Rückfrage wie bei einem
-    vom Interpreter gemeldeten unsicheren Risiko gestellt.
-    """
+def test_narrow_preflight_stops_catalogue_immediate_cases_without_provider(tmp_path) -> None:
+    """Eindeutige enge Preflight-Treffer führen direkt zum kontrollierten 112-Text."""
     catalog = load_safety_scenarios()
     app = create_app(settings(tmp_path))
     provider = QueueProvider([])
@@ -180,12 +173,21 @@ def test_narrow_preflight_detects_catalogue_immediate_cases_without_provider(tmp
             if scenario.scenario_group == "detected":
                 assert hit, (scenario.scenario_id, language)
                 body = post(client, query, language).json()
-                assert body["answer_type"] == "acute_risk_clarification"
-                assert body["cards"] == [] and body["map_data"] is None
-                assert body["clarification"]["type"] == "acute_risk_confirmation"
-                assert "112" not in body["answer"]
+                assert_safety_stop(body, language, SafetyTextKind.DETECTED)
             else:
                 assert not hit, (scenario.scenario_id, language)
+    assert provider.interpreter_calls == 0
+
+
+def test_explicit_immediate_suicide_wording_stops_without_confirmation(tmp_path: Path) -> None:
+    app = create_app(settings(tmp_path))
+    provider = QueueProvider([])
+    app.state.service.blablador = provider
+
+    body = post(TestClient(app), "Ich werde mich jetzt umbringen.").json()
+
+    assert_safety_stop(body, Language.DE, SafetyTextKind.DETECTED)
+    assert body["clarification"] is None
     assert provider.interpreter_calls == 0
 
 
@@ -309,87 +311,6 @@ def test_safety_dialog_no_resumes_structured_need_without_risk_fact(tmp_path: Pa
     assert body["answer_type"] == "clarification"
     assert body["clarification"]["type"] == "sleep_target_group"
     assert [card["id"] for card in body["cards"]] == ["7"]
-    assert provider.interpreter_calls == 1
-
-
-def _preflight_trigger_query(language: Language = Language.DE) -> str:
-    catalog = load_safety_scenarios()
-    scenario = next(item for item in catalog.scenarios if item.scenario_id == "immediate_self_harm")
-    return scenario.synthetic_inputs[language]
-
-
-@pytest.mark.parametrize(
-    ("choice", "kind"),
-    [
-        ("immediate_danger_yes", SafetyTextKind.DETECTED),
-        ("immediate_danger_unsure", SafetyTextKind.UNCERTAIN),
-    ],
-)
-def test_preflight_triggered_dialog_yes_and_unsure_stop_without_provider_call(
-    tmp_path: Path,
-    choice: str,
-    kind: SafetyTextKind,
-) -> None:
-    """Der Preflight ruft keinen Provider auf; Bestätigung oder Unsicherheit stoppen konservativ."""
-    app = create_app(settings(tmp_path))
-    provider = QueueProvider([])
-    app.state.service.blablador = provider
-    client = TestClient(app)
-    opened = post(client, _preflight_trigger_query()).json()
-    assert opened["answer_type"] == "acute_risk_clarification"
-    body = post(
-        client,
-        "",
-        session_id=opened["session_id"],
-        dialog_id=opened["clarification"]["dialog_id"],
-        choice_values=[choice],
-    ).json()
-
-    assert_safety_stop(body, Language.DE, kind)
-    assert provider.interpreter_calls == 0
-
-
-def test_preflight_triggered_dialog_no_opens_general_need_clarification_without_provider_call(
-    tmp_path: Path,
-) -> None:
-    """Ohne echte Interpretation ist kein Bedarf bekannt; die Verneinung fragt ihn allgemein nach."""
-    app = create_app(settings(tmp_path))
-    provider = QueueProvider([])
-    app.state.service.blablador = provider
-    client = TestClient(app)
-    opened = post(client, _preflight_trigger_query()).json()
-    body = post(
-        client,
-        "",
-        session_id=opened["session_id"],
-        dialog_id=opened["clarification"]["dialog_id"],
-        choice_values=["immediate_danger_no"],
-    ).json()
-
-    assert body["answer_type"] == "clarification"
-    assert body["clarification"]["type"] == "general_need"
-    assert body["cards"] == []
-    assert provider.interpreter_calls == 0
-
-
-def test_preflight_triggered_dialog_explicit_free_text_no_resumes_via_fresh_interpretation(
-    tmp_path: Path,
-) -> None:
-    """Eine exakte Freitextverneinung löst den Dialog auf; der reale Bedarf kommt aus der Neuinterpretation."""
-    app = create_app(settings(tmp_path))
-    provider = QueueProvider([interpretation(AcuteRiskStatus.NOT_DETECTED, need=Need.SLEEP)])
-    app.state.service.blablador = provider
-    client = TestClient(app)
-    opened = post(client, _preflight_trigger_query()).json()
-    body = post(
-        client,
-        "Nein.",
-        session_id=opened["session_id"],
-        dialog_id=opened["clarification"]["dialog_id"],
-    ).json()
-
-    assert body["answer_type"] == "clarification"
-    assert body["clarification"]["type"] == "sleep_target_group"
     assert provider.interpreter_calls == 1
 
 
@@ -562,6 +483,7 @@ def test_health_reports_redacted_safety_contract_and_honest_language_status(tmp_
     resource = load_application_texts()
     assert health["safety_policy_version"] == SAFETY_POLICY_VERSION
     assert health["safety_preflight_version"] == SAFETY_PREFLIGHT_VERSION
+    assert health["acute_risk_policy_status"] == "deterministic_preflight_or_validated_interpretation"
     assert health["safety_dialogue_contract_version"] == DIALOG_CONTRACT_VERSION
     assert health["safety_text_resource_version"] == APPLICATION_COPY_VERSION
     assert health["technical_fallback_includes_emergency_guidance"] is True

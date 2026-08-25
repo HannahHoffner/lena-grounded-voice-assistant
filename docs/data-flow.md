@@ -15,9 +15,10 @@ sequenceDiagram
     B->>A: POST /api/query
     A->>S: QueryRequest
     opt vollständig expliziter Akutsatz (enger Wortlauttreffer)
-        S->>D: Safety-Dialog atomar öffnen (kein Interpreteraufruf)
+        S->>S: kontrollierten 112-Text auswählen (kein Interpreteraufruf)
+        S-->>A: acute_risk ohne Dialog, Karten oder Marker
     end
-    opt Provider vollständig konfiguriert und kein Preflight-Dialog
+    opt Provider vollständig konfiguriert und kein Preflight-Stopp
         S->>L: Frage + letzte Nutzertexte + minimale Alias-Hinweise
         L-->>S: validierte Bedarfsbeschreibung ohne Angebots-IDs
         alt acute_risk_status = detected
@@ -80,15 +81,19 @@ eine grobe Essens- oder Grundversorgungsabsicht unbelegt auf Hygiene, Kleidung,
 Wäsche oder Postservice ausgeweitet wird.
 
 `acute_risk_status` ist ein verpflichtendes dreiwertiges Feld der ersten
-strukturierten LLM-Antwort. Bei `detected` bricht `QueryService` vor
-Formulator, Kandidatenbegrenzung, Karten und normaler Antwort ab. Die Anwendung wählt einen
-festen Text für `de`, `en`, `pl`, `ro` oder `ru`; das LLM kann weder diesen Text
-noch die Nummer 112 verändern. `uncertain` öffnet vor jedem Fachpfad den
+strukturierten LLM-Antwort. Zusätzlich stoppt ein enger deterministischer
+Preflight bei vollständig expliziten unmittelbaren Akutsätzen bereits vor dem
+Interpreter. Bei einem Preflight-Treffer oder Interpreter-`detected` bricht
+`QueryService` vor Formulator, Kandidatenbegrenzung, Karten und normaler Antwort
+ab. Die Anwendung wählt einen festen Text für `de`, `en`, `pl`, `ro` oder `ru`;
+das LLM kann weder diesen Text noch die Nummer 112 verändern. `uncertain` öffnet vor jedem Fachpfad den
 strukturierten Safety-Dialog. Ja und Unsicher führen zum 112-Pfad; nur eine
 kontrolliert ausdrückliche Verneinung zusammen mit `not_detected` darf den
 ursprünglichen strukturierten Bedarf wieder öffnen. Eine kleine versionierte
 Vorprüfung erkennt ausschließlich vollständige explizite Akutsätze und ersetzt
-keine allgemeine Sprachinterpretation.
+keine allgemeine Sprachinterpretation für alle übrigen Formulierungen. Ein
+Preflight-Treffer öffnet keinen Bestätigungsdialog; `uncertain` aus dem
+Interpreter tut dies weiterhin.
 
 Interpreter, Selector und Formulator besitzen getrennte Stufengrenzen und
 teilen zusätzlich ein monotones externes Wartebudget von standardmäßig 45
@@ -137,13 +142,19 @@ Fakten mit opaken Referenzen. Der Formulator sieht weder die übrige
 Kandidatenmenge noch Conditional-/Excluded-Einträge, Rohfelder,
 Kurationsbegründungen oder frühere Antworttexte.
 
-Die Modellantwort folgt Formulatorvertrag 2: ein bis drei kurze Sätze mit
-Claimtyp sowie Fakten- oder Policyreferenzen und höchstens vier Card-IDs. Das
-Backend baut den sichtbaren Text erst nach vollständiger Vertrags-, Sprach-,
-Rollen-, Fakten- und Kartenprüfung zusammen. Eine ungültige Referenz oder ein
-ungeerdeter operativer Fakt verwirft die gesamte Antwort. Verbindliche Karten
-und die finale Reihenfolge werden deterministisch aus dem Evidence-Paket
-wiederhergestellt und können durch `card_ids` weder entfernt noch umsortiert
+Die Modellantwort folgt Formulatorvertrag 2. Promptversion 13 fordert bei
+normalen angebotsbezogenen Antworten zwei oder drei kurze Sätze: Zuerst kommt
+der feste rollenrichtige Handlungssatz, danach ein eigener Satz mit genau einer
+hilfreichen Angebotsinformation und passender Faktenreferenz. Ein optionaler
+dritter Satz darf genau eine weitere relevante operative Angabe enthalten. Der
+eng begrenzte Prompt-Injection-Pfad bleibt als sichere Ausnahme einsätzig. Alle
+Sätze enthalten Claimtyp sowie Fakten- oder Policyreferenzen; die Antwort
+enthält höchstens vier Card-IDs. Das Backend baut den sichtbaren Text erst nach
+vollständiger Vertrags-, Sprach-, Rollen-, Fakten- und Kartenprüfung zusammen.
+Eine ungültige Referenz oder ein ungeerdeter operativer Fakt verwirft die
+gesamte Antwort. Verbindliche Karten und die finale Reihenfolge werden
+deterministisch aus dem Evidence-Paket wiederhergestellt und können durch
+`card_ids` weder entfernt noch umsortiert
 werden.
 
 ## Strukturierter Dialog
@@ -183,6 +194,9 @@ Exaktes Alter 12–13 lässt die ab 14 belegte Notschlafstelle nicht zu. Bei blo
 bekanntem `under_18` bleibt sie bedingt, während der Jugendnotdienst erreichbar
 bleibt. Ab 18 gelten Rücke beziehungsweise Scharni; bestehende Jugendangebote
 bis 26 passieren das separate Intent-Gate nur bei explizitem Jugendbezug.
+Werden die beiden VKKJ-Angebote final ausgegeben, entstehen ihre Marker aus den
+hashgebundenen WGS84-Koordinaten der offiziellen Betreiberseiten. Anschrift und
+Punkt bleiben dadurch derselben verifizierten Quelle zugeordnet.
 
 Die vollständige Entscheidung wird nicht in das Forschungsprotokoll kopiert.
 Persistiert wird lediglich `candidate_selection_status`; Fakten, bedingte und

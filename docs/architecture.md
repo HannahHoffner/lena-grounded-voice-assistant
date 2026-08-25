@@ -105,6 +105,10 @@ kuratierte Runtime-Projektion. Der Kurationskatalog bindet auch diesen Hash;
 der gemeinsame Session-Fingerprint ändert sich bei einer Änderung der
 Betreiberquelle. Ein fehlender, ungültiger oder abweichender Betreiberstand
 führt zu einem kontrollierten Fehler, niemals zu einer Teilprojektion.
+Die im Betreiber-HTML strukturiert veröffentlichten WGS84-Punkte werden mit
+explizitem CRS in derselben Quelle gespeichert. `app/maps.py` akzeptiert dafür
+nur das bekannte CRS und Punkte im Leipziger Prüfrahmen; dadurch erhalten beide
+VKKJ-Angebote Informationskarten und Marker, ohne einen Geocoder aufzurufen.
 
 `app/candidate_contract.py` definiert den strikten, versionierten Vertrag der
 Kandidatenstufe. `app/candidates.py` wendet ausschließlich positiv kuratierte
@@ -139,8 +143,9 @@ Die explizite Altersgruppe trennt `under_18` von den Erwachsenenbereichen
 
 Die aktive Politik kennt Schlafzielgruppe, eine einmalige Schlaf-Altersfrage,
 A1/Schoppi-Leistungsart, Mobile/Kübel-Ort, allgemeinen Bedarf und den
-vorrangigen Safety-Dialog `acute_risk_confirmation`. Allgemeine
-Dialoge haben einen Versuch; nur die Schlaf-Altersabsicherung darf unmittelbar
+Safety-Dialog `acute_risk_confirmation` für unklare Risikoklassifikationen. Ein
+enger eindeutiger Preflight-Treffer stoppt dagegen unmittelbar ohne Dialog.
+Allgemeine Dialoge haben einen Versuch; nur die Schlaf-Altersabsicherung darf unmittelbar
 als zweiter Schritt folgen. Der allgemeine Bedarfsdialog öffnet sich sowohl bei
 `need=general_help` als auch bei `need=unknown` (AP10: unklare, aber
 möglicherweise relevante Anfrage) — beide werden auf denselben
@@ -161,7 +166,8 @@ Jugendtreffs und Jugendstreetwork bis einschließlich 26 werden unabhängig
 davon nur durch ausdrücklichen Jugendbedarf oder einen exakten Alias aktiviert;
 ein Alter allein genügt nicht.
 
-Bei `acute_risk_status=detected` beendet `QueryService` den normalen Pfad
+Bei einem engen eindeutigen Preflight-Treffer oder
+`acute_risk_status=detected` beendet `QueryService` den normalen Pfad
 unmittelbar und gibt den zentralen sprachabhängigen 112-Text ohne Karten aus.
 Bei `uncertain` öffnet es den fingerprintgebundenen Safety-Dialog. Ja und
 Unsicher führen deterministisch zu 112; nur ein validierter Modellstatus plus
@@ -195,9 +201,15 @@ nur freigegebene Positivlistenfelder, Kandidatenrollen, opake Faktenreferenzen
 und bindende Policies. Conditional-, Excluded- und Sozialamt-Angebote sowie
 WFS-Rohfelder, Reviewnotizen und technische Provenienz gelangen nicht hinein.
 
-Der Formulatorvertrag 2 besteht aus ein bis drei kurzen Sätzen. Jeder Satz
-nennt Claimtyp, Angebots- und Faktenreferenzen oder einen erlaubten
-Policybaustein; freier Text außerhalb des JSON-Vertrags existiert nicht.
+Der Formulatorvertrag 2 erlaubt ein bis drei kurze Sätze. Promptversion 13
+verlangt für normale angebotsbezogene Antworten zwei oder drei Sätze: Auf den
+rollen- und sprachgebundenen Handlungssatz mit unverändertem Anzeigenamen folgt
+ein eigener Satz mit genau einer hilfreichen, belegten Angebotsinformation; ein
+dritter Satz darf eine weitere relevante operative Information nennen. Nur der
+eng begrenzte Prompt-Injection-Pfad bleibt absichtlich beim sicheren
+Handlungssatz. Jeder Satz nennt Claimtyp, Angebots- und Faktenreferenzen oder
+einen erlaubten Policybaustein; freier Text außerhalb des JSON-Vertrags
+existiert nicht.
 `app/grounding.py` validiert die Antwort atomar gegen genau das Evidence-Paket:
 Rollen, Fakt-Angebot-Zuordnung, operative Zahlen, Adressen, Kontakte, URLs,
 Zeiten, Zielskript, Längen, interne IDs und Kartenbindung. Mandatory-Karten und

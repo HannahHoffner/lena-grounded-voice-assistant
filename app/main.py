@@ -315,7 +315,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "dialog_contract_version": DIALOG_CONTRACT_VERSION,
             "safety_policy_version": SAFETY_POLICY_VERSION,
             "safety_preflight_version": SAFETY_PREFLIGHT_VERSION,
-            "acute_risk_policy_status": "deterministic_after_validated_interpretation",
+            "acute_risk_policy_status": "deterministic_preflight_or_validated_interpretation",
             "acute_risk_uncertain_policy": "structured_confirmation_dialog",
             "technical_fallback_includes_emergency_guidance": True,
             "safety_dialogue_contract_version": DIALOG_CONTRACT_VERSION,

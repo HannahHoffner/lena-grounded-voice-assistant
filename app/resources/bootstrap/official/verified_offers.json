@@ -1,18 +1,18 @@
 {
   "schema_version": 1,
-  "source_version": "vkkj-2026-08-20",
+  "source_version": "vkkj-2026-08-25",
   "sources": [
     {
       "id": "vkkj_youth_night_shelter_web",
       "title": "Kontakt- und Notschlafstelle für Jugendliche",
       "url": "https://www.vkkj.de/verzeichnis/visitenkarte.php?mandat=240969",
-      "retrieved_at": "2026-08-20T00:00:00+02:00"
+      "retrieved_at": "2026-08-25T11:08:43+02:00"
     },
     {
       "id": "vkkj_youth_emergency_service_web",
       "title": "Jugendnotdienst",
       "url": "https://www.vkkj.de/verzeichnis/visitenkarte.php?mandat=230429",
-      "retrieved_at": "2026-08-20T00:00:00+02:00"
+      "retrieved_at": "2026-08-25T11:08:43+02:00"
     }
   ],
   "offers": [
@@ -39,7 +39,11 @@
       "notes": ["Kapazität und Aufnahme müssen direkt bei der Einrichtung erfragt werden."],
       "raw_fields": {},
       "raw_text": "Kontakt- und Notschlafstelle für Jugendliche; Breite Straße 10, 04317 Leipzig; für Jugendliche von 14 bis unter 18 Jahren; täglich 22:00–10:00 Uhr.",
-      "geometry": null,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [12.4080206, 51.3372778],
+        "crs": "urn:ogc:def:crs:OGC::CRS84"
+      },
       "source_feature_id": "vkkj:240969",
       "source_updated_at": null,
       "source_hash": null,
@@ -70,7 +74,11 @@
       "notes": ["Aufnahme und konkrete Unterbringung müssen direkt mit dem Jugendnotdienst geklärt werden."],
       "raw_fields": {},
       "raw_text": "Jugendnotdienst; Ringstraße 4, 04209 Leipzig; Schutz- und Inobhutnahmeangebot für 12 bis unter 18 Jahre; rund um die Uhr erreichbar.",
-      "geometry": null,
+      "geometry": {
+        "type": "Point",
+        "coordinates": [12.294794, 51.314376],
+        "crs": "urn:ogc:def:crs:OGC::CRS84"
+      },
       "source_feature_id": "vkkj:230429",
       "source_updated_at": null,
       "source_hash": null,

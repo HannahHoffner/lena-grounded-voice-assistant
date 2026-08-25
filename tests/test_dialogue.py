@@ -192,8 +192,8 @@ def test_sleep_free_text_resolution_matrix(tmp_path, age, gender, expected_first
     if forbidden:
         assert forbidden not in ids
     if age == 17:
-        assert "vkkj_notschlafstelle" not in body["map_marker_ids"]
-        assert "vkkj_jugendnotdienst" not in body["map_marker_ids"]
+        assert "vkkj_notschlafstelle" in body["map_marker_ids"]
+        assert "vkkj_jugendnotdienst" in body["map_marker_ids"]
     assert provider.calls[1]["dialog_context"].dialog_type == "sleep_target_group"
     assert provider.calls[1]["conversation_history"] == []
 

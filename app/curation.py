@@ -124,7 +124,10 @@ class ServiceOffer(CurationModel):
     access_rules: list[AccessRule] = Field(default_factory=list)
     curation_decision_ids: list[str] = Field(default_factory=list)
     source_reference_ids: list[str] = Field(default_factory=list)
-    coordinates_status: Literal["not_verified_after_address_change"] | None = None
+    coordinates_status: Literal[
+        "verified_from_official_source",
+        "not_verified_after_address_change",
+    ] | None = None
     runtime_overrides: dict[str, object] = Field(default_factory=dict)
 
 

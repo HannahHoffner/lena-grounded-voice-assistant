@@ -9,7 +9,8 @@ Produktivfreigabe. LENA alarmiert niemanden, übermittelt keinen Standort und
 löst keinen Anruf aus.
 
 Als einziger freigegebener Notruffakt wird `112` verwendet. Die Nummer ist in
-`app/policy_facts.py` mit Policyversion 1 und zwei Referenzen gebunden:
+`app/policy_facts.py` mit Notruffakt-Policyversion 1 und zwei Referenzen
+gebunden. Die darauf aufbauende Anwendungspolitik trägt Safety-Policyversion 2:
 
 - Bundesamt für Bevölkerungsschutz und Katastrophenhilfe: Erste Hilfe und Notruf
 - Europäische Kommission: einheitliche europäische Notrufnummer 112
@@ -33,33 +34,31 @@ explizite Sätze mit Person, Handlung und unmittelbarem Zeitbezug in den fünf
 unterstützten Sprachen. Einzelwörter, negative Stimmung, historische,
 metaphorische oder verneinte Aussagen reichen in aller Regel nicht; da der
 Preflight eine reine Wortfolgen-Übereinstimmung ohne Zitat- oder Berichtskontext
-ist, kann ein exakt wortgleiches Zitat dennoch fälschlich auslösen. Deshalb
-führt ein Preflight-Treffer nicht zu einem sofortigen Stopp, sondern öffnet
-denselben bestätigenden Safety-Dialog wie ein vom Interpreter gemeldetes
-unsicheres Risiko (siehe unten). Der LLM-Interpreter bleibt die primäre
-sprachliche Klassifikation und ist die einzige Quelle für einen sofortigen
-Stopp ohne Rückfrage.
+ist, kann ein exakt wortgleiches Zitat dennoch fälschlich auslösen. Seit
+Safety-Policyversion 2 führt ein Treffer ohne Modellaufruf direkt zum
+kontrollierten lokalisierten 112-Text. Diese bewusste fail-closed Entscheidung
+verkürzt den Pfad bei den eng formulierten eindeutigen Akutsätzen; sie nimmt
+für exakt passende Zitate einen möglichen unnötigen Stopp in Kauf. Alle nicht
+exakt passenden Formulierungen gehen weiterhin an den LLM-Interpreter.
 
 ## Drei Risikostatus
 
 | Status | Quelle | Bedeutung | Systementscheidung |
 |---|---|---|---|
-| `detected` | Interpreter | konkrete unmittelbare oder unmittelbar bevorstehende Gefahr | sofortiger lokalisierter 112-Text; keine weiteren Provider, Angebote, Karten oder Marker |
-| `uncertain` | Interpreter oder Preflight | unmittelbare Gefahr ist möglich, aber nicht sicher auflösbar (Interpreter), oder ein enger Wortlauttreffer ohne Kontextprüfung (Preflight) | strukturierter Dialog `acute_risk_confirmation` |
+| `detected` | enger Preflight oder Interpreter | konkrete unmittelbare oder unmittelbar bevorstehende Gefahr | sofortiger lokalisierter 112-Text; keine weiteren Provider, Angebote, Karten oder Marker |
+| `uncertain` | Interpreter | unmittelbare Gefahr ist möglich, aber nicht sicher auflösbar | strukturierter Dialog `acute_risk_confirmation` |
 | `not_detected` | Interpreter | aktueller Kontext lässt keine Akutgefahr erkennen | regulärer Pfad, sofern kein offener Safety-Dialog eine ausdrückliche Verneinung verlangt |
 
-Ein Preflight-Treffer öffnet den Dialog ohne Kenntnis des eigentlichen Bedarfs
-(`originating_need` ist der generische Platzhalter `general_help`, nicht der
-vom Interpreter erkannte Bedarf). Eine Bestätigung oder Unsicherheit stoppt
-konservativ ohne weiteren Provideraufruf. Eine Verneinung führt zu einer
-allgemeinen Bedarfsklärung (`general_need`), da vor dem Preflight noch kein
-Bedarf interpretiert wurde.
+Ein Preflight-Treffer öffnet keinen Dialog und erzeugt keinen künstlichen
+Bedarfs- oder Faktenzustand. Er beendet den fachlichen Pfad unmittelbar. Nur
+ein strikt validierter Interpreterstatus `uncertain` öffnet den nachfolgenden
+Safety-Dialog.
 
 Der Interpreter erzeugt weder Notrufnummer noch Safety-Text, Diagnose,
 Risikobegründung oder Score. `QueryService` entscheidet nach Vertragsvalidierung
 deterministisch über den sichtbaren Pfad.
 
-## Safety-Dialog
+## Safety-Dialog für unklare Interpreterergebnisse
 
 Der Safety-Dialog nutzt den einzigen vorhandenen Session- und Dialogstore. Er
 ist an Session, Runtime-Wissensbasisfingerabdruck und Ablaufzeit gebunden und

@@ -84,10 +84,10 @@ def test_acute_risk_signal_interrupts_query_before_answer_and_retrieval(
 ) -> None:
     """Prüft den vom Interpreter signalisierten Fall isoliert vom separat getesteten Preflight.
 
-    Einige der hier verwendeten realistischen Formulierungen treffen zufällig
-    auch den engen Preflight-Regex; dieser leitet seit der Umstellung auf den
-    bestätigenden Safety-Dialog nicht mehr in einen Sofort-Stopp. Der Preflight
-    selbst wird bereits in test_safety_policy.py separat getestet.
+    Einige der hier verwendeten realistischen Formulierungen treffen auch den
+    engen Preflight-Regex und würden dort bereits direkt stoppen. Der Preflight
+    wird deshalb für diesen Test deaktiviert und separat in
+    test_safety_policy.py geprüft.
     """
     monkeypatch.setattr("app.service.preflight_detects_immediate_danger", lambda _query: False)
     app = create_app(_settings())

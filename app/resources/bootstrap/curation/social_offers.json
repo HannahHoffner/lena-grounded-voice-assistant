@@ -1,9 +1,9 @@
 {
   "schema_version": 1,
-  "catalog_version": "prototype-2026-08-20-timmitohelp-route",
+  "catalog_version": "prototype-2026-08-25-vkkj-coordinates",
   "approved_source_release_id": "legacy-3b72f95a88f9",
   "approved_source_hash": "3b72f95a88f98c57778f50beaa4c66af61b58493fe995feb1deb6f7756d7bf9c",
-  "approved_official_source_hash": "b864c075da3ff6ef3a4c8f9771cb688759db268af1a55db3907ae026cb4ee7c6",
+  "approved_official_source_hash": "3974f094d32f503db9bd1d2d516c8d9cdfd1e776233f16561d47c799270a3c86",
   "review_policy": {
     "review_interval": null,
     "review_policy_status": "not_yet_formally_defined",
@@ -1044,8 +1044,9 @@
       "maximum_age": 17,
       "priority_rules": ["minor_sleep_first"],
       "needs": ["sleep", "advice"],
-      "curation_decision_ids": ["vkkj_minor_sleep_services"],
-      "source_reference_ids": ["vkkj_youth_night_shelter_web"]
+      "curation_decision_ids": ["vkkj_minor_sleep_services", "vkkj_verified_map_coordinates"],
+      "source_reference_ids": ["vkkj_youth_night_shelter_web"],
+      "coordinates_status": "verified_from_official_source"
     },
     {
       "id": "vkkj_jugendnotdienst",
@@ -1061,8 +1062,9 @@
       "referral_needs": ["sleep", "general_help"],
       "priority_rules": ["minor_crisis_first"],
       "needs": ["advice", "general_help"],
-      "curation_decision_ids": ["vkkj_minor_sleep_services"],
-      "source_reference_ids": ["vkkj_youth_emergency_service_web"]
+      "curation_decision_ids": ["vkkj_minor_sleep_services", "vkkj_verified_map_coordinates"],
+      "source_reference_ids": ["vkkj_youth_emergency_service_web"],
+      "coordinates_status": "verified_from_official_source"
     }
   ],
   "organization_aliases": [
@@ -1164,14 +1166,14 @@
       "source_type": "official_website",
       "title": "Kontakt- und Notschlafstelle für Jugendliche",
       "url": "https://www.vkkj.de/verzeichnis/visitenkarte.php?mandat=240969",
-      "retrieved_at": "2026-08-20"
+      "retrieved_at": "2026-08-25T11:08:43+02:00"
     },
     {
       "id": "vkkj_youth_emergency_service_web",
       "source_type": "official_website",
       "title": "Jugendnotdienst",
       "url": "https://www.vkkj.de/verzeichnis/visitenkarte.php?mandat=230429",
-      "retrieved_at": "2026-08-20"
+      "retrieved_at": "2026-08-25T11:08:43+02:00"
     },
     {
       "id": "timmitohelp_tourplan_pdf",
@@ -1433,6 +1435,19 @@
       "recorded_by_role": "Forscherin und Entwicklerin von LENA",
       "evidence_reference": "VKKJ-Angebotsseiten und Fachfestlegung vom 20.08.2026",
       "reviewed_at": "2026-08-20"
+    },
+    {
+      "id": "vkkj_verified_map_coordinates",
+      "decision_type": "override",
+      "affected_source_ids": ["vkkj_notschlafstelle", "vkkj_jugendnotdienst"],
+      "reason": "Die auf den offiziellen Betreiberseiten strukturiert veröffentlichten WGS84-Koordinaten werden für die Kartenmarker der unveränderten, freigegebenen Anschriften verwendet.",
+      "source_reference_ids": ["vkkj_youth_night_shelter_web", "vkkj_youth_emergency_service_web"],
+      "review_status": "externally_verified",
+      "reviewed_by_role": null,
+      "evidence_type": "strukturierte GeoCoordinates der offiziellen Betreiberwebsites",
+      "recorded_by_role": "Forscherin und Entwicklerin von LENA",
+      "evidence_reference": "VKKJ-Angebotsseiten, Quellenabruf vom 25.08.2026",
+      "reviewed_at": "2026-08-25T11:08:43+02:00"
     },
     {
       "id": "timmitohelp_thursday_route",

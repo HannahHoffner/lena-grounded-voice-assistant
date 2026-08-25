@@ -1,6 +1,6 @@
 {
   "contract_version": "1",
-  "policy_version": "1",
+  "policy_version": "2",
   "emergency_policy_version": "1",
   "synthetic_data_only": true,
   "scenarios": [

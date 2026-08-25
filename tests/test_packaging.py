@@ -241,7 +241,7 @@ with TestClient(app_instance) as client:
     assert health['drinking_fountain_runtime_eligible_count'] == 21
     assert health['translations']['active_runtime_policy'] == 'reviewed_or_machine'
     assert health['application_texts']['resource_count_per_language'] > 0
-    assert health['safety_policy_version'] == '1'
+    assert health['safety_policy_version'] == '2'
     assert health['technical_fallback_includes_emergency_guidance'] is True
     copy = client.get('/api/i18n/copy?language=pl').json()
     assert copy['copy_version'] == '7' and copy['language'] == 'pl' and copy['texts']
