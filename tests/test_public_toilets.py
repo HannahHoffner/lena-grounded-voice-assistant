@@ -12,7 +12,6 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.config import Settings
-from app.application_texts import application_text
 from app.infrastructure import (
     FeeStatus,
     ToiletSourceError,

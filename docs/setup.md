@@ -201,7 +201,7 @@ werden. Pytest und CI führen ausschließlich providerfreie Prüfungen aus.
 ## Wheel-Installation
 
 Die kanonische Softwareversion steht in `pyproject.toml`; derzeit ist dies die
-Prototypversion `0.1.0`. Wheel, API, `python -m app --version` und neue
+Prototypversion `0.2.0`. Wheel, API, `python -m app --version` und neue
 Interaktionsdatensätze lesen dieselbe Version. Interaktionsschema 11 und
 WFS-Manifestschema 1 sind davon unabhängige Datenverträge.
 
@@ -209,7 +209,7 @@ Ein Distributionsbuild erzeugt Wheel und Source Distribution:
 
 ```powershell
 python -m build
-python -m pip install -c requirements/constraints-py311.txt dist\lena_code3-0.1.0-py3-none-any.whl
+python -m pip install -c requirements/constraints-py311.txt dist\lena_code3-0.2.0-py3-none-any.whl
 python -m app --version
 ```
 

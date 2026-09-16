@@ -12,7 +12,6 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 from .application_texts import (
     APPLICATION_COPY_VERSION,
     application_text,
-    application_text_summary,
     load_application_texts,
 )
 from .interpreter import AgeGroup, Gender, Need, RequestedService, ThreeWayStatus
@@ -187,10 +186,6 @@ def dialogue_text(
     **values: str,
 ) -> str:
     return application_text(language, f"dialogue.{section}.{key}", **values)
-
-
-def dialogue_translation_summary() -> dict[str, object]:
-    return application_text_summary()
 
 
 def public_dialogue_copy(language: Language) -> dict[str, object]:

@@ -6,7 +6,6 @@ import asyncio
 import sys
 from pathlib import Path
 
-import httpx
 import pytest
 
 import app.config as config

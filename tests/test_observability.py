@@ -14,7 +14,6 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.config import Settings
-from app.application_texts import application_text
 from app.interpreter import AcuteRiskStatus, Need, QueryInterpretation, ScopeStatus
 from app.interactions import InteractionRecord, InteractionWriter
 from app.llm_selection import CandidateSelectionResponse, SelectorError

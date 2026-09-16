@@ -19,7 +19,7 @@ from app.config import Settings
 from app.main import create_app
 from app.models import Category, Language
 from app.providers.llm import BlabladorProvider, InterpreterError
-from app.speech import SpeechSynthesizer, SpeechSynthesisTimeoutError
+from app.speech import SpeechSynthesizer
 from app.translate_offers import TranslationError, _post_blablador
 from app.wfs_sync import WfsTimeoutError, sync_wfs
 

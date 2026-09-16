@@ -23,7 +23,6 @@ from .translation_contract import (
     LinguisticReviewStatus,
     OfferTranslationEntry,
     TRANSLATABLE_FIELDS,
-    TRANSLATION_PROMPT_VERSION,
     TranslationFields,
     TranslationRecord,
     TranslationRuntimePolicy,

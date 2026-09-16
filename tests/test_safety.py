@@ -13,7 +13,7 @@ from fastapi.testclient import TestClient
 from app.config import Settings
 from app.interpreter import AcuteRiskStatus, Need, QueryInterpretation, ScopeStatus
 from app.main import create_app
-from app.models import Category, Language
+from app.models import Language
 from app.providers.llm import BlabladorProvider, InterpreterError, ProviderAnswer
 from app.application_texts import application_text
 from app.safety import SafetyTextKind, safety_text

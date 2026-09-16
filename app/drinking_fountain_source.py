@@ -22,7 +22,7 @@ from .infrastructure import (
     InstallationType,
     MunicipalityBoundaryMetadata,
 )
-from .release_storage import canonical_json_bytes, sha256_bytes
+from .release_storage import sha256_bytes
 from .spatial import wgs84_to_utm33n
 
 
@@ -351,7 +351,3 @@ def diff_drinking_fountain_records(
             if comparable(current_by_id[record_id]) != comparable(previous_by_id[record_id])
         ),
     }
-
-
-def canonical_page_evidence(evidence: DrinkingFountainPageEvidence) -> bytes:
-    return canonical_json_bytes(evidence.model_dump(mode="json"))

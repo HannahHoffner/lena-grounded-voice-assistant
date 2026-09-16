@@ -8,7 +8,7 @@ from datetime import datetime
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationError, model_validator
+from pydantic import BaseModel, ConfigDict, ValidationError, model_validator
 
 from .models import Language
 from .policy_facts import EMERGENCY_NUMBER

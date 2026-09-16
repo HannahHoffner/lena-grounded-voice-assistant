@@ -31,7 +31,7 @@ from app.interpreter import (
 )
 from app.llm_selection import SELECTOR_PROMPT_VERSION, CandidateSelectionResponse
 from app.main import create_app
-from app.models import Category, ChatTurn, Language
+from app.models import ChatTurn, Language
 from app.providers.llm import BlabladorProvider, InterpreterError, ProviderAnswer, ProviderError
 from app.spatial import LEIPZIG_HBF, distance_from_hbf
 from app.speech import SpeechSynthesizer, SpeechTranscriber

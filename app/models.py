@@ -80,12 +80,6 @@ class OfferRecord(BaseModel):
     coordinates_status: str | None = None
 
 
-class LLMTransportModel(BaseModel):
-    """Explizite Positivliste fuer einen LLM-Transportvertrag."""
-
-    model_config = ConfigDict(extra="forbid")
-
-
 class OfferCard(BaseModel):
     record_type: Literal["social_offer"] = "social_offer"
     id: str

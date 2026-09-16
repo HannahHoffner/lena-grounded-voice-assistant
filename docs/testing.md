@@ -12,9 +12,15 @@ Pytest liest `pyproject.toml`, sucht unter `tests/` und verwendet den Quiet-Modu
 `tests/conftest.py` setzt `LENA_ENV_FILE_MODE=disabled`, unterdrückt dadurch
 Checkout-`.env`/`.env.local` auch in Testsubprozessen, entfernt geerbte
 Providerkonfiguration für die Testsitzung und blockiert reale HTTP- sowie
-nichtlokale Sockettransporte. Netzwerkprovider werden durch explizite Settings
-und Test-Doubles ersetzt; ein vergessener LLM-, STT-, TTS-, WFS- oder
-Toiletten- oder Trinkbrunnenquellenaufruf lässt den Test sofort fehlschlagen.
+nichtlokale Sockettransporte. Zusätzlich wird die Laufzeitwurzel der Testsitzung
+isoliert: `LENA_RUNTIME_DIR` zeigt auf ein temporäres Verzeichnis, und
+`Settings`-Objekte, deren `runtime_dir` beziehungsweise `interaction_log_path`
+mangels eigener Angabe auf das Checkout-`runtime/` fallen würde, werden auf
+dieselbe temporäre Wurzel umgelenkt. Ein Testlauf schreibt dadurch weder den
+lokalen Sessionstore noch das Interaktionsprotokoll des Checkouts.
+Netzwerkprovider werden durch explizite Settings und Test-Doubles ersetzt; ein
+vergessener LLM-, STT-, TTS-, WFS- oder Toiletten- oder
+Trinkbrunnenquellenaufruf lässt den Test sofort fehlschlagen.
 
 ## Abdeckung nach Testmodul
 
@@ -41,8 +47,11 @@ Toiletten- oder Trinkbrunnenquellenaufruf lässt den Test sofort fehlschlagen.
 | `tests/test_safety_policy.py` | enger fünfsprachiger Preflight-Sofortstopp, Safety-Dialog für unklare Fälle, fail-closed Providerfehler, Redaktion und Health |
 | `tests/test_observability.py` | technische Events, finale JSONL-Paare, Redaktionsgrenzen und Schreibfehler |
 | `tests/test_provider_timeouts.py` | LLM-, Speech-, WFS- und Übersetzungs-Timeouts sowie Fallbacks |
+| `tests/test_request_boundaries.py` | Query-/STT-/TTS-Eingabegrenzen, Medientyp- und Payloadabweisung, Loopback-Bindung und geklemmte Umgebungs-/HBF-Werte |
+| `tests/test_speech_transcription.py` | Browseraudio-zu-PCM-WAV-Normalisierung, Dauergrenze, redigierte Upstream-Status und Ablehnung nicht dekodierbarer Aufnahmen |
 | `tests/test_provider_isolation.py` | `.env`-Isolation, Transportblockade und dreifache Live-Smoke-Freigabe |
 | `tests/test_live_evaluation.py` | WP9B-Stufenkatalog, feste Erwartungen, Payloadinventar, harte Limits, atomare Reports, Redaktion, providerfreier Dry-Run und isolierter Stufe-1-Runner |
+| `tests/test_translation_tokens.py` | maskierte operative Platzhalter, Inventarprüfung beim Zurückschreiben und sprachunabhängiger Maskierungsvertrag |
 | `tests/test_translation_quality.py` | Statusmodell, Hash-/Kurationsbindung, Runtime-Policies, aktives Übersetzungsinventar mit deutschem Fallback für neue ungeprüfte Angebote, CLI/Review, vollständiger Dry-Run, gemeinsame Sprachressourcen, Szenariokatalog, Live-Opt-in und STT/TTS |
 | `tests/test_public_toilets.py` | amtliches CSV-Schema, Fail-safe-Kosten/Geometrie, Diff, Promotion/Rollback/Fallback, Runtime, API, Evidence, fünf Sprachen und Health |
 | `tests/test_drinking_fountains.py` | Wasserwerke-KML, amtliche Grenzprüfung, Manifest/Fallback, Ausschlüsse, Saison, kombinierte Wasserresultate, HBF-Ranking, fünf Sprachen, Evidence/Grounding, Frontend und Health |

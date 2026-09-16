@@ -5,6 +5,7 @@ from __future__ import annotations
 import ipaddress
 import socket
 from collections.abc import Generator
+from pathlib import Path
 from typing import Any
 
 import httpx
@@ -12,6 +13,8 @@ import pytest
 
 import app.config as config
 
+
+CHECKOUT_ROOT = Path(__file__).resolve().parents[1]
 
 PROVIDER_ENV_NAMES = {
     "REWRITE_PROVIDER",
@@ -52,6 +55,7 @@ def _loopback_host(host: object) -> bool:
 
 @pytest.fixture(scope="session", autouse=True)
 def isolate_checkout_settings_and_external_network(
+    tmp_path_factory: pytest.TempPathFactory,
 ) -> Generator[None, None, None]:
     """Make forgotten live configuration or transport use fail inside pytest."""
 
@@ -59,7 +63,36 @@ def isolate_checkout_settings_and_external_network(
     for name in PROVIDER_ENV_NAMES:
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("LENA_ENV_FILE_MODE", "disabled")
+    # Without this, every test that builds Settings via load_settings() resolves
+    # the runtime root to the checkout's own runtime/ and writes there. The
+    # shared session store is then rewritten with test sessions, evicting the
+    # local research/session data the README marks as sensitive.
+    runtime_root = tmp_path_factory.mktemp("lena-runtime")
+    monkeypatch.setenv("LENA_RUNTIME_DIR", str(runtime_root))
     monkeypatch.setattr(config, "_load_env_file", lambda *_args, **_kwargs: None)
+
+    # Most tests build Settings directly and pass the checkout as app_root so
+    # that data/ is reachable. runtime_dir and interaction_log_path then default
+    # into the checkout's own runtime/, and a test run rewrites the local
+    # session store and interaction log -- files the README marks as sensitive
+    # local research data. Redirect exactly those two checkout defaults onto the
+    # temporary root; Settings that already name their own runtime directory
+    # (the majority) are left untouched.
+    checkout_runtime = CHECKOUT_ROOT / "runtime"
+    real_post_init = config.Settings.__post_init__
+
+    def isolated_post_init(self: config.Settings) -> None:
+        real_post_init(self)
+        if self.runtime_dir is not None and Path(self.runtime_dir).resolve() == checkout_runtime:
+            object.__setattr__(self, "runtime_dir", runtime_root)
+            if self.interaction_log_path is not None and checkout_runtime in Path(
+                self.interaction_log_path
+            ).resolve().parents:
+                object.__setattr__(
+                    self, "interaction_log_path", runtime_root / "logs" / "interactions.jsonl"
+                )
+
+    monkeypatch.setattr(config.Settings, "__post_init__", isolated_post_init)
 
     async def block_async_http(
         _transport: httpx.AsyncHTTPTransport,

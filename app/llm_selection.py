@@ -7,7 +7,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, StringConstraints, model_validator
 
-from .candidate_contract import CandidateDecision, CandidateItem, CandidateRole, ReasonCode
+from .candidate_contract import CandidateDecision, ReasonCode
 from .interpreter import Need, QueryInterpretation, RequestedService
 from .models import Language, OfferRecord
 

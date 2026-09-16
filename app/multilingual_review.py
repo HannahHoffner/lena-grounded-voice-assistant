@@ -31,7 +31,6 @@ from .models import Language
 from .resources import packaged_bootstrap_data_root
 
 
-SCENARIO_SCHEMA_VERSION = "1"
 REVIEW_OUTPUT_VERSION = "1"
 
 

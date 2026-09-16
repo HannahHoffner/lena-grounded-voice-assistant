@@ -89,7 +89,7 @@ Budgeterschöpfung und ein nicht verfügbarer Interpreter fallen geschlossen aus
 Ein Fehler behauptet nicht, dass Gefahr erkannt wurde. Die Nummer und alle
 sichtbaren Safety-Texte stammen aus zentralen versionierten Ressourcen.
 
-Seit Version 0.3.0 ist dieser Text kein Sackgassentext mehr: Ist in der
+Dieser Text ist kein Sackgassentext: Ist in der
 Wissensbasis ein Hilfebus-Kontakt hinterlegt (`priority_rules` enthält
 `general_help_referral_first`, siehe `_general_help_contact()` in
 `app/service.py`), enthält der Text zusätzlich dessen Telefonnummer und
@@ -111,7 +111,7 @@ betroffen und bleibt weiterhin ohne Karten, Karten-IDs oder Marker.
 `POST /api/query` kennzeichnet die Pfade als `acute_risk`,
 `acute_risk_clarification` oder `technical_fallback`. `acute_risk` und
 `acute_risk_clarification` enthalten weiterhin leere Karten-, Karten-ID- und
-Markerlisten. `technical_fallback` enthält seit Version 0.3.0 die
+Markerlisten. `technical_fallback` enthält die
 Hilfebus-Karte und einen Kartenmarker, sofern die Wissensbasis den Kontakt
 liefert (siehe oben); das Frontend rendert diese Karte und Markierung wie bei
 jeder anderen Antwort. Das Frontend leert in jedem Fall zunächst bestehende

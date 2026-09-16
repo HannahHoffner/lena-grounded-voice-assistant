@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 import logging
 from contextlib import asynccontextmanager, suppress
-from pathlib import Path
 from time import perf_counter
 
 from fastapi import FastAPI, HTTPException, Query, Request

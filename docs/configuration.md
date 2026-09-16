@@ -143,7 +143,7 @@ Einzelprozessbetrieb und sind keine prozessübergreifende Kapazitätssteuerung.
 
 Ein Interpreter-Timeout sowie HTTP-, JSON-, Schema-, Vertrags-, Budget- oder
 Verfügbarkeitsfehler führen fail-closed zum lokalisierten technischen Hinweis
-mit bedingter 112-Angabe -- seit Version 0.3.0 zusätzlich mit dem
+mit bedingter 112-Angabe -- zusätzlich mit dem
 deterministischen Hilfebus-Kontakt (Telefon, Zeiten, Karte), sofern die
 Wissensbasis ihn liefert (siehe
 [Safety- und Fehlerpolitik](safety-and-error-policy.md)). CandidateSelector,

@@ -4,10 +4,11 @@ from __future__ import annotations
 
 import dataclasses
 import tempfile
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from time import monotonic
-from typing import Any, Callable
+from typing import Any
 from urllib.parse import urlsplit
 
 from .candidate_contract import CandidateRole
@@ -607,7 +608,6 @@ def _record_component_calls(counter: AtomicRunCounter, interaction: QueryInterac
 
 
 _SAFETY_ACUTE_CASES = frozenset({"acute", "other_person", "prompt_injection"})
-_SAFETY_NON_ACUTE_CASES = frozenset({"non_acute", "historical", "denied", "metaphorical", "quoted"})
 # app/service.py setzt "acute_risk_clarification" ausschließlich für den
 # acute_risk_status=uncertain-Dialogpfad (siehe dort sowie
 # docs/safety-and-error-policy.md); beide Werte zeigen eine durch die

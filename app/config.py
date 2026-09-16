@@ -11,7 +11,7 @@ import os
 from dataclasses import dataclass
 from pathlib import Path
 
-from .resources import bootstrap_data_root, checkout_root
+from .resources import bootstrap_data_root, checkout_root, packaged_bootstrap_data_root
 from .spatial import is_valid_leipzig_coordinate
 
 @dataclass(frozen=True)
@@ -292,7 +292,7 @@ def load_settings() -> Settings:
     external_curation = data_dir / "curation" / "social_offers.json"
     bootstrap_curation = bootstrap_root / "curation" / "social_offers.json"
     if not bootstrap_curation.is_file():
-        bootstrap_curation = Path(__file__).resolve().parent / "resources" / "bootstrap" / "curation" / "social_offers.json"
+        bootstrap_curation = packaged_bootstrap_data_root() / "curation" / "social_offers.json"
     default_curation = external_curation if external_curation.is_file() else bootstrap_curation
 
     provider = (_optional_env("REWRITE_PROVIDER", "LENA_REWRITE_PROVIDER") or "template").lower()
