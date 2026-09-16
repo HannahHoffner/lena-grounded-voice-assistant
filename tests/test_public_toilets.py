@@ -201,6 +201,17 @@ def test_missing_required_value_and_duplicate_id_are_rejected() -> None:
         _collection(duplicate)
 
 
+@pytest.mark.parametrize("missing_column", ["Entgelt", "Servicenummer", "lat", "utm_north"])
+def test_truncated_csv_row_is_a_controlled_source_error(missing_column: str) -> None:
+    rows = list(csv.reader(io.StringIO(_snapshot().decode("utf-8-sig"))))
+    rows[1] = rows[1][:rows[0].index(missing_column)]
+    output = io.StringIO(newline="")
+    csv.writer(output, lineterminator="\n").writerows(rows)
+
+    with pytest.raises(ToiletSourceError, match="toilet_record_invalid"):
+        _collection(b"\xef\xbb\xbf" + output.getvalue().encode("utf-8"))
+
+
 def test_unknown_fee_is_preserved_without_inference() -> None:
     content = _rewrite_csv(lambda _fields, rows: rows[0].update(Entgelt="vor Ort erfragen"))
     record = _collection(content).records[0]
@@ -277,6 +288,18 @@ def test_diff_detects_add_remove_fee_name_and_coordinate_changes() -> None:
     assert diff["added"] == ["toilet:0999"]
     assert "toilet:0021" in diff["removed"]
     assert {"toilet:0001", "toilet:0002", "toilet:0003"} <= set(diff["modified"])
+
+
+def test_diff_ignores_dataset_hash_and_reports_only_changed_record() -> None:
+    previous = _collection()
+    unchanged = _collection(_rewrite_csv(lambda _fields, _rows: None))
+    assert unchanged.source.sha256 != previous.source.sha256
+    assert diff_toilet_records(previous, unchanged) == {"added": [], "removed": [], "modified": []}
+
+    changed = _collection(_rewrite_csv(lambda _fields, rows: rows[0].update(Ort="Geänderter Ort")))
+    assert diff_toilet_records(previous, changed) == {
+        "added": [], "removed": [], "modified": ["toilet:0001"],
+    }
 
 
 def test_release_promotion_rollback_and_corruption_fallback(tmp_path: Path) -> None:

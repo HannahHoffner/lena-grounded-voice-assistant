@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from app.application_texts import LanguageTextInventory, application_text, application_text_summary, load_application_texts
+from app.application_texts import APPLICATION_COPY_VERSION, LanguageTextInventory, application_text, application_text_summary, load_application_texts
 from app.config import load_settings
 from app.i18n import (
     TranslationCatalog,
@@ -435,6 +435,34 @@ def test_schema_two_migration_is_idempotent_and_packaged_copy_matches_checkout(t
     )
 
 
+@pytest.mark.parametrize("schema", ["1", "2"])
+@pytest.mark.parametrize("entries", [["unexpected"], {"5": {"translations": ["unexpected"]}}])
+def test_malformed_legacy_translation_mappings_use_invalid_catalog_fallback(
+    tmp_path: Path, schema: str, entries,
+) -> None:
+    settings, kb, _ = _runtime(tmp_path)
+    path = tmp_path / "invalid-translations.json"
+    path.write_text(json.dumps({"schema_version": schema, "entries": entries}), encoding="utf-8")
+
+    catalog = load_translation_catalog(settings, kb, path=path)
+
+    assert catalog.integrity_errors == ("translation_store_invalid",)
+    assert catalog.store.entries == {}
+    card = localize_offer_card(kb.offers[0], Language.EN, catalog, TranslationRuntimePolicy.REVIEWED_OR_MACHINE)
+    assert card.short_description == kb.offers[0].short_description
+
+
+def test_invalid_translation_encoding_uses_invalid_catalog_fallback(tmp_path: Path) -> None:
+    settings, kb, _ = _runtime(tmp_path)
+    path = tmp_path / "invalid-translations.json"
+    path.write_bytes(b"\xff\xfe")
+
+    catalog = load_translation_catalog(settings, kb, path=path)
+
+    assert catalog.integrity_errors == ("translation_store_invalid",)
+    assert catalog.store.entries == {}
+
+
 def test_generate_changes_only_selected_language_and_offer(tmp_path: Path) -> None:
     settings, _, catalog = _runtime(tmp_path)
     original_polish = catalog.store.entries["5"].translations[Language.PL].model_dump(mode="json")
@@ -620,12 +648,12 @@ def test_result_copy_points_below_without_naming_cards_or_map() -> None:
 
 
 def test_unreviewed_application_resource_rejects_partial_review_metadata() -> None:
-    with pytest.raises(ValidationError):
+    with pytest.raises(ValidationError, match="unreviewed application copy must not carry review approval metadata"):
         LanguageTextInventory.model_validate(
             {
                 "source_language": "de",
                 "target_language": "en",
-                "version": "2",
+                "version": APPLICATION_COPY_VERSION,
                 "linguistic_review_status": "machine",
                 "source_origin": "machine_drafted",
                 "reviewed_by_role": "author_review",

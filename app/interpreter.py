@@ -15,7 +15,7 @@ from .models import Category, ChatTurn, Language, OfferRecord
 
 
 INTERPRETER_CONTRACT_VERSION = "4"
-INTERPRETER_PROMPT_VERSION = "8"
+INTERPRETER_PROMPT_VERSION = "9"
 MAX_INTERPRETER_INPUT_CHARS = 2_000
 MAX_INTERPRETER_RESPONSE_CHARS = 8_000
 MAX_INTERPRETER_CONTEXT_TURNS = 4
@@ -48,6 +48,8 @@ Never add, omit, rename, or flatten any of these keys; explicit_facts must alway
 Classify need as food, drinking_water, sleep, medical, advice, toilet, general_help, or unknown. The domain covers food/basic needs, drinking water, overnight accommodation, medical help, advice/social support/streetwork, toilets, and a still-unspecified general request for help. Clearly unrelated requests are out_of_scope; incomprehensible or unresolved requests are unclear. unknown does not itself mean out_of_scope. A question about LENA's abilities is a controlled system question, not a service request.
 
 List explicitly requested services separately in explicit_service_requests, using only overnight_stay, food, drinking_water, hygiene, shower, laundry, clothing, postal, medical_care, wound_care, counselling, day_stay, contact, youth_support, or protection. youth_support requires an explicit request for a youth service, youth centre, youth streetwork, or a named youth organization; a numeric age alone never establishes youth_support. protection requires an explicit request for a protected place, immediate youth welfare support, or help because the person cannot safely return home. Include a service only when the user explicitly asks for it; do not expand food into hygiene or infer a service from an unrelated institution alias. Keep the broader need and the concrete service distinct.
+
+Toilet means an explicitly requested toilet/WC, not washing, hygiene, a shower, or laundry. A shower-only request (for example "Wo kann ich duschen?") is need=general_help with explicit_service_requests=["shower"]. A correction such as "Ich suche keine Toilette, Dusche" has the same meaning: ignore the negated toilet request. Likewise classify standalone washing/hygiene or laundry requests as general_help with their exact explicitly requested service. A concrete service is already a resolved need, not an unspecified request for help.
 
 Record only facts explicitly stated about the person who needs help. Never infer age, gender, drug use, or social-benefit entitlement from names, language, writing style, an institution, or earlier offers. Use unknown or null when absent. Put tentative implications only in uncertain_hints. Do not infer a missing benefit entitlement from having no money. The newest explicit correction wins. On a clear topic change, do not carry unrelated constraints forward. A language change alone does not erase still-relevant explicit context.
 

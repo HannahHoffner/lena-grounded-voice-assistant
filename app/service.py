@@ -53,6 +53,7 @@ from .interpreter import (
     AcuteRiskStatus,
     Need,
     QueryInterpretation,
+    RequestedService,
     ScopeStatus,
     interpreter_alias_hints,
 )
@@ -450,7 +451,14 @@ class QueryService:
                 dialog_id=payload.dialog_id or "",
                 choice_values=payload.choice_values,
             )
-        elif session.dialog and session.dialog.status == DialogStatus.AWAITING_ANSWER and payload.query:
+        elif (
+            session.dialog
+            and session.dialog.status == DialogStatus.AWAITING_ANSWER
+            and (
+                payload.query
+                or session.dialog.dialog_type == DialogType.ACUTE_RISK_CONFIRMATION
+            )
+        ):
             if payload.dialog_id and payload.dialog_id != session.dialog.dialog_id:
                 raise DialogRequestError()
             session, active_dialog = self.sessions.claim_dialog(
@@ -562,17 +570,18 @@ class QueryService:
                 visible_question=query,
             )
 
-        # Kontrollierte Anwendungspolitik bleibt außerhalb des Interpretervertrags: ein reiner
-        # Text-Abgleich, unabhängig davon, ob/wie der LLM-Interpreter die Anfrage einstufen würde
-        # (z. B. faelschlich als OUT_OF_SCOPE). Muss daher vor jedem Interpreter-Aufruf und vor
-        # der scope_status-Weiche geprüft werden, sonst ist dieser Zweig unerreichbar.
-        if query and _matches_phrase(query, SELF_PATTERNS):
+        safety_dialog_open = bool(
+            active_dialog and active_dialog.dialog_type == DialogType.ACUTE_RISK_CONFIRMATION
+        )
+        # Nur reine Systemfragen dürfen den Interpreter umgehen. Zusätze können
+        # Gefahr enthalten; ein offener Safety-Dialog braucht eine explizite Antwort.
+        if not safety_dialog_open and normalize_text(query) in SELF_PATTERNS:
             interaction.route = "self_description"
             interaction.answer_type = AnswerType.SYSTEM_DESCRIPTION.value
             _record_selector_bypass(interaction, SelectorBypassReason.SYSTEM_RESPONSE)
             return _CoreOutcome(QueryResponse(answer=_fallback_text(language, "self_description"), language=language, provider="template", status="ok"))
 
-        if not query and payload.category is None and not payload.choice_values:
+        if not safety_dialog_open and not query and payload.category is None and not payload.choice_values:
             dialog = new_dialog(
                 DialogType.GENERAL_NEED,
                 need=Need.GENERAL_HELP,
@@ -759,6 +768,13 @@ class QueryService:
                 visible_question=visible_question,
             )
 
+        # Konkrete Waschleistungen sind kein Beleg für einen Toilettenbedarf.
+        # Bei widersprüchlichen Modellfeldern hat die explizite Leistung Vorrang.
+        if interpretation.need == Need.TOILET and set(interpretation.explicit_service_requests) & {
+            RequestedService.SHOWER, RequestedService.HYGIENE, RequestedService.LAUNDRY,
+        }:
+            interpretation = interpretation.model_copy(update={"need": Need.GENERAL_HELP})
+
         if active_dialog and is_clear_topic_change(interpretation, active_dialog):
             interaction.dialog_type = active_dialog.dialog_type.value
             interaction.dialog_result_status = "topic_changed"
@@ -775,7 +791,7 @@ class QueryService:
                     language=language,
                     interaction=interaction,
                     budget=llm_budget,
-                    provider_failed=interpreter_failed and self.blablador is not None,
+                    provider_failed=False,
                 ),
                 visible_question=visible_question,
             )
@@ -795,8 +811,6 @@ class QueryService:
             context=selection_context,
             now=self.clock(),
         )
-        if interpreter_failed:
-            decision = self.candidate_selector.interpreter_unavailable(self.kb.offers, decision)
         interaction.candidate_selection_status = decision.selection_status.value
         interaction.candidate_result_count = len(decision.mandatory_candidates) + len(decision.selectable_candidates)
         LOGGER.info(
@@ -814,7 +828,7 @@ class QueryService:
                     decision=decision,
                     interaction=interaction,
                     budget=llm_budget,
-                    provider_failed=interpreter_failed and self.blablador is not None,
+                    provider_failed=False,
                 ),
                 visible_question=visible_question,
             )
@@ -838,7 +852,40 @@ class QueryService:
                     status="no_results",
                     interaction=interaction,
                     budget=llm_budget,
-                    provider_failed=interpreter_failed and self.blablador is not None,
+                ),
+                visible_question=visible_question,
+            )
+
+        # Ein unbekanntes Alter bleibt unbekannt. Der vorhandene bedingte
+        # Hinweis reicht als Abschluss; eine weitere Pflichtfrage ist unnötig.
+        facts = interpretation.explicit_facts
+        if (
+            interpretation.need == Need.SLEEP
+            and not selection_context.alias
+            and facts.gender.value == "female"
+            and facts.age is None
+            and facts.age_group.value == "unknown"
+        ):
+            ruecke = next((offer for offer in self.kb.offers if "general_sleep_contact_first" in offer.priority_rules), None)
+            scharni = next((offer for offer in self.kb.offers if "female" in offer.eligible_genders and offer.minimum_age == 18), None)
+            cards = [offer for offer in (ruecke, scharni) if offer]
+            interaction.route = "sleep_conditional_contact"
+            interaction.answer_type = AnswerType.GROUNDED_REFERRAL.value
+            if active_dialog:
+                interaction.dialog_type = active_dialog.dialog_type.value
+                interaction.dialog_attempt_count = active_dialog.attempt_count
+                interaction.dialog_result_status = "resolved_conditionally"
+            _record_selector_bypass(interaction, SelectorBypassReason.NO_ELIGIBLE_CANDIDATE)
+            return _CoreOutcome(
+                QueryResponse(
+                    answer=(
+                        dialogue_text(language, "answers", "scharni_conditional") + " "
+                        + dialogue_text(language, "answers", "sleep_intro")
+                    ),
+                    cards=[_card(offer, language, self.translation_catalog, self.translation_policy) for offer in cards],
+                    language=language,
+                    provider="template",
+                    status="ok",
                 ),
                 visible_question=visible_question,
             )
@@ -846,51 +893,6 @@ class QueryService:
         if active_dialog:
             interaction.dialog_type = active_dialog.dialog_type.value
             interaction.dialog_attempt_count = active_dialog.attempt_count
-            # Bewusst ohne Formulator: Rücke/Scharni stehen bereits fest (Schlafen-
-            # spezifische Zielgruppenklärung), diese Antwort öffnet nur den nächsten
-            # Klärungsschritt (SLEEP_AGE) statt eine finale Antwort zu formulieren --
-            # kein Auswahl- oder Formulierungsspielraum, siehe Untersuchung Zeile 11.
-            female_without_age = (
-                active_dialog.dialog_type == DialogType.SLEEP_TARGET_GROUP
-                and interpretation.explicit_facts.gender.value == "female"
-                and interpretation.explicit_facts.age is None
-                and interpretation.explicit_facts.age_group.value == "unknown"
-            )
-            if female_without_age:
-                follow_up = new_dialog(
-                    DialogType.SLEEP_AGE,
-                    need=Need.SLEEP,
-                    fingerprint=self.kb.runtime_kb_fingerprint or "",
-                    session_timeout_seconds=self.settings.session_timeout_seconds,
-                    facts=known_facts(interpretation),
-                    attempt_count=active_dialog.attempt_count + 1,
-                )
-                ruecke = next((offer for offer in self.kb.offers if "general_sleep_contact_first" in offer.priority_rules), None)
-                scharni = next((offer for offer in self.kb.offers if "female" in offer.eligible_genders and offer.minimum_age == 18), None)
-                cards = [offer for offer in (ruecke, scharni) if offer]
-                interaction.route = "dialog_sleep_age"
-                interaction.answer_type = AnswerType.CLARIFICATION.value
-                interaction.dialog_result_status = "continued"
-                _record_selector_bypass(
-                    interaction,
-                    SelectorBypassReason.DIALOGUE_REQUIRED,
-                    eligible_count=len(decision.candidates),
-                )
-                return _CoreOutcome(
-                    QueryResponse(
-                        answer=(
-                            dialogue_text(language, "answers", "scharni_conditional")
-                            + " "
-                            + dialogue_text(language, "prompts", DialogType.SLEEP_AGE.value)
-                        ),
-                        cards=[_card(offer, language, self.translation_catalog, self.translation_policy) for offer in cards],
-                        language=language,
-                        provider="template",
-                        status="ok",
-                    ),
-                    follow_up,
-                    visible_question,
-                )
             # Bewusst ohne Formulator: der Kandidat ist nach dem Bezirksdialog bereits
             # eindeutig (genau ein conditional_candidate), unabhängig vom Bedarfstyp --
             # kein Auswahl- oder Formulierungsspielraum, siehe Untersuchung Zeile 11.
@@ -967,7 +969,7 @@ class QueryService:
                         query=query,
                         interaction=interaction,
                         budget=llm_budget,
-                        provider_failed=interpreter_failed and self.blablador is not None,
+                        provider_failed=False,
                     ),
                     visible_question=visible_question,
                 )
@@ -1022,11 +1024,6 @@ class QueryService:
             if dialog.dialog_type == DialogType.SLEEP_TARGET_GROUP:
                 cards = [offer for offer in selected_offers if "general_sleep_contact_first" in offer.priority_rules]
                 answer = f"{dialogue_text(language, 'answers', 'sleep_intro')} {answer}"
-            elif dialog.dialog_type == DialogType.SLEEP_AGE:
-                ruecke = next((offer for offer in self.kb.offers if "general_sleep_contact_first" in offer.priority_rules), None)
-                scharni = next((offer for offer in self.kb.offers if "female" in offer.eligible_genders and offer.minimum_age == 18), None)
-                cards = [offer for offer in (ruecke, scharni) if offer]
-                answer = f"{dialogue_text(language, 'answers', 'scharni_conditional')} {answer}"
             return _CoreOutcome(
                 QueryResponse(
                     answer=answer,
@@ -1039,20 +1036,11 @@ class QueryService:
                 visible_question,
             )
 
-        if decision.selection_status == SelectionStatus.INTERPRETER_UNAVAILABLE and not selected_offers:
-            interaction.route = "interpreter_unavailable"
-            interaction.answer_type = AnswerType.TECHNICAL_FALLBACK.value
-            _record_selector_bypass(interaction, SelectorBypassReason.INTERPRETER_UNAVAILABLE)
-            return _CoreOutcome(
-                QueryResponse(answer=_fallback_text(language, "no_results"), language=language, provider="template", status="no_results"),
-                visible_question=visible_question,
-            )
-
         selector_method = getattr(self.blablador, "select_candidates", None) if self.blablador else None
         selection = bypass_outcome(
             decision,
             selector_available=callable(selector_method),
-            interpreter_succeeded=not interpreter_failed,
+            interpreter_succeeded=True,
         )
         selector_provider_failed = False
         if selection is None:
@@ -1122,7 +1110,7 @@ class QueryService:
                 status="ok",
                 interaction=interaction,
                 budget=llm_budget,
-                provider_failed=(interpreter_failed and self.blablador is not None) or selector_provider_failed,
+                provider_failed=selector_provider_failed,
             )
             if interaction.route == "unknown":
                 interaction.route = (
@@ -1167,7 +1155,7 @@ class QueryService:
                 status="no_results",
                 interaction=interaction,
                 budget=llm_budget,
-                provider_failed=(interpreter_failed and self.blablador is not None) or selector_provider_failed,
+                provider_failed=selector_provider_failed,
             ),
             visible_question=visible_question,
         )

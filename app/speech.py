@@ -196,7 +196,9 @@ class SpeechTranscriber:
                 return text
             raise SpeechTranscriptionError("Speech transcription response is not JSON") from exc
 
-        transcript = str(payload.get("text") or "").strip()
+        if not isinstance(payload, dict) or not isinstance(payload.get("text"), str):
+            raise SpeechTranscriptionError("Speech transcription response contains no text")
+        transcript = payload["text"].strip()
         if not transcript:
             raise SpeechTranscriptionError("Speech transcription response contains no text")
         return " ".join(transcript.split())

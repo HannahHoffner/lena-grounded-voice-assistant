@@ -2,7 +2,7 @@
 
 ## Status
 
-- State: In progress
+- State: Complete — sichere lokale Prüfung; dokumentierte Live-Grenzen bleiben offen
 - Owner: Codex
 - Created: 2026-09-16
 - Ausgangscommit: `534ffba` auf `maintenance/repository-cleanup`
@@ -10,12 +10,12 @@
 ## Objective und Acceptance contract
 
 - [x] Einstieg, Quellen, Konfiguration, Tests, Git und vorhandene Änderungen prüfen.
-- [ ] Alle aktiven Module und zugehörige Verträge anhand des Codes beurteilen.
-- [ ] Nur reproduzierte Fehler mit kleinen Änderungen korrigieren.
-- [ ] Jede Bereinigung mit Referenzen, Risiko und Entscheidung dokumentieren.
-- [ ] Verständliche Mermaid-Diagramme für Anwendung und Arbeitsabläufe ergänzen.
-- [ ] Gezielte Regressionen, Syntax, Paketinhalt und finalen Diff prüfen.
-- [ ] Ergebnisse, Grenzen und dateiweisen Änderungsnachweis festhalten.
+- [x] Alle aktiven Module und zugehörige Verträge anhand des Codes beurteilen.
+- [x] Nur belegte Fehler mit kleinen Änderungen korrigieren.
+- [x] Jede Bereinigung mit Referenzen, Risiko und Entscheidung dokumentieren.
+- Zurückgestellt auf Nutzerwunsch: zusätzliche Mermaid-Diagramme.
+- [x] Gezielte Regressionen, Syntax, Paketinhalt und finalen Diff prüfen.
+- [x] Ergebnisse, Grenzen und dateiweisen Änderungsnachweis festhalten.
 
 ## Scope
 
@@ -127,6 +127,35 @@ können rückgängig gemacht werden; keine Migration erforderlich.
 
 ## Progress log / Discoveries
 
+- Zusätzliches Bereinigungsinventar vor Löschung: `tests/test_frontend_runtime.js`
+  ist eine unversionierte Zwischenfassung dieses Reviews. Alle fünf Fälle sind
+  in `tests/frontend.test.cjs` abgedeckt, dort zusätzlich TTS. Keine Start-,
+  Paket- oder Dokumentationsreferenz; niedrige Gefahr. Zwischenfassung entfernen.
+- Betriebsreview: Der historische Live-Evaluationsrunner wertet den technischen
+  Fallback noch als kartenlos aus und setzt die deklarierte Fehler-Injection
+  nicht um. Seine E2E-Aufrufzählung erfolgt nachträglich. Diese Forschungsevidenz
+  wird erhalten; Berichte sind kein Nachweis aktueller vollständiger Live-Gates.
+- Aktualisierte Nutzerpriorität: Qualitätsprüfung und Fertigstellung vor neuen
+  Mermaid-Diagrammen; Diagrammerweiterung ausdrücklich zurückgestellt. Vorhandene
+  Diagramme bleiben erhalten, erkannte falsche Versionsangaben werden korrigiert.
+- TTS-Zusatzbefund: Unterbrechung pausierte Audio ohne Freigabe der Blob-URL oder
+  Abschluss des Wiedergabe-Promises. Der bestehende Unterbrechungspfad ruft jetzt
+  dieselbe lokale Bereinigung wie das normale Audioende auf; Verhaltenstest prüft
+  Sessionpayload, Unterbrechung und URL-Freigabe ohne Browser-/Provideraufruf.
+- 2026-09-16: Der Nutzer hat die bisherigen Änderungen inzwischen in `8e7b204`
+  und `3433c7a` committet. Der eigene Implementierungsvergleich beginnt deshalb
+  beim sauberen `3433c7a`; diese Commits werden nicht verändert.
+- Bestätigte Ergänzungen zum File impact: `sessions.py` behandelt ungültiges
+  UTF-8 und zeitzonenlose persistierte Zeitstempel bislang nicht durchgehend
+  als beschädigten Zustand. Vorhandene Quarantäne-/Record-Verwerfung erweitern,
+  Bytes erhalten und valide Nachbarsessions mit Regressionen schützen.
+- Weitere reproduzierte Grenzen: getauschte Kurations-Quell-IDs, datasetweiter
+  Hash im Toiletten-Record-Diff, verkürzte CSV-Zeilen, defekte Grenzpolygone,
+  falsche Legacy-Übersetzungsstrukturen, ungültige Speech-/LLM-Antwortwurzeln.
+  Korrektur in den bestehenden Validatoren und Fehlerpfaden, keine neuen Layer.
+- `candidates.py`: Mehrfachbedarf wählt bisher zufällig aus einem Set zwischen
+  Hilfebus-Essens- und Beratungszeit. Primärbedarf muss deterministisch seine
+  belegte Zeitregel verwenden; bestehende Kandidatentests um Regression ergänzen.
 - 2026-09-16: Bericht und Claude-Diff gelesen; eigene alte Baseline wiedergewonnen;
   alle 212 Kopien mit historischen kanonischen Blobs abgeglichen.
 - 2026-09-16: VS Codes vorhandene Electron-Node-Laufzeit (`ELECTRON_RUN_AS_NODE=1`)
@@ -135,6 +164,19 @@ können rückgängig gemacht werden; keine Migration erforderlich.
 
 ## Final verification summary
 
-Noch offen: fokussierte Fehlerbehebung, Regressionen, Diagramme, Abschlussbericht
-und abschließender Diff-/Datenvergleich. Produktive Providerqualität,
-Screenreaderprüfung und Remote-CI bleiben außerhalb der sicheren Verifikation.
+629 unterschiedliche betroffene Python-Tests und sechs ausführbare JS-Tests
+bestanden; zehn STT-Tests nach abschließender Testcodebereinigung nochmals grün.
+Syntax, Abhängigkeiten, CLI, Paketbau und Offline-Factory/Lifespan aus einem
+außerhalb des Checkouts installierten Wheel geprüft. Alle 90 Appdateien im
+94-Dateien-Wheel sind vollständig und bytegleich zum Checkout. Alle 224
+geschützten Dateien sind unverändert, keine neuen Daten-/Runtime-Dateien.
+Die abschließende rekursive Entfernung regenerierter Test-/Pythoncaches wurde
+automatisch mit `blocked by policy` abgelehnt, ohne genauere Begründung. Die
+ignorierten Caches bleiben erhalten; keine Umgehung der Sperre.
+
+Der [Abschlussbericht](../reviews/quality-review-2026-09.md) enthält Befunde,
+Prüfbefehle, Inventar, Restgrenzen und die dateiweise Übersicht. Historische
+Sessionverluste sind nicht vollständig rekonstruierbar. Produktive
+Providerqualität, echte Browser-/Screenreaderprüfung, Remote-CI und die
+abweichenden Live-Evaluationsmetriken werden nicht als erfolgreich verifiziert
+ausgegeben. Zusätzliche Diagramme bleiben entsprechend Nutzerpriorität vertagt.

@@ -494,7 +494,11 @@ def normalize_toilet_csv(
     try:
         for row in rows:
             required_values = ("ID", "Betreiber", "Ort", "Ortsteil", "Oeffnungszeiten", "Ausstattung")
-            if None in row or any(row.get(name) is None or not row[name].strip() for name in required_values):
+            if (
+                None in row
+                or any(row.get(name) is None for name in REQUIRED_COLUMNS)
+                or any(not row[name].strip() for name in required_values)
+            ):
                 raise ToiletSourceError("toilet_record_invalid")
             source_id = row["ID"].strip()
             if not SOURCE_ID_RE.fullmatch(source_id):
@@ -586,7 +590,7 @@ def diff_toilet_records(
     modified = sorted(
         record_id
         for record_id in current_by_id.keys() & previous_by_id.keys()
-        if current_by_id[record_id].model_dump(mode="json")
-        != previous_by_id[record_id].model_dump(mode="json")
+        if current_by_id[record_id].model_dump(mode="json", exclude={"source_hash"})
+        != previous_by_id[record_id].model_dump(mode="json", exclude={"source_hash"})
     )
     return {"added": added, "removed": removed, "modified": modified}

@@ -130,6 +130,27 @@ def _boundary_features(content: bytes) -> tuple[dict[str, object], list[dict[str
     for feature in features:
         if not isinstance(feature, dict) or not isinstance(feature.get("geometry"), dict):
             raise DrinkingFountainSourceError("drinking_fountain_boundary_invalid")
+        geometry = feature["geometry"]
+        coordinates = geometry.get("coordinates")
+        if geometry.get("type") not in ("Polygon", "MultiPolygon") or not isinstance(coordinates, list):
+            raise DrinkingFountainSourceError("drinking_fountain_boundary_invalid")
+        polygons = [coordinates] if geometry["type"] == "Polygon" else coordinates
+        if not polygons:
+            raise DrinkingFountainSourceError("drinking_fountain_boundary_invalid")
+        for polygon in polygons:
+            if not isinstance(polygon, list) or not polygon:
+                raise DrinkingFountainSourceError("drinking_fountain_boundary_invalid")
+            for ring in polygon:
+                if not isinstance(ring, list) or len(ring) < 4:
+                    raise DrinkingFountainSourceError("drinking_fountain_boundary_invalid")
+                for coordinate in ring:
+                    if not isinstance(coordinate, list) or len(coordinate) < 2:
+                        raise DrinkingFountainSourceError("drinking_fountain_boundary_invalid")
+                    try:
+                        if not all(math.isfinite(float(value)) for value in coordinate[:2]):
+                            raise ValueError("non-finite boundary coordinate")
+                    except (TypeError, ValueError, OverflowError) as exc:
+                        raise DrinkingFountainSourceError("drinking_fountain_boundary_invalid") from exc
     return payload, features
 
 

@@ -423,7 +423,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return {
             "server_transcription_available": app.state.speech_transcriber.configured,
             "server_synthesis_available": app.state.speech_synthesizer.configured,
-            "synthesis_format": settings.speech_synthesis_response_format,
+            "synthesis_format": (
+                "mp3" if settings.speech_synthesis_provider == "edge"
+                else settings.speech_synthesis_response_format
+            ),
             "supported_languages": [language.value for language in Language],
         }
 
@@ -456,7 +459,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             )
         except SpeechTranscriptionAudioError as exc:
             LOGGER.warning(
-                "stt.audio_rejected",
+                "stt.audio_rejected code=%s",
+                exc.code,
                 extra={
                     "duration_ms": round((perf_counter() - started_at) * 1000, 2),
                     "error_code": exc.code,
@@ -475,7 +479,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             if upstream_status is not None:
                 log_context["upstream_status"] = upstream_status
             LOGGER.warning(
+                "%s code=%s upstream_status=%s",
                 event,
+                exc.code,
+                upstream_status,
                 extra=log_context,
             )
             raise HTTPException(status_code=503, detail="Speech transcription failed") from exc

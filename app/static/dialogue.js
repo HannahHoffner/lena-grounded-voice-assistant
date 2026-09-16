@@ -16,6 +16,7 @@
     }
 
     render(clarification) {
+      this.busy = false;
       this.active = clarification || null;
       this.selected.clear();
       this.choices.replaceChildren();
@@ -79,12 +80,14 @@
 
     relocalize(copy) {
       if (!this.active) return;
+      const wasBusy = this.busy;
       this.active.prompt = copy.prompts[this.active.type] || this.active.prompt;
       this.active.submit_label = copy.submit_label || this.active.submit_label;
       for (const choice of this.active.choices) {
         choice.label = copy.choices[choice.value] || choice.label;
       }
       this.render(this.active);
+      if (wasBusy) this.disable();
     }
   }
 

@@ -244,7 +244,16 @@ class CandidateSelector:
                     else:
                         missing.update({MissingFact.REQUESTED_TIME, MissingFact.SOCIAL_BENEFIT_ENTITLEMENT})
                         reasons.append(ReasonCode.HELENE_ACCESS_NOT_ESTABLISHED)
-            matching_capability = next((item for item in requested if item in offer.service_schedules), None)
+            # Bei Essen/Wasser gilt deren Ausgabezeit, nicht etwa die längere
+            # Beratungszeit desselben Angebots. Weitere Leistungen bleiben stabil geordnet.
+            matching_capability = next(
+                (
+                    item
+                    for item in sorted(requested, key=lambda item: (item != need.value, item))
+                    if item in offer.service_schedules
+                ),
+                None,
+            )
             if need == Need.FOOD:
                 schedule_rule = offer.service_schedules.get(matching_capability) if matching_capability else None
                 rules.append(RuleCode.DOCUMENTED_TIME_ONLY)

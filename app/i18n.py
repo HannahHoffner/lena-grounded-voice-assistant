@@ -129,7 +129,7 @@ def read_json(path: Path) -> dict[str, Any]:
         return {}
     try:
         payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
         return {}
     return payload if isinstance(payload, dict) else {}
 
@@ -207,13 +207,19 @@ def migrate_legacy_store(
     """Migriert Schema 1 im Speicher ohne menschliche Freigaben zu erfinden."""
     by_id = {offer.id: offer for offer in offers}
     migrated = empty_store(source_dataset_hash=context.source_dataset_hash)
-    for offer_id, raw_entry in (payload.get("entries") or {}).items():
+    entries = payload.get("entries")
+    if entries is not None and not isinstance(entries, dict):
+        raise ValueError("legacy translation entries must be a mapping")
+    for offer_id, raw_entry in (entries or {}).items():
         if not isinstance(raw_entry, dict):
             continue
+        raw_translations = raw_entry.get("translations")
+        if raw_translations is not None and not isinstance(raw_translations, dict):
+            raise ValueError("legacy translations must be a mapping")
         offer = by_id.get(str(offer_id))
         translations: dict[Language, TranslationRecord] = {}
         for language in TARGET_LANGUAGES:
-            raw_fields = (raw_entry.get("translations") or {}).get(language.value)
+            raw_fields = (raw_translations or {}).get(language.value)
             if not isinstance(raw_fields, dict):
                 continue
             try:
@@ -288,13 +294,19 @@ def migrate_schema_two_store(
     """
     by_id = {offer.id: offer for offer in offers}
     migrated = empty_store(source_dataset_hash=context.source_dataset_hash)
-    for offer_id, raw_entry in (payload.get("entries") or {}).items():
+    entries = payload.get("entries")
+    if entries is not None and not isinstance(entries, dict):
+        raise ValueError("legacy translation entries must be a mapping")
+    for offer_id, raw_entry in (entries or {}).items():
         if not isinstance(raw_entry, dict):
             continue
+        raw_translations = raw_entry.get("translations")
+        if raw_translations is not None and not isinstance(raw_translations, dict):
+            raise ValueError("legacy translations must be a mapping")
         offer = by_id.get(str(offer_id))
         translations: dict[Language, TranslationRecord] = {}
         for language in TARGET_LANGUAGES:
-            raw_record = (raw_entry.get("translations") or {}).get(language.value)
+            raw_record = (raw_translations or {}).get(language.value)
             if not isinstance(raw_record, dict):
                 continue
             raw_fields = raw_record.get("fields")
@@ -401,7 +413,7 @@ def load_translation_catalog(
             migrated_from = "2"
         else:
             store = TranslationStore.model_validate(payload)
-    except ValidationError:
+    except ValueError:
         return TranslationCatalog(
             store=empty_store(source_dataset_hash=kb.source_hash),
             checked_at=checked_at,

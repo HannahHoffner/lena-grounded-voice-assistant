@@ -10,6 +10,8 @@ import pytest
 from fastapi.testclient import TestClient
 
 from app.config import Settings
+from app.dialogue import DialogType, new_dialog
+from app.interpreter import Need
 from app.main import create_app
 from app.models import Language
 from app.sessions import ConversationSession, SessionStore
@@ -196,6 +198,44 @@ def test_failed_quarantine_keeps_corrupt_file_untouched(
     assert session.session_id
     assert path.read_text(encoding="utf-8") == "corrupt-sensitive-content"
     assert list(tmp_path.glob("sessions.corrupt.*.json")) == []
+
+
+def test_invalid_utf8_session_file_is_quarantined_byte_for_byte(tmp_path: Path) -> None:
+    path = tmp_path / "sessions.json"
+    content = b'{"private": "\xff"}'
+    path.write_bytes(content)
+
+    session = SessionStore(path).create(Language.DE, "kb-v1")
+
+    assert SessionStore(path).get(session.session_id) is not None
+    recovery = list(tmp_path.glob("sessions.corrupt.*.json"))
+    assert len(recovery) == 1
+    assert recovery[0].read_bytes() == content
+
+
+@pytest.mark.parametrize("field", ["created_at", "last_activity_at", "dialog"])
+def test_timezone_missing_record_does_not_break_valid_sessions(tmp_path: Path, field: str) -> None:
+    path = tmp_path / "sessions.json"
+    now = datetime.now(UTC)
+    valid = _session("valid", now)
+    invalid = _session("invalid", now).model_dump(mode="json")
+    if field == "dialog":
+        dialog = new_dialog(
+            DialogType.GENERAL_NEED,
+            need=Need.GENERAL_HELP,
+            fingerprint="current-fingerprint",
+            session_timeout_seconds=180,
+            now=now,
+        ).model_dump(mode="json")
+        for name in ("created_at", "updated_at", "expires_at"):
+            dialog[name] = datetime.fromisoformat(dialog[name]).replace(tzinfo=None).isoformat()
+        invalid[field] = dialog
+    else:
+        invalid[field] = now.replace(tzinfo=None).isoformat()
+    path.write_text(json.dumps({"valid": valid.model_dump(mode="json"), "invalid": invalid}), encoding="utf-8")
+
+    assert SessionStore(path).get("valid") is not None
+    assert set(json.loads(path.read_text(encoding="utf-8"))) == {"valid"}
 
 
 def test_session_cleanup_does_not_touch_interaction_log(

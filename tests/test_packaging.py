@@ -244,7 +244,7 @@ with TestClient(app_instance) as client:
     assert health['safety_policy_version'] == '2'
     assert health['technical_fallback_includes_emergency_guidance'] is True
     copy = client.get('/api/i18n/copy?language=pl').json()
-    assert copy['copy_version'] == '8' and copy['language'] == 'pl' and copy['texts']
+    assert copy['copy_version'] == '9' and copy['language'] == 'pl' and copy['texts']
     # Seit Version 0.3.0 enthaelt der technische Fallback zusaetzlich den
     # deterministischen Hilfebus-Kontakt statt eines reinen 112-Hinweises,
     # sofern die Wissensbasis ihn liefert (Untersuchung Zeile 5).

@@ -210,6 +210,31 @@ def test_invalid_or_wrong_source_is_rejected(content: bytes, code: str) -> None:
         _collection(content)
 
 
+@pytest.mark.parametrize(
+    ("geometry_type", "coordinates"),
+    [
+        ("Polygon", []),
+        ("Polygon", [None]),
+        ("Polygon", [[]]),
+        ("Polygon", [[[1]]]),
+        ("Polygon", [[[None, 2], [1, 2], [2, 3], [None, 2]]]),
+        ("Polygon", [[[float("nan"), 2], [1, 2], [2, 3], [float("nan"), 2]]]),
+        ("MultiPolygon", [[[[1]]]]),
+        ([], []),
+    ],
+)
+def test_malformed_boundary_is_a_controlled_source_error(geometry_type, coordinates) -> None:
+    source, boundary, evidence = _source_files()
+    payload = json.loads(boundary.decode("utf-8-sig"))
+    payload["features"] = [{"geometry": {"type": geometry_type, "coordinates": coordinates}}]
+
+    with pytest.raises(DrinkingFountainSourceError, match="drinking_fountain_boundary_invalid"):
+        normalize_drinking_fountain_kml(
+            source, json.dumps(payload).encode("utf-8"), evidence,
+            retrieved_at=FETCHED_AT, content_type="text/xml",
+        )
+
+
 def test_invalid_and_duplicate_geometry_are_retained_but_excluded() -> None:
     source, _, _ = _source_files()
     coordinate_values = re.findall(rb"<coordinates>([^<]+)</coordinates>", source)

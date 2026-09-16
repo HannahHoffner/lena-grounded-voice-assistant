@@ -377,6 +377,28 @@ def test_explicit_sunday_water_request_keeps_documented_hilfebus_stand() -> None
     assert "21" in ids(decision)
 
 
+@pytest.mark.parametrize("need", [Need.FOOD, Need.DRINKING_WATER])
+@pytest.mark.parametrize(("day", "time", "expected"), [
+    ("monday", "20:00", False),
+    ("sunday", "20:30", True),
+    ("sunday", "22:00", False),
+])
+@pytest.mark.parametrize("reverse_services", [False, True])
+def test_hilfebus_combined_request_uses_food_or_water_stand_schedule(
+    need, day, time, expected, reverse_services,
+) -> None:
+    services = [RequestedService(need.value), RequestedService.COUNSELLING]
+    if reverse_services:
+        services.reverse()
+
+    decision = decide(interpretation(need, services=services, day=day, time=time))
+
+    assert ("21" in ids(decision)) is expected
+    if not expected:
+        exclusion = next(item for item in decision.excluded if item.offer_id == "21")
+        assert exclusion.reason_codes == [ReasonCode.TIME_CONDITION_NOT_MET]
+
+
 def test_hilfebus_is_referral_contact_for_uncovered_basic_help() -> None:
     decision = decide(
         interpretation(Need.GENERAL_HELP, services=[RequestedService.CLOTHING])

@@ -1,11 +1,11 @@
 {
   "schema_version": "2",
-  "copy_version": "8",
+  "copy_version": "9",
   "languages": {
     "de": {
       "source_language": "de",
       "target_language": "de",
-      "version": "8",
+      "version": "9",
       "linguistic_review_status": "review_pending",
       "source_origin": "author_formulated",
       "reviewed_by_role": null,
@@ -114,13 +114,16 @@
         "fallback.water_free": "Dieser Trinkwasserbrunnen ist laut den Leipziger Wasserwerken kostenlos.",
         "fallback.water_seasonal_unknown": "Die Brunnen werden von April bis Oktober betrieben. Die aktuelle Funktionsfähigkeit kann LENA nicht prüfen.",
         "fallback.water_more_markers": "Weitere passende Wasserstellen findest du unten.",
-        "fallback.water_unavailable": "Ich habe gerade keinen verifizierten Ort für Trinkwasser. Ich nenne dir deshalb keinen ungeprüften Ort."
+        "fallback.water_unavailable": "Ich habe gerade keinen verifizierten Ort für Trinkwasser. Ich nenne dir deshalb keinen ungeprüften Ort.",
+        "ui.voiceStartRecording": "Drücke das Mikrofon, um zu sprechen. Du kannst auch schreiben.",
+        "ui.voiceRecording": "Ich nehme auf. Drücke das Mikrofon erneut, wenn du fertig bist.",
+        "ui.voiceServiceError": "Die Spracherkennung ist gerade nicht erreichbar. Versuche es erneut oder schreibe deine Frage."
       }
     },
     "en": {
       "source_language": "de",
       "target_language": "en",
-      "version": "8",
+      "version": "9",
       "linguistic_review_status": "machine",
       "source_origin": "machine_drafted",
       "reviewed_by_role": null,
@@ -229,13 +232,16 @@
         "fallback.water_free": "According to Leipziger Wasserwerke, this drinking-water fountain is free.",
         "fallback.water_seasonal_unknown": "The fountains operate from April to October. LENA cannot verify whether this fountain currently works.",
         "fallback.water_more_markers": "You can find more matching water points below.",
-        "fallback.water_unavailable": "I do not currently have a verified place for drinking water. I will not give you an unverified place."
+        "fallback.water_unavailable": "I do not currently have a verified place for drinking water. I will not give you an unverified place.",
+        "ui.voiceStartRecording": "Press the microphone to speak. You can also type.",
+        "ui.voiceRecording": "Recording. Press the microphone again when you have finished.",
+        "ui.voiceServiceError": "Speech recognition is currently unavailable. Try again or type your question."
       }
     },
     "pl": {
       "source_language": "de",
       "target_language": "pl",
-      "version": "8",
+      "version": "9",
       "linguistic_review_status": "machine",
       "source_origin": "machine_drafted",
       "reviewed_by_role": null,
@@ -344,13 +350,16 @@
         "fallback.water_free": "Według Leipziger Wasserwerke ta fontanna z wodą pitną jest bezpłatna.",
         "fallback.water_seasonal_unknown": "Fontanny działają od kwietnia do października. LENA nie może sprawdzić, czy fontanna działa teraz.",
         "fallback.water_more_markers": "Więcej pasujących miejsc z wodą znajdziesz poniżej.",
-        "fallback.water_unavailable": "Nie mam teraz zweryfikowanego miejsca z wodą pitną. Dlatego nie podam niesprawdzonego miejsca."
+        "fallback.water_unavailable": "Nie mam teraz zweryfikowanego miejsca z wodą pitną. Dlatego nie podam niesprawdzonego miejsca.",
+        "ui.voiceStartRecording": "Naciśnij mikrofon, aby mówić. Możesz też pisać.",
+        "ui.voiceRecording": "Nagrywam. Naciśnij mikrofon ponownie, gdy skończysz.",
+        "ui.voiceServiceError": "Rozpoznawanie mowy jest teraz niedostępne. Spróbuj ponownie lub wpisz pytanie."
       }
     },
     "ro": {
       "source_language": "de",
       "target_language": "ro",
-      "version": "8",
+      "version": "9",
       "linguistic_review_status": "machine",
       "source_origin": "machine_drafted",
       "reviewed_by_role": null,
@@ -459,13 +468,16 @@
         "fallback.water_free": "Potrivit Leipziger Wasserwerke, această fântână cu apă potabilă este gratuită.",
         "fallback.water_seasonal_unknown": "Fântânile funcționează din aprilie până în octombrie. LENA nu poate verifica dacă fântâna funcționează acum.",
         "fallback.water_more_markers": "Găsești mai multe locuri potrivite cu apă mai jos.",
-        "fallback.water_unavailable": "Nu am acum un loc verificat pentru apă potabilă. De aceea nu îți indic un loc neverificat."
+        "fallback.water_unavailable": "Nu am acum un loc verificat pentru apă potabilă. De aceea nu îți indic un loc neverificat.",
+        "ui.voiceStartRecording": "Apasă microfonul ca să vorbești. Poți și să scrii.",
+        "ui.voiceRecording": "Înregistrez. Apasă din nou microfonul când ai terminat.",
+        "ui.voiceServiceError": "Recunoașterea vocală nu este disponibilă acum. Încearcă din nou sau scrie întrebarea."
       }
     },
     "ru": {
       "source_language": "de",
       "target_language": "ru",
-      "version": "8",
+      "version": "9",
       "linguistic_review_status": "machine",
       "source_origin": "machine_drafted",
       "reviewed_by_role": null,
@@ -574,7 +586,10 @@
         "fallback.water_free": "По данным Leipziger Wasserwerke, этот фонтан с питьевой водой бесплатный.",
         "fallback.water_seasonal_unknown": "Фонтаны работают с апреля по октябрь. LENA не может проверить, работает ли фонтан сейчас.",
         "fallback.water_more_markers": "Больше подходящих мест с водой указано ниже.",
-        "fallback.water_unavailable": "Сейчас у меня нет проверенного места с питьевой водой. Поэтому я не назову непроверенное место."
+        "fallback.water_unavailable": "Сейчас у меня нет проверенного места с питьевой водой. Поэтому я не назову непроверенное место.",
+        "ui.voiceStartRecording": "Нажми на микрофон, чтобы говорить. Также можно написать.",
+        "ui.voiceRecording": "Идёт запись. Нажми на микрофон ещё раз, когда закончишь.",
+        "ui.voiceServiceError": "Распознавание речи сейчас недоступно. Попробуй ещё раз или напиши свой вопрос."
       }
     }
   }

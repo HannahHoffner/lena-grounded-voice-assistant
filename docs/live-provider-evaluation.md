@@ -13,6 +13,21 @@
 
 ## Ausgeführte Läufe
 
+### Grenze des aktuellen E2E-Runners
+
+Der Code-Review vom September 2026 hat Abweichungen im vorbereiteten E2E-Runner
+gefunden: `inject_interpreter_error` wird im Szenariodurchlauf nicht umgesetzt;
+die Fallbackmetrik erwartet noch eine kartenlose Antwort, obwohl der aktuelle
+Fehlerpfad einen lokalen Hilfebus-Kontakt anzeigen darf. E2E-Provideraufrufe
+werden nach dem Turn gezählt und erfassen interne Wiederholungen nicht exakt.
+Die Aufrufgrenzen sind dort deshalb nicht als vor jedem einzelnen externen
+Aufruf durchgesetzte Obergrenzen nachgewiesen. Vor einer Nutzung dieser Stufen
+als Evaluationsnachweis müssen Runner und Erwartungen abgeglichen werden.
+Historische Ergebnisse bleiben unverändert; dieser Review hat keine Live-Stufe
+ausgeführt. Details stehen im [Qualitätsreview](reviews/quality-review-2026-09.md).
+
+### Historische Ergebnisse
+
 | Lauf-ID | Stufe | Datum | Commit | Ergebnis |
 |---|---|---|---|---|
 | `run_7484e6b2e8564f349e9c275fe474c72c` | `interpreter` | 2026-08-24 | `293bd17a6d22dd8f0bb630842ac1892dec06516e` (clean) | Nach 6/15 Requests und 6 Provideraufrufen kontrolliert abgebrochen: 3 deutschsprachige Ergebnisse technisch vertragskonform; danach 3-mal `interpreter_http_error`; 1 nicht kritische Inhaltsabweichung im Feld `need` bei `i_de_acute`, während `acute_risk_status=detected` korrekt war; 0 kritische Inhaltsfehler. |

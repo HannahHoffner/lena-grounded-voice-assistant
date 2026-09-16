@@ -275,7 +275,7 @@ class SessionStore:
             return _LoadResult({})
         try:
             payload = json.loads(self.path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError as exc:
+        except (json.JSONDecodeError, UnicodeDecodeError) as exc:
             LOGGER.warning("session.corrupt_file.detected", extra={"error_type": type(exc).__name__})
             return _LoadResult({}, writable=self._quarantine_unlocked())
         except OSError as exc:
@@ -292,6 +292,15 @@ class SessionStore:
                 parsed = ConversationSession.model_validate(value)
                 if parsed.session_id != session_id:
                     raise ValueError("Session-ID stimmt nicht mit dem Schlüssel überein")
+                # TTL und Kapazitätsordnung vergleichen absolute Zeitpunkte.
+                # Ein beschädigter Einzelrecord darf die übrigen nicht blockieren.
+                timestamps = [parsed.created_at, parsed.last_activity_at]
+                if parsed.dialog:
+                    timestamps.extend([
+                        parsed.dialog.created_at, parsed.dialog.updated_at, parsed.dialog.expires_at,
+                    ])
+                if any(stamp.utcoffset() is None for stamp in timestamps):
+                    raise ValueError("Sessionzeitstempel benötigen eine Zeitzone")
                 sessions[session_id] = parsed
             except (ValidationError, TypeError, ValueError):
                 invalid_count += 1

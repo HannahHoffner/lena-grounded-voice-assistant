@@ -47,8 +47,10 @@ python -m app --port 8002
 ```
 
 Öffne `http://127.0.0.1:8002`. Ohne konfigurierten Interpreter startet die
-Anwendung, beantwortet freie Anfragen aber fail-closed: keine Angebote oder
-Karten, sondern ein lokalisierter technischer Hinweis mit bedingter 112-Angabe.
+Anwendung. Freie Anfragen erhalten einen lokalisierten technischen Hinweis mit
+bedingter 112-Angabe und, falls in der Wissensbasis vorhanden, die telefonische
+Hilfebus-Kontaktkarte. Eine fachliche Suche oder Standortempfehlung findet dann
+nicht statt; der mobile Hilfebus erhält dabei keinen Kartenmarker.
 
 Der Server bindet standardmäßig nur lokal. Nicht lokale Hosts erfordern
 zusätzlich `--allow-public`; dieses Flag ersetzt keine TLS-, Authentifizierungs-
@@ -60,12 +62,13 @@ Kopieren der Konfiguration erfolgt mit `cp .env.example .env`.
 
 ## Dokumentation
 
-- [Architektur](docs/architecture.md)
+- [Architektur mit Systemübersicht](docs/architecture.md)
 - [Installation und Betrieb](docs/setup.md)
 - [Konfigurationsreferenz](docs/configuration.md)
 - [Datenflüsse und Schnittstellen](docs/data-flow.md)
 - [Tests und Qualitätssicherung](docs/testing.md)
 - [Safety- und Fehlerpolitik](docs/safety-and-error-policy.md)
+- [Qualitätsreview und Bereinigungsnachweis, September 2026](docs/reviews/quality-review-2026-09.md)
 
 ## Projektstruktur
 
@@ -157,7 +160,7 @@ Dokumentationsdateien.
 | `GET` | `/api/dialogue/copy` | kompatible Teilansicht der Dialogressourcen |
 | `GET` | `/api/speech/config` | verfügbare Speech-Funktionen melden |
 | `POST` | `/api/speech/transcribe` | rohe Audiodaten transkribieren |
-| `POST` | `/api/speech/synthesize` | letzten sichtbaren Session-Antworttext als Audio erzeugen |
+| `POST` | `/api/speech/synthesize` | freigegebene Antwort-, Rückfrage- und Angebotstexte des letzten Session-Turns vorlesen |
 | `POST` | `/api/query` | Frage beantworten und Karten liefern |
 
 Die Datenmodelle stehen in `app/models.py`; eine ausführliche Beschreibung
@@ -318,10 +321,9 @@ Erweitere Datenmodelle rückwärtskompatibel und ergänze für jede fachliche Re
 einen Test. Echte Zugangsdaten gehören ausschließlich in die ignorierten Dateien
 `.env` oder `.env.local`, niemals in Quellcode, Dokumentation oder Testfixtures.
 
-Die kontrollierte Evaluation der real konfigurierten Blablador-Modelle ist als
-WP9B `prepared_not_executed`. Der aktuelle Schritt enthält ausschließlich
-synthetische Szenarien, harte Freigabe- und Laufgrenzen sowie einen
-providerfreien Dry-Run; reale LLM-, STT- und TTS-Aufrufe wurden nicht
-ausgeführt. Ablauf, Aussagegrenzen und der erst nach gesonderter Freigabe
+Der providerfreie WP9B-Dry-Run meldet stets `prepared_not_executed`. Dieser
+Status beschreibt den Dry-Run, nicht die gesamte Evaluationshistorie. Bereits
+dokumentierte Modellläufe und ihre begrenzte Aussagekraft stehen getrennt in
+der Evaluationsdokumentation. Ablauf, Aussagegrenzen und der erst nach gesonderter Freigabe
 zulässige Stufe-1-Befehl stehen in
 [Kontrollierte Live-Provider-Evaluation](docs/live-provider-evaluation.md).

@@ -203,7 +203,7 @@ class CurationCatalog(CurationModel):
         source_ids = unique([item.source_id for item in self.service_offers], "source offer IDs")
         reference_ids = unique([item.id for item in self.source_references], "source reference IDs")
         decision_ids = unique([item.id for item in self.curation_decisions], "curation decision IDs")
-        if service_ids != source_ids:
+        if any(offer.id != offer.source_id for offer in self.service_offers):
             raise ValueError("service offer IDs must equal their immutable WFS source IDs")
         for offer in self.service_offers:
             if offer.organization_id not in organization_ids or offer.location_id not in location_ids:

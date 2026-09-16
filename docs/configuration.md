@@ -12,7 +12,7 @@ und Sessionvariablen weiterhin akzeptiert.
 |---|---:|---|---|
 | `LENA_KB_PATH` | nein | `data/canonical/offers.json` | normalisierte Quelle für Wartung/Migration; keine ungefilterte Runtime-Wissensbasis |
 | `LENA_CURATION_PATH` | nein | externe Datei unter `LENA_DATA_DIR`, sonst paketierter Prototypkatalog | verpflichtender schema-validierter, hashgebundener Kurationskatalog; ungültige explizite Pfade stoppen den Nutzerbestand kontrolliert |
-| `REWRITE_PROVIDER` | nein | `template` | `blablador` aktiviert den Interpreter; `template` führt freie Anfragen fail-closed ohne Angebote aus |
+| `REWRITE_PROVIDER` | nein | `template` | `blablador` aktiviert den Interpreter; `template` liefert den technischen Hinweis mit gegebenenfalls Hilfebus-Kontaktkarte, ohne fachliche Suche |
 | `BLABLADOR_BASE_URL` | für Blablador | – | OpenAI-kompatible Basis-URL |
 | `BLABLADOR_API_KEY` | für Blablador | – | Zugangstoken; niemals committen |
 | `BLABLADOR_MODEL` | für Blablador | – | gemeinsames Modell für alle drei Stufen, sofern keine Stufe unten überschrieben wird |
@@ -49,7 +49,7 @@ und Sessionvariablen weiterhin akzeptiert.
 | `SPEECH_SYNTHESIS_API_KEY` | für OpenAI-TTS | – | Zugangstoken |
 | `SPEECH_SYNTHESIS_MODEL` | nein | `gpt-4o-mini-tts` bei OpenAI | TTS-Modell |
 | `SPEECH_SYNTHESIS_VOICE` | nein | `alloy` | Voice-Name |
-| `SPEECH_SYNTHESIS_RESPONSE_FORMAT` | nein | `mp3` | Antwortformat |
+| `SPEECH_SYNTHESIS_RESPONSE_FORMAT` | nein | `mp3` | OpenAI-kompatibles Antwortformat; Edge liefert immer MP3, auch in `/api/speech/config` |
 | `TTS_TIMEOUT_SECONDS` | nein | `45` | TTS-Gesamtgrenze für OpenAI-kompatibles und Edge-TTS, mindestens 0,1 s |
 | `SPEECH_SYNTHESIS_TIMEOUT_SECONDS` | nein | – | Legacy-Name für `TTS_TIMEOUT_SECONDS` |
 | `SPEECH_SYNTHESIS_MAX_CHARS` | nein | `4000` | maximaler TTS-Text; Bereich 1–20000 Zeichen |
@@ -232,7 +232,8 @@ dem konfigurierten Limit erhält HTTP 413; geprüft werden sowohl ein vorhandene
 `Content-Length`-Header als auch die tatsächlich gestreamten Bytes. Unterstützt
 sind WebM, Ogg, MP4, MPEG/MP3 und WAV. Ein ausdrücklich anderer Medientyp erhält
 HTTP 415, ein leerer Audiobody HTTP 422. Diese Anwendungsgrenzen ergänzen, aber
-ersetzen keine engeren Reverse-Proxy-Limits.
+ersetzen keine engeren Reverse-Proxy-Limits. Query- und TTS-Textgrenzen greifen
+nach dem Parsen des JSON-Bodys; sie begrenzen nicht dessen gesamte Bytegröße.
 
 ## Serverbindung
 

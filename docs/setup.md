@@ -28,18 +28,45 @@ Exposition, ersetzt aber weder TLS, Authentifizierung noch einen Reverse Proxy.
 
 ## Sicherer Offline-naher Start
 
-Setze mindestens `REWRITE_PROVIDER=template` und `WFS_AUTO_SYNC=false`, wenn der
-Start keine Modell- oder WFS-Anfrage auslösen soll. Das Frontend bleibt nutzbar;
+Setze `REWRITE_PROVIDER=template`, `WFS_AUTO_SYNC=false`,
+`TOILET_AUTO_SYNC=false` und `DRINKING_FOUNTAIN_AUTO_SYNC=false`, wenn der
+Start keine Modell- oder Quellenanfrage auslösen soll. Für isolierte Prüfungen
+verhindert `LENA_ENV_FILE_MODE=disabled`, dass `.env.local` Prozesswerte wieder
+überschreibt; `LENA_RUNTIME_DIR` sollte auf ein temporäres Verzeichnis zeigen.
+Das Frontend bleibt nutzbar;
 freie Anfragen werden ohne Interpreter jedoch bewusst nicht fachlich
 klassifiziert. Sie erhalten einen technischen Hinweis mit bedingter 112-Angabe
-und keine Angebote oder Karten. Speech und Kartenkacheln können ohne Netzwerk
-zusätzlich eingeschränkt sein.
+und gegebenenfalls die lokal belegte Hilfebus-Kontaktkarte, ohne Kartenmarker
+oder fachliche Suchresultate. Speech und Kartenkacheln benötigen weiterhin
+Netzwerk und sind kein Teil einer providerfreien Prüfung.
 
 Für langsame oder kontrolliert blockierte Provider können die Timeoutwerte aus
 [Konfiguration](configuration.md) angepasst werden. Sehr kleine Werte eignen
 sich nur für Tests. Ein Timeout führt bei Query-Providern in den vorhandenen
 Fallback; Speech antwortet mit HTTP 503 und WFS behält den zuletzt aktivierten
 Datenstand.
+
+## Spracheingabe in Firefox
+
+Ohne Browser-Spracherkennung verwendet LENA `MediaRecorder` und den
+konfigurierten STT-Server. Auf `http://127.0.0.1:8002/` bzw. `localhost`:
+Mikrofonzugriff erlauben, Mikrofon einmal zum Starten und erneut zum Beenden
+anklicken. Erst danach wird die Aufnahme transkribiert. Das erkannte Ergebnis
+erscheint im Eingabefeld und kann geprüft und gesendet werden.
+
+„Die Spracherkennung ist gerade nicht erreichbar“ bezeichnet einen technischen
+Dienst-/Netzwerkfehler; es ist kein Urteil über die Aussprache. „Nicht verstanden“
+bezeichnet leeres oder nicht verwertbares Audio. Die Verfügbarkeitsanzeige der
+Speech-Konfiguration prüft die Einstellungen, nicht die Erreichbarkeit des
+Servers. Ein funktionierendes Mikrofon und erfolgreiches TTS beweisen deshalb
+keine funktionierende STT-Verbindung. Ogg/Opus und WebM/Opus werden serverseitig
+zu WAV normalisiert. Allgemeine HTTP-LAN-Adressen benötigen für Mikrofonzugriff
+einen sicheren Kontext, typischerweise HTTPS; siehe
+[MDN: getUserMedia](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia).
+
+Technische Fehler erscheinen im Serverlog mit einem redigierten Fehlercode und,
+falls vorhanden, dem HTTP-Status des STT-Servers. Audioinhalte, Zugangsdaten und
+Antworttexte des Providers werden dabei nicht protokolliert.
 
 ## Zustandsdateien
 
@@ -182,9 +209,10 @@ Ein providerfreies Szenario-Review wird so exportiert:
 python -m app.multilingual_review export --output multilingual-review.json
 ```
 
-Die kontrollierte Live-Provider-Evaluation ist als `prepared_not_executed`
-vorbereitet. Ihr providerfreier Plan kann ohne `.env`- oder
-Providerinitialisierung geprüft werden:
+Der providerfreie Plan der kontrollierten Live-Provider-Evaluation kann ohne
+Providerinitialisierung geprüft werden. Er liest nur freigegebene, nicht geheime
+Konfigurationswerte einschließlich `.env`/`.env.local`. Sein fester Status
+`prepared_not_executed` trifft keine Aussage über frühere dokumentierte Läufe:
 
 ```powershell
 python -m app.multilingual_review live-dry-run --stage all
@@ -229,8 +257,11 @@ Benutzerverzeichnis (`%LOCALAPPDATA%\LENA` unter Windows beziehungsweise
 `LENA_RUNTIME_DIR` setzen diese externen Wurzeln explizit. WFS-Promotionen
 erzeugen Releases und den Active-Pointer nur dort; der Bootstrap wird niemals
 überschrieben. Ein ungültiger externer Pointer oder ein fehlender Bootstrap
-ergibt einen sichtbaren Knowledge-Base-Fehler und fällt nicht auf Pending-Daten
-oder einen versteckten Netzwerkabruf zurück.
+führt nur dann zu einem sichtbaren Knowledge-Base-Fehler, wenn auch der exakt
+kataloggebundene verifizierte lokale Stand und der Paket-Bootstrap nicht nutzbar
+sind. Ein erfolgreicher gebundener Fallback meldet `degraded` und den
+Quellenfehler in Health. Pending-Daten und versteckte Netzwerkabrufe sind keine
+Fallbacks.
 
 Die Constraints gelten für CPython 3.11 und enthalten noch keine
 Artefakthashes. Der Build ist hinsichtlich Name, Version und Dateiinventar

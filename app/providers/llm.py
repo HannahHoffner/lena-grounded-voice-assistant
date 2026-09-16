@@ -202,6 +202,8 @@ class BlabladorProvider:
                 response = await self._post(payload)
         except (TimeoutError, httpx.TimeoutException) as exc:
             raise ProviderTimeoutError(f"Blablador {stage} timed out") from exc
+        if not isinstance(response, dict):
+            raise ValueError("LLM response must be a JSON object")
         confirmed_model = response.get("model")
         if isinstance(confirmed_model, str) and confirmed_model.strip():
             self.last_confirmed_models[stage] = confirmed_model.strip()

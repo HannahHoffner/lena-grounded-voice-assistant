@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import asyncio
 from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
@@ -39,6 +40,63 @@ from app.speech import SpeechSynthesizer, SpeechTranscriber
 
 ROOT = Path(__file__).resolve().parents[1]
 KB_PATH = ROOT / "data" / "canonical" / "offers.json"
+
+
+@pytest.mark.parametrize("envelope", [None, [], "unexpected", 7])
+def test_invalid_llm_envelope_uses_controlled_interpreter_error(monkeypatch, envelope) -> None:
+    provider = BlabladorProvider(settings("blablador"))
+    async def fake_post(payload):
+        return envelope
+    monkeypatch.setattr(provider, "_post", fake_post)
+    with pytest.raises(InterpreterError, match="interpreter_invalid_json"):
+        asyncio.run(provider.interpret_query(query="Hilfe", language=Language.DE, category=None, aliases=[]))
+
+
+@pytest.mark.parametrize("provider", ["edge", "openai"])
+@pytest.mark.parametrize("language", list(Language))
+def test_tts_api_reaches_adapter_with_session_bound_text(monkeypatch, provider, language) -> None:
+    import edge_tts
+    import httpx
+    from app.speech import EDGE_VOICES, normalize_tts_text
+
+    captured = {}
+    audio = b"synthetic-audio"
+    class Edge:
+        def __init__(self, **kwargs): captured.update(kwargs)
+        async def stream(self):
+            yield {"type": "WordBoundary", "text": "ignored"}
+            yield {"type": "audio", "data": audio}
+    class Client:
+        def __init__(self, **kwargs): pass
+        async def __aenter__(self): return self
+        async def __aexit__(self, *args): pass
+        async def post(self, url, **kwargs):
+            captured.update(url=url, **kwargs)
+            return httpx.Response(200, content=audio, request=httpx.Request("POST", url))
+    monkeypatch.setattr(edge_tts, "Communicate", Edge)
+    monkeypatch.setattr(httpx, "AsyncClient", Client)
+    app = create_app(replace(
+        settings("blablador"), speech_synthesis_provider=provider, speech_synthesis_response_format="wav",
+    ))
+    session = app.state.service.sessions.create(language, app.state.kb.runtime_kb_fingerprint)
+    app.state.service.sessions.add_turn(session, question="Test", answer="Antwort", speakable_texts=["112"])
+    client = TestClient(app)
+    response = client.post("/api/speech/synthesize", json={
+        "text": "112", "language": language.value, "session_id": session.session_id,
+    })
+    assert response.status_code == 200
+    assert response.content == audio
+    expected_format = "mp3" if provider == "edge" else "wav"
+    assert client.get("/api/speech/config").json()["synthesis_format"] == expected_format
+    assert response.headers["content-type"] == ("audio/mpeg" if provider == "edge" else "audio/wav")
+    if provider == "edge":
+        assert captured["text"] == normalize_tts_text("112", language)
+        assert captured["voice"] == EDGE_VOICES[language]
+    else:
+        assert captured["url"].endswith("/audio/speech")
+        assert captured["headers"]["Authorization"] == "Bearer test-token"
+        assert captured["json"]["input"] == normalize_tts_text("112", language)
+        assert captured["json"]["response_format"] == "wav"
 
 
 def _interpretation(

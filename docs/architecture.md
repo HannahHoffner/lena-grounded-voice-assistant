@@ -14,7 +14,7 @@ flowchart LR
     S --> R[Deterministische Kandidatenbegrenzung]
     S -. optional .-> L[Blablador]
     R --> Q[Freigegebene Runtime-Sicht]
-    C[Active-Pointer einmal lesen] --> K[(data/wfs/releases/ID/offers.json)]
+    C[Active-Pointer prüfen] --> K[(data/wfs/releases/ID/offers.json)]
     K --> Q
     V[(schema-validierter Kurationskatalog)] --> Q
     E[(verifizierte paketierte Betreiberangebote)] --> Q
@@ -60,10 +60,12 @@ die zentrale Sessionlogik den fachlichen Altverlauf.
 
 `app/service.py` ist die fachliche Orchestrierung. Der Dienst löst Sessions auf,
 führt zuerst den engen Preflight und danach den LLM-Interpreter aus und wertet
-den validierten Risikostatus vor Scope, Selbstbeschreibung, Fachdialog,
+den validierten Risikostatus vor Scope, Fachdialog,
 Kandidaten und Infrastruktur aus. `app/safety.py` begrenzt diese Entscheidung
 deterministisch; Nummer und sichtbare Texte stammen aus versionierten lokalen
-Policy- und I18n-Ressourcen.
+Policy- und I18n-Ressourcen. Reine bekannte Selbstbeschreibungsfragen dürfen
+nach dem Preflight ohne Interpreter beantwortet werden, solange kein
+Safety-Dialog offen ist. Zusätzlicher Text verhindert diesen Shortcut.
 
 Bei `drinking_water` verbindet `app/infrastructure_results.py` die positive
 soziale `CandidateDecision` mit der freigegebenen Brunnenprojektion. Fachliche
@@ -145,13 +147,16 @@ den Interpreter. Beide Wege verwenden danach denselben `CandidateSelector`.
 Die explizite Altersgruppe trennt `under_18` von den Erwachsenenbereichen
 18–26 und ab 27, ohne ein numerisches Alter zu erfinden.
 
-Die aktive Politik kennt Schlafzielgruppe, eine einmalige Schlaf-Altersfrage,
+Die aktive Politik kennt Schlafzielgruppe,
 A1/Schoppi-Leistungsart, Mobile/Kübel-Ort, allgemeinen Bedarf und den
 Safety-Dialog `acute_risk_confirmation` für unklare Risikoklassifikationen. Ein
 enger eindeutiger Preflight-Treffer stoppt dagegen unmittelbar ohne Dialog.
-Allgemeine Dialoge haben einen Versuch; nur die Schlaf-Altersabsicherung darf unmittelbar
-als zweiter Schritt folgen. Der allgemeine Bedarfsdialog öffnet sich sowohl bei
-`need=general_help` als auch bei `need=unknown` (AP10: unklare, aber
+Fachliche Dialoge schließen nach einer verwertbaren Antwort ab. Bei „Frau“ ohne
+Alter folgt keine weitere Pflichtfrage: Scharni wird ausdrücklich als Angebot
+für volljährige Frauen bedingt genannt, Rücke bleibt der Erstkontakt. Der alte
+`sleep_age`-Zustand bleibt für bestehende Sessions lesbar, wird aber nicht neu
+geöffnet. Der allgemeine Bedarfsdialog öffnet sich bei fehlender konkreter
+Leistungsangabe sowohl bei `need=general_help` als auch bei `need=unknown` (AP10: unklare, aber
 möglicherweise relevante Anfrage) — beide werden auf denselben
 Originating-Need normalisiert. Bleibt die Lage unklar, stammen Telefon und
 Zeiten des Hilfebus ausschließlich aus dem kuratierten Runtime-Datensatz.
@@ -238,8 +243,10 @@ Qualitätsbewertung; dafür bleibt eine manuelle Evaluation erforderlich.
 Scheitert der Selector technisch, verwendet die Anfrage nur die stabile
 deterministische CandidateDecision und den Templatepfad; der gleiche Provider
 wird nicht unmittelbar nochmals als Formulator aufgerufen. Jeder
-Formulatorfehler verwirft die vollständige Modellantwort und verwendet nur die
-bereits finalen Angebote im lokalisierten, rollenrichtigen Templatefallback.
+Formulatorfehler verwirft die vollständige Modellantwort. Bei Parsing- oder
+Groundingfehlern ist innerhalb des Restbudgets ein neuer Versuch erlaubt; bei
+Transportfehlern nicht. Bleibt die Antwort ungültig, verwendet die Anwendung
+die bereits finalen Angebote im lokalisierten Templatefallback.
 
 Interpreter, Selector und Formulator verwenden denselben asynchronen
 HTTPX-Transport, aber getrennte Stufengrenzen von standardmäßig 15, 10 und 30
@@ -251,7 +258,8 @@ LLM-Wartezeit gezählt. HTTPX begrenzt zusätzlich seine Transportphasen.
 Transportfehler werden nicht automatisch wiederholt. Scheitert bereits der
 Interpreter durch Timeout, HTTP-/JSON-/Schema-/Vertragsfehler, Budget oder
 Nichtverfügbarkeit, endet die Anfrage fail-closed mit einem technischen Text
-und bedingtem 112-Hinweis. Kandidaten, Infrastruktur, Selector und Formulator
+und bedingtem 112-Hinweis sowie gegebenenfalls der lokalen Hilfebus-Kontaktkarte
+ohne Marker. Kandidaten, Infrastruktur, Selector und Formulator
 laufen nicht; eine lexikalische Fachklassifikation wird nicht verwendet.
 
 `app/resources.py` löst statische Paketressourcen und den rein lesbaren
@@ -272,8 +280,8 @@ schreibt daraus einen unveränderlichen Ordner mit `offers.json`,
 `snapshot.geojson`, `diff.json` und typisiertem `manifest.json`. Promotion lädt
 nicht erneut vom WFS, sondern prüft alle gespeicherten Bytes und ersetzt zuletzt
 genau den kleinen Pointer `data/wfs/active_release.json` atomar. Rollback nutzt
-denselben validierten Pointerwechsel. `app/kb_loader.py` liest den Pointer pro
-Ladevorgang einmal und verwendet danach nur diesen Release; solange noch kein
+denselben validierten Pointerwechsel. `app/kb_loader.py` prüft Pointer und Releasebindung beim
+Laden; solange noch kein
 Pointer existiert, diagnostiziert `app/kb_loader.py` diesen Zustand getrennt
 vom Runtime-Bestand. Die Nutzeranwendung lädt ausschließlich die kuratierte
 Projektion: zuerst den exakt kataloggebundenen und vollständig verifizierten
@@ -281,8 +289,8 @@ lokalen Release, danach den manifest- und hashverifizierten Paket-Bootstrap.
 Ungefilterte normalisierte Daten sind nur über die ausdrückliche
 Wartungsfunktion `load_normalized_source_release()` erreichbar.
 
-`app/i18n.py` führt deutsche Quelldaten, gespeicherte Übersetzungen und manuelle
-Overrides zu Karten zusammen. Es liest einen vorhandenen externen Store oder
+`app/i18n.py` führt deutsche Quelldaten und integritätsgeprüfte
+gespeicherte Übersetzungen zu Karten zusammen. Es liest einen vorhandenen externen Store oder
 sonst den paketierten Bootstrap. `app/translate_offers.py` schreibt ausschließlich
 in die externe Datenwurzel und aktualisiert den Store explizit als
 Wartungsschritt, nicht während einer Nutzeranfrage.
@@ -309,8 +317,8 @@ EPSG:25833 nach WGS84 und erstellt Ziele relativ zum Leipziger Hauptbahnhof.
 Vor der Synthese ersetzt der Adapter das eigenständige Token `112`
 sprachabhängig durch einzeln gesprochene Ziffern. Die visuelle API-Antwort bleibt
 unverändert. Der TTS-Endpunkt verlangt zusätzlich die aktive Session-ID und
-akzeptiert nur den exakten letzten sichtbaren Antworttext dieser Session und
-Sprache. Faktenreferenzen, Policy-IDs, Fehlercodes oder clientseitig veränderte
+akzeptiert nur die letzte Antwort sowie serverseitig freigegebene Angebots-,
+Marker- und Rückfragetexte dieses Turns in derselben Sprache. Faktenreferenzen, Policy-IDs, Fehlercodes oder clientseitig veränderte
 Texte können dadurch nicht als reguläre Antwort synthetisiert werden.
 
 STT und TTS besitzen jeweils eine konfigurierbare Gesamtgrenze von standardmäßig
@@ -354,8 +362,9 @@ Links nur nach expliziter Protokollprüfung.
 ## Tatsächliche Betriebsprofile
 
 - Ohne Interpreterzugang: Start und Health funktionieren, freie Anfragen fallen
-  jedoch geschlossen auf den technischen 112-Hinweis zurück; keine Angebote,
-  Toiletten, Brunnen oder Karten werden ausgegeben. Server-Transkription fehlt,
+  jedoch auf den technischen 112-Hinweis mit gegebenenfalls einer telefonischen
+  Hilfebus-Kontaktkarte zurück. Fachsuche und Kartenmarker entfallen.
+  Server-Transkription fehlt ohne eigene Speech-Konfiguration;
   Sprachsynthese kann über `edge-tts` verfügbar sein.
 - Mit `REWRITE_PROVIDER=blablador`: strukturierte Interpretation und geerdete
   Formulierung mit vorgeschaltetem Akutgefahr-Signal und deterministischem

@@ -13,7 +13,8 @@ from app.config import Settings
 from app.interpreter import AcuteRiskStatus, Need, QueryInterpretation, RequestedService, ScopeStatus
 from app.main import create_app
 from app.providers.llm import InterpreterError
-from app.dialogue import load_dialogue_resource
+from app.dialogue import DialogType, KnownExplicitFacts, load_dialogue_resource, new_dialog
+from app.dialogue_flow import merge_dialog_facts
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -118,6 +119,42 @@ def send_choices(client: TestClient, opened: dict[str, object], values: list[str
     )
 
 
+@pytest.mark.parametrize("need", [Need.TOILET, Need.GENERAL_HELP])
+@pytest.mark.parametrize("language", ["de", "en", "pl", "ro", "ru"])
+def test_explicit_shower_returns_only_verified_showers_without_need_question(tmp_path, need, language):
+    client, _ = client_with(tmp_path, [interpretation(need, services=[RequestedService.SHOWER])])
+    response = client.post("/api/query", json={"query": "Wo kann ich duschen?", "language": language})
+    body = response.json()
+    assert response.status_code == 200
+    assert body["clarification"] is None
+    assert body["cards"]
+    by_id = client.app.state.kb.by_id()
+    assert all(card["id"] in by_id and "shower" in by_id[card["id"]].capabilities for card in body["cards"])
+    assert not any(marker.startswith("toilet:") for marker in body["map_marker_ids"])
+
+
+@pytest.mark.parametrize("language", ["de", "en", "pl", "ro", "ru"])
+def test_female_sleep_choice_finishes_without_inventing_age(tmp_path, language):
+    client, provider = client_with(tmp_path, [interpretation(Need.SLEEP)])
+    opened = open_sleep(client)
+    body = send_choices(client, opened, ["female"], language=language).json()
+    assert body["clarification"] is None
+    assert body["answer_type"] == "grounded_referral"
+    assert {card["id"] for card in body["cards"]} == {"7", "8"}
+    from app.dialogue import dialogue_text
+    from app.models import Language
+    assert dialogue_text(Language(language), "answers", "scharni_conditional") in body["answer"]
+    assert len(provider.calls) == 1
+    assert client.app.state.service.sessions.get(body["session_id"]).dialog is None
+
+
+def test_conditional_sleep_contact_does_not_override_named_organization(tmp_path):
+    client, _ = client_with(tmp_path, [interpretation(Need.SLEEP, facts={"gender": "female"})])
+    body = client.post("/api/query", json={"query": "Ich suche einen Schlafplatz bei Schoppi."}).json()
+    assert body["clarification"] is None
+    assert [card["id"] for card in body["cards"]] == ["6"]
+
+
 def test_general_sleep_opens_ruecke_and_multifact_choices(tmp_path) -> None:
     client, provider = client_with(tmp_path, [interpretation(Need.SLEEP)])
     body = open_sleep(client)
@@ -127,21 +164,22 @@ def test_general_sleep_opens_ruecke_and_multifact_choices(tmp_path) -> None:
     assert provider.calls[0]["dialog_context"] is None
 
 
-def test_sleep_button_female_preserves_unknown_age_and_opens_age_clarification(tmp_path) -> None:
+def test_sleep_button_female_preserves_unknown_age_and_finishes_conditionally(tmp_path) -> None:
     client, provider = client_with(tmp_path, [interpretation(Need.SLEEP)])
     opened = open_sleep(client)
     response = send_choices(client, opened, ["female"])
 
     assert response.status_code == 200
     body = response.json()
-    assert body["clarification"]["type"] == "sleep_age"
+    assert body["clarification"] is None
+    assert body["answer_type"] == "grounded_referral"
     assert body["question"] == "Ich bin eine Frau"
     assert {card["id"] for card in body["cards"]} == {"7", "8"}
     assert "female" not in body["question"].casefold()
     assert len(provider.calls) == 1
 
 
-def test_female_without_age_gets_one_short_age_followup_and_conditional_scharni(tmp_path) -> None:
+def test_female_without_age_finishes_with_conditional_scharni(tmp_path) -> None:
     client, _ = client_with(
         tmp_path,
         [interpretation(Need.SLEEP), interpretation(Need.SLEEP, facts={"gender": "female"})],
@@ -152,8 +190,8 @@ def test_female_without_age_gets_one_short_age_followup_and_conditional_scharni(
         json={"query": "Ich bin eine Frau.", "session_id": opened["session_id"]},
     ).json()
 
-    assert body["clarification"]["type"] == "sleep_age"
-    assert body["clarification"]["choices"] == []
+    assert body["clarification"] is None
+    assert body["answer_type"] == "grounded_referral"
     assert {card["id"] for card in body["cards"]} == {"7", "8"}
     assert body["map_data"] is None or "8" not in {item["id"] for item in body["map_data"]["destinations"]}
 
@@ -165,8 +203,8 @@ def test_initial_explicit_female_fact_skips_redundant_target_group_question(tmp_
         json={"query": "Ich bin eine Frau und brauche einen Schlafplatz.", "language": "de"},
     ).json()
 
-    assert body["clarification"]["type"] == "sleep_age"
-    assert body["clarification"]["choices"] == []
+    assert body["clarification"] is None
+    assert body["answer_type"] == "grounded_referral"
     assert {card["id"] for card in body["cards"]} == {"7", "8"}
 
 
@@ -217,7 +255,8 @@ def test_speech_followup_uses_same_interpreter_path_and_keeps_language_change(tm
     body = response.json()
     assert response.status_code == 200
     assert body["session_id"] == opened["session_id"]
-    assert body["clarification"]["type"] == "sleep_age"
+    assert body["clarification"] is None
+    assert body["answer_type"] == "grounded_referral"
     assert provider.calls[1]["language"].value == "ro"
 
 
@@ -281,6 +320,53 @@ def test_kuebel_requires_place_and_gruenau_never_guesses_another_team(tmp_path) 
     assert {card["id"] for card in resolved["cards"]}.issubset({"19.2", "21"})
     assert "19.1" not in {card["id"] for card in resolved["cards"]}
     assert "19.3" not in {card["id"] for card in resolved["cards"]}
+
+
+@pytest.mark.parametrize(
+    ("prior_age", "current_facts", "expected_age", "expected_group"),
+    [
+        (22, {"age_group": "under_18"}, None, "under_18"),
+        (16, {"age_group": "adult"}, None, "adult"),
+        (22, {"age_group": "adult"}, 22, "under_27"),
+        (22, {"age_group": "under_27"}, 22, "under_27"),
+        (22, {"age": 17}, 17, "under_18"),
+        (22, {}, 22, "under_27"),
+    ],
+)
+def test_dialog_age_correction_preserves_only_compatible_known_age(
+    prior_age, current_facts, expected_age, expected_group,
+) -> None:
+    prior = interpretation(Need.ADVICE, facts={"age": prior_age}).explicit_facts
+    dialog = new_dialog(
+        DialogType.ORGANIZATION_DISTRICT,
+        need=Need.ADVICE,
+        fingerprint="a" * 64,
+        session_timeout_seconds=300,
+        facts=KnownExplicitFacts(age=prior.age, age_group=prior.age_group),
+    )
+
+    merged = merge_dialog_facts(interpretation(Need.ADVICE, facts=current_facts), dialog)
+
+    assert merged.explicit_facts.age == expected_age
+    assert merged.explicit_facts.age_group.value == expected_group
+
+
+def test_age_group_correction_resolves_real_organization_dialog(tmp_path) -> None:
+    client, _ = client_with(tmp_path, [
+        interpretation(Need.ADVICE, facts={"age": 22}),
+        interpretation(Need.ADVICE, facts={"age_group": "under_18", "district": "Grünau"}),
+    ])
+    opened = client.post("/api/query", json={"query": "Ich bin 22 und suche Kübel"}).json()
+    assert opened["clarification"]["type"] == "organization_district"
+
+    response = client.post("/api/query", json={
+        "session_id": opened["session_id"],
+        "query": "Korrektur: unter 18, in Grünau",
+    })
+
+    assert response.status_code == 200
+    assert response.json()["clarification"] is None
+    assert [card["id"] for card in response.json()["cards"]] == ["19.2"]
 
 
 def test_general_help_choice_and_unresolved_answer_falls_back_to_curated_hilfebus(tmp_path) -> None:
@@ -448,7 +534,7 @@ def test_dialog_copy_has_five_languages_and_explicit_review_status_in_health(tmp
     client, _ = client_with(tmp_path, [])
     for language in ("de", "en", "pl", "ro", "ru"):
         copy = client.get(f"/api/dialogue/copy?language={language}").json()
-        assert copy["copy_version"] == "8"
+        assert copy["copy_version"] == "9"
         assert copy["prompts"]["general_need"]
     summary = client.get("/api/health").json()["application_texts"]
     assert summary["languages"]["de"]["review_pending"] > 0

@@ -4,7 +4,7 @@ include pyproject.toml
 recursive-include app *.py *.html *.css *.js *.png *.json *.geojson *.csv *.kml
 recursive-include docs *.md
 recursive-include requirements *.txt
-recursive-include tests *.py *.md
+recursive-include tests *.py *.md *.cjs
 prune data
 prune runtime
 prune build

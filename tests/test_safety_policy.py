@@ -361,6 +361,63 @@ def test_topic_change_does_not_clear_open_safety_dialog(tmp_path: Path) -> None:
     assert body["clarification"]["type"] == "acute_risk_confirmation"
 
 
+SELF_DESCRIPTION_QUERIES = [
+    (Language.DE, "Wer bist du?"),
+    (Language.EN, "Who are you?"),
+    (Language.PL, "Kim jesteś?"),
+    (Language.RO, "Cine ești?"),
+    (Language.RU, "Кто ты?"),
+]
+
+
+@pytest.mark.parametrize(("language", "query"), SELF_DESCRIPTION_QUERIES)
+def test_pure_self_description_remains_provider_free(tmp_path, language, query) -> None:
+    app = create_app(settings(tmp_path))
+    provider = QueueProvider([])
+    app.state.service.blablador = provider
+    body = post(TestClient(app), query, language).json()
+
+    assert body["answer_type"] == "system_description"
+    assert body["answer"] == application_text(language, "fallback.self_description")
+    assert provider.interpreter_calls == provider.selector_calls == provider.formulator_calls == 0
+
+
+@pytest.mark.parametrize(("language", "query"), SELF_DESCRIPTION_QUERIES)
+def test_mixed_self_description_cannot_bypass_risk_interpretation(tmp_path, language, query) -> None:
+    app = create_app(settings(tmp_path))
+    provider = QueueProvider([interpretation(AcuteRiskStatus.DETECTED)])
+    app.state.service.blablador = provider
+    mixed_query = f"{query} Ich habe gerade sehr viele Tabletten genommen."
+    assert not preflight_detects_immediate_danger(mixed_query)
+
+    body = post(TestClient(app), mixed_query, language).json()
+
+    assert_safety_stop(body, language, SafetyTextKind.DETECTED)
+    assert provider.interpreter_calls == 1
+
+
+@pytest.mark.parametrize("followup", [{"query": "Wer bist du?"}, {"query": ""}, {"category": "food"}])
+def test_shortcuts_cannot_clear_pending_safety_dialog(tmp_path, followup) -> None:
+    app = create_app(settings(tmp_path))
+    provider = QueueProvider([
+        interpretation(AcuteRiskStatus.UNCERTAIN),
+        interpretation(AcuteRiskStatus.NOT_DETECTED),
+    ])
+    app.state.service.blablador = provider
+    client = TestClient(app)
+    opened = post(client, "synthetic uncertain statement").json()
+
+    response = client.post("/api/query", json={"session_id": opened["session_id"], **followup})
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["answer_type"] == "acute_risk_clarification"
+    assert body["clarification"]["type"] == "acute_risk_confirmation"
+    assert body["cards"] == [] and body["map_data"] is None
+    assert provider.interpreter_calls == 2
+    assert provider.selector_calls == provider.formulator_calls == 0
+
+
 def test_language_change_and_speech_text_preserve_open_safety_dialog(tmp_path: Path) -> None:
     app = create_app(settings(tmp_path))
     provider = QueueProvider(

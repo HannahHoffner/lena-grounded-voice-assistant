@@ -43,7 +43,7 @@ sequenceDiagram
         S->>S: Mandatory ergänzen und stabile Reihenfolge herstellen
     end
     opt geerdete Formulierung verfügbar
-        S->>S: Evidence-Vertrag 2 aus finalen Angeboten
+        S->>S: Evidence-Vertrag 3 aus finalen Angeboten
         S->>L: Evidence + bindende Policies
         L-->>S: Satzvertrag 2 + Card-IDs
         S->>S: Fakten, Rollen, Sprache und Karten atomar validieren
@@ -59,8 +59,9 @@ sequenceDiagram
 Choice-Antworten dürfen nicht gleichzeitig Freitext oder Kategorie enthalten.
 `QueryResponse` enthält Antwort, Karten, Providerstatus, den expliziten
 `answer_type`,
-Sitzungsverlauf und optionale Kartendaten. Pydantic begrenzt die Frage auf 1000
-Zeichen und normalisiert Whitespace.
+Sitzungsverlauf und optionale Kartendaten. Pydantic begrenzt die Frage auf 10000 Zeichen; das konfigurierbare
+API-Limit und das HTML-Eingabefeld verwenden standardmäßig 1000 Zeichen.
+Whitespace wird normalisiert.
 
 Der Interpretervertrag Version 4 unterscheidet `need`, ausdrücklich angefragte
 Einzelleistungen, `scope_status`, `input_language`, ausdrücklich genannte Fakten, begrenzte unsichere Hinweise,
@@ -101,7 +102,8 @@ Sekunden. Vor jeder Stufe wird deren Timeout auf die verbleibende Budgetzeit
 gekürzt; nach Ausschöpfung beginnt keine weitere Modellstufe. Läuft der
 Interpreter ab oder verletzt seine Antwort den Vertrag, wird keine Kandidaten-
 oder Infrastrukturentscheidung begonnen. Die Anwendung gibt einen lokalisierten
-technischen Text mit bedingtem 112-Hinweis ohne Karten und Marker aus und ruft
+technischen Text mit bedingtem 112-Hinweis und gegebenenfalls einer lokal
+belegten Hilfebus-Kontaktkarte ohne Marker aus und ruft
 keinen nachgelagerten Provider auf. Auch eine providerfreie Templatekonfiguration
 verwendet keine lexikalische Fachklassifikation.
 Läuft der Selector ab, wird keine teilweise Modellmenge übernommen. Mandatory
@@ -228,15 +230,17 @@ Formulator erhält ausschließlich den Evidence-Vertrag aus finalen IDs, Rollen
 und freigegebenen Fakten; Grundcodes und die vollständige Entscheidung bleiben
 außerhalb des Prompts.
 
-Vier eng begrenzte Antworten innerhalb eines laufenden Dialogs formulieren
+Vier eng begrenzte Antworten formulieren
 bewusst nicht über den Formulator, sondern nutzen feste, lokalisierte
-Textbausteine (`dialogue.answers.*`): die Schlaf-Folgefrage nach Geschlecht
-ohne Altersangabe (`SLEEP_AGE`-Übergang), der aufgelöste Bezirkskontakt
+Textbausteine (`dialogue.answers.*`): der bedingte Schlafabschluss bei weiblicher
+Zielperson ohne Altersangabe, der aufgelöste Bezirkskontakt
 (`ORGANIZATION_DISTRICT`), der aufgelöste Organisationsdienst
 (`ORGANIZATION_NEED`) sowie ein eindeutiger Organisations-Alias-Treffer ganz
-ohne Dialog. In allen vier Fällen steht der Kandidat bereits eindeutig fest
-(genau ein `conditional_candidate` bzw. ein eindeutiger Alias) und es besteht
-kein Auswahl- oder Formulierungsspielraum mehr; nur der erste Fall ist
+ohne Dialog. Der erste Fall nennt den vorhandenen Erstkontakt Rücke und Scharni
+ausdrücklich nur unter der Bedingung der Volljährigkeit. Er erfindet kein Alter
+und öffnet keine weitere Pflichtfrage. In den anderen Fällen steht der Kandidat
+bereits eindeutig fest (genau ein `conditional_candidate` bzw. eindeutiger Alias).
+Es besteht kein freier Formulierungsspielraum mehr; nur der erste Fall ist
 schlafplatzspezifisch, die übrigen drei gelten für jeden Bedarfstyp. Das ist
 eine bewusste, aber nicht in Kapitel 4 als sicherheitskritisch benannte
 Ausnahme vom sonst durchgängigen Formulator-Einsatz für grounded Antworten
@@ -244,6 +248,13 @@ Ausnahme vom sonst durchgängigen Formulator-Einsatz für grounded Antworten
 Fallbacks, siehe Fundstellen in `app/service.py`).
 
 ## Öffentliche Toiletten und räumliche Ergebnisordnung
+
+Duschen, allgemeine Hygiene und Wäschewaschen sind keine Toilettenanfragen.
+Interpreterprompt 9 ordnet solche alleinigen Anfragen `general_help` mit der
+konkreten Leistung zu. Widerspricht ein `toilet`-Bedarf einer gleichzeitig
+ausdrücklich erkannten Waschleistung, hat diese vor der Infrastrukturroute
+Vorrang. Konkrete Leistungen lösen keine erneute allgemeine Bedarfsfrage aus.
+Angebote müssen weiterhin in der kuratierten Wissensbasis belegt sein.
 
 `app.toilet_sync fetch` lädt die amtliche CSV mit getrennten Connect-/Read-
 Timeouts. `app.infrastructure` prüft UTF-8/BOM, Pflichtspalten, IDs, Kosten,
@@ -395,16 +406,16 @@ Quelländerungen und der erforderliche Review vor der finalen Evaluation sind
 ## Übersetzungen und Lokalisierung
 
 Die Runtime trennt drei Sprachbereiche. Kartenübersetzungen liegen im
-schema-validierten Store 2; ausschließlich `short_description` und `services`
-sind übersetzbar. Anzeigenamen, Aliase, Adressen, Kontakte, URLs, Preise und
-Zeiten werden bei jeder Karte aus der aktuellen kuratierten Runtime-Sicht
-eingesetzt. Jede Sprachfassung ist an Angebot, Quellfeldhash, operative Fakten,
+schema-validierten Store 3; `short_description`, `services`,
+`opening_hours_raw` und `notes` sind übersetzbar. Anzeigenamen, Aliase, Adressen, Kontakte, URLs und eigenständige Standzeiten werden aus der aktuellen kuratierten
+Runtime-Sicht eingesetzt. Operative Tokens wie Preise und Uhrzeiten bleiben
+auch innerhalb übersetzbarer Texte unverändert. Jede Sprachfassung ist an Angebot, Quellfeldhash, operative Fakten,
 Kuration, Prompt, Provider/Modell und Erstellungszeit gebunden. Listenstruktur
 und geschützte Tokens werden lokal geprüft. Ungültige, abgelehnte oder veraltete
 Fassungen werden nicht verwendet.
 
 Vor einem Maschinenübersetzungsrequest werden die bereits kanonisch erkannten
-operativen Tokens in den beiden übersetzbaren Feldern lokal maskiert. Dazu
+operativen Tokens in den vier übersetzbaren Feldern lokal maskiert. Dazu
 zählen insbesondere Dezimalwerte und Preise, Telefonnummern, E-Mail-Adressen,
 URLs, exakte Zeiten und Daten sowie kuratierte Namen, Aliase und Adressen, wenn
 sie im übersetzbaren Text vorkommen. Jedes Vorkommen erhält in stabiler
@@ -454,8 +465,9 @@ zusätzlich auf 120 Sekunden begrenzt; nicht dekodierbares Audio ergibt 422 und
 eine Überschreitung der dekodierten Dauer 413, jeweils vor dem Provideraufruf.
 
 `POST /api/speech/synthesize` erwartet den Pydantic-Vertrag mit `text`, einer
-unterstützten `language` und `session_id`. Der Text muss exakt der letzten
-sichtbaren Antwort der aktiven Session und Sprache entsprechen; fremde,
+unterstützten `language` und `session_id`. Der Text muss exakt der letzten Antwort oder einem vom Server gespeicherten
+sprechbaren Angebots-, Marker- oder Rückfragetext desselben Turns und derselben
+Session und Sprache entsprechen; fremde,
 veränderte oder veraltete Texte enden mit dem redigierten HTTP-409-Fehler
 `tts_text_invalid`. Leere, unbekanntsprachige oder zu lange Payloads enden mit
 422 vor dem Provider. Je nach Konfiguration wird ein
@@ -465,8 +477,9 @@ aus. Unmittelbar vor beiden Syntheseprovidern ersetzt `normalize_tts_text()`
 das Token `112` durch sprachabhängig einzeln gesprochene Ziffern; im Browser
 und in `QueryResponse` bleibt `112` sichtbar.
 
-STT und TTS haben je eine Gesamtgrenze um die Verarbeitung und den
-tatsächlichen Provideraufruf. Ein
+STT und TTS begrenzen das Warten auf Verarbeitung und Provider. Ein bereits
+laufender STT-Decoder-Thread kann nach dem Timeout noch auslaufen; der Timeout
+beendet ihn nicht zwangsweise. Ein
 STT-Timeout liefert kein Transkript und löst daher keinen Query- oder
 Interaktionsdatensatz aus. TTS wird erst nach der sichtbaren Textantwort
 aufgerufen; sein Timeout verändert das bereits korrekte Textprotokoll nicht.

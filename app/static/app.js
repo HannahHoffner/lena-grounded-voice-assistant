@@ -34,6 +34,7 @@ const state = {
   serverSynthesisAvailable: false,
   currentSpeechAudio: null,
   currentSpeechAbort: null,
+  currentSpeechCleanup: null,
   currentSpeechButton: null,
   speechRequestToken: 0,
   resultTiles: new Map(),
@@ -654,6 +655,9 @@ function renderMap(mapData) {
 }
 
 async function submitQuery(query, dialogSubmission = null) {
+  if (state.isSubmitting) return;
+  state.isSubmitting = true;
+  if (dialogueUI.active) dialogueUI.disable();
   // Die Session-ID verbindet kurze Folgefragen. Alle Fakten werden mit jeder
   // Antwort erneut vom Backend geliefert.
   resetSessionTimeout();
@@ -673,7 +677,7 @@ async function submitQuery(query, dialogSubmission = null) {
       body: JSON.stringify({
         query,
         language: state.language,
-        category: state.category,
+        category: dialogSubmission ? null : state.category,
         session_id: state.sessionId,
         input_mode: state.queryInputMode,
         dialog_id: dialogSubmission?.dialogId || null,
@@ -728,7 +732,13 @@ function updateVoiceStatusReady() {
   micButton.classList.toggle("is-listening", state.isListening);
   micButton.classList.toggle("is-ready", voiceInputAvailable() && !state.isListening);
   if (state.keepRecognizedStatus) return;
-  byId("voiceStatus").textContent = voiceInputAvailable() ? text().voiceReady : text().voiceUnavailable;
+  if (state.isListening) {
+    byId("voiceStatus").textContent = state.listeningMode === "server" ? text().voiceRecording : text().voiceListening;
+  } else {
+    byId("voiceStatus").textContent = voiceInputAvailable()
+      ? (recognitionConstructor ? text().voiceReady : text().voiceStartRecording)
+      : text().voiceUnavailable;
+  }
 }
 
 function setSpeechButtonActive(button) {
@@ -766,6 +776,7 @@ function interruptCurrentSpeech() {
     state.currentSpeechAudio.load();
     state.currentSpeechAudio = null;
   }
+  if (state.currentSpeechCleanup) state.currentSpeechCleanup();
 }
 
 // `button` is optional: when given, its visual "is-speaking" state tracks this
@@ -813,20 +824,23 @@ function speakText(message, button = null) {
       audioUrl = URL.createObjectURL(audioBlob);
       const audio = new Audio(audioUrl);
       state.currentSpeechAudio = audio;
-      audio.onended = () => {
-        URL.revokeObjectURL(audioUrl);
+      const cleanup = () => {
+        if (audioUrl) URL.revokeObjectURL(audioUrl);
+        audioUrl = null;
         if (state.currentSpeechAudio === audio) state.currentSpeechAudio = null;
+        if (state.currentSpeechCleanup === cleanup) state.currentSpeechCleanup = null;
         finish();
       };
-      audio.onerror = () => {
-        URL.revokeObjectURL(audioUrl);
-        if (state.currentSpeechAudio === audio) state.currentSpeechAudio = null;
-        finish();
-      };
+      state.currentSpeechCleanup = cleanup;
+      audio.onended = cleanup;
+      audio.onerror = cleanup;
       await audio.play();
     } catch (_) {
       if (audioUrl) URL.revokeObjectURL(audioUrl);
-      state.currentSpeechAudio = null;
+      if (isCurrent()) {
+        state.currentSpeechAudio = null;
+        state.currentSpeechCleanup = null;
+      }
       finish();
     }
   });
@@ -908,9 +922,15 @@ async function transcribeRecordedAudio(blob) {
       headers: { "Content-Type": blob.type || "audio/webm" },
       body: blob
     });
-    if (!response.ok) throw new Error("transcription failed");
+    if (!response.ok) {
+      state.keepRecognizedStatus = true;
+      byId("voiceStatus").textContent = [413, 415, 422].includes(response.status)
+        ? text().voiceTryAgain : text().voiceServiceError;
+      return;
+    }
     const data = await response.json();
-    const transcript = (data.text || "").trim();
+    if (typeof data.text !== "string") throw new Error("invalid transcription response");
+    const transcript = data.text.trim();
     state.keepRecognizedStatus = true;
     if (transcript) {
       byId("queryInput").value = transcript;
@@ -924,7 +944,7 @@ async function transcribeRecordedAudio(blob) {
     // true, nicht false: siehe recognition.onerror weiter oben -- sonst
     // ueberschreibt updateVoiceStatusReady() die Fehlermeldung sofort wieder.
     state.keepRecognizedStatus = true;
-    byId("voiceStatus").textContent = text().voiceTryAgain;
+    byId("voiceStatus").textContent = text().voiceServiceError;
     updateVoiceStatusReady();
   }
 }
@@ -941,10 +961,10 @@ async function startServerRecording({ automatic = false } = {}) {
   }
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    state.mediaStream = stream;
     const mimeType = preferredAudioMimeType();
     const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
     state.audioChunks = [];
-    state.mediaStream = stream;
     state.mediaRecorder = recorder;
     state.listeningMode = "server";
     recorder.ondataavailable = (event) => {
@@ -966,13 +986,17 @@ async function startServerRecording({ automatic = false } = {}) {
     state.keepRecognizedStatus = false;
     byId("voiceStatus").textContent = text().voiceListening;
     updateVoiceStatusReady();
-  } catch (_) {
+  } catch (error) {
+    state.mediaStream?.getTracks().forEach((track) => track.stop());
+    state.mediaStream = null;
+    state.mediaRecorder = null;
     state.isListening = false;
     state.listeningMode = null;
     // true, nicht false: siehe recognition.onerror weiter oben -- sonst
     // ueberschreibt updateVoiceStatusReady() die Fehlermeldung sofort wieder.
     state.keepRecognizedStatus = true;
-    byId("voiceStatus").textContent = text().voiceDenied;
+    byId("voiceStatus").textContent = error.name === "NotAllowedError" || error.name === "SecurityError"
+      ? text().voiceDenied : text().voiceServiceError;
     updateVoiceStatusReady();
   }
 }
@@ -1037,9 +1061,6 @@ byId("queryForm").addEventListener("submit", (event) => {
 
 byId("queryInput").addEventListener("input", () => {
   state.queryInputMode = "text";
-  if (state.isSubmitting) return;
-  state.isSubmitting = true;
-  if (dialogueUI.active) dialogueUI.disable();
   resetSessionTimeout();
 });
 

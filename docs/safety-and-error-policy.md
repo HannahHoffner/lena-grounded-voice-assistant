@@ -38,8 +38,12 @@ ist, kann ein exakt wortgleiches Zitat dennoch fälschlich auslösen. Seit
 Safety-Policyversion 2 führt ein Treffer ohne Modellaufruf direkt zum
 kontrollierten lokalisierten 112-Text. Diese bewusste fail-closed Entscheidung
 verkürzt den Pfad bei den eng formulierten eindeutigen Akutsätzen; sie nimmt
-für exakt passende Zitate einen möglichen unnötigen Stopp in Kauf. Alle nicht
-exakt passenden Formulierungen gehen weiterhin an den LLM-Interpreter.
+für exakt passende Zitate einen möglichen unnötigen Stopp in Kauf. Nicht exakt
+passende fachliche Formulierungen gehen an den LLM-Interpreter. Nur eine
+vollständige bekannte Selbstbeschreibungsfrage darf ohne offenen Safety-Dialog
+direkt beantwortet werden. Zusätzlicher Text verhindert diesen Shortcut. Ein
+offener Safety-Dialog bleibt auch bei einer solchen Frage, leerer Anfrage oder
+Kategorieauswahl an seine Bestätigungsregeln gebunden.
 
 ## Drei Risikostatus
 
@@ -94,7 +98,7 @@ Wissensbasis ein Hilfebus-Kontakt hinterlegt (`priority_rules` enthält
 `general_help_referral_first`, siehe `_general_help_contact()` in
 `app/service.py`), enthält der Text zusätzlich dessen Telefonnummer und
 Einsatzzeiten (`safety.technical_hilfebus`) sowie eine zugehörige
-Angebotskarte und einen Kartenmarker -- ausschließlich aus bereits geladenen,
+Angebotskarte ohne Kartenmarker -- ausschließlich aus bereits geladenen,
 deterministischen Wissensbasisdaten, ohne jeden weiteren Providerkontakt. Der
 bedingte 112-Hinweis bleibt dabei unverändert Teil des Texts (weiterhin genau
 einmal, zentral geprüft), weil der vorgelagerte Preflight bewusst eng gefasst
@@ -112,15 +116,16 @@ betroffen und bleibt weiterhin ohne Karten, Karten-IDs oder Marker.
 `acute_risk_clarification` oder `technical_fallback`. `acute_risk` und
 `acute_risk_clarification` enthalten weiterhin leere Karten-, Karten-ID- und
 Markerlisten. `technical_fallback` enthält die
-Hilfebus-Karte und einen Kartenmarker, sofern die Wissensbasis den Kontakt
-liefert (siehe oben); das Frontend rendert diese Karte und Markierung wie bei
-jeder anderen Antwort. Das Frontend leert in jedem Fall zunächst bestehende
+Hilfebus-Karte, sofern die Wissensbasis den Kontakt liefert (siehe oben).
+Die Organisationsadresse des mobilen Hilfebus ist kein Nutzerstandort und
+erzeugt in diesem Pfad keinen Marker. Das Frontend leert zunächst bestehende
 Layer, zeigt eine textliche Safety-Überschrift und ein zusätzliches Symbol,
 verwendet native Dialogbuttons und genau einen Alert-Ausgabekanal. Es erzeugt
 keinen `tel:`-Link.
 
-TTS akzeptiert weiterhin nur den letzten sichtbaren Antworttext derselben
-Session und Sprache. Technische Normalisierung spricht 112 ziffernweise; eine
+TTS akzeptiert nur vom Server freigegebene Texte des letzten Turns derselben
+Session und Sprache: Antwort, sprechbare Angebots-/Markertexte sowie Rückfrage
+mit Auswahlmöglichkeiten. Technische Normalisierung spricht 112 ziffernweise; eine
 menschliche Hörprüfung wird nicht behauptet.
 
 Session- und Interaktionsspeicherung redigieren Safety-Eingaben. Zulässig sind

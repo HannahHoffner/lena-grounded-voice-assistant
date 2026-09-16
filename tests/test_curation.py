@@ -15,7 +15,7 @@ from fastapi.testclient import TestClient
 from app.candidate_contract import CandidateRole
 from app.candidates import build_selection_context
 from app.config import Settings
-from app.curation import load_curation_catalog
+from app.curation import CurationError, load_curation_catalog
 from app.formulation import AnswerType, EvidenceFact, EvidenceOffer, FactType, FormulatorEvidence, build_formulator_evidence
 from app.i18n import load_translation_catalog, localize_offer_card, offer_translation_hash
 from app.interpreter import Need, QueryInterpretation, RequestedService, interpreter_alias_hints
@@ -126,6 +126,17 @@ def test_catalog_models_organization_location_and_distinct_service_offers() -> N
     assert offers["6"].offer_type == "overnight_accommodation"
     assert offers["11"].offer_type == "contact_cafe_day_center"
     assert offers["6"].id != offers["11"].id
+
+
+def test_catalog_rejects_swapped_immutable_source_ids(tmp_path: Path) -> None:
+    payload = json.loads(CURATION_PATH.read_text(encoding="utf-8"))
+    offers = {offer["id"]: offer for offer in payload["service_offers"]}
+    offers["5"]["source_id"], offers["6"]["source_id"] = "6", "5"
+    path = tmp_path / "swapped-curation.json"
+    path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+
+    with pytest.raises(CurationError, match="Curation catalog is invalid"):
+        load_curation_catalog(path)
 
 
 def test_leipziger_oase_is_offer_name_without_renaming_diakonie(curated_kb) -> None:

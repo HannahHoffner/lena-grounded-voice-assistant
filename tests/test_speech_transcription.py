@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+import logging
 import asyncio
 import io
 import math
@@ -27,6 +29,41 @@ from app.speech import (
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def test_stt_failure_log_exposes_safe_cause_without_changing_public_error(monkeypatch, caplog):
+    async def rejected(self, *args, **kwargs):
+        raise SpeechTranscriptionProviderError(upstream_status=404)
+
+    monkeypatch.setattr(SpeechTranscriber, "transcribe", rejected)
+    with caplog.at_level(logging.WARNING):
+        response = TestClient(create_app(_settings())).post(
+            "/api/speech/transcribe", content=b"synthetic-audio", headers={"Content-Type": "audio/ogg"},
+        )
+    assert response.status_code == 503
+    assert response.json() == {"detail": "Speech transcription failed"}
+    assert "code=stt_provider_http_error upstream_status=404" in caplog.text
+    assert "test-token" not in caplog.text
+
+
+@pytest.mark.parametrize("payload", [[], None, {"text": []}, {"text": 123}, {"text": " "}])
+def test_invalid_transcription_json_is_a_controlled_api_error(monkeypatch, payload) -> None:
+    class Client:
+        def __init__(self, **kwargs): pass
+        async def __aenter__(self): return self
+        async def __aexit__(self, *args): pass
+        async def post(self, url, **kwargs):
+            return httpx.Response(
+                200, content=json.dumps(payload), request=httpx.Request("POST", url),
+            )
+
+    monkeypatch.setattr(httpx, "AsyncClient", Client)
+    app = create_app(_settings())
+    response = TestClient(app).post(
+        "/api/speech/transcribe", content=_browser_opus_audio(), headers={"Content-Type": "audio/webm"},
+    )
+    assert response.status_code == 503
+    assert response.json() == {"detail": "Speech transcription failed"}
+
+
 def _settings() -> Settings:
     return Settings(
         app_root=ROOT,
@@ -44,11 +81,11 @@ def _settings() -> Settings:
     )
 
 
-def _webm_opus_audio(*, samples: int = 4_800) -> bytes:
+def _browser_opus_audio(*, samples: int = 4_800, container_format: str = "webm") -> bytes:
     """Erzeugt rein synthetisches Browseraudio ohne Aufnahme oder Nutzerdaten."""
 
     output = io.BytesIO()
-    with av.open(output, mode="w", format="webm") as container:
+    with av.open(output, mode="w", format=container_format) as container:
         stream = container.add_stream("libopus", rate=48_000)
         stream.layout = "mono"
         frame = av.AudioFrame(format="s16", layout="mono", samples=samples)
@@ -66,8 +103,9 @@ def _webm_opus_audio(*, samples: int = 4_800) -> bytes:
     return output.getvalue()
 
 
-def test_browser_webm_is_sent_as_pcm_wav_and_transcribes(
-    monkeypatch: pytest.MonkeyPatch,
+@pytest.mark.parametrize("container_format", ["webm", "ogg"])
+def test_browser_audio_is_sent_as_pcm_wav_and_transcribes(
+    monkeypatch: pytest.MonkeyPatch, container_format: str,
 ) -> None:
     captured: dict[str, object] = {}
 
@@ -88,13 +126,13 @@ def test_browser_webm_is_sent_as_pcm_wav_and_transcribes(
             return httpx.Response(200, json={"text": "Ich brauche Hilfe"}, request=request)
 
     monkeypatch.setattr(httpx, "AsyncClient", RecordingClient)
-    result = asyncio.run(
-        SpeechTranscriber(_settings()).transcribe(
-            _webm_opus_audio(),
-            content_type="audio/webm",
-            language=Language.DE,
-        )
+    response = TestClient(create_app(_settings())).post(
+        "/api/speech/transcribe?language=de",
+        content=_browser_opus_audio(container_format=container_format),
+        headers={"Content-Type": f"audio/{container_format};codecs=opus"},
     )
+    assert response.status_code == 200
+    result = response.json()["text"]
 
     filename, payload, media_type = captured["files"]["file"]  # type: ignore[index]
     assert result == "Ich brauche Hilfe"
@@ -123,7 +161,7 @@ def test_invalid_audio_is_rejected_before_provider_initialization(
 def test_decoded_audio_duration_is_bounded(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(speech, "_STT_MAX_SAMPLES", 100)
     with pytest.raises(SpeechTranscriptionAudioTooLongError, match="stt_audio_too_long"):
-        speech._normalize_audio_to_wav(_webm_opus_audio())
+        speech._normalize_audio_to_wav(_browser_opus_audio())
 
 
 def test_upstream_http_status_is_redacted_but_classified(
@@ -151,7 +189,7 @@ def test_upstream_http_status_is_redacted_but_classified(
     with pytest.raises(SpeechTranscriptionProviderError) as caught:
         asyncio.run(
             SpeechTranscriber(_settings()).transcribe(
-                _webm_opus_audio(),
+                _browser_opus_audio(),
                 content_type="audio/webm",
                 language=Language.DE,
             )

@@ -86,7 +86,7 @@ werden; die lokale Ausführung prüft nur Befehle und Workflowstruktur.
 1. Starte mit `REWRITE_PROVIDER=template`, `WFS_AUTO_SYNC=false`,
    `TOILET_AUTO_SYNC=false` und `DRINKING_FOUNTAIN_AUTO_SYNC=false`.
 2. Prüfe `GET /api/health`, öffne `/` und verifiziere den fail-closed
-   technischen 112-Hinweis ohne Karten. Fachliche Smokes benötigen einen
+   technischen 112-Hinweis mit gegebenenfalls Hilfebus-Kontaktkarte ohne Marker. Fachliche Smokes benötigen einen
    kontrollierten Test-Double oder bewusst konfigurierten Interpreter.
 3. Prüfe mit Test-Double je eine Frage zu Essen, Schlafen, Medizin und Beratung.
 4. Prüfe Karten, Kartendarstellung, Sprachwechsel und eine Folgefrage.
@@ -121,17 +121,31 @@ Artefakthashes und sind kein universeller Lock für andere Python-Versionen oder
 Plattformen. Ein Hash-Lock und zusätzliche Werkzeuge benötigen eine bewusste
 Projektentscheidung in einem separaten Paket.
 
-Die Dialogoberfläche wird derzeit statisch und über API-Integration geprüft.
+Die Dialogoberfläche wird statisch, über API-Integration und mit ausführbaren
+JavaScript-Verhaltenstests geprüft.
 Native Buttons liefern Tastatur- und Fokussemantik; ein echter Screenreader- und
 Browserlauf bleibt manuell. `node --check` kann zusätzlich ausgeführt werden,
 wenn eine Node.js-Laufzeit vorhanden ist; sie gehört nicht zu den
 Python-Projektabhängigkeiten.
 
+```powershell
+node --test tests/frontend.test.cjs
+node --check app/static/app.js
+node --check app/static/dialogue.js
+```
+
+Die Verhaltenstests führen die echten Browserskripte mit lokalen DOM- und
+Transport-Doubles aus. Sie prüfen Folgedialoge, Sprachwechsel während einer
+Anfrage, Doppelsenden, Fehler-Recovery sowie Sessionbindung und Freigabe von
+TTS-Audio. Sie sind im Source-Archiv enthalten und laufen getrennt von Pytest
+und der bisherigen Python-CI. Ein echter Browser-/Screenreader-Test bleibt offen.
+
 Automatische Mehrsprachigkeitstests belegen Schema, Kontrollfluss,
 Tokenintegrität, Grounding und offensichtliche Skriptfehler. Sie belegen weder
 Natürlichkeit noch idiomatische oder fachsprachliche Qualität. Der synthetische
 Reviewexport verlangt deshalb weiterhin eine dokumentierte menschliche
-Bewertung pro Sprache und Szenario. WP9B ist `prepared_not_executed`. Der
+Bewertung pro Sprache und Szenario. Der providerfreie WP9B-Dry-Run meldet `prepared_not_executed`; bereits
+dokumentierte Live-Läufe sind davon unabhängig. Der
 Live-Smoke wird nie von Pytest oder CI gestartet und benötigt Unterbefehl,
 einzelne Stufe, Flag, unabhängige Umgebungsfreigabe, erwartete Provideridentität
 und sieben exakte Laufgrenzen. Der vollständige providerfreie Plan wird mit

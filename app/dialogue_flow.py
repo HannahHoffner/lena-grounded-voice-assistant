@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pydantic import ValidationError
+
 from .candidate_contract import CandidateDecision, CandidateSelectionContext, MissingFact, ReasonCode, SelectionStatus
 from .dialogue import DialogState, DialogType, KnownExplicitFacts, new_dialog
 from .interpreter import (
@@ -52,8 +54,15 @@ def merge_dialog_facts(
     current = interpretation.explicit_facts
     prior = dialog.known_explicit_facts
     merged = current.model_copy(deep=True)
-    if merged.age is None:
-        merged.age = prior.age
+    if merged.age is None and prior.age is not None:
+        with_prior_age = merged.model_copy(update={"age": prior.age})
+        if merged.age_group == AgeGroup.ADULT and prior.age >= 18:
+            with_prior_age.age_group = AgeGroup.UNKNOWN
+        try:
+            merged = ExplicitFacts.model_validate(with_prior_age.model_dump(mode="python"))
+        except ValidationError:
+            # Eine explizite neue Altersgruppe ersetzt eine widersprechende alte Zahl.
+            pass
     if merged.age_group == AgeGroup.UNKNOWN:
         merged.age_group = prior.age_group
     for field in ("gender", "drug_use", "no_social_benefit_entitlement"):
@@ -185,18 +194,6 @@ def choose_dialog(
         )
     if interpretation.need == Need.SLEEP:
         facts = interpretation.explicit_facts
-        if (
-            facts.gender == Gender.FEMALE
-            and facts.age is None
-            and facts.age_group == AgeGroup.UNKNOWN
-        ):
-            return new_dialog(
-                DialogType.SLEEP_AGE,
-                need=Need.SLEEP,
-                fingerprint=fingerprint,
-                session_timeout_seconds=timeout_seconds,
-                facts=known_facts(interpretation),
-            )
         has_general_contact = any(
             ReasonCode.GENERAL_SLEEP_CONTACT_PRIORITY in item.reason_codes
             for item in decision.candidates
@@ -216,7 +213,7 @@ def choose_dialog(
             session_timeout_seconds=timeout_seconds,
             facts=known_facts(interpretation),
         )
-    if interpretation.need in {Need.GENERAL_HELP, Need.UNKNOWN}:
+    if interpretation.need in {Need.GENERAL_HELP, Need.UNKNOWN} and not interpretation.explicit_service_requests:
         return new_dialog(
             DialogType.GENERAL_NEED,
             need=Need.GENERAL_HELP,
