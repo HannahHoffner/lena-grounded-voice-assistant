@@ -69,6 +69,89 @@ Thesisdateien wurden nicht geändert.
 
 ## Sichere technische Prüfungen
 
+### Konkreter Ablauf für 5A
+
+Die vorhandenen Test-Doubles sind in die Testsuite eingebunden. Es gibt keinen
+allgemeinen Browser-Modus, der freie Eingaben durch einen Fake-Interpreter
+versteht. Deshalb besteht 5A aus den automatisierten fachlichen Prüfungen mit
+Doubles und einer anschließenden manuellen Prüfung des providerfreien
+Browser-/Fehlerpfads. Die normale freie Bedarfssuche wird mit 5B geprüft.
+
+Für die fachlichen Regeln im Verzeichnis `code` ausführen:
+
+```powershell
+$env:LENA_ENV_FILE_MODE = 'disabled'
+$env:LENA_ALLOW_LIVE_SMOKE = 'false'
+python -m pytest tests/test_candidates.py tests/test_dialogue.py tests/test_result_ordering.py tests/test_safety_policy.py tests/test_drinking_fountains.py -q
+```
+
+Für die manuelle lokale Prüfung in einer eigenen PowerShell starten (Fenster
+danach schließen, damit die Testkonfiguration nicht für 5B bestehen bleibt):
+
+```powershell
+$env:LENA_ENV_FILE_MODE = 'disabled'
+$env:REWRITE_PROVIDER = 'template'
+$env:WFS_AUTO_SYNC = 'false'
+$env:TOILET_AUTO_SYNC = 'false'
+$env:DRINKING_FOUNTAIN_AUTO_SYNC = 'false'
+$env:LENA_ALLOW_LIVE_SMOKE = 'false'
+$env:INTERACTION_LOGGING_ENABLED = 'false'
+$env:LENA_RUNTIME_DIR = Join-Path $env:LOCALAPPDATA 'LENA\evaluation-5a'
+python -m app --host 127.0.0.1 --port 8002
+```
+
+Vor dem Öffnen die externe Netzwerkverbindung des Rechners trennen, während
+Loopback verfügbar bleibt, und die Mikrofonberechtigung für die lokale Seite
+blockieren. Damit sind auch externe Aufrufe durch Browser und Backend gesperrt.
+Ein Browser-Filter für fremde Domains allein sperrt serverseitiges Edge-TTS
+nicht; `template` allein deaktiviert außerdem die automatische Browser-
+Spracherkennung nicht. Für diesen Text-Smoke keine Mikrofon-/Vorleseaktion
+verwenden. Öffne `http://127.0.0.1:8002`.
+
+| Fall | Eingabe/Aktion | Erwartung |
+| --- | --- | --- |
+| A01 | Jede der fünf Sprachen wählen | Bedienelemente in gewählter Sprache; Texteingabe nutzbar |
+| A02 | „Ich brauche Essen.“ | Technischer Hinweis mit geladenem Hilfebus-Kontakt und dokumentierten Zeiten; keine reguläre Essenssuche, kein Marker |
+| A03 | Start nach A02 | Eingabe, Antwort, Verlauf und Kartendaten entfernt; neue Browser-Sitzung |
+| A04 | Nach A02 drei Minuten inaktiv bleiben | Rückkehr zur Sprachauswahl; vorherige Inhalte verborgen/geleert |
+| A05 | Anfrage absenden und sofort Start | Späte Antwort stellt vorherigen Inhalt nicht wieder her |
+| A06 | Sprache wechseln und erneut A02 | Neuer Hinweis in gewählter Sprache; keine fremdsprachige verspätete Antwort |
+
+Pro Fall Datum/Uhrzeit, Browser, Sprache, Code-Commit plus lokale Änderungen,
+Runtime-Fingerprint, Eingabe, sichtbares Ergebnis und bestanden/fehlgeschlagen
+mit Begründung notieren. Diese Tabelle enthält Erwartungen, keine Ergebnisse.
+
+### Übergang zu 5B und 5C
+
+Für 5B ist deine Auswahl bereits festgehalten. Nach 5A die verbleibenden
+Test-/Dokumentationsänderungen versionieren und in einer frischen Shell das
+vorgesehene Providerprofil verwenden. Zuerst den vorhandenen providerfreien
+Plan ausgeben:
+
+```powershell
+python -m app.multilingual_review live-dry-run --stage all
+```
+
+Modell-/Domainwerte und Grenzen mit dem gewünschten Profil vergleichen.
+Anschließend die vorhandenen vier Stufen gemäß
+[Live-Provider-Anleitung](live-provider-evaluation.md) nacheinander ausführen;
+der Stufe-1-Befehl steht dort vollständig. Erst nach dem jeweiligen Gate zur
+nächsten Stufe wechseln. Kein WFS-Abruf oder Datenupdate ist dafür notwendig.
+Die Live-Stufen prüfen LLM-Verhalten; reale STT-/TTS- und Akustikprüfungen sind
+damit noch nicht durchgeführt.
+
+Bei anschließender manueller Bedarfssuche mit synthetischen Eingaben besonders
+prüfen: Hilfebus-Verweis um 10:00/23:30 ohne Marker; explizit Sonntag20:30 für
+Essen/Wasser mit belegtem Stand; Sonntag22:00 ohne diesen direkten Stand;
+medizinische Anfrage ohne Zeit und mit widersprechendem Tag; Minderjährige,
+unbekanntes Alter, unklare Aliase, Safety sowie Sprachwechsel/Reset. Für
+zeitabhängige Fälle den tatsächlichen Zeitpunkt oder die explizite Eingabe
+dokumentieren, nicht die Betriebssystemzeit verändern.
+
+5C folgt nach den dokumentierten Ergebnissen von 5A/5B. Vor Eingaben mit
+Personenbezug sind die bereits genannten Entscheidungen zu Verantwortlichkeit,
+Logging/Aufbewahrung und Zugriffsschutz zu treffen.
+
 `python -m pytest`, `python -m compileall -q app tests`, `python -m pip check`,
 `node --test tests/frontend.test.cjs`, `node --check app/static/app.js` und
 `node --check app/static/dialogue.js` prüfen automatisierte technische Pfade.

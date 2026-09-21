@@ -152,25 +152,44 @@ and evaluation prerequisites now describe the verified behavior. Full changed
 code/test/docs diff and new documents reviewed.
 
 Report: ../LENA_TECHNICAL_QUALITY_GATE.md, including all 41 TC and five AMB
-entries with exact original matrix locations. Decision: not ready for final
-thesis-bound manual evaluation until the temporal-contract ambiguity is
-resolved, catalogue-required data review is recorded, and the corrected
-code/data/configuration baseline is frozen. Domain rules were preserved;
-no institutional approval or provider availability was inferred.
+entries with exact original matrix locations. The original not-ready decision
+preceded the user's 1B/2B/3B/4A decisions. Those resolve the temporal-contract
+question and record data acceptance for evaluation. Synthetic local checks (5A)
+are now ready with the documented limitations. The final code/data/configuration
+identity is still to be recorded for 5B. Domain rules were preserved; no
+institutional approval or provider availability was inferred.
 
 ## Post-review implementation plan
 
 - [x] Reinspect CandidateSelector, Hilfebus fallback/map paths and existing
   tests before changing overlapping files.
 - [x] Persist the authorized 1B/2B/3B/4A/5A->5B->5C contract in this plan.
-- [ ] Add a deterministic regression for telephone referral outside 18:00--23:00
+- [x] Add a deterministic regression for telephone referral outside 18:00--23:00
   and ensure that it is not a direct location service.
-- [ ] Update existing manual-evaluation/testing documentation and the external
+- [x] Update existing manual-evaluation/testing documentation and the external
   report; retain thesis only as a correction recommendation.
-- [ ] Run focused candidate/dialogue tests, then full safe pytest and final
+- [x] Run focused candidate/dialogue tests, then full safe pytest and final
   diff/self-review.
 
+Continuation verification: targeted candidate/dialogue/formulation/safety suite
+passed after correcting the assertion. Full `python -m pytest`: **861 passed,
+1 warning in 259.73 s**, including existing packaging/install/startup checks.
+`python -m compileall -q app tests` and `git diff --check` passed. The existing
+Starlette/httpx deprecation warning remains. No further runtime code changed.
+Reviewed the complete follow-up diff and the documentation using
+code-documentation: concrete 5A commands/cases, existing 5B CLI and later 5C
+prerequisites; no new test harness or abstractions. Original matrix claims and
+locations checked: all 46 preserved. Three repository files changed relative
+to54d9846; report updated outside the repository. Manual/live runs remain to
+be performed in the agreed order by the evaluator.
+
 ### Dead-end check
+
+Continuation baseline: the user has since committed the preceding work as
+`54d9846` (clean worktree on resumption). Preserve that commit. The new test's
+`ids(decision)` assertion is incorrect because this property includes mandatory
+referral candidates; replace it with the existing map projection's observable
+no-marker assertion. Run the focused suite and the planned full safe suite.
 
 Changing Hilfebus to disappear outside 18:00--23:00 would contradict the
 authorized 1B decision and remove the intended non-spatial referral fallback.

@@ -14,7 +14,8 @@ from app.candidates import CandidateSelector, build_selection_context
 from app.curation import load_curation_catalog, project_runtime_offers
 from app.interpreter import AcuteRiskStatus, Need, QueryInterpretation, RequestedService
 from app.kb_loader import load_knowledge_base
-from app.models import Category, OfferRecord
+from app.models import Category, Language, OfferRecord
+from app.maps import build_map_data
 from app.official_offer_source import load_official_offer_source
 
 
@@ -427,7 +428,8 @@ def test_hilfebus_is_nonspatial_referral_contact_outside_documented_mobile_hours
     hilfebus = next(item for item in decision.mandatory_candidates if item.offer_id == "21")
 
     assert hilfebus.role == CandidateRole.REFERRAL_CONTACT
-    assert "21" not in ids(decision)
+    offer = next(offer for offer in OFFERS if offer.id == hilfebus.offer_id)
+    assert build_map_data([offer], language=Language.DE, service=Need.GENERAL_HELP.value) is None
 
 
 def test_food_need_ignores_age_restriction_even_when_offer_requires_adults() -> None:
