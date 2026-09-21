@@ -75,7 +75,7 @@ Prototyp-Protokollierung `logs/interactions.jsonl`. Das Verzeichnis ist laut
 `.gitignore` lokal. Neue aktive WFS-Stände liegen unveränderlich unter
 `data/wfs/releases/`; `data/wfs/active_release.json` wählt genau einen davon.
 `data/canonical/offers.json` und die bisherigen WFS-Dateien bleiben während der
-Migration als Legacy-Fallback erhalten.
+Migration als Wartungsquellen erhalten, nicht als ungefilterter Runtime-Fallback.
 
 Öffentliche Toiletten verwenden einen getrennten Releasepfad. Lokal aktivierte
 Stände liegen unter `data/toilets/releases/`, ausstehende Abrufe unter

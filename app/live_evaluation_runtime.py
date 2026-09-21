@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import threading
@@ -83,6 +84,42 @@ class AtomicRunCounter:
                 "formulator_calls": self.formulator_calls,
                 "failures": self.failures,
             }
+
+
+class LimitedEvaluationProvider:
+    """Evaluation-only boundary counting real calls, including formulation retries.
+
+    Query metadata cannot prove how many calls happened (preflight bypasses and
+    retries differ). Reserve at the provider boundary without altering runtime
+    service behavior, and never let an in-flight call outlive the run budget.
+    """
+
+    def __init__(self, provider: Any, counter: AtomicRunCounter) -> None:
+        self.provider = provider
+        self.counter = counter
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self.provider, name)
+
+    async def _call(self, component: EvaluationComponent, method: str, **kwargs: Any) -> Any:
+        self.counter.reserve_provider_call(component)
+        remaining = self.counter.limits.max_total_runtime_seconds - (
+            self.counter.clock() - self.counter.started_at
+        )
+        try:
+            async with asyncio.timeout(max(0, remaining)):
+                return await getattr(self.provider, method)(**kwargs)
+        except TimeoutError as exc:
+            raise EvaluationLimitReached("live_evaluation_runtime_limit") from exc
+
+    async def interpret_query(self, **kwargs: Any) -> Any:
+        return await self._call(EvaluationComponent.INTERPRETER, "interpret_query", **kwargs)
+
+    async def select_candidates(self, **kwargs: Any) -> Any:
+        return await self._call(EvaluationComponent.SELECTOR, "select_candidates", **kwargs)
+
+    async def formulate_answer(self, **kwargs: Any) -> Any:
+        return await self._call(EvaluationComponent.FORMULATOR, "formulate_answer", **kwargs)
 
 
 def new_run_id() -> str:

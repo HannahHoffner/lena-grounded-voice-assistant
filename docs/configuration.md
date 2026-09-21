@@ -219,13 +219,18 @@ bezeichnet die externe Wurzel für Sessions, Interaktionsprotokolle, WFS-Pending
 und Statusdateien. Im Source-Checkout sind die Standards `data/` und `runtime/`;
 in einer Wheel-Installation liegen beide außerhalb von `site-packages` im
 Benutzer-Datenverzeichnis. Absolute Pfade sind für Dienstinstallationen am
-eindeutigsten. `LENA_KB_PATH` kann den lesbaren Bootstrap explizit ersetzen,
-sollte aber nicht auf ein veränderliches Pending-Release zeigen.
+eindeutigsten. `LENA_KB_PATH` bezeichnet eine normalisierte Wartungs- und
+Migrationsquelle, keinen frei austauschbaren Runtime-Bootstrap.
 
-Das Wheel selbst enthält nur den unveränderlichen Bootstrap. Existiert ein
-valider externer Active-Pointer, wird exakt dessen verifiziertes Release
-verwendet; ein beschädigter Pointer wird als Fehler behandelt und nicht still
-durch ein Pending-Release ersetzt.
+Das Wheel enthält einen unveränderlichen Bootstrap. Für soziale Angebote muss
+das WFS-Release zusätzlich zur technischen Verifikation exakt zur Quellenbindung
+des Kurationskatalogs passen. Ein abweichender Active-Pointer setzt diese Bindung
+nicht außer Kraft: der Loader versucht das exakt gebundene lokale Release und
+danach den passenden paketierten Bootstrap, niemals beliebige ältere oder
+Pending-Verzeichnisse. Toiletten und Brunnen haben eigene verifizierte
+Active-/Last-verified-/Previous-verified-/Bootstrap-Rückfälle. Ist eine dieser
+Infrastrukturquellen vollständig unbrauchbar, bleibt die soziale Wissensbasis
+verfügbar; fehlt deren gültige Kurations-/Quellenbindung, scheitert das Laden.
 
 Die API lehnt zu große Query- und TTS-Texte mit HTTP 422 ab. STT-Audio über
 dem konfigurierten Limit erhält HTTP 413; geprüft werden sowohl ein vorhandener

@@ -56,6 +56,7 @@ from app.live_evaluation_plan import (
 )
 from app.live_evaluation_runner import (
     _evaluate_e2e,
+    _run_e2e_scenario,
     run_end_to_end_live_gate,
     run_interpreter_live_gate,
     run_selector_formulator_live_gate,
@@ -67,6 +68,7 @@ from app.live_evaluation_runtime import (
     AtomicRunCounter,
     EvaluationLimitReached,
     EvaluationReportStore,
+    LimitedEvaluationProvider,
     new_run_id,
 )
 from app.models import Language, QueryInteraction, QueryResponse
@@ -261,6 +263,70 @@ def test_redacted_configuration_detects_per_stage_model_overrides(tmp_path: Path
     assert result.redacted_selector_model_identifier == "alias-fast"
     assert result.redacted_formulator_model_identifier == "alias-fast"
     assert result.model_assignment == "per_stage_overrides"
+
+
+@pytest.mark.parametrize("configured,expected", [(None, 1200), ("2000", 2000), ("9000", 4096), ("bad", 1200)])
+def test_preview_reports_actual_shared_provider_token_limit(tmp_path: Path, configured, expected) -> None:
+    environ = {"BLABLADOR_MAX_TOKENS": configured} if configured else {}
+    result = load_redacted_live_configuration(tmp_path, environ)
+    assert result.maximum_tokens == dict.fromkeys(("interpreter", "selector", "formulator"), expected)
+
+
+def test_preview_respects_disabled_env_files_and_legacy_timeout(tmp_path: Path) -> None:
+    (tmp_path / ".env.local").write_text("BLABLADOR_MODEL=must-not-load\n", encoding="utf-8")
+    result = load_redacted_live_configuration(tmp_path, {
+        "LENA_ENV_FILE_MODE": "disabled", "BLABLADOR_TIMEOUT_SECONDS": "22",
+    })
+    assert result.redacted_model_identifier == "not_configured"
+    assert result.configured_timeouts == {"interpreter": 22, "selector": 10, "formulator": 22}
+
+
+def test_evaluation_provider_reserves_each_retry_before_call_and_blocks_excess() -> None:
+    counter = AtomicRunCounter(LiveRunLimits(
+        max_requests=1, max_provider_calls=1, max_interpreter_calls=0,
+        max_selector_calls=0, max_formulator_calls=1, max_total_runtime_seconds=10,
+        max_failures=1,
+    ))
+    calls = []
+
+    class FailingProvider:
+        async def formulate_answer(self, **kwargs):
+            calls.append(kwargs)
+            raise FormulatorError("formulator_invalid_json")
+
+    async def run():
+        provider = LimitedEvaluationProvider(FailingProvider(), counter)
+        with pytest.raises(FormulatorError):
+            await provider.formulate_answer(evidence=None)
+        with pytest.raises(EvaluationLimitReached, match="live_evaluation_provider_limit"):
+            await provider.formulate_answer(evidence=None)
+
+    asyncio.run(run())
+    assert len(calls) == counter.snapshot()["formulator_calls"] == 1
+    assert counter.snapshot()["interpreter_calls"] == 0
+
+
+def test_evaluation_provider_cancels_inflight_call_at_run_deadline() -> None:
+    counter = AtomicRunCounter(LiveRunLimits(
+        max_requests=1, max_provider_calls=1, max_interpreter_calls=1,
+        max_selector_calls=0, max_formulator_calls=0, max_total_runtime_seconds=0.05,
+        max_failures=1,
+    ))
+    cancelled = []
+
+    class SlowProvider:
+        async def interpret_query(self, **kwargs):
+            try:
+                await asyncio.Event().wait()
+            finally:
+                cancelled.append(True)
+
+    async def run():
+        with pytest.raises(EvaluationLimitReached, match="live_evaluation_runtime_limit"):
+            await LimitedEvaluationProvider(SlowProvider(), counter).interpret_query()
+
+    asyncio.run(run())
+    assert cancelled == [True]
 
 
 def test_dry_run_is_provider_free_read_only_and_inventories_all_runtime_sources(
@@ -1156,6 +1222,26 @@ def test_acute_case_without_any_safety_intercept_is_critical() -> None:
     _metrics, _mismatches, critical, _unverified = _evaluate_e2e(scenario, response)
 
     assert critical is True
+
+
+def test_e2e_technical_failure_in_first_turn_is_not_hidden_by_successful_followup() -> None:
+    scenario = _acute_test_scenario("t_first_turn_failure", "uncertain")
+    scenario.synthetic_inputs = ["Synthetischer erster Turn", "Synthetischer Folgeturn"]
+    failed = _minimal_response(answer_type="technical_fallback")
+    failed.interaction.interpreter_error_code = "interpreter_timeout"
+    responses = iter([failed, _minimal_response(answer_type="acute_risk_clarification")])
+
+    class FakeService:
+        async def query(self, request: Any) -> QueryResponse:
+            return next(responses)
+
+    counter = AtomicRunCounter(load_live_scenario_catalog().plan(EvaluationStage.END_TO_END).live_limits)
+    result = asyncio.run(_run_e2e_scenario(scenario, FakeService(), counter, lambda: 0.0))
+
+    assert result["technically_valid"] is False
+    assert result["turns"] == 2
+    assert counter.snapshot()["requests"] == 2
+    assert counter.snapshot()["provider_calls"] == 0
 
 
 def test_collect_git_state_reads_real_repository_head() -> None:

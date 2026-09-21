@@ -18,7 +18,7 @@ from app.infrastructure import (
     diff_toilet_records,
     normalize_toilet_csv,
 )
-from app.infrastructure_results import select_public_toilets, toilet_card
+from app.infrastructure_results import select_public_toilets, toilet_card, toilet_map_data
 from app.formulation import (
     ClaimType,
     FactType,
@@ -83,6 +83,21 @@ def _settings(tmp_path: Path) -> Settings:
         wfs_auto_sync=False,
         toilet_auto_sync=False,
     )
+
+
+@pytest.mark.parametrize("language", list(Language))
+def test_toilet_card_map_and_readout_share_localized_fields(language: Language) -> None:
+    records = select_public_toilets(tuple(_collection().records)).map_results
+    mapped = toilet_map_data(records, language)
+    assert mapped is not None
+    for record, destination in zip(records, mapped.destinations, strict=True):
+        card = toilet_card(record, language)
+        assert destination.opening_hours == card.opening_hours_raw
+        assert destination.facilities == card.facilities
+        assert destination.fee_raw == card.fee_raw
+        assert destination.spoken_text == card.spoken_text
+        for value in [*card.opening_hours_raw, *card.facilities, card.fee_raw]:
+            assert value in card.spoken_text
 
 
 class _ToiletInterpreter:

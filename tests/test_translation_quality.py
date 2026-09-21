@@ -608,7 +608,8 @@ def test_application_resources_and_scenario_review_inventory_are_complete(tmp_pa
     )
     assert len(report["items"]) == len(scenarios.scenarios) * 5 * 2
     assert report["synthetic_data_only"] is True
-    assert report["live_smoke_plan"]["maximum_provider_calls"] == len(report["items"]) * 3
+    # One interpreter, one selector, and at most two formulation attempts.
+    assert report["live_smoke_plan"]["maximum_provider_calls"] == len(report["items"]) * 4
     assert all(item["manual_review_status"] == "not_reviewed" for item in report["items"])
 
 

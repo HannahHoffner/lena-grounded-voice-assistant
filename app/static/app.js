@@ -40,7 +40,10 @@ const state = {
   resultTiles: new Map(),
   lastAnswer: "",
   queryInputMode: "text",
-  isSubmitting: false
+  isSubmitting: false,
+  viewToken: 0,
+  queryAbort: null,
+  transcriptionAbort: null
 };
 
 const SESSION_TIMEOUT_MS = 3 * 60 * 1000;
@@ -97,8 +100,9 @@ async function loadSpeechConfig() {
 function resetSessionTimeout() {
   if (state.idleTimer) window.clearTimeout(state.idleTimer);
   state.idleTimer = window.setTimeout(() => {
-    state.sessionId = null;
-    dialogueUI.clear();
+    resetView();
+    byId("appView").hidden = true;
+    byId("languageView").hidden = false;
   }, SESSION_TIMEOUT_MS);
 }
 
@@ -111,14 +115,18 @@ function setIconButton(id, label) {
 }
 
 async function setLanguage(language) {
+  cancelPendingInteraction();
+  const viewToken = state.viewToken;
   const preserveSession = Boolean(state.sessionId);
   resetSessionTimeout();
   try {
     await loadApplicationCopy(language);
   } catch (_) {
+    if (viewToken !== state.viewToken) return;
     await loadApplicationCopy("de");
     language = "de";
   }
+  if (viewToken !== state.viewToken) return;
   state.language = language;
   state.category = null;
   state.autoListenTried = false;
@@ -128,16 +136,21 @@ async function setLanguage(language) {
   byId("appView").hidden = false;
   applyCopy();
   if (!preserveSession) resetView();
+  const activeViewToken = state.viewToken;
   void (async () => {
     if (preserveSession && dialogueUI.active) {
       try {
         const response = await fetch(`/api/dialogue/copy?language=${encodeURIComponent(language)}`);
-        if (response.ok) dialogueUI.relocalize(await response.json());
+        if (response.ok) {
+          const payload = await response.json();
+          if (activeViewToken === state.viewToken) dialogueUI.relocalize(payload);
+        }
       } catch (_) {
         // Freie Text- und Spracheingabe bleiben bei einem Copy-Fehler erhalten.
       }
     }
     await loadSpeechConfig();
+    if (activeViewToken !== state.viewToken) return;
     await speakIntroThenListen();
   })();
 }
@@ -238,7 +251,6 @@ function renderCategories() {
       resetSessionTimeout();
       state.category = category;
       state.queryInputMode = "text";
-      stopListening();
       renderCategories();
       void submitQuery("");
     });
@@ -246,7 +258,38 @@ function renderCategories() {
   }
 }
 
+// Cancellation is also a visibility boundary: transports may complete despite
+// abort, so callbacks must check the view token before touching the next user.
+function cancelPendingInteraction() {
+  state.viewToken += 1;
+  state.queryAbort?.abort();
+  state.queryAbort = null;
+  state.transcriptionAbort?.abort();
+  state.transcriptionAbort = null;
+  state.isSubmitting = false;
+  byId("statusLine").textContent = "";
+  dialogueUI.restore();
+  stopSpeechOutput();
+  if (state.recognition) {
+    const recognition = state.recognition;
+    state.recognition = null;
+    recognition.onstart = recognition.onresult = recognition.onerror = recognition.onend = null;
+    try { recognition.abort(); } catch (_) { /* Already stopped. */ }
+  }
+  if (state.mediaRecorder) {
+    const recorder = state.mediaRecorder;
+    recorder.ondataavailable = recorder.onstop = null;
+    try { if (recorder.state !== "inactive") recorder.stop(); } catch (_) { /* Release tracks below. */ }
+  }
+  state.mediaStream?.getTracks().forEach((track) => track.stop());
+  state.mediaStream = state.mediaRecorder = null;
+  state.audioChunks = [];
+  state.isListening = false;
+  state.listeningMode = null;
+}
+
 function resetView() {
+  cancelPendingInteraction();
   resetSessionTimeout();
   state.category = null;
   state.queryInputMode = "text";
@@ -257,6 +300,9 @@ function resetView() {
   byId("searchView").hidden = false;
   byId("resultView").hidden = true;
   byId("answerText").textContent = "";
+  byId("statusLine").textContent = "";
+  byId("questionEchoText").textContent = "";
+  renderSafetyState(null);
   byId("replayAnswerButton").hidden = true;
   state.lastAnswer = "";
   byId("cardList").replaceChildren();
@@ -270,6 +316,7 @@ function resetView() {
 }
 
 function backToSearch() {
+  cancelPendingInteraction();
   resetSessionTimeout();
   state.keepRecognizedStatus = false;
   byId("searchView").hidden = false;
@@ -656,12 +703,15 @@ function renderMap(mapData) {
 
 async function submitQuery(query, dialogSubmission = null) {
   if (state.isSubmitting) return;
+  cancelPendingInteraction();
+  const viewToken = state.viewToken;
+  const controller = new AbortController();
+  state.queryAbort = controller;
   state.isSubmitting = true;
   if (dialogueUI.active) dialogueUI.disable();
   // Die Session-ID verbindet kurze Folgefragen. Alle Fakten werden mit jeder
   // Antwort erneut vom Backend geliefert.
   resetSessionTimeout();
-  stopListening();
   byId("searchView").hidden = false;
   byId("resultView").hidden = false;
   byId("statusLine").textContent = text().loading;
@@ -673,6 +723,7 @@ async function submitQuery(query, dialogSubmission = null) {
   try {
     const response = await fetch("/api/query", {
       method: "POST",
+      signal: controller.signal,
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         query,
@@ -686,6 +737,7 @@ async function submitQuery(query, dialogSubmission = null) {
     });
     if (!response.ok) throw new Error("request failed");
     const data = await response.json();
+    if (viewToken !== state.viewToken) return;
     const safety = renderSafetyState(data.answer_type);
     state.sessionId = data.session_id || state.sessionId;
     resetSessionTimeout();
@@ -716,6 +768,7 @@ async function submitQuery(query, dialogSubmission = null) {
     state.queryInputMode = "text";
     updateVoiceStatusReady();
   } catch (_) {
+    if (viewToken !== state.viewToken) return;
     renderSafetyState(null);
     byId("statusLine").textContent = "";
     byId("answerText").textContent = text().error;
@@ -723,7 +776,10 @@ async function submitQuery(query, dialogSubmission = null) {
     byId("replayAnswerButton").hidden = true;
     dialogueUI.restore();
   } finally {
-    state.isSubmitting = false;
+    if (viewToken === state.viewToken) {
+      state.isSubmitting = false;
+      state.queryAbort = null;
+    }
   }
 }
 
@@ -788,6 +844,10 @@ function interruptCurrentSpeech() {
 // two clicks in quick succession (before the first request had produced an
 // <audio> to pause) speak over each other.
 function speakText(message, button = null) {
+  if (button && state.currentSpeechButton === button) {
+    stopSpeechOutput();
+    return Promise.resolve();
+  }
   const requestToken = ++state.speechRequestToken;
   const isCurrent = () => state.speechRequestToken === requestToken;
   return new Promise(async (resolve) => {
@@ -862,16 +922,19 @@ function ensureRecognition() {
   if (!recognitionConstructor) return null;
   if (state.recognition) return state.recognition;
   const recognition = new recognitionConstructor();
+  const isCurrent = () => state.recognition === recognition;
   recognition.continuous = false;
   recognition.interimResults = false;
   recognition.maxAlternatives = 1;
   recognition.onstart = () => {
+    if (!isCurrent()) return;
     state.isListening = true;
     state.keepRecognizedStatus = false;
     byId("voiceStatus").textContent = text().voiceListening;
     updateVoiceStatusReady();
   };
   recognition.onresult = (event) => {
+    if (!isCurrent()) return;
     const transcript = Array.from(event.results)
       .map((result) => result[0]?.transcript || "")
       .join(" ")
@@ -887,6 +950,7 @@ function ensureRecognition() {
     }
   };
   recognition.onerror = (event) => {
+    if (!isCurrent()) return;
     state.isListening = false;
     // true, nicht false: updateVoiceStatusReady() unten wuerde die gerade
     // gesetzte Fehlermeldung sonst im selben Zug wieder durch den generischen
@@ -896,6 +960,7 @@ function ensureRecognition() {
     updateVoiceStatusReady();
   };
   recognition.onend = () => {
+    if (!isCurrent()) return;
     state.isListening = false;
     state.listeningMode = null;
     updateVoiceStatusReady();
@@ -915,13 +980,20 @@ function preferredAudioMimeType() {
 }
 
 async function transcribeRecordedAudio(blob) {
+  const viewToken = state.viewToken;
+  state.transcriptionAbort?.abort();
+  const controller = new AbortController();
+  state.transcriptionAbort = controller;
+  const isCurrent = () => viewToken === state.viewToken && state.transcriptionAbort === controller;
   byId("voiceStatus").textContent = text().voiceProcessing;
   try {
     const response = await fetch(`/api/speech/transcribe?language=${encodeURIComponent(state.language)}`, {
       method: "POST",
+      signal: controller.signal,
       headers: { "Content-Type": blob.type || "audio/webm" },
       body: blob
     });
+    if (!isCurrent()) return;
     if (!response.ok) {
       state.keepRecognizedStatus = true;
       byId("voiceStatus").textContent = [413, 415, 422].includes(response.status)
@@ -929,6 +1001,7 @@ async function transcribeRecordedAudio(blob) {
       return;
     }
     const data = await response.json();
+    if (!isCurrent()) return;
     if (typeof data.text !== "string") throw new Error("invalid transcription response");
     const transcript = data.text.trim();
     state.keepRecognizedStatus = true;
@@ -941,15 +1014,19 @@ async function transcribeRecordedAudio(blob) {
       byId("voiceStatus").textContent = text().voiceTryAgain;
     }
   } catch (_) {
+    if (!isCurrent()) return;
     // true, nicht false: siehe recognition.onerror weiter oben -- sonst
     // ueberschreibt updateVoiceStatusReady() die Fehlermeldung sofort wieder.
     state.keepRecognizedStatus = true;
     byId("voiceStatus").textContent = text().voiceServiceError;
     updateVoiceStatusReady();
+  } finally {
+    if (isCurrent()) state.transcriptionAbort = null;
   }
 }
 
 async function startServerRecording({ automatic = false } = {}) {
+  const viewToken = state.viewToken;
   if (automatic) {
     updateVoiceStatusReady();
     return;
@@ -961,6 +1038,10 @@ async function startServerRecording({ automatic = false } = {}) {
   }
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    if (viewToken !== state.viewToken) {
+      stream.getTracks().forEach((track) => track.stop());
+      return;
+    }
     state.mediaStream = stream;
     const mimeType = preferredAudioMimeType();
     const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
@@ -968,9 +1049,11 @@ async function startServerRecording({ automatic = false } = {}) {
     state.mediaRecorder = recorder;
     state.listeningMode = "server";
     recorder.ondataavailable = (event) => {
+      if (viewToken !== state.viewToken) return;
       if (event.data && event.data.size > 0) state.audioChunks.push(event.data);
     };
     recorder.onstop = () => {
+      if (viewToken !== state.viewToken) return;
       const type = recorder.mimeType || mimeType || "audio/webm";
       const blob = new Blob(state.audioChunks, { type });
       stream.getTracks().forEach((track) => track.stop());
@@ -987,6 +1070,7 @@ async function startServerRecording({ automatic = false } = {}) {
     byId("voiceStatus").textContent = text().voiceListening;
     updateVoiceStatusReady();
   } catch (error) {
+    if (viewToken !== state.viewToken) return;
     state.mediaStream?.getTracks().forEach((track) => track.stop());
     state.mediaStream = null;
     state.mediaRecorder = null;
@@ -1089,8 +1173,7 @@ byId("backButton").addEventListener("click", () => {
 });
 byId("languageButton").addEventListener("click", () => {
   resetSessionTimeout();
-  stopListening();
-  stopSpeechOutput();
+  cancelPendingInteraction();
   byId("appView").hidden = true;
   byId("languageView").hidden = false;
 });

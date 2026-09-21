@@ -399,13 +399,35 @@ def test_hilfebus_combined_request_uses_food_or_water_stand_schedule(
         assert exclusion.reason_codes == [ReasonCode.TIME_CONDITION_NOT_MET]
 
 
-def test_hilfebus_is_referral_contact_for_uncovered_basic_help() -> None:
-    decision = decide(
-        interpretation(Need.GENERAL_HELP, services=[RequestedService.CLOTHING])
+@pytest.mark.parametrize(
+    "now",
+    [
+        datetime(2026, 8, 3, 10, 0, tzinfo=ZoneInfo("Europe/Berlin")),
+        datetime(2026, 8, 3, 23, 30, tzinfo=ZoneInfo("Europe/Berlin")),
+    ],
+)
+def test_hilfebus_is_nonspatial_referral_contact_outside_documented_mobile_hours(
+    now: datetime,
+) -> None:
+    """Telephone referral is available independently of current mobile hours.
+
+    The answer must show the documented 18:00--23:00 times without claiming the
+    Hilfebus is currently reachable. Food/water stand eligibility is tested
+    separately and remains stricter.
+    """
+    value = interpretation(Need.GENERAL_HELP, services=[RequestedService.CLOTHING])
+    context = build_selection_context(
+        query="Ich brauche Kleidung.",
+        interpretation=value,
+        offers=OFFERS,
+        organization_aliases=ORGANIZATION_ALIASES,
+        ui_category=None,
     )
+    decision = SELECTOR.select(value, OFFERS, context=context, now=now)
     hilfebus = next(item for item in decision.mandatory_candidates if item.offer_id == "21")
 
     assert hilfebus.role == CandidateRole.REFERRAL_CONTACT
+    assert "21" not in ids(decision)
 
 
 def test_food_need_ignores_age_restriction_even_when_offer_requires_adults() -> None:

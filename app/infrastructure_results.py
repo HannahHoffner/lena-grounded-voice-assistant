@@ -153,6 +153,7 @@ def toilet_map_data(
     destinations = []
     for record in records:
         assert record.latitude is not None and record.longitude is not None
+        card = toilet_card(record, language, origin=origin)
         destinations.append(MapDestination(
             id=record.id,
             label=record.display_name,
@@ -162,12 +163,12 @@ def toilet_map_data(
             distance_meters=distance_from_hbf(record.latitude, record.longitude, origin=origin),
             description=record.operator_name,
             phone_numbers=[record.service_phone] if record.service_phone else [],
-            opening_hours=[record.opening_hours_raw],
+            opening_hours=card.opening_hours_raw,
             record_type="public_toilet",
-            fee_raw=record.fee_raw,
-            facilities=record.facilities,
+            fee_raw=card.fee_raw,
+            facilities=card.facilities,
             source_attribution="Stadt Leipzig",
-            spoken_text=toilet_spoken_text(record, language),
+            spoken_text=card.spoken_text,
         ))
     if not destinations:
         return None
@@ -323,7 +324,9 @@ def drinking_water_map_data(
         ))
     order = {result.id: index for index, result in enumerate(results)}
     destinations.sort(key=lambda destination: (
-        order.get(destination.id.partition(":")[0], len(order)),
+        # Fountain IDs contain ':' themselves; only social stand suffixes
+        # need stripping when the complete ID has no result entry.
+        order.get(destination.id, order.get(destination.id.partition(":")[0], len(order))),
         destination.distance_meters if destination.distance_meters is not None else 10**9,
         destination.id,
     ))

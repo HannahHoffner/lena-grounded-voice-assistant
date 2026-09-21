@@ -13,7 +13,10 @@ from __future__ import annotations
 import re
 
 from .application_texts import application_text
-from .infrastructure import DrinkingFountainRecord, PublicToiletRecord
+from .infrastructure import (
+    DrinkingFountainRecord, PublicToiletRecord, TOILET_FACILITY_TRANSLATIONS,
+    TOILET_FEE_TRANSLATIONS, TOILET_HOURS_TRANSLATIONS, localize_toilet_text,
+)
 from .models import Language, OfferRecord
 
 _BULLET_PREFIX = re.compile(r"^>\s*")
@@ -77,9 +80,9 @@ def toilet_spoken_text(record: PublicToiletRecord, language: Language) -> str:
         language,
         [
             ("district", [record.district] if record.district else []),
-            ("hours", [record.opening_hours_raw] if record.opening_hours_raw else []),
-            ("facilities", record.facilities),
-            ("fee", [record.fee_raw] if record.fee_raw else []),
+            ("hours", [localize_toilet_text(record.opening_hours_raw, TOILET_HOURS_TRANSLATIONS, language)] if record.opening_hours_raw else []),
+            ("facilities", [localize_toilet_text(value, TOILET_FACILITY_TRANSLATIONS, language) for value in record.facilities]),
+            ("fee", [localize_toilet_text(record.fee_raw, TOILET_FEE_TRANSLATIONS, language)] if record.fee_raw else []),
             ("source", ["Stadt Leipzig"]),
         ],
     )

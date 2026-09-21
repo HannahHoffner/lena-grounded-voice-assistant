@@ -149,15 +149,15 @@ redigierte Planstand ist:
 | Interpretermodell | `alias-fast` |
 | Selectormodell | `alias-fast` |
 | Formulatormodell | `alias-fast` |
-| Interpreter Vertrag / Prompt | `4` / `8` |
+| Interpreter Vertrag / Prompt | `4` / `9` |
 | Selector Vertrag / Prompt | `1` / `3` |
 | Evidence-Vertrag | `3` |
 | Formulator Vertrag / Prompt | `2` / `15` |
-| Safety-Policy | `1` |
+| Safety-Policy | `2` |
 | Temperatur | `0` |
 | Response-Format | `json_object` |
-| maximale Ausgabetokens I / S / F | `700` / `300` / `900` |
-| Timeout I / S / F | `15` / `30` / `30` Sekunden |
+| maximale Ausgabetokens I / S / F | gemeinsam `min(BLABLADOR_MAX_TOKENS, 4096)`; Code-Standard `1200`, Beispielkonfiguration `2000` |
+| Timeout I / S / F | `15` / `10` / `30` Sekunden (konfigurierbar) |
 | globales E2E-LLM-Budget | `45` Sekunden je Nutzeranfrage |
 
 Interpreter-, Selector- und Formulatormodell werden einzeln aus
@@ -168,7 +168,7 @@ sonst Fallback auf den gemeinsamen Basiswert `BLABLADOR_MODEL`/`LENA_LLM_MODEL`)
 dem Laden der normalen Settings zeigt `live-dry-run` deshalb zusätzlich
 `model_assignment` (`shared_across_llm_stages` oder `per_stage_overrides`) und
 die drei redigierten Stufenkennungen einzeln. Ein autorisierter Lauf gleicht
-vor jedem Providercall exakt diese drei Stufenwerte ab (`_provider_identity`/
+vor dem Lauf und an Szenariogrenzen exakt diese drei Stufenwerte ab (`_provider_identity`/
 `_expected_identity` in `app/live_evaluation_runner.py`), nicht mehr nur den
 gemeinsamen Basiswert; eine Abweichung auch nur einer einzelnen Stufe stoppt
 den Lauf mit `live_evaluation_provider_identity_mismatch` bzw.
@@ -207,8 +207,14 @@ Turn des letzten Ablaufs (`e_session_continuation`) nicht mehr ausgeführt
 wurde. Seit Version 0.2.0 ist das Budget auf 34 korrigiert.
 
 Bei End-to-End-Anfragen gilt zusätzlich das vorhandene monotone 45-Sekunden-
-Budget. Die Laufzeitgrenze umfasst auch lokale Verarbeitung. Die Callzahlen
-sind reproduzierbare Obergrenzen, keine Verbrauchs- oder Kostenprognose. Kosten
+Budget. Die Laufzeitgrenze wird zwischen Verarbeitungsschritten geprüft und
+begrenzt außerdem jeden laufenden Provideraufruf auf die verbleibende Zeit;
+synchrone lokale Verarbeitung kann nicht mitten im Schritt abgebrochen werden.
+Jeder tatsächliche Aufruf wird vor dem Start reserviert, einschließlich eines
+zulässigen Formulierungs-Wiederholungsversuchs. Solche Versuche verbrauchen
+das bestehende Stufenbudget; sie erhöhen es nicht. Technische Stufenfehler zählen
+auch dann als Gate-Fehler, wenn ein nutzbarer Template-Rückfall vorliegt.
+Die Callzahlen sind Abbruchgrenzen, keine Verbrauchs- oder Kostenprognose. Kosten
 sind ohne eine belastbare, versionierte Preisinformation des Providers nicht
 bestimmbar; das Repository enthält keine solche Preisgrundlage.
 

@@ -115,11 +115,14 @@ _SAFE_CONFIG_NAMES = (
     "LLM_INTERPRETER_TIMEOUT_SECONDS", "LLM_SELECTOR_TIMEOUT_SECONDS",
     "LLM_FORMULATOR_TIMEOUT_SECONDS", "LLM_REQUEST_BUDGET_SECONDS",
     "BLABLADOR_MAX_TOKENS", "LENA_LLM_MAX_TOKENS",
+    "BLABLADOR_TIMEOUT_SECONDS", "LENA_LLM_TIMEOUT_SECONDS",
 )
 
 
 def _safe_values(root: Path, environ: Mapping[str, str]) -> dict[str, str]:
     values = {name: environ[name] for name in _SAFE_CONFIG_NAMES if environ.get(name)}
+    if environ.get("LENA_ENV_FILE_MODE", "").casefold() == "disabled":
+        return values
     for filename, override in ((".env", False), (".env.local", True)):
         path = root / filename
         if not path.is_file():
@@ -149,7 +152,7 @@ def load_redacted_live_configuration(
 ) -> RedactedLiveConfiguration:
     """Liest ausschließlich nicht geheime Planwerte, ohne Settings oder Provider."""
 
-    values = _safe_values(root or checkout_root() or Path.cwd(), environ or os.environ)
+    values = _safe_values(root or checkout_root() or Path.cwd(), os.environ if environ is None else environ)
     provider = (values.get("REWRITE_PROVIDER") or values.get("LENA_REWRITE_PROVIDER") or "template").casefold()
     provider = provider if provider in {"template", "blablador"} else "template"
     raw_model = values.get("BLABLADOR_MODEL") or values.get("LENA_LLM_MODEL") or "not_configured"
@@ -178,6 +181,15 @@ def load_redacted_live_configuration(
         configured_max = max(200, int(values.get("BLABLADOR_MAX_TOKENS") or values.get("LENA_LLM_MAX_TOKENS") or 1200))
     except ValueError:
         configured_max = 1200
+    try:
+        legacy_timeout = float(values.get("BLABLADOR_TIMEOUT_SECONDS") or values.get("LENA_LLM_TIMEOUT_SECONDS") or 30)
+        if not math.isfinite(legacy_timeout) or legacy_timeout < 1:
+            legacy_timeout = 30.0
+    except ValueError:
+        legacy_timeout = 30.0
+    interpreter_default = legacy_timeout if any(
+        values.get(name) for name in ("BLABLADOR_TIMEOUT_SECONDS", "LENA_LLM_TIMEOUT_SECONDS")
+    ) else 15.0
     return RedactedLiveConfiguration(
         provider_name=provider,
         provider_base_domain=base_domain,
@@ -187,15 +199,15 @@ def load_redacted_live_configuration(
         redacted_formulator_model_identifier=formulator_model,
         model_assignment=model_assignment,
         configured_timeouts={
-            "interpreter": _safe_float(values, "LLM_INTERPRETER_TIMEOUT_SECONDS", 15.0),
+            "interpreter": _safe_float(values, "LLM_INTERPRETER_TIMEOUT_SECONDS", interpreter_default),
             "selector": _safe_float(values, "LLM_SELECTOR_TIMEOUT_SECONDS", 10.0),
-            "formulator": _safe_float(values, "LLM_FORMULATOR_TIMEOUT_SECONDS", 30.0),
+            "formulator": _safe_float(values, "LLM_FORMULATOR_TIMEOUT_SECONDS", legacy_timeout),
         },
         global_budget_seconds=_safe_float(values, "LLM_REQUEST_BUDGET_SECONDS", 45.0),
         maximum_tokens={
-            "interpreter": min(configured_max, 700),
-            "selector": min(configured_max, 300),
-            "formulator": min(configured_max, 900),
+            "interpreter": min(configured_max, 4096),
+            "selector": min(configured_max, 4096),
+            "formulator": min(configured_max, 4096),
         },
     )
 
@@ -362,6 +374,10 @@ def build_run_manifest(
             "interpreter": settings.llm_interpreter_timeout_seconds,
             "selector": settings.llm_selector_timeout_seconds,
             "formulator": settings.llm_formulator_timeout_seconds,
+        },
+        "maximum_tokens": {
+            stage: min(settings.blablador_max_tokens, 4096)
+            for stage in ("interpreter", "selector", "formulator")
         },
         "global_budget": settings.llm_request_budget_seconds,
         "request_limit": limits.max_requests,

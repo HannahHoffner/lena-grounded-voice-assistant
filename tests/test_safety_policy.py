@@ -138,6 +138,9 @@ def assert_technical_hilfebus_stop(body: dict[str, object], app, language: Langu
     assert body["answer_type"] == "technical_fallback"
     assert [card["id"] for card in body["cards"]] == [offer.id]
     assert body["card_ids"] == [offer.id]
+    assert body["cards"][0]["address"] is None
+    if offer.address:
+        assert offer.address not in body["cards"][0]["spoken_text"]
     assert body["clarification"] is None
     assert body["answer"].count("112") == 1
 

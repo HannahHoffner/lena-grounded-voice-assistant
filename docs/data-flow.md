@@ -10,7 +10,7 @@ sequenceDiagram
     participant K as lokale KB
     participant C as CandidateSelector
     participant D as Dialogzustand
-    participant L as Blablador optional
+    participant L as Blablador (Interpreter erforderlich)
     participant J as lokales JSONL
     B->>A: POST /api/query
     A->>S: QueryRequest
@@ -53,6 +53,10 @@ sequenceDiagram
     A->>J: eine JSONL-Zeile lokal anhängen
     A-->>B: Antwort, Karten, Session, MapData
 ```
+
+Das Diagramm fasst alternative Pfade zusammen: Preflight-Safety, erkannte oder
+ungeklärte Akutgefahr sowie Interpreterfehler beenden den normalen Auswahlpfad.
+Die darunter dargestellten Kandidaten-/Modellschritte laufen dann nicht weiter.
 
 `QueryRequest` enthält `query`, `language`, `input_mode` sowie optional
 `category`, `session_id`, `dialog_id` und höchstens zwei `choice_values`.

@@ -29,6 +29,7 @@ from .live_evaluation_runner import (
 from .llm_selection import SELECTOR_CONTRACT_VERSION, SELECTOR_PROMPT_VERSION
 from .models import Language
 from .resources import packaged_bootstrap_data_root
+from .service import FORMULATOR_MAX_ATTEMPTS
 
 
 REVIEW_OUTPUT_VERSION = "1"
@@ -161,7 +162,7 @@ def build_review_template(
         "interpretation_limit": "This finite scenario set is not representative and yields no general success rate.",
         "live_smoke_plan": {
             "query_count": len(items),
-            "maximum_provider_calls": len(items) * 3,
+            "maximum_provider_calls": len(items) * (2 + FORMULATOR_MAX_ATTEMPTS),
             "maximum_provider_wait_seconds": len(items) * settings.llm_request_budget_seconds,
             "actual_duration_requires_explicit_live_run": True,
         },

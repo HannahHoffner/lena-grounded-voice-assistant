@@ -24,6 +24,14 @@ Trinkbrunnenquellenaufruf lässt den Test sofort fehlschlagen.
 
 ## Abdeckung nach Testmodul
 
+Zusätzlich führt `node --test tests/frontend.test.cjs` die echten Frontend-Skripte
+mit DOM-/Transport-Doubles aus. Abgedeckt sind unter anderem Single-Flight,
+Reset bei laufenden Requests, späte STT-Ergebnisse/Mikrofonfreigaben und das
+Stoppen erneuter Wiedergabe. Syntaxprüfungen: `node --check app/static/app.js`
+und `node --check app/static/dialogue.js`. Diese Prüfungen sind kein Browser-E2E
+oder Barrierefreiheitsnachweis. Für den manuellen Übergang gilt die
+[Evaluationscheckliste](manual-evaluation-prerequisites.md).
+
 | Datei | Schwerpunkt |
 |---|---|
 | `tests/test_api.py` | Health, Query-API, LLM-Stufen und Fallbacks |
@@ -90,9 +98,14 @@ werden; die lokale Ausführung prüft nur Befehle und Workflowstruktur.
    kontrollierten Test-Double oder bewusst konfigurierten Interpreter.
 3. Prüfe mit Test-Double je eine Frage zu Essen, Schlafen, Medizin und Beratung.
 4. Prüfe Karten, Kartendarstellung, Sprachwechsel und eine Folgefrage.
+   Prüfe außerdem den Hilfebus außerhalb 18:00--23:00 als Telefon-/Vermittlungs-
+   hinweis mit Zeiten, ohne Marker und ohne Behauptung aktueller Erreichbarkeit;
+   prüfe ihn für Essen/Trinkwasser nur im Sonntag-20:00--21:00-Standfenster.
 5. Prüfe im Zeitraum April bis Oktober eine Trinkbrunnenanfrage: höchstens drei
-   Karten, vollständige Brunnenmarkermenge, HBF als Ursprung und kein
+   primäre Antwortkarten, vollständige Brunnenmarkermenge, HBF als Ursprung und kein
    Echtzeitversprechen. Prüfe außerhalb des Zeitraums den sozialen Wasserfallback.
+   Die sichtbaren aufklappbaren Tafeln vereinigen sämtliche Kartenziele mit
+   ausgewählten Angeboten ohne Geometrie und können daher mehr als drei sein.
 6. Prüfe Speech nur mit bewusst konfiguriertem externem Dienst.
 7. Prüfe bei bewusst aktivierter Prototyp-Protokollierung eine erzeugte
    `runtime/logs/interactions.jsonl` und lösche lokale Testdaten anschließend.

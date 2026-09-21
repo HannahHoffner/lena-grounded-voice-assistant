@@ -14,6 +14,7 @@ from .candidate_contract import CandidateDecision, CandidateRole, ReasonCode, Se
 from .candidates import CandidateSelector, build_selection_context
 from .config import Settings
 from .i18n import load_translation_catalog, localize_offer_card
+from .spoken_text import offer_spoken_text
 from .formulation import (
     AnswerType,
     FormulatorError,
@@ -150,7 +151,14 @@ def _card(
     # Die Quelladresse des mobilen Hilfebus bleibt in Runtime/Provenienz, ist
     # aber kein Nutzerstandort. Sichtbar ist nur der separat belegte
     # Sonntagsstand, wenn der konkrete Leistungs- und Zeitpfad ihn zulässt.
-    return card.model_copy(update={"address": None}) if offer.place_type == "help_bus" else card
+    if offer.place_type == "help_bus":
+        card.address = None
+        card.spoken_text = offer_spoken_text(
+            offer.model_copy(update={"address": None}), language,
+            short_description=card.short_description, services=card.services,
+            opening_hours_raw=card.opening_hours_raw, notes=card.notes,
+        )
+    return card
 
 
 def _adopt_card_spoken_text(map_data: MapData | None, cards: list) -> None:
@@ -503,6 +511,16 @@ class QueryService:
                     # inherits unchanged from the offer get localized here.
                     destination.services = card.services
                     destination.notes = card.notes
+                    destination.spoken_text = offer_spoken_text(
+                        offer.model_copy(update={
+                            "display_name": destination.label,
+                            "address": destination.address,
+                        }), payload.language,
+                        short_description=destination.description or "",
+                        services=destination.services,
+                        opening_hours_raw=destination.opening_hours,
+                        notes=destination.notes,
+                    )
                 else:
                     destination.label = card.name
                     destination.description = card.short_description

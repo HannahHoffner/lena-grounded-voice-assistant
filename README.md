@@ -4,14 +4,19 @@ LENA ist eine lokal betriebene, mehrsprachige Webanwendung zur Suche nach
 Hilfsangeboten für wohnungslose Menschen in Leipzig. Ein statisches Browser-
 Frontend spricht mit einem FastAPI-Backend. Antworten werden ausschließlich aus
 lokal freigegebenen, getrennt geprüften Beständen für soziale Angebote,
-öffentliche Toiletten und feste Trinkwasserbrunnen abgeleitet. Ein optionales
-Sprachmodell formuliert diese Fakten, ist aber keine Wissensquelle.
+öffentliche Toiletten und feste Trinkwasserbrunnen abgeleitet. Die normale
+Bedarfsauswahl benötigt einen konfigurierten LLM-Interpreter. Nachgelagerte
+LLM-Auswahl und Formulierung haben deterministische Rückfälle; das Modell ist
+keine Wissensquelle. Ohne Interpreter startet die Anwendung, liefert bei
+normalen Anfragen aber nur den technischen Hilfepfad.
 
 Die Anwendung richtet sich an technisch betreuende Personen sowie an Fachkräfte,
 die LENA installieren, Datenänderungen prüfen, Übersetzungen pflegen und die
 fachlichen Leitplanken weiterentwickeln.
 
 ## Funktionsumfang
+
+Vor einer manuellen Prüfung: [Evaluationsvoraussetzungen](docs/manual-evaluation-prerequisites.md).
 
 - Textanfragen in Deutsch, Englisch, Polnisch, Rumänisch und Russisch
 - deterministische, begründete Kandidatenbegrenzung mit Mandatory-/Selectable-Trennung
@@ -98,7 +103,7 @@ Kopieren der Konfiguration erfolgt mit `cp .env.example .env`.
 | `app/maps.py` | Kartendaten aus kuratierten Ortstypen und Einsatzzeitregeln |
 | `app/speech.py` | serverseitige Transkription und Sprachsynthese |
 | `app/static/` | Browser-Frontend und vendored Leaflet-Dateien |
-| `data/canonical/` | Legacy-Fallback des normalisierten Datenstands |
+| `data/canonical/` | normalisierte Quelle für Wartung/Migration, kein ungefilterter Runtime-Fallback |
 | `data/wfs/releases/`, `data/wfs/active_release.json` | unveränderliche Releases und atomarer Active-Pointer |
 | `data/i18n/` | versionierter Kartenübersetzungsstore; keine automatischen menschlichen Freigaben |
 | `runtime/` | ignorierte Sessions, Interaktionsprotokolle und WFS-Prüfdaten |
@@ -186,7 +191,9 @@ Runtime-Fingerprint gebunden, bevor sie in die einzige Runtime-Sicht gelangen.
 Die Quelle wird im Nutzerpfad nicht live abgerufen. Die Betreiberseiten
 veröffentlichen für beide Anschriften strukturierte WGS84-Koordinaten; nur
 diese hashgebundenen Punkte erzeugen die VKKJ-Kartenmarker.
-Blablador beziehungsweise ein OpenAI-kompatibler Speech-Endpunkt sind optional.
+Providerzugänge sind für den Start optional; normale Bedarfsauswahl benötigt
+jedoch den LLM-Interpreter. Ein Speech-Endpunkt ist nur für den serverseitigen
+Sprachpfad erforderlich.
 `edge-tts` wird standardmäßig für Sprachsynthese verwendet und benötigt eine
 Netzwerkverbindung. Leaflet wird lokal aus `app/static/vendor/` ausgeliefert; die
 Kartenkacheln werden im Frontend von OpenStreetMap geladen.
@@ -223,7 +230,11 @@ ausdrückliche Datensatzlizenz ist nicht ausgewiesen; der Release speichert dahe
 - Safety-Texte sind technisch integriert, aber nicht muttersprachlich,
   professionell oder akustisch menschlich freigegeben. Deutsch steht auf
   `review_pending`, Englisch, Polnisch, Rumänisch und Russisch auf `machine`.
-- Zeitangaben werden nur für ausdrücklich unterstützte Regeln ausgewertet.
+- Ohne ausdrückliche Zeit werden Essen und Trinkwasser gegen die aktuelle
+  Europe/Berlin-Zeit geprüft. Andere Bedarfswege verwenden nur ihre ausdrücklich
+  unterstützten Regeln. Der Hilfebus kann jederzeit als nicht räumlicher
+  Telefon-/Vermittlungshinweis mit dokumentierten Zeiten erscheinen; als
+  Essens-/Wasserstand am Hbf nur Sonntag 20:00--21:00.
 - Stadtteile steuern außerhalb kuratierter Aliaszuordnungen wie „Kübel in
   Grünau“ noch kein geografisches Filter oder Ranking. Toiletten und
   Trinkwasserresultate werden ausschließlich zum Hauptbahnhof sortiert;

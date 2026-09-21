@@ -45,10 +45,11 @@ from .live_evaluation_runtime import (
     AtomicRunCounter,
     EvaluationLimitReached,
     EvaluationReportStore,
+    LimitedEvaluationProvider,
     new_run_id,
 )
 from .llm_selection import SelectorError
-from .models import Language, OfferRecord, QueryInteraction, QueryRequest, QueryResponse
+from .models import Language, OfferRecord, QueryRequest, QueryResponse
 from .providers.llm import BlabladorProvider, InterpreterError
 from .service import QueryService
 from .translation_contract import TranslationRuntimePolicy
@@ -196,7 +197,7 @@ async def run_interpreter_live_gate(
     current_scenario_id = "run"
 
     try:
-        provider = provider_factory(settings)
+        provider = LimitedEvaluationProvider(provider_factory(settings), counter)
         if _provider_identity(provider) != expected_identity:
             raise EvaluationLimitReached("live_evaluation_provider_identity_mismatch")
         for scenario in catalog.scenarios_for(EvaluationStage.INTERPRETER):
@@ -204,7 +205,6 @@ async def run_interpreter_live_gate(
             if _provider_identity(provider) != expected_identity:
                 raise EvaluationLimitReached("live_evaluation_provider_identity_changed")
             counter.reserve_request()
-            counter.reserve_provider_call(EvaluationComponent.INTERPRETER)
             started = clock()
             try:
                 output = await provider.interpret_query(
@@ -395,7 +395,7 @@ async def run_selector_formulator_live_gate(
     current_scenario_id = "run"
 
     try:
-        provider = provider_factory(settings)
+        provider = LimitedEvaluationProvider(provider_factory(settings), counter)
         if _provider_identity(provider) != expected_identity:
             raise EvaluationLimitReached("live_evaluation_provider_identity_mismatch")
 
@@ -490,7 +490,6 @@ async def _run_selector_scenario(
             "technically_valid": True,
             "bypass_reason": "insufficient_selectable_candidates",
         }
-    counter.reserve_provider_call(EvaluationComponent.SELECTOR)
     try:
         result = await provider.select_candidates(
             query=scenario.synthetic_inputs[0],
@@ -559,7 +558,6 @@ async def _run_formulator_scenario(
         "synthetic_input": scenario.synthetic_inputs[0],
         "linguistic_review_pending": True,
     }
-    counter.reserve_provider_call(EvaluationComponent.FORMULATOR)
     try:
         answer = await provider.formulate_answer(evidence=evidence)
     except FormulatorError as exc:
@@ -590,21 +588,6 @@ async def _run_formulator_scenario(
         "technically_valid": True,
         "confirmed_model_identifier": _confirmed_model(provider, "formulator"),
     }
-
-
-def _record_component_calls(counter: AtomicRunCounter, interaction: QueryInteraction) -> None:
-    """Zählt nachträglich die innerhalb eines vollständigen Anfragedurchlaufs
-
-    tatsächlich erfolgten Provideraufrufe. ``QueryService.query()`` kapselt
-    Interpreter, Selector und Formulator als einen Ablauf; eine Vorab-Reservierung
-    je Einzelaufruf wie in den Stufen 1/2 ist hier architektonisch nicht
-    verfügbar, ohne den produktiven Anfragepfad selbst zu verändern.
-    """
-    counter.interpreter_calls += 1
-    if interaction.selector_used:
-        counter.selector_calls += 1
-    if interaction.formulator_used:
-        counter.formulator_calls += 1
 
 
 _SAFETY_ACUTE_CASES = frozenset({"acute", "other_person", "prompt_injection"})
@@ -666,7 +649,12 @@ def _evaluate_e2e(
         checks["marker_set_valid"] = set(response.card_ids) <= set(response.map_marker_ids)
 
     if required.get("fallback_behavior_valid"):
-        checks["fallback_behavior_valid"] = interaction.route == "interpreter_error" and not response.cards
+        checks["fallback_behavior_valid"] = (
+            response.answer_type == "technical_fallback"
+            and interaction.route == "interpreter_error"
+            and len(response.cards) <= 1
+            and response.map_data is None
+        )
 
     numeric_forbidden = {token for token in forbidden if token.replace(".", "", 1).isdigit()}
     if numeric_forbidden:
@@ -705,6 +693,7 @@ async def _run_e2e_scenario(
     session_id: str | None = None
     response: QueryResponse | None = None
     dialogue_opened = False
+    technically_valid = True
     started = clock()
     for turn_index, text in enumerate(scenario.synthetic_inputs):
         counter.reserve_request()
@@ -712,14 +701,18 @@ async def _run_e2e_scenario(
         response = await service.query(QueryRequest(query=text, language=language, session_id=session_id))
         session_id = response.session_id
         dialogue_opened = dialogue_opened or response.clarification is not None
-        _record_component_calls(counter, response.interaction)
+        technically_valid = technically_valid and not bool(
+            response.interaction.interpreter_error_code
+            or response.interaction.selector_error_code
+            or response.interaction.formulator_error_code
+        )
     assert response is not None
     metrics, mismatches, critical, unverified = _evaluate_e2e(
         scenario, response, dialogue_opened_during_flow=dialogue_opened
     )
     # Momentaufnahme nach Abschluss des Ablaufs, keine Zuordnung zu einem einzelnen Turn:
     # QueryService.query() kann Interpreter, Selector und Formulator innerhalb eines Turns
-    # bündeln (siehe _record_component_calls), daher nur je Stufe der zuletzt bestätigte Wert.
+    # bündeln, daher nur je Stufe der zuletzt bestätigte Wert.
     provider = getattr(service, "blablador", None)
     return {
         "scenario_id": scenario.scenario_id,
@@ -731,7 +724,7 @@ async def _run_e2e_scenario(
         "content_mismatches": mismatches,
         "unverified_metrics": unverified,
         "critical_content_error": critical,
-        "technically_valid": True,
+        "technically_valid": technically_valid,
         "linguistic_review_pending": True,
         "duration_ms": round((clock() - started) * 1_000, 2),
         "last_confirmed_model_identifiers": {
@@ -746,6 +739,7 @@ async def _build_isolated_service(
     settings: Settings,
     scratch_dir: Path,
     provider_factory: Callable[[Settings], Any],
+    counter: AtomicRunCounter,
 ) -> tuple[QueryService, Any]:
     """Konstruiert einen QueryService mit isolierter Runtime-Wurzel für die Evaluation.
 
@@ -756,7 +750,7 @@ async def _build_isolated_service(
     isolated_settings = dataclasses.replace(settings, runtime_dir=scratch_dir)
     kb = load_active_knowledge_base(isolated_settings)
     service = QueryService(isolated_settings, kb)
-    provider = provider_factory(settings)
+    provider = LimitedEvaluationProvider(provider_factory(settings), counter)
     service.blablador = provider
     return service, provider
 
@@ -795,7 +789,7 @@ async def run_end_to_end_live_gate(
 
     with tempfile.TemporaryDirectory(prefix="lena-live-eval-e2e-") as scratch:
         try:
-            service, provider = await _build_isolated_service(settings, Path(scratch), provider_factory)
+            service, provider = await _build_isolated_service(settings, Path(scratch), provider_factory, counter)
             if _provider_identity(provider) != expected_identity:
                 raise EvaluationLimitReached("live_evaluation_provider_identity_mismatch")
             for scenario in catalog.scenarios_for(EvaluationStage.END_TO_END):
@@ -806,7 +800,7 @@ async def run_end_to_end_live_gate(
                 content_mismatches += bool(result["content_mismatches"])
                 critical_content_errors += int(result["critical_content_error"])
                 store.append_result(result)
-                if result["critical_content_error"]:
+                if result["critical_content_error"] or not result["technically_valid"]:
                     counter.record_failure()
         except EvaluationLimitReached as exc:
             status = "aborted"
@@ -884,7 +878,7 @@ async def run_stability_live_gate(
 
     with tempfile.TemporaryDirectory(prefix="lena-live-eval-stability-") as scratch:
         try:
-            service, provider = await _build_isolated_service(settings, Path(scratch), provider_factory)
+            service, provider = await _build_isolated_service(settings, Path(scratch), provider_factory, counter)
             if _provider_identity(provider) != expected_identity:
                 raise EvaluationLimitReached("live_evaluation_provider_identity_mismatch")
             for scenario_id in STABILITY_SCENARIO_IDS:
@@ -900,7 +894,7 @@ async def run_stability_live_gate(
                     content_mismatches += bool(result["content_mismatches"])
                     critical_content_errors += int(result["critical_content_error"])
                     store.append_result(result)
-                    if result["critical_content_error"]:
+                    if result["critical_content_error"] or not result["technically_valid"]:
                         counter.record_failure()
         except EvaluationLimitReached as exc:
             status = "aborted"

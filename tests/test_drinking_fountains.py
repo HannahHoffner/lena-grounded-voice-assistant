@@ -49,7 +49,7 @@ from app.infrastructure import (
     SeasonalStatus,
     DrinkingFountainRecordCollection,
 )
-from app.infrastructure_results import select_drinking_water_results
+from app.infrastructure_results import drinking_water_map_data, select_drinking_water_results
 from app.interpreter import (
     AcuteRiskStatus,
     ExplicitFacts,
@@ -468,6 +468,24 @@ def test_explicit_fountain_request_is_spatial_only_and_outside_season_uses_socia
     assert winter.eligible and all(result.record_type == "social_offer" for result in winter.eligible)
 
 
+def test_mixed_water_map_preserves_the_same_ranked_result_order(tmp_path: Path) -> None:
+    kb, decision = _decision(_settings(tmp_path))
+    results = select_drinking_water_results(decision, kb.offers, kb.drinking_fountains, now=FETCHED_AT)
+    assert {item.record_type for item in results.map_results} == {"social_offer", "drinking_fountain"}
+    fountain = next(item for item in results.map_results if item.record_type == "drinking_fountain")
+    social = next(item for item in results.map_results if item.record_type == "social_offer")
+    # The map must preserve a supplied eligibility/priority order, not regroup
+    # all social IDs ahead of namespaced fountain IDs.
+    ordered = (fountain, social)
+    mapped = drinking_water_map_data(ordered, Language.DE)
+    assert mapped is not None
+    expected = [item.id for item in ordered]
+    # Social mobile stops carry a suffix; fountain IDs themselves are namespaced.
+    actual = [item.id if item.id in expected else item.id.partition(":")[0] for item in mapped.destinations]
+    assert actual == expected
+    assert mapped.selected_destination_id == mapped.destinations[0].id
+
+
 def test_unknown_season_or_inactive_status_never_becomes_a_direct_fountain_result(tmp_path: Path) -> None:
     settings = _settings(tmp_path)
     kb, decision = _decision(settings)
@@ -577,6 +595,8 @@ def test_generic_water_request_uses_hilfebus_during_sunday_stand_time(tmp_path: 
     stand = response.map_data.destinations[0]
     assert "Westseite" in stand.address
     assert "20:00" in " ".join(stand.opening_hours)
+    assert stand.address in stand.spoken_text
+    assert kb.by_id()["21"].address not in stand.spoken_text
 
 
 @pytest.mark.parametrize(

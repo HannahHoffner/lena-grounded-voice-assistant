@@ -12,7 +12,7 @@ flowchart LR
     U[Browser] -->|HTTP/JSON, Audio| A[FastAPI app/main.py]
     A --> S[QueryService]
     S --> R[Deterministische Kandidatenbegrenzung]
-    S -. optional .-> L[Blablador]
+    S --> L[Blablador: Interpreter erforderlich, nachgelagerte Stufen mit Fallback]
     R --> Q[Freigegebene Runtime-Sicht]
     C[Active-Pointer prüfen] --> K[(data/wfs/releases/ID/offers.json)]
     K --> Q
