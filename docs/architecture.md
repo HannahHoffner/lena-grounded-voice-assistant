@@ -217,7 +217,7 @@ nur freigegebene Positivlistenfelder, Kandidatenrollen, opake Faktenreferenzen
 und bindende Policies. Conditional-, Excluded- und Sozialamt-Angebote sowie
 WFS-Rohfelder, Reviewnotizen und technische Provenienz gelangen nicht hinein.
 
-Der Formulatorvertrag 2 erlaubt ein bis drei kurze Sätze. Promptversion 15
+Der Formulatorvertrag 2 erlaubt ein bis drei kurze Sätze. Promptversion 16
 verlangt für normale angebotsbezogene Antworten zwei oder drei natürliche,
 rollenrichtige Sätze ohne festes `Nutze ...`-Muster. Das erste Angebot und der
 wichtigste nächste Schritt stehen zuerst. Sind mehrere finale Angebote
@@ -245,7 +245,12 @@ deterministische CandidateDecision und den Templatepfad; der gleiche Provider
 wird nicht unmittelbar nochmals als Formulator aufgerufen. Jeder
 Formulatorfehler verwirft die vollständige Modellantwort. Bei Parsing- oder
 Groundingfehlern ist innerhalb des Restbudgets ein neuer Versuch erlaubt; bei
-Transportfehlern nicht. Bleibt die Antwort ungültig, verwendet die Anwendung
+Transportfehlern nicht. Liegt eine geschlossene Groundingdiagnose vor, erhält
+dieser zweite Versuch einen festen Korrekturhinweis, niemals den verworfenen
+Text. Evidence und Validator bleiben unverändert. Der Hinweis korrigiert keine
+Antwort automatisch und ist kein Beleg für semantische Vollständigkeit;
+[bekannte Grenzen und Diagnoseverfahren](live-provider-evaluation.md#prompt-16-und-begrenztes-korrekturfeedback)
+bleiben ausdrücklich dokumentiert. Bleibt die Antwort ungültig, verwendet die Anwendung
 die bereits finalen Angebote im lokalisierten Templatefallback.
 
 Interpreter, Selector und Formulator verwenden denselben asynchronen

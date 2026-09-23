@@ -20,6 +20,8 @@ from ..formulation import (
     FormulatorError,
     FormulatorEvidence,
     FormulatorResponse,
+    GroundingDiagnosticCode,
+    formulator_retry_instruction,
 )
 from ..grounding import validate_formulation
 from ..interpreter import (
@@ -347,6 +349,7 @@ class BlabladorProvider:
         *,
         evidence: FormulatorEvidence,
         timeout_seconds: float | None = None,
+        retry_diagnostic: GroundingDiagnosticCode | None = None,
     ) -> ProviderAnswer:
         """Formuliert und validiert eine vollständige Evidence-Antwort atomar.
 
@@ -356,13 +359,17 @@ class BlabladorProvider:
         context = json.dumps(evidence.model_dump(mode="json"), ensure_ascii=False, separators=(",", ":"))
         if len(context) > self.max_context_chars:
             raise FormulatorError("formulator_contract_violation")
+        # Only trusted closed feedback is added, never the rejected model response.
+        system_prompt = FORMULATOR_SYSTEM_PROMPT
+        if retry_diagnostic is not None:
+            system_prompt += "\n" + formulator_retry_instruction(retry_diagnostic)
         payload = {
             "model": self.formulator_model,
             "temperature": 0,
             "max_tokens": min(self.max_tokens, 4096),
             "response_format": {"type": "json_object"},
             "messages": [
-                {"role": "system", "content": FORMULATOR_SYSTEM_PROMPT},
+                {"role": "system", "content": system_prompt},
                 {"role": "user", "content": context},
             ],
         }

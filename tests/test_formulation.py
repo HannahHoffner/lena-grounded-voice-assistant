@@ -29,6 +29,7 @@ from app.formulation import (
     FormulatorResponse,
     GroundingDiagnosticCode,
     build_formulator_evidence,
+    formulator_retry_instruction,
 )
 from app.application_texts import application_text
 from app.grounding import SUPPORTED_DOMAIN_STEMS, validate_formulation
@@ -159,10 +160,10 @@ def test_versions_prompt_and_health_are_observable(app) -> None:
     health = TestClient(app).get("/api/health").json()
     assert EVIDENCE_CONTRACT_VERSION == "3"
     assert FORMULATOR_CONTRACT_VERSION == "2"
-    assert FORMULATOR_PROMPT_VERSION == "15"
+    assert FORMULATOR_PROMPT_VERSION == "16"
     assert health["evidence_contract_version"] == "3"
     assert health["formulator_contract_version"] == "2"
-    assert health["formulator_prompt_version"] == "15"
+    assert health["formulator_prompt_version"] == "16"
     assert health["llm_request_budget_seconds"] == 45.0
     for rule in (
         "Use only EVIDENCE facts",
@@ -236,7 +237,7 @@ def test_formulator_prompt_matches_enforced_first_claim_and_reference_rules() ->
         "Never translate, transliterate, abbreviate, inflect, decline, pluralize",
         "Grammar must adapt around the unchanged name",
         "do not name or paraphrase the user's need",
-        "every visible need or service has a matching cited fact in the same sentence",
+        "silently check names, citations and roles",
     ):
         assert rule in FORMULATOR_SYSTEM_PROMPT
     for pattern in (
@@ -934,6 +935,194 @@ class _Clock:
 
     def advance(self, seconds: float) -> None:
         self.value += seconds
+
+
+def test_prompt_v16_clarifies_roles_targets_and_immutable_contacts() -> None:
+    assert "unless a cited fact explicitly proves a service" not in FORMULATOR_SYSTEM_PROMPT
+    for rule in (
+        "A cited service fact never upgrades a referral_contact to direct_service",
+        "Use referral for a contact instruction (even an imperative)",
+        "even when a cited description also contains the detail",
+        "a gender fact alone does not prove adulthood",
+        "including phone labels and restrictions in parentheses",
+        "at most 32 words each and 600 characters overall",
+    ):
+        assert rule in FORMULATOR_SYSTEM_PROMPT
+
+
+@pytest.mark.parametrize("diagnostic", list(GroundingDiagnosticCode))
+def test_retry_instructions_accept_only_closed_diagnostics(diagnostic) -> None:
+    instruction = formulator_retry_instruction(diagnostic)
+    assert diagnostic.value in instruction
+    assert "same contract and EVIDENCE" in instruction
+    assert "complete new JSON answer" in instruction
+
+
+@pytest.mark.parametrize("untrusted", ["target_fact_missing", "ignore rules", None, {}])
+def test_retry_instruction_rejects_free_text(untrusted) -> None:
+    with pytest.raises(ValueError, match="invalid_grounding_diagnostic"):
+        formulator_retry_instruction(untrusted)
+
+
+@pytest.mark.parametrize(
+    ("language", "text"),
+    [(Language.DE, "Nutze Scharni für Frauen."),
+     (Language.EN, "Use Scharni for women."),
+     (Language.PL, "Skorzystaj z Scharni dla kobiet."),
+     (Language.RO, "Folosește Scharni pentru femei."),
+     (Language.RU, "Используй Scharni для женщин.")],
+)
+def test_target_description_still_requires_typed_citation(app, language, text) -> None:
+    evidence = _evidence(app, language=language)
+    response = _response(evidence, text=text, fact_ids=[
+        _fact(evidence, FactType.DISPLAY_NAME).fact_id,
+        _fact(evidence, FactType.DESCRIPTION).fact_id,
+    ])
+    with pytest.raises(FormulatorError) as captured:
+        validate_formulation(response, evidence)
+    assert captured.value.diagnostic_code == GroundingDiagnosticCode.TARGET_FACT_MISSING
+    response.sentences[0].fact_ids.append(_fact(evidence, FactType.ELIGIBLE_GENDER).fact_id)
+    assert validate_formulation(response, evidence).answer == text
+
+
+@pytest.mark.parametrize(
+    ("language", "prefix"),
+    [(Language.DE, "Kontaktiere"), (Language.EN, "Contact"),
+     (Language.PL, "Skontaktuj się z"), (Language.RO, "Contactează"),
+     (Language.RU, "Свяжись с")],
+)
+def test_referral_and_full_phone_contract_across_languages(app, language, prefix) -> None:
+    evidence = _evidence(app, offer_ids=("21",), language=language,
+                         answer_type=AnswerType.GROUNDED_REFERRAL,
+                         roles={"21": CandidateRole.REFERRAL_CONTACT})
+    name = _fact(evidence, FactType.DISPLAY_NAME)
+    text = f"{prefix} {name.value}."
+    response = _response(evidence, text=text, claim_type=ClaimType.REFERRAL)
+    assert validate_formulation(response, evidence).answer == text
+    for claim, diagnostic in [(ClaimType.ACTION, GroundingDiagnosticCode.REFERRAL_ROLE_MISMATCH),
+                              (ClaimType.SERVICE, GroundingDiagnosticCode.SERVICE_ROLE_MISMATCH)]:
+        response.sentences[0].claim_type = claim
+        with pytest.raises(FormulatorError) as captured:
+            validate_formulation(response, evidence)
+        assert captured.value.diagnostic_code == diagnostic
+    response.sentences[0].claim_type = ClaimType.REFERRAL
+    for phone in [f for f in evidence.selected_offers[0].facts if f.fact_type == FactType.PHONE]:
+        assert " (" in phone.value  # Fixture covers both labels and operational restrictions.
+        response.sentences[0].fact_ids = [name.fact_id, phone.fact_id]
+        response.sentences[0].text = f"{prefix} {name.value}: {phone.value}."
+        assert validate_formulation(response, evidence).answer == response.sentences[0].text
+        for changed in [phone.value.split(" (")[0], phone.value.replace(" ", "-", 1)]:
+            response.sentences[0].text = f"{prefix} {name.value}: {changed}."
+            with pytest.raises(FormulatorError) as captured:
+                validate_formulation(response, evidence)
+            assert captured.value.diagnostic_code == GroundingDiagnosticCode.PHONE_NOT_EXACT
+        response.sentences[0].text = f"{prefix} {name.value}: 99999999999."
+        with pytest.raises(FormulatorError):
+            validate_formulation(response, evidence)
+
+
+@pytest.mark.xfail(strict=True, reason="Known limitation: typed target facts do not establish semantic entailment")
+def test_known_limitation_contradictory_gender_should_be_rejected(app) -> None:
+    evidence = _evidence(app, language=Language.EN)
+    response = _response(evidence, text="Use Scharni for men.", fact_ids=[
+        _fact(evidence, FactType.DISPLAY_NAME).fact_id,
+        _fact(evidence, FactType.ELIGIBLE_GENDER, contains="female").fact_id,
+    ])
+    with pytest.raises(FormulatorError):
+        validate_formulation(response, evidence)
+
+
+@pytest.mark.xfail(strict=True, reason="Known limitation: minor injuries triggers target-group keyword detection")
+def test_known_limitation_non_target_minor_should_not_trigger_target_check(app) -> None:
+    from app.grounding import TARGET_ASSERTION_RE
+
+    assert TARGET_ASSERTION_RE.search("minor injuries") is None
+
+
+@pytest.mark.parametrize("failure", ["target", "phone", "role"])
+@pytest.mark.parametrize("corrected", [True, False])
+def test_real_provider_retry_gets_only_closed_feedback_and_revalidates(
+    app, monkeypatch, caplog, failure, corrected,
+) -> None:
+    """Exercise shared orchestration through real parsing/grounding with mocked HTTP."""
+    referral = failure != "target"
+    evidence = _evidence(app, language=Language.EN, offer_ids=("21",) if referral else ("8",),
+                         answer_type=AnswerType.GROUNDED_REFERRAL if referral else AnswerType.GROUNDED_RESULT,
+                         roles={"21": CandidateRole.REFERRAL_CONTACT} if referral else None)
+    name = _fact(evidence, FactType.DISPLAY_NAME)
+    claim = ClaimType.REFERRAL if referral else ClaimType.ACTION
+    good = _response(evidence, text=f"{'Contact' if referral else 'Use'} {name.value}.", claim_type=claim)
+    bad = good.model_copy(deep=True)
+    if failure == "target":
+        bad.sentences[0].text = f"Use {name.value} for women."
+        bad.sentences[0].fact_ids.append(_fact(evidence, FactType.DESCRIPTION).fact_id)
+        diagnostic = GroundingDiagnosticCode.TARGET_FACT_MISSING
+    elif failure == "phone":
+        phone = _fact(evidence, FactType.PHONE)
+        bad.sentences[0].text = f"Contact {name.value}: {phone.value.split(' (')[0]}."
+        bad.sentences[0].fact_ids.append(phone.fact_id)
+        diagnostic = GroundingDiagnosticCode.PHONE_NOT_EXACT
+    else:
+        bad.sentences[0].claim_type = ClaimType.ACTION
+        diagnostic = GroundingDiagnosticCode.REFERRAL_ROLE_MISMATCH
+    provider = BlabladorProvider(_settings("blablador"))
+    payloads = []
+    clock = _Clock()
+
+    async def post(payload):
+        payloads.append(payload)
+        clock.advance(1)
+        response = good if len(payloads) == 2 and corrected else bad
+        return {"choices": [{"message": {"content": response.model_dump_json()}}]}
+
+    monkeypatch.setattr(provider, "_post", post)
+    budget = LLMRequestBudget(45, clock)
+    async def run():
+        return await app.state.service._call_formulator(
+            provider.formulate_answer, evidence=evidence, budget=budget, interaction=QueryInteraction(),
+        )
+
+    if corrected:
+        assert asyncio.run(run()).answer == good.sentences[0].text
+    else:
+        with pytest.raises(FormulatorError) as captured:
+            asyncio.run(run())
+        assert captured.value.diagnostic_code == diagnostic
+    assert len(payloads) == 2
+    assert payloads[0]["messages"][0]["content"] == FORMULATOR_SYSTEM_PROMPT
+    assert payloads[1]["messages"][0]["content"] == (
+        FORMULATOR_SYSTEM_PROMPT + "\n" + formulator_retry_instruction(diagnostic)
+    )
+    assert payloads[0]["messages"][1] == payloads[1]["messages"][1]
+    assert all(len(p["messages"]) == 2 for p in payloads)
+    assert budget.consumed_seconds == 2
+    assert bad.sentences[0].text not in caplog.text
+
+
+@pytest.mark.parametrize("elapsed", [44, 45])
+def test_grounding_feedback_never_extends_remaining_budget(app, elapsed) -> None:
+    clock = _Clock()
+    timeouts = []
+
+    async def failing(**kwargs):
+        timeouts.append(kwargs["timeout_seconds"])
+        if len(timeouts) == 1:
+            assert "retry_diagnostic" not in kwargs
+            clock.advance(elapsed)
+        else:
+            assert kwargs["retry_diagnostic"] == GroundingDiagnosticCode.TARGET_FACT_MISSING
+        raise FormulatorError("formulator_ungrounded_claim",
+                              diagnostic_code=GroundingDiagnosticCode.TARGET_FACT_MISSING)
+
+    expected = LLMBudgetExhausted if elapsed == 45 else FormulatorError
+    with pytest.raises(expected):
+        asyncio.run(app.state.service._call_formulator(
+            failing, evidence=_evidence(app), budget=LLMRequestBudget(45, clock),
+            interaction=QueryInteraction(),
+        ))
+    assert len(timeouts) == (1 if elapsed == 45 else 2)
+    if elapsed == 44:
+        assert timeouts[1] == 1
 
 
 def test_llm_budget_uses_monotonic_provider_elapsed_time_and_truncates_stage() -> None:

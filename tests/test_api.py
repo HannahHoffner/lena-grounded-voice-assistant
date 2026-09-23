@@ -19,6 +19,7 @@ from app.formulation import (
     FORMULATOR_PROMPT_VERSION,
     FORMULATOR_SYSTEM_PROMPT,
     FormulatorError,
+    GroundingDiagnosticCode,
     build_formulator_evidence,
 )
 from app.i18n import localize_offer_card
@@ -893,7 +894,12 @@ def test_formulator_retries_once_after_grounding_failure_then_succeeds() -> None
     assert body["answer"] == "Found it on the second try."
 
 
-def test_formulator_falls_back_to_template_after_repeated_grounding_failures() -> None:
+@pytest.mark.parametrize("diagnostic", [
+    GroundingDiagnosticCode.TARGET_FACT_MISSING,
+    GroundingDiagnosticCode.PHONE_NOT_EXACT,
+    GroundingDiagnosticCode.REFERRAL_ROLE_MISMATCH,
+])
+def test_formulator_falls_back_to_template_after_repeated_grounding_failures(diagnostic) -> None:
     """The retry is bounded -- a persistently non-compliant model must still
     fall back to the safe template rather than retry indefinitely.
     """
@@ -916,7 +922,11 @@ def test_formulator_falls_back_to_template_after_repeated_grounding_failures() -
 
         async def formulate_answer(self, **kwargs) -> ProviderAnswer:
             attempts.append(len(attempts) + 1)
-            raise FormulatorError("formulator_ungrounded_claim")
+            if len(attempts) == 1:
+                assert "retry_diagnostic" not in kwargs
+            else:
+                assert kwargs["retry_diagnostic"] == diagnostic
+            raise FormulatorError("formulator_ungrounded_claim", diagnostic_code=diagnostic)
 
     app.state.service.blablador = AlwaysFlakyProvider()
 

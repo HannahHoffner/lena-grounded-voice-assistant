@@ -18,6 +18,7 @@ from .spoken_text import offer_spoken_text
 from .formulation import (
     AnswerType,
     FormulatorError,
+    GroundingDiagnosticCode,
     build_drinking_water_evidence,
     build_formulator_evidence,
     build_public_toilet_evidence,
@@ -1192,9 +1193,10 @@ class QueryService:
         `_drinking_water_response`, `_public_toilet_response`) ruft diese eine
         Stelle statt eigener Retry-Logik auf, siehe `FORMULATOR_MAX_ATTEMPTS`.
 
-        Nur Fehler, bei denen eine frische Stichprobe realistisch anders
-        ausfallen kann (Grounding-/Parsing-Verstöße), lösen einen zweiten
-        Versuch aus. `formulator_timeout`/`formulator_http_error` sind
+        Grounding-/Parsing-Verstöße lösen höchstens einen zweiten Versuch aus.
+        Wenn vorhanden, erhält dieser die geschlossene Groundingdiagnose als
+        Korrekturhinweis, niemals den verworfenen Text. Ohne Diagnose bleibt
+        die Wiederholung unverändert. `formulator_timeout`/`formulator_http_error` sind
         Transportfehler, kein Stichprobenproblem -- ein Retry würde dort nur
         das ohnehin knappe Zeitbudget für ein zweites, ebenso wahrscheinliches
         Scheitern verbrauchen (siehe
@@ -1203,6 +1205,7 @@ class QueryService:
         abgefangen: ist die Zeit aufgebraucht, ist ein weiterer Versuch
         ohnehin sinnlos und soll den Aufrufer wie bisher direkt erreichen.
         """
+        retry_feedback: dict[str, GroundingDiagnosticCode] = {}
         for attempt in range(FORMULATOR_MAX_ATTEMPTS):
             allocation = budget.begin(self.settings.llm_formulator_timeout_seconds)
             interaction.formulator_used = True
@@ -1210,11 +1213,15 @@ class QueryService:
                 result: ProviderAnswer = await formulator_method(
                     evidence=evidence,
                     timeout_seconds=allocation.timeout_seconds,
+                    **retry_feedback,
                 )
             except FormulatorError as exc:
                 interaction.formulator_error_code = exc.code
                 retryable = exc.code not in _FORMULATOR_NON_RETRYABLE_ERRORS
                 if retryable and attempt + 1 < FORMULATOR_MAX_ATTEMPTS:
+                    # No rejected text, free-form exception or extra provider call.
+                    if exc.diagnostic_code is not None:
+                        retry_feedback = {"retry_diagnostic": exc.diagnostic_code}
                     LOGGER.warning(
                         "query.formulation.retry",
                         extra={"error_code": exc.code, "attempt": attempt + 1},

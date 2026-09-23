@@ -155,7 +155,7 @@ Tag oder einer Uhrzeit bevorzugt er Kandidaten, deren strukturierter
 `schedule_match_status` bereits deterministisch `matched` ist; er darf keine
 Zeitpassung selbst ergänzen.
 
-Die Modellantwort folgt Formulatorvertrag 2. Promptversion 15 fordert bei
+Die Modellantwort folgt Formulatorvertrag 2. Promptversion 16 fordert bei
 normalen angebotsbezogenen Antworten zwei oder drei kurze natürliche Sätze. Das
 wichtigste Angebot steht zuerst, ist aber nicht mehr an ein festes
 `Nutze ...`-Muster gebunden. Mehrere finale, nützliche Alternativen können in
@@ -176,6 +176,13 @@ gesamte Antwort. Verbindliche Karten und die finale Reihenfolge werden
 deterministisch aus dem Evidence-Paket wiederhergestellt und können durch
 `card_ids` weder entfernt noch umsortiert
 werden.
+
+Bei einem Groundingfehler kann der gemeinsame Formulatorpfad innerhalb des
+Restbudgets genau einmal erneut aufgerufen werden. Nur der geschlossene
+Diagnosecode wird als fester Korrekturhinweis ergänzt; die Evidence bleibt
+gleich, verworfener Text wird nicht erneut eingespeist. Auch die zweite Antwort
+wird vollständig validiert. Timeout/HTTP-Fehler werden nicht wiederholt;
+endgültige Fehler führen zum bestehenden lokalisierten Templatefallback.
 
 ## Strukturierter Dialog
 

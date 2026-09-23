@@ -152,7 +152,7 @@ redigierte Planstand ist:
 | Interpreter Vertrag / Prompt | `4` / `9` |
 | Selector Vertrag / Prompt | `1` / `3` |
 | Evidence-Vertrag | `3` |
-| Formulator Vertrag / Prompt | `2` / `15` |
+| Formulator Vertrag / Prompt | `2` / `16` |
 | Safety-Policy | `2` |
 | Temperatur | `0` |
 | Response-Format | `json_object` |
@@ -387,9 +387,96 @@ kontrollierte Stichprobe, kein allgemeiner Modellbenchmark.
 Large meldete als Modellkennung
 `02_-_Qwen3.8-Flash-Next-NVFP4__general_purpose_large_model`. Das ist nur die
 Providerangabe des Laufs. Der Vergleich rechtfertigt weder eine Umstellung auf
-Large noch eine Erhöhung des Timeouts: Large beseitigte in dieser Stichprobe die
-beobachteten Groundingfehler, bestand das Gate wegen zweier Timeouts aber ebenfalls
-nicht und war deutlich langsamer. Nachfolgende Stufen wurden nicht gestartet.
+Large noch eine Erhöhung des Timeouts: `f_en_grounded` und `f_pl_injection`
+lieferten unter Large technisch gültige Antworten. Das zuvor wegen
+`phone_not_exact` verworfene `f_pl_grounded` endete hingegen im Timeout; eine
+Behebung dieses Fehlers durch Large ist nicht nachgewiesen. Large bestand das
+Gate ebenfalls nicht und war deutlich langsamer. Nachfolgende Stufen wurden
+nicht gestartet.
+
+## Prompt 16 und begrenztes Korrekturfeedback
+
+Die gezielte Architekturprüfung vom 23. September 2026 führte zu einer
+begrenzten Vertragskorrektur, nicht zu gelockerten Groundingregeln:
+
+- `candidate_role` und `claim_type` sind ausdrücklich verschiedene Begriffe.
+  Ein Dienstleistungsfakt stuft einen `referral_contact` nicht zum direkten
+  Leistungsangebot hoch. Auch eine imperative Kontaktaufforderung hat dort
+  den Satztyp `referral`, nicht `action`.
+- Zielgruppen-, Geschlechts-, Alters- und Zugangsaussagen benötigen passende
+  typisierte Fakten im selben Satz, auch wenn die Beschreibung sie ebenfalls
+  enthält. Ein beliebiger Fakt des passenden Typs genügt dem fachlichen
+  Vertrag nicht; beispielsweise belegt ein Geschlechtsfakt keine Volljährigkeit.
+- Telefonwerte sind einschließlich Klammerzusätzen unverändert zu übernehmen.
+  Das bestehende Feld kann sowohl einen Kontaktnamen als auch eine Einschränkung
+  wie „nur zu Einsatzzeiten“ enthalten. Es wird nicht auf Ziffern reduziert.
+
+Der erste Formulatoraufruf erhält weiterhin nur Systemprompt und Evidence.
+`QueryService._call_formulator()` übergibt beim bereits vorhandenen zweiten
+Versuch optional `retry_diagnostic: GroundingDiagnosticCode` an
+`BlabladorProvider.formulate_answer()`. Der Provider ergänzt ausschließlich
+einen festen Korrekturhinweis aus dieser geschlossenen Diagnose. Für
+Zielgruppen-, Telefon- und Rollenfehler erklärt er die betroffene Regel; andere
+Enumwerte erhalten einen allgemeinen Prüfhinweis mit Regelcode. Freier Text
+wird als Diagnose nicht akzeptiert. Verworfene Antworten und Exceptiontexte
+werden nicht in den erneuten Prompt übernommen oder zusätzlich protokolliert.
+Fehler ohne Groundingdiagnose behalten die bisherige Wiederholung ohne
+Zusatzhinweis bei.
+
+Jede neue Antwort durchläuft erneut denselben vollständigen Validator. Es
+bleibt bei höchstens zwei Versuchen innerhalb des Restbudgets, ohne Retry nach
+Timeout/HTTP-Fehler und mit atomarem Templatefallback bei endgültigem Scheitern.
+Modellkonfiguration, 30-s-Formulatorlimit und 45-s-Gesamtbudget bleiben unverändert.
+Evidence-Vertrag 3 und Antwortvertrag 2 ändern sich nicht. Der Systemprompt
+umfasst 8.418 statt 8.428 Zeichen (1.227 statt 1.228 whitespace-getrennte Wörter);
+ein Diagnosehinweis ergänzt im zweiten Versuch höchstens 472 Zeichen plus
+einen Zeilenumbruch. Dies
+sind keine gemessenen Modelltoken oder ein Latenznachweis.
+
+### Nachgewiesene Grenzen
+
+Die alten verworfenen Modelltexte fehlen; lokale Gegenproben rekonstruieren
+deshalb nicht deren exakten Inhalt. `referral_role_mismatch` kann bereits bei
+einem korrekten Kontaktsatz mit falschem `claim_type=action` entstehen und
+beweist allein keine falsche sichtbare Leistungsbehauptung.
+
+Die Zielgruppenprüfung ist weiterhin heuristisch: Sie kann „minor injuries“
+als Altersaussage erkennen und trotz zitiertem `female`-Fakt eine Aussage
+„for men“ akzeptieren. Zwei neue, strikt erwartete Fehler (`xfail(strict=True)`)
+in `tests/test_formulation.py` halten diese außerhalb des Änderungspakets
+liegenden Grenzen sichtbar. Kein bestehender Test wurde dafür abgeschwächt
+oder übersprungen. Die übrigen Regressionen prüfen unter anderem alle fünf
+Sprachen, vollständige Telefonwerte, Rollen, die tatsächliche Provider-
+Validierung mit gemocktem Transport, Restbudget und Templatefallback.
+
+Diese Änderung verhindert die drei Fehlerklassen nicht allgemein. Mocktests
+beweisen weder bessere Modellbefolgung noch semantische Vollständigkeit oder
+eine Verbesserung gegenüber den historischen Live-Ergebnissen.
+
+### Vorgeschlagener, noch nicht ausgeführter Diagnoselauf
+
+Nach separater Live-Freigabe und sauberem versioniertem Stand: bestehende
+Stufe `selector-formulator`, dieselben 6 Selector- und 10 Formulatorfälle,
+`alias-fast`, unveränderte Daten und tatsächliche Stufentimeouts, höchstens
+16 Szenarien/16 Provideraufrufe, 480 Sekunden Gesamtlaufzeit und Abbruch bei
+3 Fehlern. Die bestehenden Schutzmaßnahmen und lokale Speicherung von
+`rejected_structured_output` bleiben aktiv; keine STT-, TTS- oder WFS-Aufrufe.
+
+Promptversion und Commit sind die beabsichtigten Vergleichsunterschiede.
+Szenariohash, Datenfingerabdruck und tatsächliche Evidence müssen vergleichbar
+sein; insbesondere können relative Tages-/Zeitbezüge trotz identischer
+Szenario-IDs unterschiedliche Eingaben erzeugen. Fehlende historische
+Antworten werden nicht rekonstruiert. Annahmequote, Ablehnungsregeln, Timeouts
+und Latenzen sind getrennt und mit ihren Nennern zu berichten.
+
+Der isolierte Stufe-2-Runner ruft den Formulator einmal pro Szenario direkt auf.
+Er misst damit den bereinigten Erstaufruf, **nicht** das neue Feedback im
+Anwendungsretry. Die lokale Integration prüft dieses Feedback mit Mocks.
+Ein zusätzlicher Live-Nachweis dafür braucht einen separat abgegrenzten,
+vor jedem Aufruf budgetierten Lauf; die oben dokumentierten E2E-Runnergrenzen
+dürfen dafür nicht ignoriert werden. Es wird keine Folgestufe automatisch
+gestartet und keine Freigabe zur manuellen Evaluation allein aus Mocktests
+abgeleitet.
 
 Seit Version 0.2.0 speichert `manifest.json` zusätzlich `git_commit`,
 `git_dirty`, `software_version` und `provider_base_domain`
