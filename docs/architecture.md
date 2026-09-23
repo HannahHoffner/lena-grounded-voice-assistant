@@ -217,7 +217,7 @@ nur freigegebene Positivlistenfelder, Kandidatenrollen, opake Faktenreferenzen
 und bindende Policies. Conditional-, Excluded- und Sozialamt-Angebote sowie
 WFS-Rohfelder, Reviewnotizen und technische Provenienz gelangen nicht hinein.
 
-Der Formulatorvertrag 2 erlaubt ein bis drei kurze Sätze. Promptversion 17
+Der Formulatorvertrag 2 erlaubt ein bis drei kurze Sätze. Promptversion 18
 verlangt für normale angebotsbezogene Antworten zwei oder drei natürliche,
 rollenrichtige Sätze ohne festes `Nutze ...`-Muster. Das erste Angebot und der
 wichtigste nächste Schritt stehen zuerst. Sind mehrere finale Angebote
@@ -263,13 +263,35 @@ geeignet ist, noch dass die Leistung gerade jetzt verfügbar ist. Nennt ein Satz
 eine Leistung mit dokumentiertem Zeitfenster, darf er keine Zeit einer anderen
 Leistung dafür ausgeben.
 
-Die Prüfung kennt drei Ergebnisse statt einer Gleichsetzung aller Abweichungen.
+Die Konzeptprüfung unterscheidet vier Ergebnisse.
 *Belegt* wird freigegeben, auch wenn die Referenz in einem anderen Satz steht.
-*Widersprüchlich* — eine Aussage, die eine zitierte kuratierte Beschränkung
+*Widersprüchlich* — eine Aussage, die eine kuratierte Beschränkung des Angebots
 ausschließt — wird verworfen. *Nicht entscheidbar* wird ebenfalls verworfen,
 aber getrennt diagnostiziert: die Antwort wird damit nicht als nachweislich
 unwahr bezeichnet, sondern nur nicht ungeprüft freigegeben. Beide Fälle führen
 in denselben unveränderten begrenzten Retry beziehungsweise Templatefallback.
+*Nicht geprüft* (`NOT_CHECKED`) bedeutet dagegen, dass kein bekanntes Konzept
+erkannt wurde; es ist kein positiver Beleg. Ein `service`-Satz ohne erkanntes
+Leistungs- oder belegtes Zielgruppenkonzept braucht einen wörtlichen zitierten
+Leistungswert, sonst folgt `service_fact_missing`. Kontaktanweisungen und
+operative Fakten bleiben mit ihren eigenen Prüfungen möglich.
+
+`app/grounding_constraints.py` prüft erkannte Altersrelationen gegen die
+typisierten Angebotsgrenzen (auch ohne deren Zitat). Bei leistungsgebundenen
+Zeitangaben werden Tagesumfang und Reihenfolge der Uhrzeiten zusammen geprüft;
+Fenster werden nicht durch Zusammenwerfen ihrer Zahlen kombiniert. Persönliche
+Erhaltzusagen brauchen die zitierte Bedingung vollständig sichtbar mit Tag und
+Zeit; sie darf in einem anderen Satz über dasselbe Angebot stehen.
+Allgemeine Leistungsbeschreibungen dürfen weiterhin ohne Zeitangabe
+stehen. Eine persönliche Schlafplatzzusage braucht kein Wort wie „garantiert“,
+um unbelegt zu sein.
+
+Erkannte Verneinungen belegen keine positive Leistung und umgekehrt. Freie
+negative Paraphrasen werden konservativ nicht freigegeben; ein vollständig
+zitierter negativer Fakt darf wörtlich wiedergegeben werden. Ein unbekannter
+aktueller Status ist nur bei vollständiger Wiedergabe eines zitierten
+Notizwertes eine Ausnahme vom Gegenwartswächter. Unabhängige unbekannte Details
+erlauben keine aktuelle Leistungszusage.
 
 ### Zwei lexikalische Regeln und ihre Grenzen
 
@@ -304,7 +326,12 @@ Bedeutung prüfen. Abgesichert sind konkret prüfbare Aussagen: benannte
 Leistungs- und Zielgruppenkonzepte gegen zitierte Werte, Widersprüche gegen
 typisierte kuratierte Beschränkungen, Zusagemuster und leistungsgebundene
 Zeitfenster. Eine Formulierung außerhalb dieses geschlossenen Wortschatzes wird
-nicht erkannt und fällt in die Klasse *nicht entscheidbar*; umgekehrt kann ein
+nicht erkannt (`NOT_CHECKED`), nicht automatisch als wahr oder falsch bewertet.
+Die strengere Behandlung unbeurteilter `service`-Sätze ist keine allgemeine
+semantische Garantie: zusätzliche unbekannte Aussagen neben einem erkannten
+Konzept, falsch deklarierte Claimtypen, freie Negationsbezüge und nicht erkannte
+Alters-/Zeitparaphrasen können weiterhin außerhalb der Prüfabdeckung liegen.
+Umgekehrt kann ein
 lexikalisch passender Treffer inhaltlich danebenliegen (dokumentiert am
 Beispiel „minor injuries"). Eine manuelle Evaluation bleibt deshalb erforderlich.
 

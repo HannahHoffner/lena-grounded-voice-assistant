@@ -28,7 +28,7 @@ from .translation_contract import TranslationRuntimePolicy
 
 EVIDENCE_CONTRACT_VERSION = "4"
 FORMULATOR_CONTRACT_VERSION = "2"
-FORMULATOR_PROMPT_VERSION = "17"
+FORMULATOR_PROMPT_VERSION = "18"
 MAX_FORMULATOR_RESPONSE_CHARS = 3_000
 FactId = Annotated[str, StringConstraints(pattern=r"^f_[0-9a-f]{16}$")]
 OfferId = Annotated[
@@ -162,7 +162,7 @@ class BindingPolicy(str, Enum):
 POLICY_GUIDANCE = {
     BindingPolicy.NO_REALTIME_CAPACITY: "Do not say that a free place or capacity is available.",
     BindingPolicy.NO_CURRENT_AVAILABILITY: "Do not say that an offer is open or available now.",
-    BindingPolicy.REFERRAL_WORDING: "Describe referral contacts only as places to contact, ask, or receive help finding further support.",
+    BindingPolicy.REFERRAL_WORDING: "Lead with contacting or asking the referral contact. Further sentences may describe its own cited services, but never promise admission, suitability or current availability.",
     BindingPolicy.OUT_OF_SCOPE_BOUNDARY: "Say briefly that LENA cannot answer the out-of-domain question.",
     BindingPolicy.SUPPORTED_DOMAINS: "LENA supports food, drinking water, sleep, medical help, advice, and public toilets in Leipzig.",
     BindingPolicy.NO_VERIFIED_RESULT: "Say that no matching offer was found in LENA's approved data; do not recommend alternatives from world knowledge.",
@@ -317,7 +317,7 @@ def formulator_retry_instruction(diagnostic: GroundingDiagnosticCode) -> str:
             "names the group is enough. Otherwise omit the detail."
         ),
         GroundingDiagnosticCode.TARGET_CLAIM_CONTRADICTED: (
-            "A stated target group contradicts a cited curated restriction of that "
+            "A stated target group or age contradicts a curated restriction of that "
             "offer. State the group the cited values actually name, or omit it."
         ),
         GroundingDiagnosticCode.SERVICE_FACT_MISSING: (
@@ -341,21 +341,20 @@ def formulator_retry_instruction(diagnostic: GroundingDiagnosticCode) -> str:
             "restriction visible instead of presenting the service as unrestricted."
         ),
         GroundingDiagnosticCode.SERVICE_CONDITION_MISMATCH: (
-            "The time you stated belongs to a different service of that offer. Use "
-            "the service_condition of the service you name, never a contact or "
-            "general opening time."
+            "The stated days or ordered time interval do not match that service. "
+            "Use its service_condition, never a contact or general opening time."
         ),
         GroundingDiagnosticCode.PHONE_NOT_EXACT: (
             "Copy any phone value completely from its cited fact, including spacing, "
             "punctuation, labels and restrictions. Do not translate or shorten it."
         ),
         GroundingDiagnosticCode.REFERRAL_ROLE_MISMATCH: (
-            "For referral_contact, use referral for contact instructions, or fact for "
-            "operational details; never action or service. Do not claim a direct service."
+            "Use referral only for contact instructions about referral_contact. "
+            "Use service for its own evidenced services and fact for operational details."
         ),
         GroundingDiagnosticCode.SERVICE_ROLE_MISMATCH: (
-            "Use service only for direct_service with a matching service, capability "
-            "or description fact. A referral_contact remains referral or fact."
+            "Use service only with a matching service, capability "
+            "or description fact whose value supports the stated service, in either candidate role."
         ),
     }.get(diagnostic, "Recheck the cited values and the applicable binding policies.")
     return (

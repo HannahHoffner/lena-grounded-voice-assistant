@@ -306,6 +306,8 @@ def test_general_description_is_allowed_but_a_personal_promise_needs_the_conditi
             [service.fact_id, condition.fact_id],
         ),
     )
+    assert _diagnostic(with_condition, evidence) == GroundingDiagnosticCode.SERVICE_CONDITION_MISSING
+    with_condition.sentences[1].text = "Dort bekommst du Sonntag 20:00-21:00 warmes Essen."
     assert validate_formulation(with_condition, evidence).sentence_count == 2
 
 

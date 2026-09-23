@@ -29,6 +29,7 @@ from .grounding_claims import (
     detect_service_concepts,
 )
 from .interpreter import Need
+from .grounding_constraints import contradicts_age_bound, has_negation, schedule_matches
 from .models import Language
 
 
@@ -347,6 +348,7 @@ def _validate_service_conditions(
     offer,
     pool: list[EvidenceFact],
     language: Language,
+    visible_offer_text: str,
 ) -> None:
     """Hält leistungsgebundene Zeitfenster der kuratierten Daten auseinander.
 
@@ -373,12 +375,14 @@ def _validate_service_conditions(
     if not named:
         return
     cited = {fact.fact_id for fact in pool}
-    stated_times = set(TIME_RE.findall(text))
     for capability in sorted(named):
         condition = conditions[capability]
-        if stated_times and not stated_times.issubset(set(TIME_RE.findall(condition.value))):
+        if not schedule_matches(text, condition.value, language, complete=False):
             raise _ungrounded(GroundingDiagnosticCode.SERVICE_CONDITION_MISMATCH)
-        if claims_personal_receipt(text, language) and condition.fact_id not in cited:
+        if claims_personal_receipt(text, language) and (
+            condition.fact_id not in cited
+            or not schedule_matches(visible_offer_text, condition.value, language, complete=True)
+        ):
             raise _ungrounded(GroundingDiagnosticCode.SERVICE_CONDITION_MISSING)
 
 
@@ -419,6 +423,7 @@ def _validate_sentence(
     facts_by_id: dict[str, tuple[str, EvidenceFact]],
     allowed_policies: set[BindingPolicy],
     pools: dict[str, list[EvidenceFact]],
+    visible_offer_texts: dict[str, str],
 ) -> str:
     text = " ".join(sentence.text.split())
     if not text or len(text.split()) > 32 or HTML_OR_MARKDOWN_RE.search(text):
@@ -457,24 +462,69 @@ def _validate_sentence(
         if sentence.claim_type == ClaimType.REFERRAL and offer.candidate_role != "referral_contact":
             raise _ungrounded(GroundingDiagnosticCode.REFERRAL_ROLE_MISMATCH)
 
-        service_support, _ = assess_service_claim(text, pool_values, language)
-        if service_support is not ClaimSupport.SUPPORTED:
+        # Names and contact literals are not service/target claims in their own
+        # right. Preserve other fact text so that its semantics are still checked.
+        semantic_text = _without_contact_literals(text)
+        for fact in offer.facts:
+            if fact.fact_type in {FactType.DISPLAY_NAME, FactType.ALIAS}:
+                semantic_text = semantic_text.replace(fact.value, " ")
+        exact_negative_fact = any(
+            fact.fact_type in {FactType.SERVICE, FactType.DESCRIPTION, FactType.NOTE}
+            and has_negation(fact.value, language)
+            and _canonical(fact.value).rstrip(".!?") == _canonical(semantic_text).rstrip(".!?")
+            for fact in pool
+        )
+        # Negative source text cannot prove a positive service by keyword alone.
+        service_values = [
+            (kind, value) for kind, value in pool_values
+            if not any(has_negation(value, lang) for lang in {language, Language.DE, Language.EN})
+        ]
+        service_support, service_concepts = assess_service_claim(semantic_text, service_values, language)
+        if service_support in {ClaimSupport.UNDECIDABLE, ClaimSupport.CONTRADICTED} and not exact_negative_fact:
             raise _ungrounded(GroundingDiagnosticCode.SERVICE_FACT_MISSING)
-        target_support, _ = assess_target_claim(text, pool_values, language)
+        all_values = [(fact.fact_type.value, fact.value) for fact in offer.facts]
+        target_support, _ = assess_target_claim(
+            semantic_text, pool_values, language, restrictions=all_values,
+        )
+        if contradicts_age_bound(
+            semantic_text, all_values, language
+        ):
+            raise _ungrounded(GroundingDiagnosticCode.TARGET_CLAIM_CONTRADICTED)
         if target_support is ClaimSupport.CONTRADICTED:
             raise _ungrounded(GroundingDiagnosticCode.TARGET_CLAIM_CONTRADICTED)
         if target_support is ClaimSupport.UNDECIDABLE:
             raise _ungrounded(GroundingDiagnosticCode.TARGET_FACT_MISSING)
+        if sentence.claim_type == ClaimType.SERVICE and (
+            service_support is ClaimSupport.NOT_CHECKED
+            and target_support is not ClaimSupport.SUPPORTED
+            and not any(
+                fact.fact_type in {FactType.SERVICE, FactType.CAPABILITY, FactType.DESCRIPTION}
+                and _canonical(fact.value).rstrip(".!?") in _canonical(semantic_text)
+                for fact in pool
+            )
+        ):
+            _validate_operational_tokens(text, pool)
+            raise _ungrounded(GroundingDiagnosticCode.SERVICE_FACT_MISSING)
+        # Positive concept occurrence does not support a negated claim. Exact
+        # cited negative facts may be quoted; arbitrary negative paraphrases
+        # remain undecidable instead of being mistaken for positive evidence.
+        if service_concepts and has_negation(semantic_text, language) and not exact_negative_fact:
+            raise _ungrounded(GroundingDiagnosticCode.SERVICE_FACT_MISSING)
 
         # Aus einer belegten Leistungsbeschreibung folgt weder eine Aufnahme noch
         # eine persoenliche Eignung noch eine aktuelle Verfuegbarkeit.
-        if claims_admission(text, language):
+        if claims_admission(semantic_text, language):
             raise _ungrounded(GroundingDiagnosticCode.ADMISSION_CLAIM_UNSUPPORTED)
-        if claims_suitability(text, language):
+        if claims_suitability(semantic_text, language):
             raise _ungrounded(GroundingDiagnosticCode.SUITABILITY_CLAIM_UNSUPPORTED)
-        if claims_current_availability(text, language):
+        if claims_current_availability(
+            semantic_text, language,
+            known_unknown_values=[fact.value for fact in pool if fact.fact_type == FactType.NOTE],
+        ):
             raise _ungrounded(GroundingDiagnosticCode.CURRENT_AVAILABILITY_UNSUPPORTED)
-        _validate_service_conditions(text, offer, pool, language)
+        _validate_service_conditions(
+            semantic_text, offer, pool, language, visible_offer_texts[sentence.offer_id],
+        )
 
         if sentence.claim_type == ClaimType.FACT and not any(
             fact.fact_type not in {FactType.DISPLAY_NAME, FactType.ALIAS}
@@ -537,8 +587,12 @@ def validate_formulation(
 
     _resolve_references(response, offers_by_id, facts_by_id)
     pools = _citation_pools(response, facts_by_id)
+    visible_offer_texts = {
+        offer_id: " ".join(sentence.text for sentence in response.sentences if sentence.offer_id == offer_id)
+        for offer_id in pools
+    }
     texts = [
-        _validate_sentence(sentence, evidence, offers_by_id, facts_by_id, allowed_policies, pools)
+        _validate_sentence(sentence, evidence, offers_by_id, facts_by_id, allowed_policies, pools, visible_offer_texts)
         for sentence in response.sentences
     ]
     _validate_cited_names(response, texts, pools)

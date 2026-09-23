@@ -4,12 +4,13 @@ Dieses Modul beantwortet genau eine Frage: Wird ein im sichtbaren Antworttext
 erkanntes Konzept (Leistung, Zielgruppe, Aufnahme, aktuelle Verfügbarkeit) von
 den *Werten* der zitierten Fakten getragen? Es ist bewusst kein
 Entailment-Modell. Es arbeitet mit einem geschlossenen mehrsprachigen
-Stammwortschatz und liefert drei Ergebnisse statt einer Ja/Nein-Wahrheit:
+Stammwortschatz und trennt Prüfungsergebnisse von fehlender Prüfabdeckung:
 
 ``SUPPORTED``     Das Konzept steht in einem zitierten Wert.
 ``CONTRADICTED``  Ein typisierter kuratierter Fakt schließt das Konzept aus.
 ``UNDECIDABLE``   Kein Beleg und kein Widerspruch; mit diesem Verfahren nicht
                   entscheidbar.
+``NOT_CHECKED``   Kein bekanntes Konzept erkannt; keine Wahrheitsaussage.
 
 ``UNDECIDABLE`` bedeutet ausdrücklich nicht „nachweislich falsch". Der Aufrufer
 behandelt es dennoch als nicht freigebbar, weil unbelegte Aussagen nicht
@@ -39,11 +40,12 @@ from .result_time import SCHEDULE_WINDOWS, ServiceWindow
 
 
 class ClaimSupport(str, Enum):
-    """Drei Ergebnisse statt einer Gleichsetzung aller Abweichungen."""
+    """Beleg, Widerspruch, fehlender Beleg und fehlende Prüfabdeckung."""
 
     SUPPORTED = "supported"
     CONTRADICTED = "contradicted"
     UNDECIDABLE = "undecidable"
+    NOT_CHECKED = "not_checked"
 
 
 def fold(value: str) -> str:
@@ -93,7 +95,7 @@ Fact = tuple[str, str]  # (fact_type, value)
 # kette: „bed" darf nicht über „ed" und „Menschen" nicht über „men" auslösen.
 SERVICE_CONCEPT_STEMS: Vocabulary = {
     "food": {
-        Language.DE: ("essen", "mahlzeit", "verpflegung", "suppe", "lebensmittel"),
+        Language.DE: ("essen", "mahlzeit", "verpflegung", "suppe", "lebensmittel", "brot", "brotchen"),
         Language.EN: ("food", "meal"),
         Language.PL: ("jedzen", "posil", "zywnos"),
         Language.RO: ("mancare", "masa", "alimente"),
@@ -346,18 +348,20 @@ def restricting_target_concepts(facts: Sequence[Fact]) -> set[str]:
 
 
 def assess_target_claim(
-    text: str, facts: Sequence[Fact], language: Language
+    text: str, facts: Sequence[Fact], language: Language,
+    *, restrictions: Sequence[Fact] | None = None,
 ) -> tuple[ClaimSupport, set[str]]:
     """Bewertet die im Text genannten Zielgruppenkonzepte gegen die zitierten Werte."""
     claimed = detect_target_concepts(text, language)
     if not claimed:
-        return ClaimSupport.SUPPORTED, set()
+        return ClaimSupport.NOT_CHECKED, set()
     open_concepts = claimed - supported_target_concepts(facts, language)
-    restricting = restricting_target_concepts(facts)
+    restricting = restricting_target_concepts(facts if restrictions is None else restrictions)
     contradicted = {
         concept
-        for concept in open_concepts
-        if TARGET_CONCEPT_CONFLICTS.get(concept, frozenset()) & restricting
+        for concept in claimed
+        if concept not in restricting
+        and TARGET_CONCEPT_CONFLICTS.get(concept, frozenset()) & restricting
     }
     if contradicted:
         return ClaimSupport.CONTRADICTED, contradicted
@@ -377,7 +381,7 @@ def assess_service_claim(
     """
     claimed = detect_service_concepts(text, language)
     if not claimed:
-        return ClaimSupport.SUPPORTED, set()
+        return ClaimSupport.NOT_CHECKED, set()
     open_concepts = claimed - supported_service_concepts(facts, language)
     if open_concepts:
         return ClaimSupport.UNDECIDABLE, open_concepts
@@ -416,17 +420,6 @@ PLACE_STEMS: dict[Language, tuple[str, ...]] = {
     Language.RO: ("loc", "pat"),
     Language.RU: ("mesto", "krovat", "koyk"),
 }
-# Zusicherungsmarker. Erst sie machen aus der Wiedergabe einer belegten
-# Leistung („dort bekommst du einen Schlafplatz") eine Aufnahmezusage („gibt dir
-# sicher einen Schlafplatz"). Ohne sie bleibt die Leistungsbeschreibung zulässig,
-# solange die zitierten Werte sie tragen.
-ASSURANCE_MARKERS: dict[Language, tuple[str, ...]] = {
-    Language.DE: ("sicher", "bestimmt", "garantiert", "auf jeden fall"),
-    Language.EN: ("surely", "certainly", "guaranteed", "definitely", "for sure"),
-    Language.PL: ("na pewno", "gwarantowan"),
-    Language.RO: ("sigur", "garantat"),
-    Language.RU: ("tochno", "obyazatelno", "garantirovan"),
-}
 # Marker für aktuelle Verfügbarkeit. Ein belegter Wochentag ist prüfbar,
 # „jetzt" ist es nicht.
 CURRENT_MARKERS: dict[Language, tuple[str, ...]] = {
@@ -464,12 +457,8 @@ def _contains_phrase(haystack: str, phrases: Iterable[str]) -> bool:
 def claims_admission(text: str, language: Language) -> bool:
     """Erkennt eine persönliche Aufnahme- oder Platzzusage.
 
-    Eine Leistungsbeschreibung fällt nicht darunter, auch nicht in zweiter
-    Person („dort bekommst du einen Schlafplatz"): sie gibt wieder, was das
-    Angebot laut zitierten Werten leistet. Erkannt werden ausdrückliche
-    Aufnahmeaussagen („dort wirst du aufgenommen") und zugesicherte
-    Platzvergaben („gibt dir sicher einen Schlafplatz"), für die es keinen
-    Kapazitätsbeleg gibt und geben kann.
+    „Du bekommst einen Schlafplatz“ ist bereits eine persönliche Zusage,
+    auch ohne „sicher“. Eine allgemeine Leistungsbeschreibung bleibt erlaubt.
     """
     haystack = transliterated(text)
     if _contains_phrase(haystack, ADMISSION_PATTERNS.get(language, ())):
@@ -477,7 +466,6 @@ def claims_admission(text: str, language: Language) -> bool:
     return (
         _contains_phrase(haystack, PERSONAL_RECEIPT_PATTERNS.get(language, ()))
         and _contains_stem(haystack, PLACE_STEMS.get(language, ()))
-        and _contains_stem(haystack, ASSURANCE_MARKERS.get(language, ()))
     )
 
 
@@ -496,7 +484,9 @@ def claims_suitability(text: str, language: Language) -> bool:
     return _contains_phrase(transliterated(text), SUITABILITY_PATTERNS.get(language, ()))
 
 
-def claims_current_availability(text: str, language: Language) -> bool:
+def claims_current_availability(
+    text: str, language: Language, *, known_unknown_values: Sequence[str] = (),
+) -> bool:
     """Erkennt eine auf die Gegenwart bezogene Leistungsaussage.
 
     Ein allgemeiner Leistungsfakt belegt keine aktuelle Verfügbarkeit; deshalb
@@ -506,8 +496,14 @@ def claims_current_availability(text: str, language: Language) -> bool:
     haystack = transliterated(text)
     if not _contains_stem(haystack, CURRENT_MARKERS.get(language, ())):
         return False
+    # Only a complete cited unknown-status value can exempt this statement.
+    # Clause splitting alone cannot establish what an "unknown" refers to.
     if _contains_phrase(haystack, UNKNOWN_MARKERS.get(language, ())):
-        return False
+        if not claims_personal_receipt(text, language) and any(
+            haystack.strip().rstrip(".!?") == transliterated(value).strip().rstrip(".!?")
+            for value in known_unknown_values
+        ):
+            return False
     return bool(detect_service_concepts(text, language)) or _contains_phrase(
         haystack, PERSONAL_RECEIPT_PATTERNS.get(language, ())
     )

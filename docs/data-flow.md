@@ -160,7 +160,7 @@ Tag oder einer Uhrzeit bevorzugt er Kandidaten, deren strukturierter
 `schedule_match_status` bereits deterministisch `matched` ist; er darf keine
 Zeitpassung selbst ergänzen.
 
-Die Modellantwort folgt Formulatorvertrag 2. Promptversion 17 fordert bei
+Die Modellantwort folgt Formulatorvertrag 2. Promptversion 18 fordert bei
 normalen angebotsbezogenen Antworten zwei oder drei kurze natürliche Sätze. Das
 wichtigste Angebot steht zuerst, ist aber nicht mehr an ein festes
 `Nutze ...`-Muster gebunden. Mehrere finale, nützliche Alternativen können in

@@ -1263,8 +1263,33 @@ def test_e2e_technical_failure_in_first_turn_is_not_hidden_by_successful_followu
 
     assert result["technically_valid"] is False
     assert result["turns"] == 2
+    assert result["stage_errors"] == [{
+        "turn": 1, "stage": "interpreter", "error_code": "interpreter_timeout",
+        "response_type": "technical_fallback",
+    }]
     assert counter.snapshot()["requests"] == 2
     assert counter.snapshot()["provider_calls"] == 0
+
+
+def test_e2e_stage_diagnostics_do_not_leak_arbitrary_error_text() -> None:
+    scenario = _acute_test_scenario("t_diagnostic_privacy", "uncertain")
+    response = _minimal_response(answer_type="grounded_result")
+    response.interaction.formulator_error_code = "formulator_ungrounded_claim"
+    response.interaction.selector_error_code = "secret provider response with personal text"
+
+    class FakeService:
+        async def query(self, request: Any) -> QueryResponse:
+            return response
+
+    counter = AtomicRunCounter(load_live_scenario_catalog().plan(EvaluationStage.END_TO_END).live_limits)
+    result = asyncio.run(_run_e2e_scenario(scenario, FakeService(), counter, lambda: 0.0))
+    assert result["technically_valid"] is False
+    assert result["response_type"] == "grounded_result"
+    assert result["stage_errors"] == [
+        {"turn": 1, "stage": "selector", "error_code": "unclassified_stage_error", "response_type": "grounded_result"},
+        {"turn": 1, "stage": "formulator", "error_code": "formulator_ungrounded_claim", "response_type": "grounded_result"},
+    ]
+    assert "secret" not in json.dumps(result)
 
 
 def test_collect_git_state_reads_real_repository_head() -> None:

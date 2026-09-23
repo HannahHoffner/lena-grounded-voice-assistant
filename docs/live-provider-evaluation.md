@@ -418,7 +418,7 @@ Ablehnung von `action`/`service` bei `referral_contact` entfällt.
 
 Die Laufzeitgrenzen des Diagnoselaufs, Modelle und Timeouts bleiben unverändert.
 
-## Prompt 17 und begrenztes Korrekturfeedback
+## Prompt 18 und begrenztes Korrekturfeedback
 
 Die gezielte Architekturprüfung vom 23. September 2026 führte zu einer
 begrenzten Vertragskorrektur, nicht zu gelockerten Groundingregeln:
@@ -428,20 +428,47 @@ begrenzten Vertragskorrektur, nicht zu gelockerten Groundingregeln:
   Leistungsangebot hoch. Auch eine imperative Kontaktaufforderung hat dort
   den Satztyp `referral`, nicht `action`.
 - Zielgruppen-, Geschlechts-, Alters- und Zugangsaussagen benötigen passende
-  typisierte Fakten im selben Satz, auch wenn die Beschreibung sie ebenfalls
-  enthält. Ein beliebiger Fakt des passenden Typs genügt dem fachlichen
+  Werte im antwortweiten Belegpool desselben Angebots; eine Beschreibung kann
+  sie ebenfalls belegen. Ein beliebiger Fakt des passenden Typs genügt dem fachlichen
   Vertrag nicht; beispielsweise belegt ein Geschlechtsfakt keine Volljährigkeit.
 - Telefonwerte sind einschließlich Klammerzusätzen unverändert zu übernehmen.
   Das bestehende Feld kann sowohl einen Kontaktnamen als auch eine Einschränkung
   wie „nur zu Einsatzzeiten“ enthalten. Es wird nicht auf Ziffern reduziert.
+
+Prompt 18 gleicht die alte `referral_wording`-Policy und das Rollen-Retryfeedback
+an den antwortweiten Vertrag an: Weitere Sätze dürfen eigene belegte Leistungen
+des Vermittlungskontakts beschreiben. Modell, Stufentimeouts und Gesamtbudget
+bleiben unverändert. Die lokalen Reviewkorrekturen prüfen zusätzlich erkannte
+Altersrelationen, gerichtete Leistungszeitfenster und Verneinungen; sie sind
+kein vollständiger Wahrheitsbeweis für freie Sprache (siehe Architektur).
+
+E2E-`stage-results.jsonl` enthält jetzt `stage_errors`: pro fehlerbehafteter Stufe
+den 1-basierten Turn, die Stufe, einen geschlossenen Fehlercode und den Antworttyp
+dieses Turns. Unbekannte Fehlertexte werden zu `unclassified_stage_error`, nicht
+übernommen. Die bestehenden Gates und Abbruchgrenzen bleiben unverändert.
+`technically_valid=false` kann auch einen abgefangenen ersten Versuch anzeigen;
+es bedeutet nicht automatisch eine falsche oder ungefilterte finale Antwort.
+Diese Turn-Diagnostik speichert weder Anfrage-/Antworttext noch Exceptions oder
+einzelne Retryausgaben. Die separate Erfassung verworfener strukturierter
+Ausgaben bleibt auf den bestehenden synthetischen isolierten Formulatorpfad
+beschränkt. Alte Reports erhalten rückwirkend keine fehlenden Diagnosen.
+
+Die lokalen Regressionstests sind kein Nachweis einer besseren Live-Annahmequote.
+Vor der manuellen Evaluation ist ein erneut freigegebener, begrenzter Lauf mit
+dem bestehenden Szenariokatalog sinnvoll: gleiches Fast-Modell, gleiche Daten,
+Timeouts und Abbruchgrenzen; zuerst isolierter Selector/Formulator, bei bestandenem
+Gate anschließend E2E. Promptversion 18 und Commit/Arbeitsbaumzustand müssen im
+Manifest sichtbar bleiben; die Korrekturwirkung ist pro Szenario und Fehlerklasse
+zu vergleichen, nicht allein anhand einer aggregierten Annahmequote.
 
 Der erste Formulatoraufruf erhält weiterhin nur Systemprompt und Evidence.
 `QueryService._call_formulator()` übergibt beim bereits vorhandenen zweiten
 Versuch optional `retry_diagnostic: GroundingDiagnosticCode` an
 `BlabladorProvider.formulate_answer()`. Der Provider ergänzt ausschließlich
 einen festen Korrekturhinweis aus dieser geschlossenen Diagnose. Für
-Zielgruppen-, Telefon- und Rollenfehler erklärt er die betroffene Regel; andere
-Enumwerte erhalten einen allgemeinen Prüfhinweis mit Regelcode. Freier Text
+Zielgruppen-, Telefon-, Rollen-, Zusage- und Bedingungsfehler erklärt er die
+betroffene Regel; verbleibende Enumwerte erhalten einen allgemeinen Prüfhinweis
+mit Regelcode. Freier Text
 wird als Diagnose nicht akzeptiert. Verworfene Antworten und Exceptiontexte
 werden nicht in den erneuten Prompt übernommen oder zusätzlich protokolliert.
 Fehler ohne Groundingdiagnose behalten die bisherige Wiederholung ohne

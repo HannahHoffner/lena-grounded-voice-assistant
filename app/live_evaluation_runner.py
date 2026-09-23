@@ -696,6 +696,7 @@ async def _run_e2e_scenario(
     response: QueryResponse | None = None
     dialogue_opened = False
     technically_valid = True
+    stage_errors: list[dict[str, Any]] = []
     started = clock()
     for turn_index, text in enumerate(scenario.synthetic_inputs):
         counter.reserve_request()
@@ -703,6 +704,23 @@ async def _run_e2e_scenario(
         response = await service.query(QueryRequest(query=text, language=language, session_id=session_id))
         session_id = response.session_id
         dialogue_opened = dialogue_opened or response.clarification is not None
+        # Closed codes only: never persist arbitrary exception/provider text.
+        # A recovered retry can still leave an error code, so keep the final
+        # answer type alongside it rather than implying user-visible failure.
+        for stage in ("interpreter", "selector", "formulator"):
+            code = getattr(response.interaction, f"{stage}_error_code")
+            if code:
+                safe_codes = {f"{stage}_{suffix}" for suffix in (
+                    "timeout", "http_error", "invalid_json", "schema_error",
+                    "contract_violation", "invalid_id", "invalid_fact", "invalid_card",
+                    "invalid_language", "ungrounded_claim", "unavailable", "budget_exhausted",
+                )}
+                stage_errors.append({
+                    "turn": turn_index + 1,
+                    "stage": stage,
+                    "error_code": code if code in safe_codes else "unclassified_stage_error",
+                    "response_type": response.answer_type,
+                })
         technically_valid = technically_valid and not bool(
             response.interaction.interpreter_error_code
             or response.interaction.selector_error_code
@@ -727,6 +745,7 @@ async def _run_e2e_scenario(
         "unverified_metrics": unverified,
         "critical_content_error": critical,
         "technically_valid": technically_valid,
+        "stage_errors": stage_errors,
         "linguistic_review_pending": True,
         "duration_ms": round((clock() - started) * 1_000, 2),
         "last_confirmed_model_identifiers": {

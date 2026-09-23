@@ -160,10 +160,10 @@ def test_versions_prompt_and_health_are_observable(app) -> None:
     health = TestClient(app).get("/api/health").json()
     assert EVIDENCE_CONTRACT_VERSION == "4"
     assert FORMULATOR_CONTRACT_VERSION == "2"
-    assert FORMULATOR_PROMPT_VERSION == "17"
+    assert FORMULATOR_PROMPT_VERSION == "18"
     assert health["evidence_contract_version"] == "4"
     assert health["formulator_contract_version"] == "2"
-    assert health["formulator_prompt_version"] == "17"
+    assert health["formulator_prompt_version"] == "18"
     assert health["llm_request_budget_seconds"] == 45.0
     for rule in (
         "Use only EVIDENCE facts",
@@ -278,7 +278,7 @@ def test_normal_offer_answers_support_fixed_action_plus_grounded_detail(app) -> 
                 fact_ids=[name.fact_id],
             ),
             FormulatedSentence(
-                text="Dort bekommst du einen Schlafplatz.",
+                text="Dort werden Schlafplätze angeboten.",
                 claim_type=ClaimType.SERVICE,
                 offer_id=evidence.selected_offers[0].offer_id,
                 fact_ids=[sleep.fact_id],
@@ -289,7 +289,7 @@ def test_normal_offer_answers_support_fixed_action_plus_grounded_detail(app) -> 
 
     validated = validate_formulation(response, evidence)
 
-    assert validated.answer == f"Nutze „{name.value}“. Dort bekommst du einen Schlafplatz."
+    assert validated.answer == f"Nutze „{name.value}“. Dort werden Schlafplätze angeboten."
     assert validated.sentence_count == 2
 
 
@@ -947,6 +947,11 @@ def test_prompt_v17_states_answer_wide_offer_bound_grounding() -> None:
     # Rolle nicht mehr als Leistungsverbot darstellen.
     assert "A cited service fact never upgrades a referral_contact" not in FORMULATOR_SYSTEM_PROMPT
     assert "never claim a direct service in this role" not in FORMULATOR_SYSTEM_PROMPT
+    for diagnostic in (GroundingDiagnosticCode.REFERRAL_ROLE_MISMATCH, GroundingDiagnosticCode.SERVICE_ROLE_MISMATCH):
+        feedback = formulator_retry_instruction(diagnostic)
+        assert "never action or service" not in feedback
+        assert "only for direct_service" not in feedback
+        assert "A referral_contact remains referral or fact" not in feedback
     for rule in (
         "referral_contact does not mean the provider offers nothing itself",
         "A detail stated in one sentence may be supported by a fact cited in another sentence about the SAME offer",
@@ -1080,10 +1085,10 @@ def test_real_provider_retry_gets_only_closed_feedback_and_revalidates(
     good = _response(evidence, text=f"{'Contact' if referral else 'Use'} {name.value}.", claim_type=claim)
     bad = good.model_copy(deep=True)
     if failure == "target":
-        # Angebot 8 ist für volljährige Frauen kuratiert; „minors" ist mit den
-        # zitierten Werten nicht belegbar.
+        # Angebot 8 ist für volljährige Frauen kuratiert; „minors“ widerspricht
+        # der kuratierten Altersgrenze, auch ohne deren Zitat.
         bad.sentences[0].text = f"Use {name.value} for minors."
-        diagnostic = GroundingDiagnosticCode.TARGET_FACT_MISSING
+        diagnostic = GroundingDiagnosticCode.TARGET_CLAIM_CONTRADICTED
     elif failure == "phone":
         phone = _fact(evidence, FactType.PHONE)
         bad.sentences[0].text = f"Contact {name.value}: {phone.value.split(' (')[0]}."
