@@ -16,6 +16,18 @@ from .formulation import (
     FormulatorResponse,
     GroundingDiagnosticCode,
 )
+from .grounding_claims import (
+    ClaimSupport,
+    CONCEPT_CAPABILITIES,
+    assess_service_claim,
+    assess_target_claim,
+    claims_admission,
+    claims_current_availability,
+    claims_personal_receipt,
+    claims_suitability,
+    condition_capability,
+    detect_service_concepts,
+)
 from .interpreter import Need
 from .models import Language
 
@@ -59,37 +71,9 @@ INTERNAL_TERM_RE = re.compile(
 )
 VISIBLE_ID_RE = re.compile(r"\b(?:internal\s+)?(?:offer|record|source|card)?\s*ID\s*[:#-]?\s*\d", re.IGNORECASE)
 GERMAN_FORMAL_RE = re.compile(r"\b(?:Sie|Ihnen|Ihr|Ihre|Ihrem|Ihren|Ihrer|Ihres)\b")
-SERVICE_ASSERTION_RE = re.compile(
-    r"\b(?:essen|mahlzeit|wasser|schlaf|\u00fcbernacht|wundversorgung|medizin|behandel|toilet|dusche|hygiene|beratung|"
-    r"food|meal|water|sleep|overnight|wound|medical|treat|toilet|shower|hygiene|advice|"
-    r"jedzen|posi\u0142|wod|nocleg|medycz|leczen|toalet|prysznic|higien|porad|"
-    r"m\u00e2ncare|mas\u0103|ap\u0103|dorm|medical|tratament|toalet|du\u0219|igien|consili|"
-    r"\u0435\u0434|\u043f\u0438\u0449|\u0432\u043e\u0434|\u0441\u043f\u0430\u0442|\u043d\u043e\u0447\u043b\u0435\u0433|"
-    r"\u043c\u0435\u0434\u0438\u0446|\u043b\u0435\u0447\u0435\u043d|\u0442\u0443\u0430\u043b\u0435\u0442|\u0434\u0443\u0448|"
-    r"\u0433\u0438\u0433\u0438\u0435\u043d|\u043a\u043e\u043d\u0441\u0443\u043b\u044c\u0442)\w*\b",
-    re.IGNORECASE,
-)
-# "men"/"mann" duerfen NICHT mit \w*-Suffix in der Hauptgruppe stehen, da "men" sonst
-# Praefix von "Menschen" (Personen) ist und "mann" Praefix von "Mannschaft"/"Mannheim"
-# waere; deshalb exakte Wortgrenze ohne Suffixerweiterung. Das bare Pronomen "man" wird
-# ganz ausgeschlossen: Es ist das deutsche unpersoenliche Pronomen ("man kann sich
-# melden...", "man erreicht..."), keine Geschlechts-/Zielgruppenbehauptung; das englische
-# "men" (Plural) bleibt zur Erkennung von Geschlechtsbehauptungen ausreichend.
-# Live reproduziert: "UVO - Umfeldnahe Versorgung von Menschen ohne festen Wohnsitz" loeste
-# ueber "men" in "Menschen" faelschlich eine Zielgruppen-Behauptung aus und erzwang den
-# Formulator-Fallback, obwohl der Satz nur den zitierten Angebotsnamen wiedergab.
-TARGET_ASSERTION_RE = re.compile(
-    r"\b(?:frau|frauen|m\u00e4nner|minderj\u00e4hr|erwachsen|jugendlich|"
-    r"woman|women|minor|adult|young|"
-    r"kobiet|m\u0119\u017cczy|niepe\u0142nolet|doros\u0142|m\u0142od|"
-    r"femei|b\u0103rbat|minor|adult|t\u00e2n\u0103r|"
-    r"\u0436\u0435\u043d\u0449\u0438\u043d|\u043c\u0443\u0436\u0447\u0438\u043d|"
-    r"\u043d\u0435\u0441\u043e\u0432\u0435\u0440\u0448\u0435\u043d\u043d\u043e\u043b\u0435\u0442|"
-    r"\u0432\u0437\u0440\u043e\u0441\u043b|\u043c\u043e\u043b\u043e\u0434)\w*\b"
-    r"|\b(?:mann|men)\b",
-    re.IGNORECASE,
-)
-
+# Die frühere rein lexikalische Leistungs- und Zielgruppenerkennung ist nach
+# app/grounding_claims.py gewandert. Dort wird nicht mehr nur erkannt, DASS ein
+# Konzept genannt wird, sondern geprüft, ob die zitierten WERTE es tragen.
 UNSAFE_CLAIMS = (
     "freie plätze", "platz frei", "garantierte aufnahme", "jetzt geöffnet", "aktuell geöffnet",
     "nimmt dich auf", "ist für dich geeignet", "aktuelle kapazität",
@@ -276,12 +260,97 @@ def _validate_operational_tokens(text: str, facts: list[EvidenceFact]) -> None:
         raise _ungrounded(GroundingDiagnosticCode.CURRENCY_NOT_CITED)
 
 
+def _citation_pools(
+    response: FormulatorResponse,
+    facts_by_id: dict[str, tuple[str, EvidenceFact]],
+) -> dict[str, list[EvidenceFact]]:
+    """Fasst die gültigen Faktenreferenzen antwortweit je Angebot zusammen.
+
+    Belegt sein muss der Inhalt, nicht die Position einer Fakt-ID: eine Angabe
+    in Satz 1 darf durch einen Fakt belegt sein, der in Satz 2 über dasselbe
+    Angebot zitiert wird. Die Zusammenfassung bleibt strikt angebotsgebunden;
+    Fakten eines anderen Angebots gelangen nie in den Pool. Voraussetzung ist,
+    dass jede Referenz zuvor aufgelöst und ihrem Angebot zugeordnet wurde.
+    """
+    pools: dict[str, list[EvidenceFact]] = {}
+    for sentence in response.sentences:
+        if sentence.offer_id is None:
+            continue
+        pool = pools.setdefault(sentence.offer_id, [])
+        known = {fact.fact_id for fact in pool}
+        for fact_id in sentence.fact_ids:
+            bound = facts_by_id.get(fact_id)
+            if bound is None or bound[0] != sentence.offer_id or fact_id in known:
+                continue
+            known.add(fact_id)
+            pool.append(bound[1])
+    return pools
+
+
+def _resolve_references(
+    response: FormulatorResponse,
+    offers_by_id: dict[str, object],
+    facts_by_id: dict[str, tuple[str, EvidenceFact]],
+) -> None:
+    """Prüft vor jeder Zusammenfassung, dass jede Referenz zu ihrem Angebot gehört."""
+    for sentence in response.sentences:
+        if sentence.offer_id is None:
+            continue
+        if sentence.offer_id not in offers_by_id:
+            raise FormulatorError("formulator_invalid_fact")
+        for fact_id in sentence.fact_ids:
+            bound = facts_by_id.get(fact_id)
+            if bound is None or bound[0] != sentence.offer_id:
+                raise FormulatorError("formulator_invalid_fact")
+
+
+def _validate_service_conditions(
+    text: str,
+    offer,
+    pool: list[EvidenceFact],
+    language: Language,
+) -> None:
+    """Hält leistungsgebundene Zeitfenster der kuratierten Daten auseinander.
+
+    Die Kuratierung unterscheidet beim Hilfebus Essensausgabe sonntags
+    20:00-21:00 von Beratung und Vermittlung täglich 18:00-23:00. Eine
+    allgemeine Leistungsaussage bleibt zulässig; eine Zeitangabe darf aber nicht
+    von einer anderen Leistung stammen, und eine an die fragende Person
+    gerichtete Erhaltzusage braucht die belegte Bedingung selbst.
+    """
+    conditions = {
+        capability: fact
+        for fact in offer.facts
+        if fact.fact_type == FactType.SERVICE_CONDITION
+        and (capability := condition_capability(fact.value)) is not None
+    }
+    if not conditions:
+        return
+    named = {
+        capability
+        for concept in detect_service_concepts(text, language)
+        for capability in CONCEPT_CAPABILITIES.get(concept, frozenset())
+        if capability in conditions
+    }
+    if not named:
+        return
+    cited = {fact.fact_id for fact in pool}
+    stated_times = set(TIME_RE.findall(text))
+    for capability in sorted(named):
+        condition = conditions[capability]
+        if stated_times and not stated_times.issubset(set(TIME_RE.findall(condition.value))):
+            raise _ungrounded(GroundingDiagnosticCode.SERVICE_CONDITION_MISMATCH)
+        if claims_personal_receipt(text, language) and condition.fact_id not in cited:
+            raise _ungrounded(GroundingDiagnosticCode.SERVICE_CONDITION_MISSING)
+
+
 def _validate_sentence(
     sentence,
     evidence: FormulatorEvidence,
     offers_by_id: dict[str, object],
     facts_by_id: dict[str, tuple[str, EvidenceFact]],
     allowed_policies: set[BindingPolicy],
+    pools: dict[str, list[EvidenceFact]],
 ) -> str:
     text = " ".join(sentence.text.split())
     if not text or len(text.split()) > 32 or HTML_OR_MARKDOWN_RE.search(text):
@@ -296,6 +365,7 @@ def _validate_sentence(
     if not set(sentence.policy_ids).issubset(allowed_policies):
         raise FormulatorError("formulator_invalid_fact")
 
+    pool: list[EvidenceFact] = []
     cited_facts: list[EvidenceFact] = []
     if sentence.offer_id is None:
         if sentence.claim_type not in {
@@ -303,43 +373,44 @@ def _validate_sentence(
         }:
             raise FormulatorError("formulator_contract_violation")
     else:
-        offer = offers_by_id.get(sentence.offer_id)
-        if offer is None:
-            raise FormulatorError("formulator_invalid_fact")
-        for fact_id in sentence.fact_ids:
-            bound = facts_by_id.get(fact_id)
-            if bound is None or bound[0] != sentence.offer_id:
-                raise FormulatorError("formulator_invalid_fact")
-            cited_facts.append(bound[1])
-        if sentence.claim_type == ClaimType.SERVICE:
-            if offer.candidate_role != "direct_service" or not any(
-                fact.fact_type in {FactType.SERVICE, FactType.CAPABILITY, FactType.DESCRIPTION}
-                for fact in cited_facts
-            ):
-                raise _ungrounded(GroundingDiagnosticCode.SERVICE_ROLE_MISMATCH)
-        if sentence.claim_type == ClaimType.REFERRAL and offer.candidate_role != "referral_contact":
-            raise FormulatorError("formulator_contract_violation")
-        if offer.candidate_role == "referral_contact" and sentence.claim_type in {ClaimType.ACTION, ClaimType.SERVICE}:
-            raise _ungrounded(GroundingDiagnosticCode.REFERRAL_ROLE_MISMATCH)
-        if SERVICE_ASSERTION_RE.search(text) and not any(
+        offer = offers_by_id[sentence.offer_id]
+        cited_facts = [facts_by_id[fact_id][1] for fact_id in sentence.fact_ids]
+        pool = pools[sentence.offer_id]
+        pool_values = [(fact.fact_type.value, fact.value) for fact in pool]
+        language = evidence.requested_language
+        # Die Rolle beschreibt, warum das Angebot ausgewaehlt wurde, nicht seinen
+        # Leistungsumfang. Ein referral_contact darf seine belegten eigenen
+        # Leistungen beschreiben; entscheidend ist der Beleg, nicht der Enumwert.
+        if sentence.claim_type == ClaimType.SERVICE and not any(
             fact.fact_type in {FactType.SERVICE, FactType.CAPABILITY, FactType.DESCRIPTION}
-            for fact in cited_facts
+            for fact in pool
         ):
+            raise _ungrounded(GroundingDiagnosticCode.SERVICE_ROLE_MISMATCH)
+        if sentence.claim_type == ClaimType.REFERRAL and offer.candidate_role != "referral_contact":
+            raise _ungrounded(GroundingDiagnosticCode.REFERRAL_ROLE_MISMATCH)
+
+        service_support, _ = assess_service_claim(text, pool_values, language)
+        if service_support is not ClaimSupport.SUPPORTED:
             raise _ungrounded(GroundingDiagnosticCode.SERVICE_FACT_MISSING)
-        if TARGET_ASSERTION_RE.search(text) and not any(
-            fact.fact_type in {
-                FactType.TARGET_GROUP,
-                FactType.MINIMUM_AGE,
-                FactType.MAXIMUM_AGE,
-                FactType.ELIGIBLE_GENDER,
-                FactType.ACCESS,
-            }
-            for fact in cited_facts
-        ):
+        target_support, _ = assess_target_claim(text, pool_values, language)
+        if target_support is ClaimSupport.CONTRADICTED:
+            raise _ungrounded(GroundingDiagnosticCode.TARGET_CLAIM_CONTRADICTED)
+        if target_support is ClaimSupport.UNDECIDABLE:
             raise _ungrounded(GroundingDiagnosticCode.TARGET_FACT_MISSING)
+
+        # Aus einer belegten Leistungsbeschreibung folgt weder eine Aufnahme noch
+        # eine persoenliche Eignung noch eine aktuelle Verfuegbarkeit.
+        if claims_admission(text, language):
+            raise _ungrounded(GroundingDiagnosticCode.ADMISSION_CLAIM_UNSUPPORTED)
+        if claims_suitability(text, language):
+            raise _ungrounded(GroundingDiagnosticCode.SUITABILITY_CLAIM_UNSUPPORTED)
+        if claims_current_availability(text, language):
+            raise _ungrounded(GroundingDiagnosticCode.CURRENT_AVAILABILITY_UNSUPPORTED)
+        _validate_service_conditions(text, offer, pool, language)
+
         if sentence.claim_type == ClaimType.FACT and not any(
             fact.fact_type not in {FactType.DISPLAY_NAME, FactType.ALIAS}
-            for fact in cited_facts
+            for fact in pool
         ):
             raise _ungrounded(GroundingDiagnosticCode.FACT_CLAIM_MISSING)
 
@@ -365,12 +436,14 @@ def _validate_sentence(
             ]
             if mentioned and candidate.offer_id != sentence.offer_id:
                 raise FormulatorError("formulator_invalid_fact")
-            if mentioned and not {fact.fact_id for fact in mentioned}.intersection(sentence.fact_ids):
+            if mentioned and not {fact.fact_id for fact in mentioned}.intersection(
+                {cited.fact_id for cited in pool}
+            ):
                 raise FormulatorError("formulator_invalid_fact")
             if mentioned and any(not _contains_exact_literal(text, fact.value) for fact in mentioned):
                 raise _ungrounded(GroundingDiagnosticCode.PROPER_NAME_NOT_EXACT)
 
-    _validate_operational_tokens(text, cited_facts)
+    _validate_operational_tokens(text, pool)
     return text
 
 
@@ -393,8 +466,10 @@ def validate_formulation(
     if not offers_by_id and response.card_ids:
         raise FormulatorError("formulator_invalid_card")
 
+    _resolve_references(response, offers_by_id, facts_by_id)
+    pools = _citation_pools(response, facts_by_id)
     texts = [
-        _validate_sentence(sentence, evidence, offers_by_id, facts_by_id, allowed_policies)
+        _validate_sentence(sentence, evidence, offers_by_id, facts_by_id, allowed_policies, pools)
         for sentence in response.sentences
     ]
     if len({_canonical(text) for text in texts}) != len(texts):

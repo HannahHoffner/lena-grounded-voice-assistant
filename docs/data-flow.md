@@ -43,7 +43,7 @@ sequenceDiagram
         S->>S: Mandatory ergänzen und stabile Reihenfolge herstellen
     end
     opt geerdete Formulierung verfügbar
-        S->>S: Evidence-Vertrag 3 aus finalen Angeboten
+        S->>S: Evidence-Vertrag 4 aus finalen Angeboten
         S->>L: Evidence + bindende Policies
         L-->>S: Satzvertrag 2 + Card-IDs
         S->>S: Fakten, Rollen, Sprache und Karten atomar validieren
@@ -142,10 +142,15 @@ Feldinventar, Typen, Enum, Duplikate, Höchstzahl und jede ID werden strikt
 validiert. Eine einzelne fremde ID verwirft die gesamte Antwort. Danach setzt
 die Anwendung Mandatory-Kandidaten vor die gewählte Menge und stellt die
 kuratierte stabile Reihenfolge wieder her. Erst daraus entsteht ein
-`FormulatorEvidence`-Paket mit Evidence-Version 3 und Formulatorpromptversion
-15. Es enthält
+`FormulatorEvidence`-Paket mit Evidence-Version 4 und Formulatorpromptversion
+17. Es enthält
 pro finalem Angebot Rolle, Mandatory-Status und ausschließlich freigegebene
-Fakten mit opaken Referenzen. Der Formulator sieht weder die übrige
+Fakten mit opaken Referenzen. Evidence 4 ergänzt leistungsgebundene
+Bedingungsfakten (`service_condition`): vorhandene feste Zeitfenster der
+kuratierten `service_schedules` werden lesbar projiziert, etwa beim Hilfebus
+Essensausgabe sonntags 20:00-21:00 gegenüber Beratung und Vermittlung täglich
+18:00-23:00. Die Kuratierung bleibt die einzige Quelle; Regeln ohne festes
+Fenster werden ausgelassen statt geraten. Der Formulator sieht weder die übrige
 Kandidatenmenge noch Conditional-/Excluded-Einträge, Rohfelder,
 Kurationsbegründungen oder frühere Antworttexte.
 
@@ -155,7 +160,7 @@ Tag oder einer Uhrzeit bevorzugt er Kandidaten, deren strukturierter
 `schedule_match_status` bereits deterministisch `matched` ist; er darf keine
 Zeitpassung selbst ergänzen.
 
-Die Modellantwort folgt Formulatorvertrag 2. Promptversion 16 fordert bei
+Die Modellantwort folgt Formulatorvertrag 2. Promptversion 17 fordert bei
 normalen angebotsbezogenen Antworten zwei oder drei kurze natürliche Sätze. Das
 wichtigste Angebot steht zuerst, ist aber nicht mehr an ein festes
 `Nutze ...`-Muster gebunden. Mehrere finale, nützliche Alternativen können in
@@ -171,8 +176,13 @@ nicht auf „Karten“ oder andere technische Ergebniscontainer. Eine nötige
 Orientierung wird sprachabhängig als „Mehr Infos stehen unten“ ausgedrückt; die
 eigentliche Kartenansicht und fachliche Angaben zur Kartenzahlung sind davon
 nicht betroffen.
-Eine ungültige Referenz oder ein ungeerdeter operativer Fakt verwirft die
-gesamte Antwort. Verbindliche Karten und die finale Reihenfolge werden
+Belegt sein muss der Inhalt, nicht die Position einer Fakt-ID. Die Prüfung
+fasst deshalb die gültigen Faktenreferenzen antwortweit je Angebot zusammen:
+eine Angabe in Satz 1 darf durch einen Fakt belegt sein, der in Satz 2 über
+dasselbe Angebot zitiert wird. Die Zusammenfassung bleibt strikt
+angebotsgebunden; Fakten eines anderen Angebots ersetzen nie einen fehlenden
+Beleg. Eine ungültige oder angebotsfremde Referenz und ein ungeerdeter
+operativer Fakt verwerfen weiterhin die gesamte Antwort. Verbindliche Karten und die finale Reihenfolge werden
 deterministisch aus dem Evidence-Paket wiederhergestellt und können durch
 `card_ids` weder entfernt noch umsortiert
 werden.

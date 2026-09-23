@@ -211,19 +211,20 @@ neue Zeit- oder Eignungsentscheidung an das Modell delegiert.
 Der alte Adapter `Interpreterbedarf → Category → Retrieval`, der frühere
 ID-selektierende LLM-Router, der ungenutzte Kandidatenindex und die direkte
 erste-vier-Übergabe sind nicht mehr aktiv. `app/formulation.py` projiziert die
-höchstens drei sichtbaren finalen Runtime-Angebote in den Evidence-Vertrag 3.
+höchstens drei sichtbaren finalen Runtime-Angebote in den Evidence-Vertrag 4.
 Er enthält
 nur freigegebene Positivlistenfelder, Kandidatenrollen, opake Faktenreferenzen
 und bindende Policies. Conditional-, Excluded- und Sozialamt-Angebote sowie
 WFS-Rohfelder, Reviewnotizen und technische Provenienz gelangen nicht hinein.
 
-Der Formulatorvertrag 2 erlaubt ein bis drei kurze Sätze. Promptversion 16
+Der Formulatorvertrag 2 erlaubt ein bis drei kurze Sätze. Promptversion 17
 verlangt für normale angebotsbezogene Antworten zwei oder drei natürliche,
 rollenrichtige Sätze ohne festes `Nutze ...`-Muster. Das erste Angebot und der
 wichtigste nächste Schritt stehen zuerst. Sind mehrere finale Angebote
 komplementär hilfreich, kann die Antwort bis zu drei davon in der bereits
 deterministisch hergestellten Evidence-Reihenfolge nennen; jeder Satz bleibt an
-genau ein Angebot und dessen eigene Fakten gebunden. Nur der eng begrenzte
+genau ein Angebot gebunden; belegen darf ihn jeder Fakt, den die Antwort für
+dieses Angebot zitiert. Nur der eng begrenzte
 Prompt-Injection-Pfad verwendet weiterhin einen festen sicheren Handlungssatz.
 Der sichtbare Antworttext verweist nicht auf technische UI-Container wie
 Ergebniskarten oder die Kartenansicht. Wo eine kurze Orientierung nötig ist,
@@ -233,12 +234,53 @@ davon unberührt.
 Jeder Satz nennt Claimtyp, Angebots- und Faktenreferenzen oder einen erlaubten
 Policybaustein; freier Text außerhalb des JSON-Vertrags existiert nicht.
 `app/grounding.py` validiert die Antwort atomar gegen genau das Evidence-Paket:
-Rollen, Fakt-Angebot-Zuordnung, operative Zahlen, Adressen, Kontakte, URLs,
-Zeiten, Zielskript, Längen, interne IDs und Kartenbindung. Mandatory-Karten und
-die deterministische Reihenfolge werden serverseitig wiederhergestellt.
+Fakt-Angebot-Zuordnung, operative Zahlen, Adressen, Kontakte, URLs, Zeiten,
+Zielskript, Längen, interne IDs und Kartenbindung. Mandatory-Karten und die
+deterministische Reihenfolge werden serverseitig wiederhergestellt.
 Kapazitäts-, Echtzeit- und garantierte Aufnahmebehauptungen werden verworfen.
-Diese Prüfung ist keine vollständige semantische oder linguistische
-Qualitätsbewertung; dafür bleibt eine manuelle Evaluation erforderlich.
+
+### Antwortweiter, angebotsgebundener Groundingvertrag
+
+Die Referenzen werden zuerst aufgelöst und ihrem Angebot zugeordnet, danach je
+Angebot antwortweit zusammengefasst. Geprüft wird gegen die **Werte** dieser
+Fakten, nicht gegen ihre Typen: `app/grounding_claims.py` erkennt mit einem
+geschlossenen mehrsprachigen Stammwortschatz, welche Leistungs- und
+Zielgruppenkonzepte der sichtbare Satz nennt, und sucht sie in den zitierten
+Werten. Eine zitierte lokalisierte Beschreibung kann damit eine
+Zielgruppenaussage belegen; eine zusätzliche typisierte Referenz ist dann nicht
+zwingend. Umgekehrt belegt das bloße Vorhandensein eines Fakts zulässigen Typs
+nichts mehr.
+
+Die Kandidatenrolle beschreibt, warum ein Angebot ausgewählt wurde, nicht seinen
+Leistungsumfang. Ein `referral_contact` kann eigene Leistungen haben — die
+allgemeine Schlafplatzvermittlung ist genau so eingestuft. Ein Satz mit
+`claim_type=service` ist deshalb nicht mehr allein wegen des Enumwerts falsch;
+entscheidend sind die belegte Aussage und ihre Einschränkungen. Unverändert
+unzulässig bleiben in jeder Rolle unbelegte Aufnahme-, Eignungs- und
+Verfügbarkeitszusagen: aus einer belegten Leistungsbeschreibung folgt weder,
+dass die fragende Person aufgenommen wird, noch dass das Angebot für sie
+geeignet ist, noch dass die Leistung gerade jetzt verfügbar ist. Nennt ein Satz
+eine Leistung mit dokumentiertem Zeitfenster, darf er keine Zeit einer anderen
+Leistung dafür ausgeben.
+
+Die Prüfung kennt drei Ergebnisse statt einer Gleichsetzung aller Abweichungen.
+*Belegt* wird freigegeben, auch wenn die Referenz in einem anderen Satz steht.
+*Widersprüchlich* — eine Aussage, die eine zitierte kuratierte Beschränkung
+ausschließt — wird verworfen. *Nicht entscheidbar* wird ebenfalls verworfen,
+aber getrennt diagnostiziert: die Antwort wird damit nicht als nachweislich
+unwahr bezeichnet, sondern nur nicht ungeprüft freigegeben. Beide Fälle führen
+in denselben unveränderten begrenzten Retry beziehungsweise Templatefallback.
+
+**Grenze.** Diese Prüfung ist und bleibt keine vollständige semantische oder
+linguistische Qualitätsbewertung. Der Validator arbeitet ohne zusätzliche
+Modellstufe und kann freie mehrsprachige Paraphrasen nicht vollständig auf
+Bedeutung prüfen. Abgesichert sind konkret prüfbare Aussagen: benannte
+Leistungs- und Zielgruppenkonzepte gegen zitierte Werte, Widersprüche gegen
+typisierte kuratierte Beschränkungen, Zusagemuster und leistungsgebundene
+Zeitfenster. Eine Formulierung außerhalb dieses geschlossenen Wortschatzes wird
+nicht erkannt und fällt in die Klasse *nicht entscheidbar*; umgekehrt kann ein
+lexikalisch passender Treffer inhaltlich danebenliegen (dokumentiert am
+Beispiel „minor injuries"). Eine manuelle Evaluation bleibt deshalb erforderlich.
 
 Scheitert der Selector technisch, verwendet die Anfrage nur die stabile
 deterministische CandidateDecision und den Templatepfad; der gleiche Provider
@@ -249,7 +291,7 @@ Transportfehlern nicht. Liegt eine geschlossene Groundingdiagnose vor, erhält
 dieser zweite Versuch einen festen Korrekturhinweis, niemals den verworfenen
 Text. Evidence und Validator bleiben unverändert. Der Hinweis korrigiert keine
 Antwort automatisch und ist kein Beleg für semantische Vollständigkeit;
-[bekannte Grenzen und Diagnoseverfahren](live-provider-evaluation.md#prompt-16-und-begrenztes-korrekturfeedback)
+[bekannte Grenzen und Diagnoseverfahren](live-provider-evaluation.md#prompt-17-und-begrenztes-korrekturfeedback)
 bleiben ausdrücklich dokumentiert. Bleibt die Antwort ungültig, verwendet die Anwendung
 die bereits finalen Angebote im lokalisierten Templatefallback.
 

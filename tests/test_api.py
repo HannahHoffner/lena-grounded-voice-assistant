@@ -780,7 +780,7 @@ def test_interpreter_then_candidate_selector_formulates_from_curated_records() -
     assert captured["answer_count"] <= 4
     assert captured["question"] == "A detailed but indirect Leipzig support question"
     evidence = captured["evidence"]
-    assert evidence.evidence_version == "3"
+    assert evidence.evidence_version == "4"
     assert evidence.prompt_version == FORMULATOR_PROMPT_VERSION
     assert all(item.candidate_role in {"direct_service", "referral_contact"} for item in evidence.selected_offers)
     assert [item.offer_id for item in evidence.selected_offers] == captured["answer_ids"]

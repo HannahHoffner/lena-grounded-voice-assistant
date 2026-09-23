@@ -151,7 +151,7 @@ redigierte Planstand ist:
 | Formulatormodell | `alias-fast` |
 | Interpreter Vertrag / Prompt | `4` / `9` |
 | Selector Vertrag / Prompt | `1` / `3` |
-| Evidence-Vertrag | `3` |
+| Evidence-Vertrag | `4` |
 | Formulator Vertrag / Prompt | `2` / `16` |
 | Safety-Policy | `2` |
 | Temperatur | `0` |
@@ -394,7 +394,31 @@ Behebung dieses Fehlers durch Large ist nicht nachgewiesen. Large bestand das
 Gate ebenfalls nicht und war deutlich langsamer. Nachfolgende Stufen wurden
 nicht gestartet.
 
-## Prompt 16 und begrenztes Korrekturfeedback
+## Vergleichbarkeit nach dem Vertragswechsel
+
+Evidence-Vertrag 4 und Promptversion 17 setzen den antwortweiten,
+angebotsgebundenen Groundingvertrag um (siehe
+[Architektur](architecture.md#antwortweiter-angebotsgebundener-groundingvertrag)).
+Ergebnisse, die unter diesem Vertrag entstanden sind, müssen als solche
+ausgewiesen werden. Sie sind **nicht unmittelbar mit älteren Ablehnungsquoten
+vergleichbar**: Zitierweisen, die früher als Groundingfehler zählten, sind nach
+dem neuen Vertrag zulässig, sofern der Inhalt belegt ist. Ältere lokale Reports
+behalten ihre ursprünglichen Evidence- und Promptversionen; ein Vergleich ist
+nur innerhalb derselben Version aussagekräftig.
+
+Neu hinzugekommene geschlossene Diagnoseklassen trennen die drei Ergebnisse:
+`target_claim_contradicted` (Widerspruch zu einer zitierten kuratierten
+Beschränkung) gegenüber `target_fact_missing` und `service_fact_missing` (nicht
+entscheidbar), sowie `admission_claim_unsupported`,
+`suitability_claim_unsupported`, `current_availability_unsupported`,
+`service_condition_missing` und `service_condition_mismatch`.
+`referral_role_mismatch` bezeichnet jetzt ausschließlich einen
+`referral`-Satz auf einem `direct_service`-Angebot; die frühere pauschale
+Ablehnung von `action`/`service` bei `referral_contact` entfällt.
+
+Die Laufzeitgrenzen des Diagnoselaufs, Modelle und Timeouts bleiben unverändert.
+
+## Prompt 17 und begrenztes Korrekturfeedback
 
 Die gezielte Architekturprüfung vom 23. September 2026 führte zu einer
 begrenzten Vertragskorrektur, nicht zu gelockerten Groundingregeln:
@@ -427,7 +451,7 @@ Jede neue Antwort durchläuft erneut denselben vollständigen Validator. Es
 bleibt bei höchstens zwei Versuchen innerhalb des Restbudgets, ohne Retry nach
 Timeout/HTTP-Fehler und mit atomarem Templatefallback bei endgültigem Scheitern.
 Modellkonfiguration, 30-s-Formulatorlimit und 45-s-Gesamtbudget bleiben unverändert.
-Evidence-Vertrag 3 und Antwortvertrag 2 ändern sich nicht. Der Systemprompt
+Evidence-Vertrag 4 und Antwortvertrag 2 ändern sich innerhalb eines Laufs nicht. Der Systemprompt
 umfasst 8.418 statt 8.428 Zeichen (1.227 statt 1.228 whitespace-getrennte Wörter);
 ein Diagnosehinweis ergänzt im zweiten Versuch höchstens 472 Zeichen plus
 einen Zeilenumbruch. Dies

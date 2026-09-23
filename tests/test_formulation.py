@@ -158,12 +158,12 @@ def _interpretation(need: Need) -> QueryInterpretation:
 
 def test_versions_prompt_and_health_are_observable(app) -> None:
     health = TestClient(app).get("/api/health").json()
-    assert EVIDENCE_CONTRACT_VERSION == "3"
+    assert EVIDENCE_CONTRACT_VERSION == "4"
     assert FORMULATOR_CONTRACT_VERSION == "2"
-    assert FORMULATOR_PROMPT_VERSION == "16"
-    assert health["evidence_contract_version"] == "3"
+    assert FORMULATOR_PROMPT_VERSION == "17"
+    assert health["evidence_contract_version"] == "4"
     assert health["formulator_contract_version"] == "2"
-    assert health["formulator_prompt_version"] == "16"
+    assert health["formulator_prompt_version"] == "17"
     assert health["llm_request_budget_seconds"] == 45.0
     for rule in (
         "Use only EVIDENCE facts",
@@ -213,7 +213,6 @@ def test_formulator_prompt_matches_enforced_first_claim_and_reference_rules() ->
     """The prompt must not invite structures rejected by the grounding contract."""
     for rule in (
         "grounded_referral and ambiguous_help_fallback: referral",
-        "Never set claim_type to action or service for a referral_contact",
         "grounded_result: action or service",
         "out_of_scope: domain_boundary",
         "no_verified_result: no_result",
@@ -222,15 +221,19 @@ def test_formulator_prompt_matches_enforced_first_claim_and_reference_rules() ->
         "every offer-grounded answer (grounded_result, grounded_referral, or ambiguous_help_fallback) must contain two or three sentences",
         "current_query is never evidence",
         "Write the most useful next step first",
-        "For a referral_contact, name the unchanged display_name and explain only a cited contact, counselling, referral, or support function",
+        "For a referral_contact, lead with the contact instruction using claim_type referral",
+        "Further sentences may describe what that offer itself provides when the cited values prove it",
         "normal answers do not have to start with",
         "If multiple selected_offers provide useful alternatives",
         "mention up to three of them in their supplied order",
         "when the query contains an explicit day or time",
         "For a direct_service, name the unchanged display_name and explain one cited description, service, or capability",
         "Do not dump the complete card contents into the answer",
-        "fact_ids must include a matching service, capability, or description fact",
-        "fact_ids must include a matching target_group, eligible_gender, minimum_age, maximum_age, or access fact",
+        "the facts you cite for that offer anywhere in the answer must name that service in their values",
+        "A cited description that names the target group is enough; a separate typed fact is then not required",
+        "never state a group that a cited restriction excludes",
+        "Validation pools the fact_ids you cite per offer across the whole answer",
+        "Facts of a different offer never support it",
         "If you cannot identify the required matching fact_id with certainty, omit the detail",
         "immutable output token",
         "copy its value character-for-character",
@@ -937,13 +940,22 @@ class _Clock:
         self.value += seconds
 
 
-def test_prompt_v16_clarifies_roles_targets_and_immutable_contacts() -> None:
+def test_prompt_v17_states_answer_wide_offer_bound_grounding() -> None:
+    """Der Prompt muss denselben Vertrag beschreiben, den der Validator prüft."""
     assert "unless a cited fact explicitly proves a service" not in FORMULATOR_SYSTEM_PROMPT
+    # Der Enumwert allein entscheidet nicht mehr; deshalb darf der Prompt die
+    # Rolle nicht mehr als Leistungsverbot darstellen.
+    assert "A cited service fact never upgrades a referral_contact" not in FORMULATOR_SYSTEM_PROMPT
+    assert "never claim a direct service in this role" not in FORMULATOR_SYSTEM_PROMPT
     for rule in (
-        "A cited service fact never upgrades a referral_contact to direct_service",
-        "Use referral for a contact instruction (even an imperative)",
-        "even when a cited description also contains the detail",
-        "a gender fact alone does not prove adulthood",
+        "referral_contact does not mean the provider offers nothing itself",
+        "A detail stated in one sentence may be supported by a fact cited in another sentence about the SAME offer",
+        "Facts of a different offer never support it",
+        "Describing an evidenced service in general is allowed",
+        "promising that the reader will be admitted, will get a place, or will be served right now is not",
+        "A service_condition fact states when one specific service of that offer happens",
+        "never pair it with a time taken from a different service or from a general opening time",
+        "a gender fact does not prove adulthood",
         "including phone labels and restrictions in parentheses",
         "at most 32 words each and 600 characters overall",
     ):
@@ -972,17 +984,25 @@ def test_retry_instruction_rejects_free_text(untrusted) -> None:
      (Language.RO, "Folosește Scharni pentru femei."),
      (Language.RU, "Используй Scharni для женщин.")],
 )
-def test_target_description_still_requires_typed_citation(app, language, text) -> None:
+def test_localized_description_establishes_the_target_group(app, language, text) -> None:
+    """Der Inhalt muss belegt sein, nicht die Position einer Fakt-ID.
+
+    Angebot 8 ist kuratiert für alleinstehende volljährige wohnungslose Frauen.
+    Nennt die zitierte lokalisierte Beschreibung diese Zielgruppe, ist eine
+    zusätzliche ``eligible_gender``-Referenz nicht mehr zwingend.
+    """
     evidence = _evidence(app, language=language)
+    description = _fact(evidence, FactType.DESCRIPTION)
     response = _response(evidence, text=text, fact_ids=[
         _fact(evidence, FactType.DISPLAY_NAME).fact_id,
-        _fact(evidence, FactType.DESCRIPTION).fact_id,
+        description.fact_id,
     ])
+    assert validate_formulation(response, evidence).answer == text
+    # Ohne den belegenden Wert bleibt dieselbe Aussage unentscheidbar.
+    response.sentences[0].fact_ids = [_fact(evidence, FactType.DISPLAY_NAME).fact_id]
     with pytest.raises(FormulatorError) as captured:
         validate_formulation(response, evidence)
     assert captured.value.diagnostic_code == GroundingDiagnosticCode.TARGET_FACT_MISSING
-    response.sentences[0].fact_ids.append(_fact(evidence, FactType.ELIGIBLE_GENDER).fact_id)
-    assert validate_formulation(response, evidence).answer == text
 
 
 @pytest.mark.parametrize(
@@ -999,12 +1019,12 @@ def test_referral_and_full_phone_contract_across_languages(app, language, prefix
     text = f"{prefix} {name.value}."
     response = _response(evidence, text=text, claim_type=ClaimType.REFERRAL)
     assert validate_formulation(response, evidence).answer == text
-    for claim, diagnostic in [(ClaimType.ACTION, GroundingDiagnosticCode.REFERRAL_ROLE_MISMATCH),
-                              (ClaimType.SERVICE, GroundingDiagnosticCode.SERVICE_ROLE_MISMATCH)]:
-        response.sentences[0].claim_type = claim
-        with pytest.raises(FormulatorError) as captured:
-            validate_formulation(response, evidence)
-        assert captured.value.diagnostic_code == diagnostic
+    # Der erste Satz bleibt durch answer_type auf referral festgelegt; ein
+    # service-Satz braucht weiterhin einen belegenden Leistungswert im Pool.
+    response.sentences[0].claim_type = ClaimType.SERVICE
+    with pytest.raises(FormulatorError) as captured:
+        validate_formulation(response, evidence)
+    assert captured.value.diagnostic_code == GroundingDiagnosticCode.SERVICE_ROLE_MISMATCH
     response.sentences[0].claim_type = ClaimType.REFERRAL
     for phone in [f for f in evidence.selected_offers[0].facts if f.fact_type == FactType.PHONE]:
         assert " (" in phone.value  # Fixture covers both labels and operational restrictions.
@@ -1021,22 +1041,28 @@ def test_referral_and_full_phone_contract_across_languages(app, language, prefix
             validate_formulation(response, evidence)
 
 
-@pytest.mark.xfail(strict=True, reason="Known limitation: typed target facts do not establish semantic entailment")
-def test_known_limitation_contradictory_gender_should_be_rejected(app) -> None:
+def test_contradicted_gender_is_reported_separately_from_missing_evidence(app) -> None:
+    """Ein Widerspruch ist etwas anderes als eine unentscheidbare Aussage."""
     evidence = _evidence(app, language=Language.EN)
     response = _response(evidence, text="Use Scharni for men.", fact_ids=[
         _fact(evidence, FactType.DISPLAY_NAME).fact_id,
         _fact(evidence, FactType.ELIGIBLE_GENDER, contains="female").fact_id,
     ])
-    with pytest.raises(FormulatorError):
+    with pytest.raises(FormulatorError) as captured:
         validate_formulation(response, evidence)
+    assert captured.value.diagnostic_code == GroundingDiagnosticCode.TARGET_CLAIM_CONTRADICTED
 
 
 @pytest.mark.xfail(strict=True, reason="Known limitation: minor injuries triggers target-group keyword detection")
 def test_known_limitation_non_target_minor_should_not_trigger_target_check(app) -> None:
-    from app.grounding import TARGET_ASSERTION_RE
+    """Der Wortschatz bleibt lexikalisch; „minor injuries" ist keine Zielgruppe.
 
-    assert TARGET_ASSERTION_RE.search("minor injuries") is None
+    Die Aussage fällt in die Klasse ``UNDECIDABLE`` und führt zum kontrollierten
+    Rückfall, nicht zu einer Behauptung über ihren Wahrheitswert.
+    """
+    from app.grounding_claims import detect_target_concepts
+
+    assert detect_target_concepts("minor injuries", Language.EN) == set()
 
 
 @pytest.mark.parametrize("failure", ["target", "phone", "role"])
@@ -1054,8 +1080,9 @@ def test_real_provider_retry_gets_only_closed_feedback_and_revalidates(
     good = _response(evidence, text=f"{'Contact' if referral else 'Use'} {name.value}.", claim_type=claim)
     bad = good.model_copy(deep=True)
     if failure == "target":
-        bad.sentences[0].text = f"Use {name.value} for women."
-        bad.sentences[0].fact_ids.append(_fact(evidence, FactType.DESCRIPTION).fact_id)
+        # Angebot 8 ist für volljährige Frauen kuratiert; „minors" ist mit den
+        # zitierten Werten nicht belegbar.
+        bad.sentences[0].text = f"Use {name.value} for minors."
         diagnostic = GroundingDiagnosticCode.TARGET_FACT_MISSING
     elif failure == "phone":
         phone = _fact(evidence, FactType.PHONE)
@@ -1063,8 +1090,9 @@ def test_real_provider_retry_gets_only_closed_feedback_and_revalidates(
         bad.sentences[0].fact_ids.append(phone.fact_id)
         diagnostic = GroundingDiagnosticCode.PHONE_NOT_EXACT
     else:
-        bad.sentences[0].claim_type = ClaimType.ACTION
-        diagnostic = GroundingDiagnosticCode.REFERRAL_ROLE_MISMATCH
+        # Nur der fehlende Leistungsbeleg begründet die Ablehnung, nicht die Rolle.
+        bad.sentences[0].claim_type = ClaimType.SERVICE
+        diagnostic = GroundingDiagnosticCode.SERVICE_ROLE_MISMATCH
     provider = BlabladorProvider(_settings("blablador"))
     payloads = []
     clock = _Clock()

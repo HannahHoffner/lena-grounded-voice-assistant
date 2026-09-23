@@ -565,7 +565,7 @@ def test_service_passes_only_validated_food_selection_to_formulator() -> None:
     # Reihenfolge herstellt (siehe app/result_ordering.py).
     assert captured["formulator_ids"] == captured["expected_order"]
     assert not set(captured["formulator_ids"]).intersection(captured["conditional"])
-    assert captured["evidence"].evidence_version == "3"
+    assert captured["evidence"].evidence_version == "4"
     assert [card["id"] for card in body["cards"]] == captured["expected_order"]
 
 
