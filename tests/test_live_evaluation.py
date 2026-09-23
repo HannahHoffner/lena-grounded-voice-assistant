@@ -15,8 +15,11 @@ from app.candidate_contract import CandidateRole
 from app.config import Settings
 from app.formulation import (
     AnswerType,
+    ClaimType,
     FactType,
+    FormulatedSentence,
     FormulatorError,
+    FormulatorResponse,
     GroundingDiagnosticCode,
     build_drinking_water_evidence,
     build_formulator_evidence,
@@ -898,11 +901,26 @@ class FailingSelectorFormulatorProvider(FakeSelectorFormulatorProvider):
 
 
 class DiagnosticFailingFormulatorProvider(FakeSelectorFormulatorProvider):
-    async def formulate_answer(self, **_kwargs: Any) -> ProviderAnswer:
+    async def formulate_answer(self, *, evidence: Any, **_kwargs: Any) -> ProviderAnswer:
         self.formulator_calls += 1
+        offer = evidence.selected_offers[0]
+        name = next(fact for fact in offer.facts if fact.fact_type == FactType.DISPLAY_NAME)
+        rejected = FormulatorResponse(
+            contract_version="2",
+            language=evidence.requested_language,
+            sentences=[FormulatedSentence(
+                text=f"Use {name.value}.",
+                claim_type=ClaimType.ACTION,
+                offer_id=offer.offer_id,
+                fact_ids=[name.fact_id],
+                policy_ids=[],
+            )],
+            card_ids=[offer.offer_id],
+        )
         raise FormulatorError(
             "formulator_ungrounded_claim",
             diagnostic_code=GroundingDiagnosticCode.PROPER_NAME_NOT_EXACT,
+            rejected_response=rejected,
         )
 
 
@@ -995,6 +1013,10 @@ def test_selector_formulator_runner_persists_redacted_grounding_diagnostics(tmp_
     failed = [item for item in stage_records if item.get("error_code") == "formulator_ungrounded_claim"]
     assert len(failed) == 3
     assert all(item["grounding_diagnostic_code"] == "proper_name_not_exact" for item in failed)
+    assert all(item["structured_output"] is None for item in failed)
+    assert all(item["rejected_structured_output"]["contract_version"] == "2" for item in failed)
+    assert all(item["rejected_structured_output"]["sentences"][0]["text"].startswith("Use ")
+               for item in failed)
     error_records = [
         json.loads(line)
         for line in (report / "redacted-errors.jsonl").read_text(encoding="utf-8").splitlines()
@@ -1003,6 +1025,7 @@ def test_selector_formulator_runner_persists_redacted_grounding_diagnostics(tmp_
     assert len(grounding_errors) == 3
     assert all(set(item) == {"scenario_id", "error_code", "grounding_diagnostic_code"}
                for item in grounding_errors)
+    assert "rejected_structured_output" not in json.dumps(error_records)
 
 
 class FakeFullPipelineProvider:

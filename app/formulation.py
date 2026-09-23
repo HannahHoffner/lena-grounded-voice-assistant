@@ -291,17 +291,25 @@ class GroundingDiagnosticCode(str, Enum):
 
 
 class FormulatorError(RuntimeError):
-    """Redigierter, maschinenlesbarer Fehler der Formulierungsstufe."""
+    """Redigierter Formulatorfehler mit optionaler lokaler Evaluationsdiagnose.
+
+    ``rejected_response`` ist ausschließlich die bereits schema-validierte
+    Modellantwort. Der normale Anwendungspfad protokolliert oder exponiert sie
+    nicht; der synthetische Live-Runner kann sie in seinem ignorierten lokalen
+    Ergebnisbericht sichern.
+    """
 
     def __init__(
         self,
         code: str,
         *,
         diagnostic_code: GroundingDiagnosticCode | None = None,
+        rejected_response: FormulatorResponse | None = None,
     ) -> None:
         super().__init__(code)
         self.code = code
         self.diagnostic_code = diagnostic_code
+        self.rejected_response = rejected_response
 
 
 def _normalized(value: str) -> str:

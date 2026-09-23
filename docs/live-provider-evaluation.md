@@ -349,9 +349,47 @@ einen geschlossenen `grounding_diagnostic_code` enthalten. Diese Werte benennen
 nur die ausgelöste Validatorregel, beispielsweise `proper_name_not_exact`,
 `service_fact_missing` oder `unsafe_realtime_claim`. Der Reportstore akzeptiert
 ausschließlich die im Code definierten Enumwerte und verwirft freie Strings.
-Modelltext, Faktenwerte, Namen, Kontakte und Exceptionmeldungen werden dadurch
-nicht gespeichert. Der normale Anwendungspfad gibt weiterhin nur den groben,
-redigierten Formulatorfehler aus.
+`redacted-errors.jsonl` speichert weiterhin weder Modelltext noch Faktenwerte,
+Namen, Kontakte oder Exceptionmeldungen. Der normale Anwendungspfad gibt
+ebenfalls nur den groben, redigierten Formulatorfehler aus.
+
+Für eine schema-valide, aber anschließend vom Vertrags- oder Groundingvalidator
+verworfene Formulatorantwort speichert `stage-results.jsonl` zusätzlich
+`rejected_structured_output`. Das Feld enthält exakt das bereits gegen
+`FormulatorResponse` validierte JSON-Objekt; `structured_output` bleibt `null`,
+weil keine verworfene Antwort als Anwendungsergebnis gilt. Ungültiges JSON,
+Schemafehler, Transportfehler und Timeouts besitzen dieses Feld nicht. Die
+Erweiterung gilt ausschließlich für den synthetischen Stufe-2-Runner. Normale
+Sessions, Interaktionslogs, API-Antworten und `redacted-errors.jsonl` übernehmen
+den Inhalt nicht.
+
+Der lokale Diagnosetext kann unbelegte Namen, Kontakte oder andere vom Modell
+erfundene Angaben sowie interne Evidence-Referenzen enthalten. Er ist deshalb
+weder vertrauenswürdige Fachevidenz noch ein direkt teilbarer redigierter Report.
+Er dient nur dazu, den geschlossenen Diagnosecode gegen die tatsächlich
+verworfene synthetische Antwort zu prüfen. Vor einer Veröffentlichung muss er
+inhaltlich geprüft und gegebenenfalls redigiert werden. Rohes Provider-HTTP,
+Header, Schlüssel, Prompts und vollständige Evidence-Pakete werden weiterhin
+nicht persistiert.
+
+## Vergleichslauf `alias-fast` und `alias-large` vom 21./22. September 2026
+
+Beide Stufe-2-Läufe verwendeten Commit
+`ccc6a12ca68b7046a6bafa8c1275913b8b22e1e5`, denselben Szenariohash,
+Runtime-Fingerabdruck, Promptstand und dieselben Limits. Sie sind eine kleine
+kontrollierte Stichprobe, kein allgemeiner Modellbenchmark.
+
+| Alias / Lauf | Ergebnis | Formulatorlatenz | Befund |
+|---|---|---|---|
+| `alias-fast`, `run_f17ec892f09f4acfbbbb1eb1ebeb7dc8` | Abbruch nach 12/16 Szenarien; 3 Groundingfehler in 6 Formulatoraufrufen | 2,91--6,49 s, Mittel 5,08 s | `target_fact_missing`, `phone_not_exact`, `referral_role_mismatch` |
+| `alias-large`, `run_d438bc21c7424178b85c2edbe66a118a` | 16/16 Szenarien ausgeführt; 2 technische Fehler in 10 Formulatoraufrufen | 4,91--30,01 s, Mittel 15,16 s | `f_de_grounded` und `f_pl_grounded` erreichten den 30-s-Timeout; die übrigen 8 Formulatorantworten waren technisch gültig |
+
+Large meldete als Modellkennung
+`02_-_Qwen3.8-Flash-Next-NVFP4__general_purpose_large_model`. Das ist nur die
+Providerangabe des Laufs. Der Vergleich rechtfertigt weder eine Umstellung auf
+Large noch eine Erhöhung des Timeouts: Large beseitigte in dieser Stichprobe die
+beobachteten Groundingfehler, bestand das Gate wegen zweier Timeouts aber ebenfalls
+nicht und war deutlich langsamer. Nachfolgende Stufen wurden nicht gestartet.
 
 Seit Version 0.2.0 speichert `manifest.json` zusätzlich `git_commit`,
 `git_dirty`, `software_version` und `provider_base_domain`

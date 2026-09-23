@@ -573,6 +573,8 @@ async def _run_formulator_scenario(
         }
         if exc.diagnostic_code is not None:
             failed["grounding_diagnostic_code"] = exc.diagnostic_code.value
+        if exc.rejected_response is not None:
+            failed["rejected_structured_output"] = exc.rejected_response.model_dump(mode="json")
         return failed
     return {
         **base,

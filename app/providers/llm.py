@@ -391,7 +391,14 @@ class BlabladorProvider:
             parsed = FormulatorResponse.model_validate(raw)
         except ValidationError as exc:
             raise FormulatorError("formulator_schema_error") from exc
-        validated = validate_formulation(parsed, evidence)
+        try:
+            validated = validate_formulation(parsed, evidence)
+        except FormulatorError as exc:
+            # Keep the strict parsed response in memory for the synthetic live
+            # evaluation. Normal application logging and API errors continue to
+            # expose only the redacted error and optional closed diagnostic code.
+            exc.rejected_response = parsed
+            raise
         return ProviderAnswer(
             answer=validated.answer,
             card_ids=validated.card_ids,

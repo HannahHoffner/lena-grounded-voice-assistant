@@ -920,8 +920,9 @@ def test_provider_rejects_a_schema_valid_but_unknown_fact_reference(app, monkeyp
         return {"choices": [{"message": {"content": response.model_dump_json()}}]}
 
     monkeypatch.setattr(provider, "_post", model_response)
-    with pytest.raises(FormulatorError, match="formulator_invalid_fact"):
+    with pytest.raises(FormulatorError, match="formulator_invalid_fact") as captured:
         asyncio.run(provider.formulate_answer(evidence=evidence))
+    assert captured.value.rejected_response == response
 
 
 class _Clock:
