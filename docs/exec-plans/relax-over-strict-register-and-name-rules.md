@@ -2,7 +2,7 @@
 
 ## Status
 
-- State: Implemented, live re-run pending
+- State: Implemented and re-run
 - Owner: Claude
 - Created / updated: 2026-09-23
 
@@ -104,7 +104,7 @@ normalization of e-mails, and per-scenario exceptions.
 1. [x] Inspect both rules, their call sites and the captured failures.
 2. [x] Implement and verify narrow changes incrementally.
 3. [x] Full local suite, compileall, pip check, complete diff review.
-4. [ ] Re-run the selector-formulator stage and record the result.
+4. [x] Re-run the selector-formulator stage and record the result.
 
 ## Validation plan
 
@@ -150,6 +150,20 @@ Discoveries during implementation:
 - A `NAME\w+` inflection heuristic was considered to compensate for widening the
   rendering rule to answer scope, and rejected: the name `Rücke` would fire
   inside `Rückenschmerzen`.
+
+**Live result: `run_30372ff470c54d159c0b7e547dde2f78` on c6bf2f2, 16/16 requests,
+0 failures, contract gate and content gate passed for the first time.** Same
+scenario hash (`63fbc943…`) and KB fingerprint (`15d2acbb…`) as the two previous
+runs, and unchanged evidence/prompt versions (4/17), so the scenarios and data
+are directly comparable.
+
+That run is weaker evidence for this change than it looks, and must not be cited
+as proof of it: neither corrected trigger actually occurred in it. The model
+wrote `Rücke bietet Übernachtung …` instead of `Sie bieten …`, and the Russian
+answer named no e-mail address. The two fixes are evidenced by the replay of the
+captured failures and by the ten new regressions, not by this run. What the run
+does show is that nothing regressed and that all ten formulator scenarios now
+produce grounded answers.
 
 Residual limitations, stated rather than papered over: a genuine formal address
 at the start of a follow-up sentence is not detected, and an inflected rendering
