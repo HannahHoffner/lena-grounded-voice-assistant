@@ -1276,3 +1276,138 @@ def test_tts_rejects_an_older_answer_after_a_new_session_turn(app) -> None:
         json={"text": first["answer"], "language": "de", "session_id": first["session_id"]},
     )
     assert rejected.status_code == 409
+
+
+@pytest.mark.parametrize(
+    ("prose", "formal"),
+    [
+        # Satzinitial mit vorausgehendem Satz: mehrdeutig, daher nicht entscheidend.
+        ("Melde dich bei Rücke. Sie bieten Übernachtungen an.", False),
+        ("Geh zu Scharni. Ihr Angebot ist kostenlos.", False),
+        # Ohne vorausgehenden Satz gibt es keinen Bezug: Höflichkeitsform.
+        ("Sie erhalten dort Hilfe.", True),
+        ("Ihr Team hilft dir.", True),
+        # Mitten im Satz ist die Großschreibung eindeutig.
+        ("Melde dich dort. Wir helfen Ihnen gerne.", True),
+        ("Kannst du Sie dort erreichen?", True),
+    ],
+)
+def test_german_formal_register_is_decided_only_where_unambiguous(prose, formal) -> None:
+    """Deutsch schreibt jedes erste Satzwort groß; „Sie" ist dort nicht eindeutig."""
+    from app.grounding import _uses_formal_register
+
+    assert _uses_formal_register(prose) is formal
+
+
+def test_provider_pronoun_after_a_naming_sentence_is_accepted(app) -> None:
+    """Live reproduziert: „Sie bieten …" meinte den Träger, nicht die lesende Person.
+
+    Der Satz erzwang in run_44573fca einen formulator_contract_violation und
+    damit den Templatefallback, obwohl die Antwort durchgehend duzt.
+    """
+    evidence = _evidence(
+        app,
+        offer_ids=("7",),
+        answer_type=AnswerType.GROUNDED_REFERRAL,
+        roles={"7": CandidateRole.REFERRAL_CONTACT},
+    )
+    name = _fact(evidence, FactType.DISPLAY_NAME)
+    service = _fact(evidence, FactType.SERVICE, contains="Übernachtung")
+    response = FormulatorResponse(
+        contract_version=FORMULATOR_CONTRACT_VERSION,
+        language=Language.DE,
+        sentences=[
+            FormulatedSentence(
+                text="Melde dich bei Rücke.",
+                claim_type=ClaimType.REFERRAL,
+                offer_id="7",
+                fact_ids=[name.fact_id],
+            ),
+            FormulatedSentence(
+                text="Sie bieten Übernachtungen für 5,00 € pro Nacht an.",
+                claim_type=ClaimType.SERVICE,
+                offer_id="7",
+                fact_ids=[service.fact_id],
+            ),
+        ],
+        card_ids=["7"],
+    )
+    assert validate_formulation(response, evidence).sentence_count == 2
+
+
+def test_formal_address_without_an_antecedent_is_still_rejected(app) -> None:
+    """Die Lockerung darf die Höflichkeitsform nicht durchlassen."""
+    evidence = _evidence(
+        app,
+        offer_ids=("7",),
+        answer_type=AnswerType.GROUNDED_REFERRAL,
+        roles={"7": CandidateRole.REFERRAL_CONTACT},
+    )
+    name = _fact(evidence, FactType.DISPLAY_NAME)
+    response = _response(
+        evidence,
+        text="Sie erreichen Rücke telefonisch.",
+        claim_type=ClaimType.REFERRAL,
+        fact_ids=[name.fact_id],
+    )
+    with pytest.raises(FormulatorError, match="formulator_contract_violation"):
+        validate_formulation(response, evidence)
+
+
+def test_a_name_inside_a_cited_email_is_not_a_name_rendering(app) -> None:
+    """Live reproduziert: „uvo@cab-leipzig.de" galt als ungenaue Nennung von „UVO".
+
+    Der Eigenname steht in der Adresse, aber die Adresse ist keine
+    Namensnennung. E-Mails haben ihre eigene exakte Prüfung.
+    """
+    evidence = _evidence(app, offer_ids=("25",), language=Language.RU, need=Need.MEDICAL)
+    name = _fact(evidence, FactType.DISPLAY_NAME)
+    email = _fact(evidence, FactType.EMAIL)
+    assert name.value.casefold() in email.value.casefold()
+    response = FormulatorResponse(
+        contract_version=FORMULATOR_CONTRACT_VERSION,
+        language=Language.RU,
+        sentences=[
+            FormulatedSentence(
+                text=f"Воспользуйся «{name.value}».",
+                claim_type=ClaimType.ACTION,
+                offer_id="25",
+                fact_ids=[name.fact_id],
+            ),
+            FormulatedSentence(
+                text=f"Напиши на {email.value}.",
+                claim_type=ClaimType.FACT,
+                offer_id="25",
+                fact_ids=[name.fact_id, email.fact_id],
+            ),
+        ],
+        card_ids=["25"],
+    )
+    assert validate_formulation(response, evidence).sentence_count == 2
+
+
+def test_a_cited_name_must_be_rendered_exactly_somewhere_for_its_offer(app) -> None:
+    """Die Namensbindung bleibt streng, nur ihr Bezugsrahmen ist die Antwort.
+
+    Zitiert eine Antwort den Namensfakt, muss der Name in mindestens einem Satz
+    dieses Angebots unveraendert stehen. Hier steht er nirgends ausgeschrieben.
+    """
+    evidence = _evidence(app, offer_ids=("25",), language=Language.RU, need=Need.MEDICAL)
+    name = _fact(evidence, FactType.DISPLAY_NAME)
+    email = _fact(evidence, FactType.EMAIL)
+    response = FormulatorResponse(
+        contract_version=FORMULATOR_CONTRACT_VERSION,
+        language=Language.RU,
+        sentences=[
+            FormulatedSentence(
+                text=f"Напиши на {email.value}.",
+                claim_type=ClaimType.FACT,
+                offer_id="25",
+                fact_ids=[name.fact_id, email.fact_id],
+            ),
+        ],
+        card_ids=["25"],
+    )
+    with pytest.raises(FormulatorError) as captured:
+        validate_formulation(response, evidence)
+    assert captured.value.diagnostic_code == GroundingDiagnosticCode.PROPER_NAME_NOT_EXACT

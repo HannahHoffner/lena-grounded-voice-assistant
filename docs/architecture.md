@@ -271,6 +271,32 @@ aber getrennt diagnostiziert: die Antwort wird damit nicht als nachweislich
 unwahr bezeichnet, sondern nur nicht ungeprüft freigegeben. Beide Fälle führen
 in denselben unveränderten begrenzten Retry beziehungsweise Templatefallback.
 
+### Zwei lexikalische Regeln und ihre Grenzen
+
+Zwei ältere Regeln entschieden lexikalisch über etwas, das lexikalisch nicht
+immer entscheidbar ist; beide sind auf ihren eindeutigen Bereich zurückgeführt.
+
+Die deutsche **Anredeprüfung** wertet eine großgeschriebene Höflichkeitsform
+mitten im Satz weiterhin als Verstoß: dort schreibt das Deutsche weder „sie"
+noch „ihr" groß. Am Satzanfang wird jedes Wort großgeschrieben, dort ist „Sie
+bieten Übernachtungen an" nicht von der Aussage über den Träger zu
+unterscheiden. Ein satzinitiales „Sie"/„Ihr" gilt deshalb nur dann als
+Höflichkeitsform, wenn ihm kein Satz vorausgeht, auf den es sich beziehen
+könnte. Grenze: eine echte Höflichkeitsform am Anfang eines Folgesatzes wird
+nicht erkannt.
+
+Die **Namensbindung** blendet E-Mail-Adressen und URLs aus, bevor sie nach
+Eigennamen sucht. In `uvo@cab-leipzig.de` steckt der Name `UVO`, aber die
+Adresse ist keine Namensnennung; `@` ist kein Wortzeichen, weshalb die
+Wortgrenze allein nicht genügte. E-Mails und URLs haben eigene exakte
+Prüfungen, es geht also keine Zusicherung verloren. Die Forderung, einen
+zitierten Namensfakt unverändert auszuschreiben, gilt außerdem antwortweit je
+Angebot statt je Satz: ein Satz darf den Namen mitzitieren, um Telefon oder
+E-Mail zuzuordnen, ohne ihn zu wiederholen. Gebeugte oder sonst veränderte
+Schreibweisen bleiben unzulässig. Grenze: steht der Name in einem Satz exakt und
+in einem anderen gebeugt, erkennt die satzweise Prüfung die Beugung nur, solange
+sie als Namensnennung erkennbar bleibt.
+
 **Grenze.** Diese Prüfung ist und bleibt keine vollständige semantische oder
 linguistische Qualitätsbewertung. Der Validator arbeitet ohne zusätzliche
 Modellstufe und kann freie mehrsprachige Paraphrasen nicht vollständig auf

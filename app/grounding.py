@@ -71,6 +71,32 @@ INTERNAL_TERM_RE = re.compile(
 )
 VISIBLE_ID_RE = re.compile(r"\b(?:internal\s+)?(?:offer|record|source|card)?\s*ID\s*[:#-]?\s*\d", re.IGNORECASE)
 GERMAN_FORMAL_RE = re.compile(r"\b(?:Sie|Ihnen|Ihr|Ihre|Ihrem|Ihren|Ihrer|Ihres)\b")
+# Ein satzinitiales Pronomen kann sich nur auf etwas beziehen, das vorher schon
+# genannt wurde. Deshalb entscheidet hier die Position, nicht die Anredeform.
+_AFTER_SENTENCE_END_RE = re.compile(r"[.!?] *[\"„“«(]? *$")
+
+
+def _uses_formal_register(prose: str) -> bool:
+    """Entscheidet die deutsche Anrede nur dort, wo sie eindeutig ist.
+
+    Eine grossgeschriebene Hoeflichkeitsform mitten im Satz ist eindeutig: dort
+    schreibt das Deutsche weder ``sie`` noch ``ihr`` gross. Am Satzanfang ist sie
+    es nicht, denn dort wird jedes Wort grossgeschrieben. Ein satzinitiales
+    ``Sie``/``Ihr`` gilt deshalb nur dann als Hoeflichkeitsform, wenn ihm kein
+    Satz vorausgeht, auf den es sich beziehen koennte.
+
+    Live reproduziert: "Melde dich bei X. Sie bieten Uebernachtungen fuer 5,00
+    Euro pro Nacht an." meinte den Traeger und wurde als Hoeflichkeitsform
+    verworfen, obwohl die Antwort durchgehend duzt.
+
+    Grenze: Steht eine echte Hoeflichkeitsform selbst am Anfang eines
+    Folgesatzes, ist sie mit diesem Verfahren nicht von ``sie`` zu unterscheiden
+    und wird nicht erkannt.
+    """
+    return any(
+        not _AFTER_SENTENCE_END_RE.search(prose[: match.start()])
+        for match in GERMAN_FORMAL_RE.finditer(prose)
+    )
 # Die frühere rein lexikalische Leistungs- und Zielgruppenerkennung ist nach
 # app/grounding_claims.py gewandert. Dort wird nicht mehr nur erkannt, DASS ein
 # Konzept genannt wird, sondern geprüft, ob die zitierten WERTE es tragen.
@@ -168,6 +194,18 @@ def _contains_exact_literal(text: str, literal: str, *, ignore_case: bool = Fals
     return re.search(rf"(?<!\w){re.escape(literal)}(?!\w)", text, flags) is not None
 
 
+def _without_contact_literals(text: str) -> str:
+    """Blendet E-Mail-Adressen und URLs aus, bevor Namen gesucht werden.
+
+    In ``uvo@cab-leipzig.de`` steckt der Eigenname ``UVO``, aber die Adresse ist
+    keine Namensnennung. ``@`` ist kein Wortzeichen, deshalb genuegte die
+    bisherige Wortgrenze nicht. E-Mails und URLs haben eigene exakte Pruefungen
+    (``EMAIL_NOT_CITED``, ``URL_NOT_CITED``); hier geht keine Zusicherung
+    verloren, nur eine Doppelpruefung mit falschem Treffer.
+    """
+    return URL_RE.sub(" ", EMAIL_RE.sub(" ", text))
+
+
 def _strip_evidence_literals(text: str, evidence: FormulatorEvidence) -> str:
     stripped = text
     literals = [
@@ -197,7 +235,7 @@ def _validate_language(text: str, evidence: FormulatorEvidence) -> None:
                 raise FormulatorError("formulator_invalid_language")
     if INTERNAL_TERM_RE.search(prose):
         raise FormulatorError("formulator_contract_violation")
-    if evidence.requested_language == Language.DE and GERMAN_FORMAL_RE.search(prose):
+    if evidence.requested_language == Language.DE and _uses_formal_register(prose):
         raise FormulatorError("formulator_contract_violation")
 
 
@@ -344,6 +382,36 @@ def _validate_service_conditions(
             raise _ungrounded(GroundingDiagnosticCode.SERVICE_CONDITION_MISSING)
 
 
+def _validate_cited_names(
+    response: FormulatorResponse,
+    texts: list[str],
+    pools: dict[str, list[EvidenceFact]],
+) -> None:
+    """Verlangt jeden zitierten Namen genau einmal exakt in seinem Angebot.
+
+    Belegt sein muss der Inhalt, nicht die Position einer Fakt-ID. Ein Satz darf
+    den Namensfakt seines Angebots mitzitieren, um Telefon oder E-Mail
+    zuzuordnen, ohne den Namen erneut auszuschreiben. Erscheint der Name
+    irgendwo im Text, muss er unveraendert erscheinen; eine gebeugte oder sonst
+    veraenderte Schreibweise bleibt unzulaessig.
+
+    Grenze: Steht der Name in einem Satz exakt und in einem anderen gebeugt, so
+    erkennt die satzweise Pruefung die Beugung nur, wenn sie als Namensnennung
+    erkennbar bleibt.
+    """
+    rendered: dict[str, list[str]] = {}
+    for sentence, text in zip(response.sentences, texts):
+        if sentence.offer_id is not None:
+            rendered.setdefault(sentence.offer_id, []).append(text)
+    for offer_id, pool in pools.items():
+        answer_text = _without_contact_literals(" ".join(rendered.get(offer_id, ())))
+        for fact in pool:
+            if fact.fact_type in {
+                FactType.DISPLAY_NAME, FactType.ALIAS,
+            } and not _contains_exact_literal(answer_text, fact.value):
+                raise _ungrounded(GroundingDiagnosticCode.PROPER_NAME_NOT_EXACT)
+
+
 def _validate_sentence(
     sentence,
     evidence: FormulatorEvidence,
@@ -414,25 +482,24 @@ def _validate_sentence(
         ):
             raise _ungrounded(GroundingDiagnosticCode.FACT_CLAIM_MISSING)
 
-        for fact in cited_facts:
-            if fact.fact_type in {FactType.DISPLAY_NAME, FactType.ALIAS} and not _contains_exact_literal(
-                text,
-                fact.value,
-            ):
-                raise _ungrounded(GroundingDiagnosticCode.PROPER_NAME_NOT_EXACT)
-
+        # Die Forderung, einen zitierten Namensfakt exakt wiederzugeben, gilt
+        # antwortweit je Angebot (siehe _validate_cited_names) und nicht mehr je
+        # Satz: ein Satz darf den Namen mitzitieren, ohne ihn zu wiederholen.
+        named_text = _without_contact_literals(text)
         for candidate in evidence.selected_offers:
             naming_facts = [
                 fact for fact in candidate.facts
                 if fact.fact_type in {FactType.DISPLAY_NAME, FactType.ALIAS} and len(fact.value) >= 2
             ]
-            name_like = [fact for fact in naming_facts if fact.value.casefold() in text.casefold()]
-            if any(not _contains_exact_literal(text, fact.value) for fact in name_like):
+            name_like = [
+                fact for fact in naming_facts if fact.value.casefold() in named_text.casefold()
+            ]
+            if any(not _contains_exact_literal(named_text, fact.value) for fact in name_like):
                 raise _ungrounded(GroundingDiagnosticCode.PROPER_NAME_NOT_EXACT)
             mentioned = [
                 fact
                 for fact in naming_facts
-                if _contains_exact_literal(text, fact.value, ignore_case=True)
+                if _contains_exact_literal(named_text, fact.value, ignore_case=True)
             ]
             if mentioned and candidate.offer_id != sentence.offer_id:
                 raise FormulatorError("formulator_invalid_fact")
@@ -440,7 +507,9 @@ def _validate_sentence(
                 {cited.fact_id for cited in pool}
             ):
                 raise FormulatorError("formulator_invalid_fact")
-            if mentioned and any(not _contains_exact_literal(text, fact.value) for fact in mentioned):
+            if mentioned and any(
+                not _contains_exact_literal(named_text, fact.value) for fact in mentioned
+            ):
                 raise _ungrounded(GroundingDiagnosticCode.PROPER_NAME_NOT_EXACT)
 
     _validate_operational_tokens(text, pool)
@@ -472,6 +541,7 @@ def validate_formulation(
         _validate_sentence(sentence, evidence, offers_by_id, facts_by_id, allowed_policies, pools)
         for sentence in response.sentences
     ]
+    _validate_cited_names(response, texts, pools)
     if len({_canonical(text) for text in texts}) != len(texts):
         raise FormulatorError("formulator_contract_violation")
     answer = " ".join(texts)
