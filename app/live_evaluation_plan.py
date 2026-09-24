@@ -370,6 +370,10 @@ def build_run_manifest(
         "toilet_release_id": releases["toilet_release_id"],
         "drinking_fountain_release_id": releases["drinking_fountain_release_id"],
         "application_text_version": APPLICATION_COPY_VERSION,
+        # Kennzeichnet, welchen Pfad die Formulatorstufe misst. Ältere Berichte
+        # tragen dieses Feld nicht; sie maßen den unwiederholten Erstaufruf und
+        # sind mit Läufen dieses Modus nicht unmittelbar vergleichbar.
+        "formulator_measurement_mode": "application_path_with_bounded_retry",
         "configured_timeouts": {
             "interpreter": settings.llm_interpreter_timeout_seconds,
             "selector": settings.llm_selector_timeout_seconds,

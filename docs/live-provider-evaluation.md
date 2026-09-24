@@ -191,7 +191,7 @@ nach dem vorgesehenen Gate der vorherigen Stufe ausgeführt werden.
 | Stufe | Umfang | Provideraufrufe min. / max. | max. Providerwartezeit | harte Laufzeit | Abbruchgrenze |
 |---|---:|---:|---:|---:|---:|
 | `interpreter` | 15 Fälle, je 3 in DE/EN/PL/RO/RU | 15 / 15 | 225 s | 300 s | 3 Fehler; Gate bestanden nur bei 0 |
-| `selector-formulator` | 6 Selector- und 10 Formulatorfälle | 16 / 16 | 360 s | 480 s | 3 Fehler |
+| `selector-formulator` | 6 Selector- und 10 Formulatorfälle | 16 / 26 | 780 s | 900 s | 3 Fehler |
 | `end-to-end` | 27 Abläufe, genau 34 Requests | 44 / 102 | 1.530 s | 1.960 s | 4 kritische Fehler |
 | `stability` | 6 Abläufe × 3 Wiederholungen, je nur der erste Turn | 39 / 54 | 810 s | 1.050 s | 3 kritische Fehler |
 
@@ -555,14 +555,33 @@ Szenario-IDs unterschiedliche Eingaben erzeugen. Fehlende historische
 Antworten werden nicht rekonstruiert. Annahmequote, Ablehnungsregeln, Timeouts
 und Latenzen sind getrennt und mit ihren Nennern zu berichten.
 
-Der isolierte Stufe-2-Runner ruft den Formulator einmal pro Szenario direkt auf.
-Er misst damit den bereinigten Erstaufruf, **nicht** das neue Feedback im
-Anwendungsretry. Die lokale Integration prüft dieses Feedback mit Mocks.
-Ein zusätzlicher Live-Nachweis dafür braucht einen separat abgegrenzten,
-vor jedem Aufruf budgetierten Lauf; die oben dokumentierten E2E-Runnergrenzen
-dürfen dafür nicht ignoriert werden. Es wird keine Folgestufe automatisch
-gestartet und keine Freigabe zur manuellen Evaluation allein aus Mocktests
-abgeleitet.
+Der Stufe-2-Runner fährt denselben Formulatorpfad wie die Anwendung. Er baut
+dafür über `_build_isolated_service()` einen `QueryService` auf einer eigenen,
+mit dem Lauf endenden Runtime-Wurzel und ruft `QueryService._call_formulator()`
+auf. Damit gilt auch in der Messung `FORMULATOR_MAX_ATTEMPTS`: Ein wegen einer
+Groundingdiagnose verworfener Erstaufruf löst genau einen zweiten Versuch aus,
+der ausschließlich den geschlossenen Diagnosecode als Korrekturhinweis erhält,
+niemals den verworfenen Text. Jedes Szenario bekommt ein eigenes
+Anfragebudget, weil es einer einzelnen Nutzeranfrage entspricht.
+
+Die Retry-Schleife wird bewusst nicht im Runner nachgebaut, sondern die der
+Anwendung aufgerufen; eine Kopie würde mit der Zeit abweichen und dann nicht
+mehr die Anwendung messen. Entsprechend deckt das Aufrufbudget der Stufe bis zu
+20 statt 10 Formulatoraufrufe ab (Mindestzahl unverändert 10: ein Lauf ohne
+jeden Wiederholungsversuch ist der gute Fall, kein Verstoß).
+
+**Vergleichbarkeit.** Bis einschließlich Commit `429ab1b` maß diese Stufe den
+unwiederholten Erstaufruf — ein Verhalten, das in der Anwendung nicht vorkommt.
+Läufe beider Messarten sind nicht unmittelbar vergleichbar. Berichte des neuen
+Modus tragen deshalb im Manifest
+`formulator_measurement_mode = "application_path_with_bounded_retry"`; ältere
+Berichte tragen das Feld nicht.
+
+Das Gatekriterium selbst bleibt unverändert: null technische Fehler. Die
+Änderung macht das Gate nicht leichter bestehbar, sondern lässt es das richtige
+Verhalten messen; es kann weiterhin scheitern. Es wird keine Folgestufe
+automatisch gestartet und keine Freigabe zur manuellen Evaluation allein aus
+Mocktests abgeleitet.
 
 Seit Version 0.2.0 speichert `manifest.json` zusätzlich `git_commit`,
 `git_dirty`, `software_version` und `provider_base_domain`

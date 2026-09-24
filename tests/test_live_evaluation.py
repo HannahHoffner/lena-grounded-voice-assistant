@@ -1441,3 +1441,81 @@ def test_runner_records_git_state_in_manifest_without_gating_on_it(
     manifest = json.loads((report / "manifest.json").read_text(encoding="utf-8"))
     assert manifest["git_commit"] == "deadbeef" * 5
     assert manifest["git_dirty"] is True
+
+
+class RetryRecoveringFormulatorProvider(FakeSelectorFormulatorProvider):
+    """Scheitert je Szenario genau einmal mit einer Groundingdiagnose.
+
+    Bildet den Fall ab, den die Anwendung durch ihren einen erlaubten
+    Wiederholungsversuch auffängt: Der Erstaufruf wird verworfen, der zweite
+    liefert eine gültige Antwort.
+    """
+
+    def __init__(self, settings: Settings) -> None:
+        super().__init__(settings)
+        self.failed_once: set[str] = set()
+        self.retry_diagnostics: list[Any] = []
+
+    async def formulate_answer(self, *, evidence: Any, **kwargs: Any) -> ProviderAnswer:
+        if "retry_diagnostic" in kwargs:
+            self.retry_diagnostics.append(kwargs["retry_diagnostic"])
+        key = evidence.current_query
+        if key not in self.failed_once:
+            self.failed_once.add(key)
+            self.formulator_calls += 1
+            raise FormulatorError(
+                "formulator_ungrounded_claim",
+                diagnostic_code=GroundingDiagnosticCode.SERVICE_FACT_MISSING,
+            )
+        return await super().formulate_answer(evidence=evidence, **kwargs)
+
+
+def test_stage_two_measures_the_application_retry_not_a_bare_first_call(tmp_path: Path) -> None:
+    """Das Gate muss den Pfad messen, den die Anwendung tatsächlich fährt.
+
+    Vor dieser Änderung rief die Stufe ``provider.formulate_answer`` direkt auf
+    und zählte einen Erstaufruf-Fehlschlag als technischen Fehler, obwohl die
+    Anwendung ihn mit ihrem einen erlaubten Wiederholungsversuch auffängt.
+    """
+    settings = _settings(tmp_path)
+    plan = load_live_scenario_catalog().plan(EvaluationStage.SELECTOR_FORMULATOR)
+
+    result = asyncio.run(
+        run_selector_formulator_live_gate(
+            settings, plan.live_limits, provider_factory=RetryRecoveringFormulatorProvider
+        )
+    )
+
+    assert result["status"] == "completed"
+    assert result["counts"]["failures"] == 0
+    assert result["contract_gate_passed"] is True
+    # Zehn Szenarien, je ein verworfener Erstaufruf und ein gültiger zweiter.
+    assert result["counts"]["formulator_calls"] == 20
+    assert result["counts"]["requests"] == 16
+
+
+def test_stage_two_budget_allows_one_retry_per_formulator_scenario() -> None:
+    """Das erklärte Aufrufbudget muss den Wiederholungsversuch abdecken."""
+    plan = load_live_scenario_catalog().plan(EvaluationStage.SELECTOR_FORMULATOR)
+
+    assert plan.minimum_calls.formulator == 10
+    assert plan.maximum_calls.formulator == 20
+    assert plan.live_limits.max_formulator_calls == 20
+    assert plan.live_limits.max_provider_calls == plan.maximum_calls.total == 26
+
+
+def test_run_manifest_names_the_formulator_measurement_mode(tmp_path: Path) -> None:
+    """Berichte beider Messarten dürfen nicht verwechselbar sein."""
+    settings = _settings(tmp_path)
+    plan = load_live_scenario_catalog().plan(EvaluationStage.SELECTOR_FORMULATOR)
+
+    result = asyncio.run(
+        run_selector_formulator_live_gate(
+            settings, plan.live_limits, provider_factory=FakeSelectorFormulatorProvider
+        )
+    )
+
+    manifest = json.loads(
+        (settings.runtime_dir / result["report_directory"] / "manifest.json").read_text(encoding="utf-8")
+    )
+    assert manifest["formulator_measurement_mode"] == "application_path_with_bounded_retry"

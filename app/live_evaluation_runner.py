@@ -49,8 +49,9 @@ from .live_evaluation_runtime import (
     LimitedEvaluationProvider,
     new_run_id,
 )
+from .llm_budget import LLMRequestBudget
 from .llm_selection import SelectorError
-from .models import Language, OfferRecord, QueryRequest, QueryResponse
+from .models import Language, OfferRecord, QueryInteraction, QueryRequest, QueryResponse
 from .providers.llm import BlabladorProvider, InterpreterError
 from .service import QueryService
 from .translation_contract import TranslationRuntimePolicy
@@ -398,9 +399,12 @@ async def run_selector_formulator_live_gate(
     content_mismatches = 0
     critical_content_errors = 0
     current_scenario_id = "run"
+    scratch = tempfile.TemporaryDirectory(prefix="lena-live-eval-stage2-")
 
     try:
-        provider = LimitedEvaluationProvider(provider_factory(settings), counter)
+        service, provider = await _build_isolated_service(
+            settings, Path(scratch.name), provider_factory, counter
+        )
         if _provider_identity(provider) != expected_identity:
             raise EvaluationLimitReached("live_evaluation_provider_identity_mismatch")
 
@@ -415,11 +419,12 @@ async def run_selector_formulator_live_gate(
             else:
                 result = await _run_formulator_scenario(
                     scenario,
-                    provider,
+                    service,
                     by_id,
                     counter,
                     translation_catalog=translation_catalog,
                     translation_policy=translation_policy,
+                    clock=clock,
                 )
             result["duration_ms"] = round((clock() - started) * 1_000, 2)
             content_mismatches += bool(result["content_mismatches"])
@@ -444,6 +449,8 @@ async def run_selector_formulator_live_gate(
         status = "aborted"
         abort_reason = "live_evaluation_unexpected_runtime_error"
         store.append_error(scenario_id=current_scenario_id, code=abort_reason)
+    finally:
+        scratch.cleanup()
 
     counts = counter.snapshot()
     contract_gate_passed = (
@@ -533,13 +540,27 @@ async def _run_selector_scenario(
 
 async def _run_formulator_scenario(
     scenario: LiveScenario,
-    provider: Any,
+    service: QueryService,
     by_id: dict[str, OfferRecord],
     counter: AtomicRunCounter,
     *,
     translation_catalog: TranslationCatalog,
     translation_policy: TranslationRuntimePolicy,
+    clock: Callable[[], float],
 ) -> dict[str, Any]:
+    """Misst den Formulatorpfad der Anwendung, einschliesslich ihres Retrys.
+
+    Der frühere direkte Aufruf von ``provider.formulate_answer`` mass einen
+    unwiederholten Erstaufruf, den die Anwendung so nie ausführt: Jede Anfrage
+    läuft über ``QueryService._call_formulator`` mit
+    ``FORMULATOR_MAX_ATTEMPTS`` und übergibt einem zweiten Versuch die
+    geschlossene Groundingdiagnose als Korrekturhinweis.
+
+    Die Retry-Schleife wird bewusst nicht nachgebaut, sondern genau die der
+    Anwendung aufgerufen; eine Kopie würde mit der Zeit abweichen und dann
+    nicht mehr die Anwendung messen. Jedes Szenario erhält ein eigenes
+    Anfragebudget, weil es einer einzelnen Nutzeranfrage entspricht.
+    """
     offers = [by_id[offer_id] for offer_id in scenario.fixture["offer_ids"]]
     answer_type = AnswerType(scenario.fixture["answer_type"])
     roles = {
@@ -567,8 +588,14 @@ async def _run_formulator_scenario(
         "synthetic_input": scenario.synthetic_inputs[0],
         "linguistic_review_pending": True,
     }
+    provider = service.blablador
     try:
-        answer = await provider.formulate_answer(evidence=evidence)
+        answer = await service._call_formulator(
+            provider.formulate_answer,
+            evidence=evidence,
+            budget=LLMRequestBudget(service.settings.llm_request_budget_seconds, clock),
+            interaction=QueryInteraction(),
+        )
     except FormulatorError as exc:
         failed = {
             **base,
