@@ -751,11 +751,26 @@ async def _run_e2e_scenario(
                     "contract_violation", "invalid_id", "invalid_fact", "invalid_card",
                     "invalid_language", "ungrounded_claim", "unavailable", "budget_exhausted",
                 )}
+                # Ein erholter Wiederholungsversuch und ein endgueltiger
+                # Rueckfall hinterlassen denselben Fehlercode. Unterschieden
+                # werden sie allein ueber das Fallback-Flag der Stufe: bei
+                # Erholung kehrt der Anwendungspfad frueh mit der regulaeren
+                # Antwort zurueck und laesst das Flag unberuehrt. Der
+                # Interpreter kennt keinen Wiederholungsversuch und faellt
+                # fail-closed aus, gilt also nie als erholt.
+                fallback_used = bool(
+                    getattr(response.interaction, f"{stage}_fallback_used", True)
+                )
                 stage_errors.append({
                     "turn": turn_index + 1,
                     "stage": stage,
                     "error_code": code if code in safe_codes else "unclassified_stage_error",
                     "response_type": response.answer_type,
+                    "fallback_used": fallback_used,
+                    # Erholt heisst: die Stufe ist nicht zurueckgefallen UND die
+                    # ausgelieferte Antwort stammt nicht aus der Vorlage.
+                    "recovered": not fallback_used and response.provider != "template",
+                    "answer_provider": response.provider,
                 })
         technically_valid = technically_valid and not bool(
             response.interaction.interpreter_error_code

@@ -577,6 +577,21 @@ Modus tragen deshalb im Manifest
 `formulator_measurement_mode = "application_path_with_bounded_retry"`; ältere
 Berichte tragen das Feld nicht.
 
+Die End-to-End-Ergebnisse führen je Stufenfehler zusätzlich `fallback_used`,
+`recovered` und `answer_provider`. Hintergrund: `QueryService._call_formulator()`
+setzt `formulator_error_code` beim ersten verworfenen Versuch und löscht ihn bei
+einer erfolgreichen Wiederholung nicht. Ein erholter Wiederholungsversuch und
+ein endgültiger Rückfall hinterlassen deshalb denselben Code. Unterschieden
+werden sie über das Fallback-Flag der Stufe und den Anbieter der ausgelieferten
+Antwort: `recovered` ist nur wahr, wenn die Stufe nicht zurückgefallen ist und
+die Antwort nicht aus der Vorlage stammt. Der Interpreter kennt keinen
+Wiederholungsversuch und fällt fail-closed aus; er gilt nie als erholt.
+
+Diese Felder sind eine **Messung, kein Kriterium**: `technically_valid` und
+beide Gates bleiben unverändert, ein erholter Wiederholungsversuch zählt
+weiterhin als technischer Fehler. Ob das so bleiben soll, ist eine getrennte
+Entscheidung, die erst auf Basis dieser Messung getroffen werden kann.
+
 Das Gatekriterium selbst bleibt unverändert: null technische Fehler. Die
 Änderung macht das Gate nicht leichter bestehbar, sondern lässt es das richtige
 Verhalten messen; es kann weiterhin scheitern. Es wird keine Folgestufe

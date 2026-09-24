@@ -1380,6 +1380,9 @@ def test_e2e_technical_failure_in_first_turn_is_not_hidden_by_successful_followu
     assert result["stage_errors"] == [{
         "turn": 1, "stage": "interpreter", "error_code": "interpreter_timeout",
         "response_type": "technical_fallback",
+        # Der Interpreter kennt keinen Wiederholungsversuch und faellt
+        # fail-closed aus; er gilt deshalb nie als erholt.
+        "fallback_used": True, "recovered": False, "answer_provider": "template",
     }]
     assert counter.snapshot()["requests"] == 2
     assert counter.snapshot()["provider_calls"] == 0
@@ -1400,8 +1403,12 @@ def test_e2e_stage_diagnostics_do_not_leak_arbitrary_error_text() -> None:
     assert result["technically_valid"] is False
     assert result["response_type"] == "grounded_result"
     assert result["stage_errors"] == [
-        {"turn": 1, "stage": "selector", "error_code": "unclassified_stage_error", "response_type": "grounded_result"},
-        {"turn": 1, "stage": "formulator", "error_code": "formulator_ungrounded_claim", "response_type": "grounded_result"},
+        {"turn": 1, "stage": "selector", "error_code": "unclassified_stage_error",
+         "response_type": "grounded_result", "fallback_used": False, "recovered": False,
+         "answer_provider": "template"},
+        {"turn": 1, "stage": "formulator", "error_code": "formulator_ungrounded_claim",
+         "response_type": "grounded_result", "fallback_used": False, "recovered": False,
+         "answer_provider": "template"},
     ]
     assert "secret" not in json.dumps(result)
 
@@ -1519,3 +1526,109 @@ def test_run_manifest_names_the_formulator_measurement_mode(tmp_path: Path) -> N
         (settings.runtime_dir / result["report_directory"] / "manifest.json").read_text(encoding="utf-8")
     )
     assert manifest["formulator_measurement_mode"] == "application_path_with_bounded_retry"
+
+
+class _RetryOnceFullPipelineProvider(FakeFullPipelineProvider):
+    """Verwirft je Evidence-Paket genau den Erstaufruf des Formulators."""
+
+    def __init__(self, settings: Settings) -> None:
+        super().__init__(settings)
+        self.rejected_once: set[str] = set()
+
+    async def formulate_answer(self, *, evidence: Any, **kwargs: Any) -> ProviderAnswer:
+        key = evidence.current_query
+        if key not in self.rejected_once:
+            self.rejected_once.add(key)
+            raise FormulatorError(
+                "formulator_ungrounded_claim",
+                diagnostic_code=GroundingDiagnosticCode.SERVICE_FACT_MISSING,
+            )
+        return await super().formulate_answer(evidence=evidence, **kwargs)
+
+
+class _AlwaysRejectingFullPipelineProvider(FakeFullPipelineProvider):
+    """Verwirft jeden Formulatoraufruf, erzwingt also den Templatefallback."""
+
+    async def formulate_answer(self, *, evidence: Any, **_kwargs: Any) -> ProviderAnswer:
+        raise FormulatorError(
+            "formulator_ungrounded_claim",
+            diagnostic_code=GroundingDiagnosticCode.SERVICE_FACT_MISSING,
+        )
+
+
+def _stage_errors(settings: Settings, result: dict[str, Any]) -> list[dict[str, Any]]:
+    report = settings.runtime_dir / result["report_directory"]
+    rows = [
+        json.loads(line)
+        for line in (report / "stage-results.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    return [error for row in rows for error in row.get("stage_errors", [])]
+
+
+def test_end_to_end_report_marks_a_recovered_retry_as_recovered(tmp_path: Path) -> None:
+    """Ein erholter Wiederholungsversuch muss von einem Rückfall unterscheidbar sein.
+
+    ``formulator_error_code`` bleibt nach einer erfolgreichen Wiederholung
+    gesetzt. Ohne das Fallback-Flag sähe dieser Fall im Bericht genauso aus wie
+    ein endgültig verworfener Aufruf.
+    """
+    settings = _settings(tmp_path)
+    plan = load_live_scenario_catalog().plan(EvaluationStage.END_TO_END)
+
+    result = asyncio.run(
+        run_end_to_end_live_gate(
+            settings, plan.live_limits, provider_factory=_RetryOnceFullPipelineProvider
+        )
+    )
+
+    formulator_errors = [e for e in _stage_errors(settings, result) if e["stage"] == "formulator"]
+    assert formulator_errors, "der Erstaufruf muss einen Fehlercode hinterlassen"
+    assert all(e["recovered"] is True for e in formulator_errors)
+    assert all(e["fallback_used"] is False for e in formulator_errors)
+    assert all(e["answer_provider"] == "blablador" for e in formulator_errors)
+
+
+def test_end_to_end_report_marks_a_final_rejection_as_fallback(tmp_path: Path) -> None:
+    """Der endgültig verworfene Aufruf bleibt als Rückfall erkennbar."""
+    settings = _settings(tmp_path)
+    plan = load_live_scenario_catalog().plan(EvaluationStage.END_TO_END)
+
+    result = asyncio.run(
+        run_end_to_end_live_gate(
+            settings, plan.live_limits, provider_factory=_AlwaysRejectingFullPipelineProvider
+        )
+    )
+
+    formulator_errors = [e for e in _stage_errors(settings, result) if e["stage"] == "formulator"]
+    assert formulator_errors
+    assert all(e["recovered"] is False for e in formulator_errors)
+    assert all(e["fallback_used"] is True for e in formulator_errors)
+    assert all(e["answer_provider"] == "template" for e in formulator_errors)
+
+
+def test_recovery_reporting_does_not_change_the_failure_criterion(tmp_path: Path) -> None:
+    """Diese Messung darf das Gatekriterium nicht verschieben.
+
+    Ein erholter Wiederholungsversuch zählt weiterhin als technischer Fehler.
+    Ob das so bleiben soll, ist eine getrennte, danach zu treffende Entscheidung.
+    """
+    settings = _settings(tmp_path)
+    plan = load_live_scenario_catalog().plan(EvaluationStage.END_TO_END)
+
+    result = asyncio.run(
+        run_end_to_end_live_gate(
+            settings, plan.live_limits, provider_factory=_RetryOnceFullPipelineProvider
+        )
+    )
+
+    report = settings.runtime_dir / result["report_directory"]
+    rows = [
+        json.loads(line)
+        for line in (report / "stage-results.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    recovered_rows = [
+        row for row in rows
+        if any(e["stage"] == "formulator" and e["recovered"] for e in row.get("stage_errors", []))
+    ]
+    assert recovered_rows, "Testaufbau muss mindestens einen erholten Fall erzeugen"
+    assert all(row["technically_valid"] is False for row in recovered_rows)
