@@ -1632,3 +1632,65 @@ def test_recovery_reporting_does_not_change_the_failure_criterion(tmp_path: Path
     ]
     assert recovered_rows, "Testaufbau muss mindestens einen erholten Fall erzeugen"
     assert all(row["technically_valid"] is False for row in recovered_rows)
+
+
+def test_end_to_end_report_captures_rejected_formulations_with_their_cause(tmp_path: Path) -> None:
+    """Die Ursache eines Rückfalls muss aus dem Bericht benennbar sein.
+
+    ``QueryService`` behandelt ``FormulatorError`` intern und liefert die
+    Vorlage; ohne Erfassung auf der Evaluationsgrenze belegt der Bericht nur,
+    dass verworfen wurde, nicht weshalb.
+    """
+    settings = _settings(tmp_path)
+    plan = load_live_scenario_catalog().plan(EvaluationStage.END_TO_END)
+
+    result = asyncio.run(
+        run_end_to_end_live_gate(
+            settings, plan.live_limits, provider_factory=_AlwaysRejectingFullPipelineProvider
+        )
+    )
+
+    report = settings.runtime_dir / result["report_directory"]
+    rows = [
+        json.loads(line)
+        for line in (report / "stage-results.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    rejections = [r for row in rows for r in row.get("formulator_rejections", [])]
+    assert rejections, "verworfene Formulierungen müssen erfasst werden"
+    assert all(r["error_code"] == "formulator_ungrounded_claim" for r in rejections)
+    assert all(r["grounding_diagnostic_code"] == "service_fact_missing" for r in rejections)
+    # Der Wiederholungsversuch ist ein zweiter Aufruf durch dieselbe Grenze.
+    assert any(r["attempt"] == 2 for r in rejections)
+    assert all(r["turn"] >= 1 for r in rejections)
+
+
+def test_captured_rejections_stay_closed_and_scenario_bound(tmp_path: Path) -> None:
+    """Der Bericht darf keinen freien Providertext aufnehmen, und jede
+
+    Verwerfung muss dem Szenario gehören, das sie erzeugt hat.
+    """
+    settings = _settings(tmp_path)
+    plan = load_live_scenario_catalog().plan(EvaluationStage.END_TO_END)
+
+    result = asyncio.run(
+        run_end_to_end_live_gate(
+            settings, plan.live_limits, provider_factory=_RetryOnceFullPipelineProvider
+        )
+    )
+
+    report = settings.runtime_dir / result["report_directory"]
+    rows = [
+        json.loads(line)
+        for line in (report / "stage-results.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    allowed = {"turn", "attempt", "error_code", "grounding_diagnostic_code",
+               "rejected_structured_output"}
+    for row in rows:
+        for rejection in row.get("formulator_rejections", []):
+            assert set(rejection) <= allowed, "nur geschlossene Felder im Bericht"
+    # Ein Provider, der je Evidence-Paket nur den Erstaufruf verwirft, darf pro
+    # Szenario keine fremden Verwerfungen einsammeln.
+    assert all(
+        all(r["attempt"] == 1 for r in row.get("formulator_rejections", []))
+        for row in rows
+    )

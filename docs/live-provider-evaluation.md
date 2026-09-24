@@ -587,6 +587,15 @@ Antwort: `recovered` ist nur wahr, wenn die Stufe nicht zurückgefallen ist und
 die Antwort nicht aus der Vorlage stammt. Der Interpreter kennt keinen
 Wiederholungsversuch und fällt fail-closed aus; er gilt nie als erholt.
 
+Zusätzlich führt jeder End-to-End-Ergebnissatz `formulator_rejections`: je
+verworfener Formulierung Turn, Versuchsnummer, Fehlercode, Groundingdiagnose und
+die bereits schemavalidierte Modellantwort. Erfasst wird auf der
+Evaluationsgrenze `LimitedEvaluationProvider.formulate_answer()`, weil
+`QueryService` den Fehler intern behandelt und die Vorlage ausliefert; der
+Wiederholungsversuch erscheint dort als zweiter Versuch. Der Inhalt entspricht
+dem, was Stufe 2 mit `rejected_structured_output` ohnehin sichert; freier
+Providertext gelangt nicht in den Bericht.
+
 Diese Felder sind eine **Messung, kein Kriterium**: `technically_valid` und
 beide Gates bleiben unverändert, ein erholter Wiederholungsversuch zählt
 weiterhin als technischer Fehler. Ob das so bleiben soll, ist eine getrennte

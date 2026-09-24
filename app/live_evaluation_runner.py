@@ -733,6 +733,14 @@ async def _run_e2e_scenario(
     dialogue_opened = False
     technically_valid = True
     stage_errors: list[dict[str, Any]] = []
+    # Verworfene Formulierungen werden auf der Evaluationsgrenze erfasst, weil
+    # QueryService sie intern behandelt. Der Puffer wird je Szenario geleert,
+    # damit jede Verwerfung ihrem Szenario und Turn zugeordnet bleibt.
+    rejection_buffer: list[dict[str, Any]] = getattr(
+        getattr(service, "blablador", None), "formulator_rejections", []
+    )
+    rejection_buffer.clear()
+    formulator_rejections: list[dict[str, Any]] = []
     started = clock()
     for turn_index, text in enumerate(scenario.synthetic_inputs):
         counter.reserve_request()
@@ -772,6 +780,9 @@ async def _run_e2e_scenario(
                     "recovered": not fallback_used and response.provider != "template",
                     "answer_provider": response.provider,
                 })
+        for attempt, rejection in enumerate(rejection_buffer, start=1):
+            formulator_rejections.append({"turn": turn_index + 1, "attempt": attempt, **rejection})
+        rejection_buffer.clear()
         technically_valid = technically_valid and not bool(
             response.interaction.interpreter_error_code
             or response.interaction.selector_error_code
@@ -795,6 +806,7 @@ async def _run_e2e_scenario(
         "content_mismatches": mismatches,
         "unverified_metrics": unverified,
         "critical_content_error": critical,
+        "formulator_rejections": formulator_rejections,
         "technically_valid": technically_valid,
         "stage_errors": stage_errors,
         "linguistic_review_pending": True,

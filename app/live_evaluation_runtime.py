@@ -11,7 +11,7 @@ from pathlib import Path
 from time import monotonic, sleep
 from typing import Any
 
-from .formulation import GroundingDiagnosticCode
+from .formulation import FormulatorError, GroundingDiagnosticCode
 from .live_evaluation import (
     LIVE_REPORT_SUBDIRECTORY,
     RUN_ID_RE,
@@ -101,6 +101,12 @@ class LimitedEvaluationProvider:
     def __init__(self, provider: Any, counter: AtomicRunCounter) -> None:
         self.provider = provider
         self.counter = counter
+        # Verworfene Formulierungen der End-to-End-Stufe. Dort behandelt
+        # ``QueryService`` den Fehler intern und liefert die Vorlage, sodass der
+        # Runner ihn nie sieht. Diese Grenze liegt davor und erfasst auch den
+        # Wiederholungsversuch, weil er ein zweiter Aufruf durch dieselbe
+        # Grenze ist. Der Inhalt entspricht dem, was Stufe 2 ohnehin sichert.
+        self.formulator_rejections: list[dict[str, Any]] = []
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self.provider, name)
@@ -123,7 +129,21 @@ class LimitedEvaluationProvider:
         return await self._call(EvaluationComponent.SELECTOR, "select_candidates", **kwargs)
 
     async def formulate_answer(self, **kwargs: Any) -> Any:
-        return await self._call(EvaluationComponent.FORMULATOR, "formulate_answer", **kwargs)
+        try:
+            return await self._call(EvaluationComponent.FORMULATOR, "formulate_answer", **kwargs)
+        except FormulatorError as exc:
+            self.formulator_rejections.append({
+                "error_code": exc.code,
+                "grounding_diagnostic_code": (
+                    exc.diagnostic_code.value if exc.diagnostic_code is not None else None
+                ),
+                "rejected_structured_output": (
+                    exc.rejected_response.model_dump(mode="json")
+                    if exc.rejected_response is not None
+                    else None
+                ),
+            })
+            raise
 
 
 def new_run_id() -> str:
