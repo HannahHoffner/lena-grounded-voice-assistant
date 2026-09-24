@@ -794,6 +794,15 @@ class QueryService:
         }:
             interpretation = interpretation.model_copy(update={"need": Need.GENERAL_HELP})
 
+        # Ein Schlafsack ist eine Sachleistung, kein Schlafplatz. Der Interpreter-
+        # Vertrag bildet ihn als clothing ab; bei widersprüchlichem `sleep` bleibt
+        # ein ausdrücklich mitgenannter Übernachtungswunsch jedoch erhalten.
+        if (
+            interpretation.need == Need.SLEEP
+            and set(interpretation.explicit_service_requests) == {RequestedService.CLOTHING}
+        ):
+            interpretation = interpretation.model_copy(update={"need": Need.GENERAL_HELP})
+
         if active_dialog and is_clear_topic_change(interpretation, active_dialog):
             interaction.dialog_type = active_dialog.dialog_type.value
             interaction.dialog_result_status = "topic_changed"

@@ -192,13 +192,15 @@ def test_adult_sleep_does_not_activate_youth_offers_and_vague_age_stays_unknown(
     assert ids(young)[0] == "7"
 
 
-def test_woman_sleep_uses_scharni_only_when_adult_and_keeps_curated_geometry_state() -> None:
+def test_woman_sleep_uses_scharni_only_when_adult_and_uses_current_curated_geometry() -> None:
     adult = decide(interpretation(Need.SLEEP, age=30, gender="female"))
     assert ids(adult) == ["8"]
     scharni = next(offer for offer in OFFERS if offer.id == "8")
     assert scharni.address == "Georg-Schumann-Str. 268, 04159 Leipzig"
-    assert scharni.geometry is None
-    assert scharni.coordinates_status == "not_verified_after_address_change"
+    map_data = build_map_data([scharni], language=Language.DE)
+    assert map_data is not None
+    assert [item.id for item in map_data.destinations] == ["8"]
+    assert scharni.coordinates_status == "verified_from_open_geodata"
     minor = decide(interpretation(Need.SLEEP, age=17, gender="female"))
     assert "8" not in ids(minor) + conditional_ids(minor)
 
@@ -430,6 +432,16 @@ def test_hilfebus_is_nonspatial_referral_contact_outside_documented_mobile_hours
     assert hilfebus.role == CandidateRole.REFERRAL_CONTACT
     offer = next(offer for offer in OFFERS if offer.id == hilfebus.offer_id)
     assert build_map_data([offer], language=Language.DE, service=Need.GENERAL_HELP.value) is None
+
+
+def test_sleeping_bag_supply_routes_to_hilfebus_not_sleep_accommodation() -> None:
+    value = interpretation(Need.GENERAL_HELP, services=[RequestedService.CLOTHING])
+    decision = decide(value, query="Wo bekomme ich einen Schlafsack?")
+
+    assert decision.need == Need.GENERAL_HELP
+    assert decision.mandatory_candidates[0].offer_id == "21"
+    assert decision.mandatory_candidates[0].role == CandidateRole.REFERRAL_CONTACT
+    assert "8" not in ids(decision) + conditional_ids(decision)
 
 
 def test_food_need_ignores_age_restriction_even_when_offer_requires_adults() -> None:

@@ -381,9 +381,10 @@
         "wfs_legacy_release",
         "methodology_chapter",
         "scharni_website",
-        "scharni_imprint"
+        "scharni_imprint",
+        "scharni_openstreetmap_building"
       ],
-      "coordinates_status": "not_verified_after_address_change",
+      "coordinates_status": "verified_from_open_geodata",
       "runtime_overrides": {
         "short_description": "Notunterkunft für alleinstehende volljährige Frauen in akuter unfreiwilliger Obdachlosigkeit.",
         "district": null,
@@ -408,7 +409,11 @@
         "notes": [
           "Das Angebot richtet sich an alleinstehende volljährige wohnungslose Frauen."
         ],
-        "geometry": null
+        "geometry": {
+          "type": "Point",
+          "coordinates": [12.3344604, 51.3711432],
+          "crs": "urn:ogc:def:crs:OGC::CRS84"
+        }
       }
     },
     {
@@ -1168,6 +1173,13 @@
       "retrieved_at": "2026-08-01"
     },
     {
+      "id": "scharni_openstreetmap_building",
+      "source_type": "open_geodata",
+      "title": "OpenStreetMap-Gebäudeumriss Georg-Schumann-Straße 268 (Way 206151027)",
+      "url": "https://www.openstreetmap.org/way/206151027",
+      "retrieved_at": "2026-09-24"
+    },
+    {
       "id": "vkkj_youth_night_shelter_web",
       "source_type": "official_website",
       "title": "Kontakt- und Notschlafstelle für Jugendliche",
@@ -1381,10 +1393,11 @@
       "affected_source_ids": [
         "8"
       ],
-      "reason": "Die offizielle Betreiberwebsite belegt die neue Anschrift und Kontaktdaten; die Übernahme wurde von der Forscherin nach Rücksprache mit dem SAFE-Team des Suchtzentrums Leipzig freigegeben. Die unveränderte alte WFS-Adresse bleibt als Quellenwert erhalten.",
+      "reason": "Die offizielle Betreiberwebsite belegt die neue Anschrift und Kontaktdaten; der Punkt ist der Schwerpunkt des adressgleichen OpenStreetMap-Gebäudeumrisses Way 206151027. Die Übernahme wurde von der Forscherin nach Rücksprache mit dem SAFE-Team des Suchtzentrums Leipzig freigegeben. Die unveränderte alte WFS-Adresse und -Geometrie bleiben als Quellenwerte erhalten.",
       "source_reference_ids": [
         "scharni_website",
         "scharni_imprint",
+        "scharni_openstreetmap_building",
         "wfs_legacy_release"
       ],
       "review_status": "reviewed_for_prototype",

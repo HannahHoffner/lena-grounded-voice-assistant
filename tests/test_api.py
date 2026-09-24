@@ -1137,6 +1137,56 @@ def test_explicit_womens_sleep_selects_only_verified_scharni_offer() -> None:
 
     ids = [card["id"] for card in body["cards"]]
     assert ids == ["8"]
+    assert body["map_marker_ids"] == ["8"]
+    assert body["map_data"]["destinations"][0]["address"] == "Georg-Schumann-Str. 268, 04159 Leipzig"
+
+
+def test_sleeping_bag_only_corrects_sleep_classification_and_prioritizes_hilfebus() -> None:
+    app = create_app(settings())
+
+    class ContradictoryProvider:
+        async def interpret_query(self, **kwargs) -> QueryInterpretation:
+            return _interpretation(Need.SLEEP, services=[RequestedService.CLOTHING])
+
+        def context_fits(self, _evidence) -> bool:
+            return False
+
+    app.state.service.blablador = ContradictoryProvider()
+    body = TestClient(app).post(
+        "/api/query",
+        json={"query": "Wo bekomme ich einen Schlafsack?", "language": "de"},
+    ).json()
+
+    assert body["clarification"] is None
+    assert body["cards"][0]["id"] == "21"
+    assert "Schlafsäcke" in " ".join(body["cards"][0]["services"])
+    assert "8" not in [card["id"] for card in body["cards"]]
+    assert not any(marker_id.startswith("21") for marker_id in body["map_marker_ids"])
+
+
+def test_combined_sleep_place_and_clothing_request_remains_sleep_routing() -> None:
+    app = create_app(settings())
+
+    class CombinedProvider:
+        async def interpret_query(self, **kwargs) -> QueryInterpretation:
+            return _interpretation(
+                Need.SLEEP,
+                facts={"age": 30, "gender": "female"},
+                services=[RequestedService.OVERNIGHT_STAY, RequestedService.CLOTHING],
+            )
+
+        def context_fits(self, _evidence) -> bool:
+            return False
+
+    app.state.service.blablador = CombinedProvider()
+    body = TestClient(app).post(
+        "/api/query",
+        json={"query": "Ich brauche einen Schlafplatz und warme Kleidung.", "language": "de"},
+    ).json()
+
+    assert body["clarification"] is None
+    assert body["cards"][0]["id"] == "8"
+    assert body["map_marker_ids"] == ["8"]
 
 
 def test_context_size_guard_is_applied_per_evidence_package() -> None:

@@ -15,7 +15,7 @@ from .models import Category, ChatTurn, Language, OfferRecord
 
 
 INTERPRETER_CONTRACT_VERSION = "4"
-INTERPRETER_PROMPT_VERSION = "9"
+INTERPRETER_PROMPT_VERSION = "10"
 MAX_INTERPRETER_INPUT_CHARS = 2_000
 MAX_INTERPRETER_RESPONSE_CHARS = 8_000
 MAX_INTERPRETER_CONTEXT_TURNS = 4
@@ -50,6 +50,8 @@ Classify need as food, drinking_water, sleep, medical, advice, toilet, general_h
 List explicitly requested services separately in explicit_service_requests, using only overnight_stay, food, drinking_water, hygiene, shower, laundry, clothing, postal, medical_care, wound_care, counselling, day_stay, contact, youth_support, or protection. youth_support requires an explicit request for a youth service, youth centre, youth streetwork, or a named youth organization; a numeric age alone never establishes youth_support. protection requires an explicit request for a protected place, immediate youth welfare support, or help because the person cannot safely return home. Include a service only when the user explicitly asks for it; do not expand food into hygiene or infer a service from an unrelated institution alias. Keep the broader need and the concrete service distinct.
 
 Toilet means an explicitly requested toilet/WC, not washing, hygiene, a shower, or laundry. A shower-only request (for example "Wo kann ich duschen?") is need=general_help with explicit_service_requests=["shower"]. A correction such as "Ich suche keine Toilette, Dusche" has the same meaning: ignore the negated toilet request. Likewise classify standalone washing/hygiene or laundry requests as general_help with their exact explicitly requested service. A concrete service is already a resolved need, not an unspecified request for help.
+
+A sleeping bag is a material basic-supply/clothing request, not a request for a place to sleep. For a sleeping-bag-only request use need=general_help and explicit_service_requests=["clothing"], never sleep or overnight_stay. If the person explicitly asks for both a sleeping bag and overnight accommodation, include clothing and overnight_stay and keep need=sleep.
 
 Record only facts explicitly stated about the person who needs help. Never infer age, gender, drug use, or social-benefit entitlement from names, language, writing style, an institution, or earlier offers. Use unknown or null when absent. Put tentative implications only in uncertain_hints. Do not infer a missing benefit entitlement from having no money. The newest explicit correction wins. On a clear topic change, do not carry unrelated constraints forward. A language change alone does not erase still-relevant explicit context.
 

@@ -30,7 +30,7 @@
       "scenario_id": "sleep_woman_27",
       "synthetic_inputs": {"de": "Ich bin eine 27-jährige Frau und brauche einen Schlafplatz.", "en": "I am a 27-year-old woman and need a place to sleep.", "pl": "Jestem 27-letnią kobietą i potrzebuję noclegu.", "ro": "Sunt femeie, am 27 de ani și am nevoie de un loc de dormit.", "ru": "Я женщина, мне 27 лет, и мне нужен ночлег."},
       "expected_need": "sleep", "expected_candidate_roles": ["direct_service"], "expected_offer_ids": ["8"], "expected_answer_type": "grounded_result",
-      "forbidden_claims": ["old_scharni_address", "map_marker"], "required_facts": ["Scharni", "Georg-Schumann-Str. 268"]
+      "forbidden_claims": ["old_scharni_address"], "required_facts": ["Scharni", "Georg-Schumann-Str. 268", "map_marker"]
     },
     {
       "scenario_id": "schoppi_sleep",

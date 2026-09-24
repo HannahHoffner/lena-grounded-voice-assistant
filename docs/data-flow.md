@@ -235,6 +235,12 @@ Werden die beiden VKKJ-Angebote final ausgegeben, entstehen ihre Marker aus den
 hashgebundenen WGS84-Koordinaten der offiziellen Betreiberseiten. Anschrift und
 Punkt bleiben dadurch derselben verifizierten Quelle zugeordnet.
 
+Scharni verwendet ebenfalls ausschließlich die kuratierte aktuelle Anschrift.
+Der zugehörige CRS84-Punkt ist der Schwerpunkt des adressgleichen
+OpenStreetMap-Gebäudeumrisses und besitzt eine eigene Quellenreferenz. Die alte
+WFS-Geometrie der früheren Anschrift bleibt nur im unveränderten Quelldatensatz
+erhalten und gelangt nicht in die Kartenprojektion.
+
 Die Ergebnisliste im Frontend verbindet die vollständigen validierten
 `map_data.destinations` mit final ausgewählten `cards`, für die keine
 verifizierte Geometrie vorliegt. Dadurch bleibt beispielsweise der Hilfebus bei
@@ -271,11 +277,19 @@ Fallbacks, siehe Fundstellen in `app/service.py`).
 ## Öffentliche Toiletten und räumliche Ergebnisordnung
 
 Duschen, allgemeine Hygiene und Wäschewaschen sind keine Toilettenanfragen.
-Interpreterprompt 9 ordnet solche alleinigen Anfragen `general_help` mit der
+Interpreterprompt 10 ordnet solche alleinigen Anfragen `general_help` mit der
 konkreten Leistung zu. Widerspricht ein `toilet`-Bedarf einer gleichzeitig
 ausdrücklich erkannten Waschleistung, hat diese vor der Infrastrukturroute
 Vorrang. Konkrete Leistungen lösen keine erneute allgemeine Bedarfsfrage aus.
 Angebote müssen weiterhin in der kuratierten Wissensbasis belegt sein.
+
+Ein allein verlangter Schlafsack ist entsprechend eine Sachleistung:
+`general_help` mit `clothing`, nicht `sleep` oder `overnight_stay`. Liefert der
+Interpreter dennoch die widersprüchliche Kombination `sleep` plus ausschließlich
+`clothing`, korrigiert `QueryService` sie vor der Kandidatenauswahl. Ein
+ausdrücklich gemeinsam verlangter Schlafplatz bleibt dagegen im Schlafpfad. Der
+bereits kuratierte Hilfebus-Verweis nennt Schlafsäcke in seinem Leistungsumfang,
+bleibt außerhalb seines belegten Sonntagsstands aber ohne Marker.
 
 `app.toilet_sync fetch` lädt die amtliche CSV mit getrennten Connect-/Read-
 Timeouts. `app.infrastructure` prüft UTF-8/BOM, Pflichtspalten, IDs, Kosten,

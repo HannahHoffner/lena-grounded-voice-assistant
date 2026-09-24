@@ -42,7 +42,7 @@ oder Barrierefreiheitsnachweis. Für den manuellen Übergang gilt die
 | `tests/test_dialogue.py` | Dialogvertrag, Schlafmatrix, A1/Schoppi, Mobile/Kübel, Hilfebus, Buttons, Text/STT, Sprache/Thema, Fehler, Replay, TTL, Datenschutz und I18n-Status |
 | `tests/test_dialogue_frontend.py` | semantische Buttons, unsichtbare technische Werte, Doppelklickschutz und Sprachwechselbindung |
 | `tests/test_kb_loader.py` | Markdown- und kanonisches JSON-Laden |
-| `tests/test_curation.py` | Kurationsschema, Provenienz, Aliasauflösung, Scharni-Override, Rohdatenerhalt und Ausschluss aus allen Runtime-Verbrauchern |
+| `tests/test_curation.py` | Kurationsschema, Provenienz, Aliasauflösung, Scharni-Override einschließlich aktueller Open-Geodata-Geometrie, Rohdatenerhalt und Ausschluss aus allen Runtime-Verbrauchern |
 | `tests/test_runtime_loader.py` | verpflichtende Kuration, exakt gebundener lokaler/Paket-Fallback, Pointer-/Releasefehler und Runtime-Fingerabdruck |
 | `tests/test_official_offer_source.py` | strikt validierte VKKJ-Betreiberquelle, Quellenreferenzen, Hashbindung, minimiertes Feldinventar, verifizierte WGS84-Kartenpunkte, CRS-/Gebietsgrenzen und Ablehnung WFS-artiger Rohfelder |
 | `tests/test_retrieval.py` | isolierte lexikalische Legacy-Hilfen; nicht der aktive primäre Kandidatenpfad |

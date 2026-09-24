@@ -193,7 +193,8 @@ def test_female_without_age_finishes_with_conditional_scharni(tmp_path) -> None:
     assert body["clarification"] is None
     assert body["answer_type"] == "grounded_referral"
     assert {card["id"] for card in body["cards"]} == {"7", "8"}
-    assert body["map_data"] is None or "8" not in {item["id"] for item in body["map_data"]["destinations"]}
+    assert body["map_data"] is not None
+    assert {item["id"] for item in body["map_data"]["destinations"]} == {"7", "8"}
 
 
 def test_initial_explicit_female_fact_skips_redundant_target_group_question(tmp_path) -> None:

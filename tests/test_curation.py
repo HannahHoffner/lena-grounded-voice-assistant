@@ -333,7 +333,13 @@ def test_scharni_runtime_override_preserves_immutable_wfs_address(curated_kb) ->
     assert runtime.emails == ["uebernachtungshaus@aww.info"]
     assert runtime.raw_properties == source.raw_properties
     assert "Scharnhorststr. 27" in runtime.raw_text
-    assert runtime.geometry is None
+    assert runtime.geometry == {
+        "type": "Point",
+        "coordinates": [12.3344604, 51.3711432],
+        "crs": "urn:ogc:def:crs:OGC::CRS84",
+    }
+    assert runtime.coordinates_status == "verified_from_open_geodata"
+    assert "scharni_openstreetmap_building" in runtime.source_reference_ids
     assert runtime.source_hash == source.source_hash
     assert offer_translation_hash(runtime) != offer_translation_hash(source)
     catalog = load_translation_catalog(curated_settings(Path.cwd()), curated_kb)
@@ -345,6 +351,13 @@ def test_scharni_runtime_override_preserves_immutable_wfs_address(curated_kb) ->
     )
     assert localized.services == ["Sleeping place", "Basic provision of food, clothing and hygiene", "Social support"]
     assert localized.name == "Scharni"
+
+    map_data = build_map_data([runtime], language=Language.DE)
+    assert map_data is not None
+    assert len(map_data.destinations) == 1
+    assert map_data.destinations[0].id == "8"
+    assert map_data.destinations[0].latitude == pytest.approx(51.3711432)
+    assert map_data.destinations[0].longitude == pytest.approx(12.3344604)
 
 
 def test_hilfebus_runtime_notes_include_operating_hours_call_reminder(curated_kb) -> None:
@@ -483,7 +496,7 @@ def test_health_exposes_pending_review_policy_and_runtime_exclusions(tmp_path: P
         "production_approval_status": "not_granted",
     }
     assert health["curation"]["coordinates_status"] == {
-        "8": "not_verified_after_address_change",
+        "8": "verified_from_open_geodata",
         "vkkj_notschlafstelle": "verified_from_official_source",
         "vkkj_jugendnotdienst": "verified_from_official_source",
     }

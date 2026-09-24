@@ -175,6 +175,14 @@ Jugendtreffs und Jugendstreetwork bis einschließlich 26 werden unabhängig
 davon nur durch ausdrücklichen Jugendbedarf oder einen exakten Alias aktiviert;
 ein Alter allein genügt nicht.
 
+Ein Schlafsack allein aktiviert diesen Schlafplatzpfad nicht. Er wird als
+Sachleistung (`general_help` plus `clothing`) interpretiert und führt zum
+kuratierten Hilfebus-Verweis, dessen Leistungsbeschreibung Schlafsäcke belegt.
+Nur eine zusätzlich ausdrücklich verlangte Übernachtung hält die Anfrage im
+Schlafpfad. Scharni erhält seinen Kartenpunkt aus der kuratierten,
+quellenreferenzierten Geometrie der aktuellen Anschrift; die alte WFS-Geometrie
+der früheren Anschrift wird nicht wiederverwendet.
+
 Bei einem engen eindeutigen Preflight-Treffer oder
 `acute_risk_status=detected` beendet `QueryService` den normalen Pfad
 unmittelbar und gibt den zentralen sprachabhängigen 112-Text ohne Karten aus.

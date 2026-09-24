@@ -126,6 +126,7 @@ class ServiceOffer(CurationModel):
     source_reference_ids: list[str] = Field(default_factory=list)
     coordinates_status: Literal[
         "verified_from_official_source",
+        "verified_from_open_geodata",
         "not_verified_after_address_change",
     ] | None = None
     runtime_overrides: dict[str, object] = Field(default_factory=dict)
@@ -143,7 +144,7 @@ class OfferAlias(CurationModel):
 
 class SourceReference(CurationModel):
     id: str
-    source_type: Literal["wfs_release", "methodology", "official_website"]
+    source_type: Literal["wfs_release", "methodology", "official_website", "open_geodata"]
     title: str
     url: HttpUrl | None = None
     retrieved_at: date | datetime | None = None
