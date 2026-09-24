@@ -29,7 +29,9 @@ from .grounding_claims import (
     detect_service_concepts,
 )
 from .interpreter import Need
-from .grounding_constraints import contradicts_age_bound, has_negation, schedule_matches
+from .grounding_constraints import (
+    contradicts_age_bound, has_negation, schedule_matches, service_text_without_cited_audience,
+)
 from .models import Language
 
 
@@ -474,12 +476,19 @@ def _validate_sentence(
             and _canonical(fact.value).rstrip(".!?") == _canonical(semantic_text).rstrip(".!?")
             for fact in pool
         )
-        # Negative source text cannot prove a positive service by keyword alone.
+        # The same evidence-bound audience masking applies to both directions:
+        # "people without healthcare" neither negates counselling nor proves care.
+        service_text = service_text_without_cited_audience(semantic_text, pool_values, language)
+        scoped_values = [
+            (kind, service_text_without_cited_audience(value, pool_values, language))
+            for kind, value in pool_values
+        ]
+        # Negative service text cannot prove a positive service by keyword alone.
         service_values = [
-            (kind, value) for kind, value in pool_values
+            (kind, value) for kind, value in scoped_values
             if not any(has_negation(value, lang) for lang in {language, Language.DE, Language.EN})
         ]
-        service_support, service_concepts = assess_service_claim(semantic_text, service_values, language)
+        service_support, service_concepts = assess_service_claim(service_text, service_values, language)
         if service_support in {ClaimSupport.UNDECIDABLE, ClaimSupport.CONTRADICTED} and not exact_negative_fact:
             raise _ungrounded(GroundingDiagnosticCode.SERVICE_FACT_MISSING)
         all_values = [(fact.fact_type.value, fact.value) for fact in offer.facts]
@@ -508,7 +517,7 @@ def _validate_sentence(
         # Positive concept occurrence does not support a negated claim. Exact
         # cited negative facts may be quoted; arbitrary negative paraphrases
         # remain undecidable instead of being mistaken for positive evidence.
-        if service_concepts and has_negation(semantic_text, language) and not exact_negative_fact:
+        if service_concepts and has_negation(service_text, language) and not exact_negative_fact:
             raise _ungrounded(GroundingDiagnosticCode.SERVICE_FACT_MISSING)
 
         # Aus einer belegten Leistungsbeschreibung folgt weder eine Aufnahme noch

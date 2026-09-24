@@ -45,6 +45,7 @@ from .live_evaluation_runtime import (
     AtomicRunCounter,
     EvaluationLimitReached,
     EvaluationReportStore,
+    EvaluationReportWriteError,
     LimitedEvaluationProvider,
     new_run_id,
 )
@@ -265,6 +266,10 @@ async def run_interpreter_live_gate(
         status = "aborted"
         abort_reason = exc.code
         store.append_error(scenario_id=current_scenario_id, code=exc.code)
+    except EvaluationReportWriteError as exc:
+        status = "aborted"
+        abort_reason = exc.code
+        store.append_error(scenario_id=current_scenario_id, code=exc.code, report_write_error=exc)
     except Exception:
         status = "aborted"
         abort_reason = "live_evaluation_unexpected_runtime_error"
@@ -431,6 +436,10 @@ async def run_selector_formulator_live_gate(
         status = "aborted"
         abort_reason = exc.code
         store.append_error(scenario_id=current_scenario_id, code=exc.code)
+    except EvaluationReportWriteError as exc:
+        status = "aborted"
+        abort_reason = exc.code
+        store.append_error(scenario_id=current_scenario_id, code=exc.code, report_write_error=exc)
     except Exception:
         status = "aborted"
         abort_reason = "live_evaluation_unexpected_runtime_error"
@@ -827,6 +836,10 @@ async def run_end_to_end_live_gate(
             status = "aborted"
             abort_reason = exc.code
             store.append_error(scenario_id=current_scenario_id, code=exc.code)
+        except EvaluationReportWriteError as exc:
+            status = "aborted"
+            abort_reason = exc.code
+            store.append_error(scenario_id=current_scenario_id, code=exc.code, report_write_error=exc)
         except Exception:
             status = "aborted"
             abort_reason = "live_evaluation_unexpected_runtime_error"
@@ -921,6 +934,10 @@ async def run_stability_live_gate(
             status = "aborted"
             abort_reason = exc.code
             store.append_error(scenario_id=current_scenario_id, code=exc.code)
+        except EvaluationReportWriteError as exc:
+            status = "aborted"
+            abort_reason = exc.code
+            store.append_error(scenario_id=current_scenario_id, code=exc.code, report_write_error=exc)
         except Exception:
             status = "aborted"
             abort_reason = "live_evaluation_unexpected_runtime_error"

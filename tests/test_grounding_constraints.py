@@ -1,12 +1,17 @@
 """Counterexamples from review plus controls, through the real validator."""
 
+import asyncio
 import pytest
 
-from app.formulation import ClaimType, FactType, GroundingDiagnosticCode, EvidenceFact
+from app.candidate_contract import CandidateRole
+from app.formulation import ClaimType, FactType, GroundingDiagnosticCode, EvidenceFact, AnswerType, build_formulator_evidence
 from app.grounding import validate_formulation
-from app.grounding_claims import ClaimSupport, assess_service_claim, assess_target_claim, claims_current_availability
-from app.grounding_constraints import contradicts_age_bound, schedule_matches
+from app.grounding_claims import ClaimSupport, assess_service_claim, assess_target_claim, claims_current_availability, transliterated
+from app.grounding_constraints import contradicts_age_bound, schedule_matches, service_text_without_cited_audience
 from app.models import Language
+from app.interpreter import Need
+from app.providers.llm import BlabladorProvider
+from test_formulation import _settings
 from test_grounding_claims import _answer, _diagnostic, _evidence, _fact, app
 
 
@@ -174,3 +179,78 @@ def test_a_cited_unknown_status_note_is_still_renderable(app):
     assert validate_formulation(response, evidence).sentence_count == 2
     response.sentences[1].text = "Sleeping accommodation is available now, but other details are unknown."
     assert _diagnostic(response, evidence) == GroundingDiagnosticCode.CURRENT_AVAILABILITY_UNSUPPORTED
+
+
+def test_recorded_romanian_counselling_response_passes_real_provider_validation(app, monkeypatch):
+    """Replay the exact schema-valid output from run_1a3636... without a live call."""
+    evidence = build_formulator_evidence(
+        query="Am nevoie de ajutor medical.", language=Language.RO,
+        answer_type=AnswerType.GROUNDED_REFERRAL, need=Need.MEDICAL,
+        offers=[app.state.kb.by_id()["24"]], roles={"24": CandidateRole.REFERRAL_CONTACT},
+        translation_catalog=app.state.service.translation_catalog,
+        translation_policy=app.state.service.translation_policy,
+    )
+    name = _fact(evidence, FactType.DISPLAY_NAME)
+    service = _fact(evidence, FactType.SERVICE, contains="Consiliere socială")
+    assert name.fact_id == "f_abe67692e2acf7bf"
+    assert service.fact_id == "f_4b7b1e78895ebd88"
+    recorded = _answer(evidence,
+        ("Contactează „CABL”.", ClaimType.REFERRAL, "24", [name.fact_id]),
+        ("Oferă consiliere socială pentru persoane fără acces regulat la sistemul de sănătate.",
+         ClaimType.SERVICE, "24", [service.fact_id]),
+    )
+    provider = BlabladorProvider(_settings("blablador"))
+
+    async def post(_payload):
+        return {"choices": [{"message": {"content": recorded.model_dump_json()}}]}
+
+    monkeypatch.setattr(provider, "_post", post)
+    result = asyncio.run(provider.formulate_answer(evidence=evidence))
+    assert result.answer == " ".join(sentence.text for sentence in recorded.sentences)
+    assert result.card_ids == ["24"]
+
+
+@pytest.mark.parametrize("language,positive,negative,changed", [
+    (Language.DE, "Beratung für Menschen ohne Krankenversicherung",
+     "Keine Beratung für Menschen ohne Krankenversicherung", "Beratung für Menschen ohne Arbeit"),
+    (Language.EN, "Counselling for people without health insurance",
+     "No counselling for people without health insurance", "Counselling for people without work"),
+    (Language.PL, "Poradnictwo dla osób bez ubezpieczenia",
+     "Nie oferuje poradnictwa dla osób bez ubezpieczenia", "Poradnictwo dla osób bez pracy"),
+    (Language.RO, "Consiliere pentru persoane fără asigurare",
+     "Nu oferă consiliere pentru persoane fără asigurare", "Consiliere pentru persoane fără muncă"),
+    (Language.RU, "Консультация для людей без страховки",
+     "Не предлагает консультацию для людей без страховки", "Консультация для людей без работы"),
+])
+def test_cited_audience_qualifier_does_not_negate_service(app, language, positive, negative, changed):
+    evidence = _evidence(app, offer_ids=("24",), language=language)
+    name = _fact(evidence, FactType.DISPLAY_NAME)
+    service = EvidenceFact(fact_id="f_3333333333333333", fact_type=FactType.SERVICE, value=positive)
+    evidence.selected_offers[0].facts = [name, service]
+    response = _answer(evidence, (f"CABL: {positive}.", ClaimType.SERVICE, "24", [name.fact_id, service.fact_id]))
+    assert validate_formulation(response, evidence).sentence_count == 1
+    response.sentences[0].text = f"CABL: {negative}."
+    assert _diagnostic(response, evidence) == GroundingDiagnosticCode.SERVICE_FACT_MISSING
+    # Do not mask an unsupported qualifier. Its eventual assessment still
+    # depends on the existing language-specific lexical coverage.
+    assert service_text_without_cited_audience(changed, [("service", positive)], language) == transliterated(changed)
+    # A negative source cannot support the positive service just because the
+    # audience qualifier is identical and can be separated from both texts.
+    service.value = negative
+    response.sentences[0].text = f"CABL: {positive}."
+    assert _diagnostic(response, evidence) == GroundingDiagnosticCode.SERVICE_FACT_MISSING
+
+
+def test_audience_without_service_is_not_evidence_of_that_service(app):
+    evidence = _evidence(app, offer_ids=("24",), language=Language.EN)
+    name = _fact(evidence, FactType.DISPLAY_NAME)
+    service = EvidenceFact(fact_id="f_4444444444444444", fact_type=FactType.SERVICE,
+                           value="Counselling for people without food")
+    evidence.selected_offers[0].facts = [name, service]
+    response = _answer(evidence, ("CABL offers food.", ClaimType.SERVICE, "24", [name.fact_id, service.fact_id]))
+    assert _diagnostic(response, evidence) == GroundingDiagnosticCode.SERVICE_FACT_MISSING
+    response.sentences[0].text = "CABL offers counselling for people without food but does not offer counselling."
+    assert _diagnostic(response, evidence) == GroundingDiagnosticCode.SERVICE_FACT_MISSING
+    service.value = "Counselling for people without food and sleeping accommodation"
+    response.sentences[0].text = "CABL offers sleeping accommodation."
+    assert _diagnostic(response, evidence) == GroundingDiagnosticCode.SERVICE_FACT_MISSING

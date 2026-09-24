@@ -10,7 +10,9 @@ from __future__ import annotations
 import re
 from collections.abc import Sequence
 
-from .grounding_claims import DAILY_LABEL, WEEKDAY_NAMES, Fact, transliterated
+from .grounding_claims import (
+    DAILY_LABEL, WEEKDAY_NAMES, TARGET_SUPPORT_TEXT_FACT_TYPES, Fact, transliterated,
+)
 from .models import Language
 
 
@@ -75,6 +77,40 @@ _NEGATIONS = {
 def has_negation(text: str, language: Language) -> bool:
     """Flag polarity needing evidence; do not infer that every negation is false."""
     return bool(re.search(_NEGATIONS[language], transliterated(text)))
+
+
+_AUDIENCE_WITHOUT = {
+    Language.DE: r"(?:personen|menschen) ohne",
+    Language.EN: r"(?:people|persons) without",
+    Language.PL: r"(?:osob\w*|ludzi) bez",
+    Language.RO: r"persoane(?:le)? fara",
+    Language.RU: r"(?:lyudey|lyudi|lyudyam) bez",
+}
+
+
+def service_text_without_cited_audience(text: str, facts: Sequence[Fact], language: Language) -> str:
+    """Separate a verbatim evidenced audience qualifier from a service claim.
+
+    Counselling *for people without healthcare* is positive counselling, not
+    absent counselling (nor a promise of healthcare). Only a complete cited
+    qualifier is masked, ending at punctuation. Do not split at "and": it can
+    coordinate two things the audience lacks, not two services being offered.
+    Unmatched wording and every negation outside that span remain visible.
+    Returned text is normalized only for internal lexical checks, never output.
+    """
+    normalized = transliterated(text)
+    for lang in dict.fromkeys((language, Language.DE, Language.EN)):
+        pattern = re.compile(rf"\b{_AUDIENCE_WITHOUT[lang]}\b[^,;.!?]*")
+        qualifiers = {
+            match.group().strip()
+            for kind, value in facts
+            if kind in TARGET_SUPPORT_TEXT_FACT_TYPES | {"target_group"}
+            for match in pattern.finditer(transliterated(value))
+        }
+        normalized = pattern.sub(
+            lambda match: " " if match.group().strip() in qualifiers else match.group(), normalized,
+        )
+    return normalized
 
 
 def stated_weekdays(text: str, language: Language) -> set[int]:

@@ -71,6 +71,7 @@ from app.live_evaluation_runtime import (
     AtomicRunCounter,
     EvaluationLimitReached,
     EvaluationReportStore,
+    EvaluationReportWriteError,
     LimitedEvaluationProvider,
     new_run_id,
 )
@@ -567,6 +568,119 @@ def test_report_store_uses_only_opaque_ignored_atomic_runtime_files(tmp_path: Pa
 
     gitignore = (Path(__file__).resolve().parents[1] / ".gitignore").read_text(encoding="utf-8")
     assert "runtime/" in gitignore
+
+
+def _sharing_violation() -> PermissionError:
+    error = PermissionError(13, "private filesystem detail")
+    error.winerror = 32
+    return error
+
+
+def test_report_replace_retries_are_bounded_and_keep_the_previous_file(tmp_path, monkeypatch):
+    import app.live_evaluation_runtime as runtime
+    store = EvaluationReportStore(tmp_path, new_run_id())
+    store.initialize({"synthetic_data_only": True})
+    store.append_result({"scenario_id": "before"})
+    target = store.path / "stage-results.jsonl"
+    previous = target.read_bytes()
+    attempts = []
+    delays = []
+
+    def fail_replace(source, destination):
+        assert Path(destination) == target
+        attempts.append(Path(source))
+        assert target.read_bytes() == previous
+        raise _sharing_violation()
+
+    monkeypatch.setattr(runtime.os, "replace", fail_replace)
+    monkeypatch.setattr(runtime, "sleep", delays.append)
+    with pytest.raises(EvaluationReportWriteError) as raised:
+        store.append_result({"scenario_id": "after"})
+    assert str(raised.value) == "live_evaluation_report_write_error"
+    assert raised.value.operation == "replace"
+    assert raised.value.failure_kind == "sharing_violation"
+    assert len(attempts) == 3 and len(set(attempts)) == 1
+    assert delays == [0.05, 0.1]
+    assert target.read_bytes() == previous
+    assert [json.loads(line)["scenario_id"] for line in attempts[0].read_text().splitlines()] == ["before", "after"]
+
+
+@pytest.mark.parametrize("operation", ["temporary_write", "replace"])
+def test_nontransient_report_errors_are_not_retried_or_disclosed(tmp_path, monkeypatch, operation):
+    import app.live_evaluation_runtime as runtime
+    attempts = []
+    def fail(*args):
+        attempts.append(args)
+        raise OSError(28, "secret path and disk detail")
+    monkeypatch.setattr(runtime, "sleep", lambda _: pytest.fail("unexpected retry"))
+    if operation == "temporary_write":
+        monkeypatch.setattr(Path, "write_bytes", fail)
+    else:
+        monkeypatch.setattr(runtime.os, "replace", fail)
+    with pytest.raises(EvaluationReportWriteError) as raised:
+        EvaluationReportStore._atomic_write(tmp_path / "summary.json", b"{}")
+    assert len(attempts) == 1
+    assert raised.value.operation == operation
+    assert raised.value.failure_kind == "os_error"
+    assert "secret" not in str(raised.value)
+
+
+@pytest.mark.parametrize("permanent", [False, True])
+def test_runner_distinguishes_report_publication_from_provider_failure(tmp_path, monkeypatch, permanent):
+    """Fault at the historical publication point, without repeating its LLM call."""
+    import app.live_evaluation_runtime as runtime
+    settings = _settings(tmp_path)
+    plan = load_live_scenario_catalog().plan(EvaluationStage.SELECTOR_FORMULATOR)
+    real_replace = runtime.os.replace
+    failures = []
+    delays = []
+
+    def replace(source, destination):
+        if Path(destination).name == "stage-results.jsonl":
+            rows = [json.loads(line) for line in Path(source).read_text(encoding="utf-8").splitlines()]
+            if rows[-1]["scenario_id"] == "f_ro_injection" and (permanent or not failures):
+                failures.append(Path(source))
+                raise _sharing_violation()
+        return real_replace(source, destination)
+
+    monkeypatch.setattr(runtime.os, "replace", replace)
+    monkeypatch.setattr(runtime, "sleep", delays.append)
+    provider = FakeSelectorFormulatorProvider(settings)
+    result = asyncio.run(run_selector_formulator_live_gate(
+        settings, plan.live_limits, provider_factory=lambda _: provider,
+    ))
+    report = settings.runtime_dir / result["report_directory"]
+    if not permanent:
+        assert result["status"] == "completed"
+        assert result["counts"]["formulator_calls"] == provider.formulator_calls == 10
+        assert len(failures) == 1 and delays == [0.05]
+        assert len((report / "stage-results.jsonl").read_text(encoding="utf-8").splitlines()) == 16
+        assert not list(report.glob("*.tmp"))
+    else:
+        assert result["status"] == "aborted"
+        assert result["abort_reason"] == "live_evaluation_report_write_error"
+        assert result["contract_gate_passed"] is False
+        assert result["counts"]["formulator_calls"] == provider.formulator_calls == 8
+        assert len(failures) == 3 and delays == [0.05, 0.1]
+        assert len((report / "stage-results.jsonl").read_text(encoding="utf-8").splitlines()) == 13
+        recovered = [json.loads(line) for line in failures[0].read_text(encoding="utf-8").splitlines()]
+        assert recovered[-1]["scenario_id"] == "f_ro_injection"
+        assert recovered[-1]["technically_valid"] is True
+        errors = (report / "redacted-errors.jsonl").read_text(encoding="utf-8")
+        assert json.loads(errors) == {
+            "scenario_id": "f_ro_injection", "error_code": "live_evaluation_report_write_error",
+            "report_operation": "replace", "report_failure_kind": "sharing_violation",
+        }
+        assert "private" not in errors
+
+
+def test_report_write_metadata_rejects_arbitrary_values(tmp_path):
+    store = EvaluationReportStore(tmp_path, new_run_id())
+    store.initialize({})
+    error = EvaluationReportWriteError("replace", _sharing_violation())
+    error.failure_kind = "private provider text"
+    with pytest.raises(ValueError, match="allowlisted"):
+        store.append_error(scenario_id="synthetic", code=error.code, report_write_error=error)
 
 
 def test_manifest_is_reproducible_and_contains_no_secret(tmp_path: Path) -> None:

@@ -286,6 +286,14 @@ Allgemeine Leistungsbeschreibungen dürfen weiterhin ohne Zeitangabe
 stehen. Eine persönliche Schlafplatzzusage braucht kein Wort wie „garantiert“,
 um unbelegt zu sein.
 
+Für die Leistungsprüfung wird eine vollständig zitierte Zielgruppenphrase wie
+„Menschen ohne Krankenversicherung“ intern ausgeblendet: Sie verneint weder
+die Beratung noch belegt sie eine angebotene Krankenversicherung. Dieselbe
+Normalisierung gilt für Aussage und zitierte Evidenz in DE/EN/PL/RO/RU.
+Nur vollständig übereinstimmende Phrasen der begrenzten Sprachmuster werden
+ausgeblendet; Verneinungen außerhalb bleiben sichtbar. Das ist keine allgemeine
+semantische Analyse und erweitert nicht die vorhandene Negationswortliste.
+
 Erkannte Verneinungen belegen keine positive Leistung und umgekehrt. Freie
 negative Paraphrasen werden konservativ nicht freigegeben; ein vollständig
 zitierter negativer Fakt darf wörtlich wiedergegeben werden. Ein unbekannter

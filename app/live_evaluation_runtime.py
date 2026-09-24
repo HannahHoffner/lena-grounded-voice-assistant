@@ -8,7 +8,7 @@ import os
 import threading
 import uuid
 from pathlib import Path
-from time import monotonic
+from time import monotonic, sleep
 from typing import Any
 
 from .formulation import GroundingDiagnosticCode
@@ -22,6 +22,10 @@ from .providers.diagnostics import HTTP_STATUS_FAILURE_KINDS, SAFE_PROVIDER_FAIL
 
 _HTTP_STATUS_FAILURE_VALUES = frozenset(item.value for item in HTTP_STATUS_FAILURE_KINDS)
 _SAFE_GROUNDING_DIAGNOSTICS = frozenset(item.value for item in GroundingDiagnosticCode)
+_REPORT_WRITE_OPERATIONS = frozenset({"temporary_write", "replace"})
+_REPORT_WRITE_FAILURE_KINDS = frozenset({
+    "access_denied", "sharing_violation", "lock_violation", "permission_error", "os_error",
+})
 
 
 class EvaluationLimitReached(RuntimeError):
@@ -126,6 +130,22 @@ def new_run_id() -> str:
     return "run_" + uuid.uuid4().hex
 
 
+class EvaluationReportWriteError(RuntimeError):
+    """Content-free report failure; never serialize the underlying OS message."""
+
+    code = "live_evaluation_report_write_error"
+
+    def __init__(self, operation: str, error: OSError) -> None:
+        if operation not in _REPORT_WRITE_OPERATIONS:
+            raise ValueError("invalid report write operation")
+        super().__init__(self.code)
+        self.operation = operation
+        self.failure_kind = {
+            5: "access_denied", 32: "sharing_violation", 33: "lock_violation",
+        }.get(getattr(error, "winerror", None),
+              "permission_error" if isinstance(error, PermissionError) else "os_error")
+
+
 class EvaluationReportStore:
     """Schreibt ausschließlich vier erlaubte Laufdateien atomar."""
 
@@ -139,8 +159,22 @@ class EvaluationReportStore:
     @staticmethod
     def _atomic_write(path: Path, content: bytes) -> None:
         temporary = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
-        temporary.write_bytes(content)
-        os.replace(temporary, path)
+        try:
+            temporary.write_bytes(content)
+        except OSError as exc:
+            raise EvaluationReportWriteError("temporary_write", exc) from None
+        # Windows readers/sync clients can temporarily deny replacement. Retry
+        # only that operation, never a provider call or a direct non-atomic write.
+        # On permanent failure retain the unpublished snapshot for diagnosis.
+        for attempt in range(3):
+            try:
+                os.replace(temporary, path)
+                return
+            except OSError as exc:
+                if getattr(exc, "winerror", None) in {5, 32, 33} and attempt < 2:
+                    sleep(0.05 * (attempt + 1))
+                    continue
+                raise EvaluationReportWriteError("replace", exc) from None
 
     def initialize(self, manifest: dict[str, Any]) -> None:
         self.path.mkdir(parents=True, exist_ok=False)
@@ -166,8 +200,18 @@ class EvaluationReportStore:
         provider_failure_kind: str | None = None,
         upstream_status: int | None = None,
         grounding_diagnostic_code: str | None = None,
+        report_write_error: EvaluationReportWriteError | None = None,
     ) -> None:
         record: dict[str, Any] = {"scenario_id": scenario_id, "error_code": code[:80]}
+        if report_write_error is not None:
+            if code != EvaluationReportWriteError.code:
+                raise ValueError("report diagnostic requires a report write error")
+            if (not isinstance(report_write_error, EvaluationReportWriteError)
+                    or report_write_error.operation not in _REPORT_WRITE_OPERATIONS
+                    or report_write_error.failure_kind not in _REPORT_WRITE_FAILURE_KINDS):
+                raise ValueError("report diagnostic is not allowlisted")
+            record["report_operation"] = report_write_error.operation
+            record["report_failure_kind"] = report_write_error.failure_kind
         if provider_failure_kind is not None:
             if provider_failure_kind not in SAFE_PROVIDER_FAILURE_KINDS:
                 raise ValueError("provider failure kind is not allowlisted")

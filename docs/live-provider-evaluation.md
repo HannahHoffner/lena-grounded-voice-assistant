@@ -344,6 +344,19 @@ Modellkennungen je Stufe. Header, Keys, Tokens und reale Anwendungsdaten werden
 nicht gespeichert. Rohantworten werden nicht automatisch in Git,
 Dokumentation, Thesis oder Präsentation übernommen.
 
+Beim atomaren Ersetzen einer Reportdatei werden ausschließlich die
+Windows-Fehler 5, 32 und 33 höchstens zweimal erneut versucht (50 und 100 ms
+Wartezeit; insgesamt drei Versuche). Es wird kein Provideraufruf wiederholt.
+Bei dauerhaftem Fehler bleibt der bisherige Report unverändert und die
+temporäre `.tmp`-Datei als unveröffentlichter Diagnoseschnappschuss erhalten.
+Sie darf nicht stillschweigend als abgeschlossenes Laufergebnis gelten.
+Die Runner unterscheiden `live_evaluation_report_write_error` mit den
+geschlossenen Feldern `report_operation` (`temporary_write`, `replace`) und
+`report_failure_kind` (`access_denied`, `sharing_violation`, `lock_violation`,
+`permission_error`, `os_error`). Pfade und OS-Exceptiontexte werden nicht
+protokolliert. Ist das ganze Reportverzeichnis nicht beschreibbar, können auch
+Fehlerreport und Abschlusszusammenfassung nicht zuverlässig geschrieben werden.
+
 Bei `formulator_ungrounded_claim` darf der lokale Stufe-2-Report zusätzlich
 einen geschlossenen `grounding_diagnostic_code` enthalten. Diese Werte benennen
 nur die ausgelöste Validatorregel, beispielsweise `proper_name_not_exact`,
@@ -371,6 +384,28 @@ verworfene synthetische Antwort zu prüfen. Vor einer Veröffentlichung muss er
 inhaltlich geprüft und gegebenenfalls redigiert werden. Rohes Provider-HTTP,
 Header, Schlüssel, Prompts und vollständige Evidence-Pakete werden weiterhin
 nicht persistiert.
+
+## Lokale Untersuchung des abgebrochenen Laufs am 24. September 2026
+
+Im Lauf `run_1a3636eeae18436591d07feb9d7322f6` wurde die rumänische Aussage
+über Beratung für Menschen ohne regelmäßigen Zugang zum Gesundheitssystem
+fälschlich als `service_fact_missing` verworfen: Die Negationsprüfung behandelte
+die Zielgruppenbeschreibung als Verneinung der Beratung. Ein lokaler
+Provider-Mock spielt die tatsächlich aufgezeichnete strukturierte Antwort
+gegen die kuratierte Evidenz ab; die korrigierte Zielgruppenabgrenzung akzeptiert
+sie. Mehrsprachige Gegenproben prüfen weiterhin echte Leistungsverneinungen.
+
+Die erhaltene temporäre Reportdatei enthält außerdem ein technisch gültiges
+Ergebnis für `f_ro_injection`, das im veröffentlichten Report fehlt. Dies grenzt
+den anschließenden Abbruch auf die Reportveröffentlichung ein; der damalige
+OS-Fehler und ein eventuell sperrender Prozess wurden nicht aufgezeichnet.
+Insbesondere ist OneDrive als Ursache nicht bewiesen. Simulierte temporäre und
+dauerhafte Ersetzungsfehler prüfen jetzt Wiederholung, Abbruchklassifikation,
+Erhalt des bisherigen Reports und unveränderte Provideraufrufzahlen.
+
+Die ursprünglichen Laufdateien bleiben unverändert. Diese Offline-Nachweise
+sind kein erfolgreicher Live-Wiederholungslauf und keine Freigabe der manuellen
+Evaluation. Modell, Prompts, Providerbudgets und Timeouts bleiben unverändert.
 
 ## Vergleichslauf `alias-fast` und `alias-large` vom 21./22. September 2026
 
