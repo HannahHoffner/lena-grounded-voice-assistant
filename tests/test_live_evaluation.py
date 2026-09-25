@@ -1694,3 +1694,78 @@ def test_captured_rejections_stay_closed_and_scenario_bound(tmp_path: Path) -> N
         all(r["attempt"] == 1 for r in row.get("formulator_rejections", []))
         for row in rows
     )
+
+
+def test_end_to_end_failure_budget_allows_the_full_scenario_set() -> None:
+    """Die Stufe muss unter beobachteten Ablehnungsraten zu Ende messen können.
+
+    Drei Teilläufe zeigten rund ein Drittel fachliche Verwerfungen, auf 27
+    Abläufe hochgerechnet etwa neun. Bei vier brach die Stufe nach acht bis
+    zwölf Szenarien ab, sodass Safety-, Injektions-, Sprachwechsel- und
+    Sessionabläufe live nie gemessen wurden.
+    """
+    plan = load_live_scenario_catalog().plan(EvaluationStage.END_TO_END)
+
+    assert plan.live_limits.max_failures == 14
+    assert plan.live_limits.max_failures < len(plan.scenario_ids) / 2
+    # Die Kostengrenzen bleiben die harten Schranken.
+    assert plan.live_limits.max_provider_calls == 102
+    assert plan.live_limits.max_total_runtime_seconds == 1960
+
+
+def test_raising_the_stop_cannot_turn_a_failure_into_a_passed_gate(tmp_path: Path) -> None:
+    """Das Abbruchlimit ist kein Bewertungsmaßstab.
+
+    ``contract_gate_passed`` verlangt zusätzlich einen abgeschlossenen Lauf und
+    alle deklarierten Requests; eine angehobene Stoppgrenze kann deshalb nur
+    vollständiger messen, niemals eine Verwerfung in ein Bestehen verwandeln.
+    """
+    settings = _settings(tmp_path)
+    plan = load_live_scenario_catalog().plan(EvaluationStage.END_TO_END)
+
+    result = asyncio.run(
+        run_end_to_end_live_gate(
+            settings, plan.live_limits, provider_factory=_AlwaysRejectingFullPipelineProvider
+        )
+    )
+
+    assert result["counts"]["failures"] > 0
+    assert result["contract_gate_passed"] is False
+    assert result["content_gate_passed"] is False
+
+
+def test_critical_content_errors_stop_the_run_separately_from_ordinary_rejections() -> None:
+    """Sicherheitsrelevante Befunde dürfen sich das Budget nicht mit
+
+    gewöhnlichen fachlichen Verwerfungen teilen. Die Stufendokumentation nennt
+    vier kritische Fehler für End-to-End und drei für die Stabilitätsstufe.
+    """
+    from app.live_evaluation_runner import CRITICAL_CONTENT_ERROR_ABORT_LIMITS
+
+    assert CRITICAL_CONTENT_ERROR_ABORT_LIMITS[EvaluationStage.END_TO_END] == 4
+    assert CRITICAL_CONTENT_ERROR_ABORT_LIMITS[EvaluationStage.STABILITY] == 3
+    # Der kritische Stopp greift unabhängig von der allgemeinen Fehlergrenze.
+    plan = load_live_scenario_catalog().plan(EvaluationStage.END_TO_END)
+    assert CRITICAL_CONTENT_ERROR_ABORT_LIMITS[EvaluationStage.END_TO_END] < plan.live_limits.max_failures
+
+
+def test_end_to_end_records_the_visible_answer_per_turn() -> None:
+    """Ohne Antworttext trägt ein Lauf keine qualitative Bewertung."""
+    scenario = _acute_test_scenario("t_answers", "uncertain")
+    scenario.synthetic_inputs = ["Erster Turn", "Zweiter Turn"]
+    responses = iter([
+        _minimal_response(answer_type="acute_risk_clarification"),
+        _minimal_response(answer_type="acute_risk"),
+    ])
+
+    class FakeService:
+        async def query(self, request: Any) -> QueryResponse:
+            return next(responses)
+
+    counter = AtomicRunCounter(load_live_scenario_catalog().plan(EvaluationStage.END_TO_END).live_limits)
+    result = asyncio.run(_run_e2e_scenario(scenario, FakeService(), counter, lambda: 0.0))
+
+    assert result["answers"] == [
+        {"turn": 1, "text": "Testantwort."},
+        {"turn": 2, "text": "Testantwort."},
+    ]

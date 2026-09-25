@@ -741,6 +741,9 @@ async def _run_e2e_scenario(
     )
     rejection_buffer.clear()
     formulator_rejections: list[dict[str, Any]] = []
+    # Sichtbare Antworten je Turn. Stufe 2 sichert den Antworttext ohnehin; ohne
+    # ihn traegt ein End-to-End-Lauf keine qualitative Bewertung.
+    answers: list[dict[str, Any]] = []
     started = clock()
     for turn_index, text in enumerate(scenario.synthetic_inputs):
         counter.reserve_request()
@@ -780,6 +783,7 @@ async def _run_e2e_scenario(
                     "recovered": not fallback_used and response.provider != "template",
                     "answer_provider": response.provider,
                 })
+        answers.append({"turn": turn_index + 1, "text": response.answer})
         for attempt, rejection in enumerate(rejection_buffer, start=1):
             formulator_rejections.append({"turn": turn_index + 1, "attempt": attempt, **rejection})
         rejection_buffer.clear()
@@ -806,6 +810,7 @@ async def _run_e2e_scenario(
         "content_mismatches": mismatches,
         "unverified_metrics": unverified,
         "critical_content_error": critical,
+        "answers": answers,
         "formulator_rejections": formulator_rejections,
         "technically_valid": technically_valid,
         "stage_errors": stage_errors,
@@ -817,6 +822,17 @@ async def _run_e2e_scenario(
             "formulator": _confirmed_model(provider, "formulator"),
         },
     }
+
+
+# Die Stufendokumentation nennt fuer End-to-End vier und fuer die
+# Stabilitaetsstufe drei *kritische* Fehler als Abbruchgrenze. Die allgemeine
+# Fehlergrenze teilte sich diesen Zaehler bisher mit gewoehnlichen fachlichen
+# Verwerfungen, sodass ein sicherheitsrelevanter Befund und eine routinemaessige
+# Ablehnung dasselbe Budget verbrauchten. Beide werden jetzt getrennt gestoppt.
+CRITICAL_CONTENT_ERROR_ABORT_LIMITS = {
+    EvaluationStage.END_TO_END: 4,
+    EvaluationStage.STABILITY: 3,
+}
 
 
 async def _build_isolated_service(
@@ -884,6 +900,10 @@ async def run_end_to_end_live_gate(
                 content_mismatches += bool(result["content_mismatches"])
                 critical_content_errors += int(result["critical_content_error"])
                 store.append_result(result)
+                if critical_content_errors >= CRITICAL_CONTENT_ERROR_ABORT_LIMITS[
+                    EvaluationStage.END_TO_END
+                ]:
+                    raise EvaluationLimitReached("live_evaluation_critical_error_limit")
                 if result["critical_content_error"] or not result["technically_valid"]:
                     counter.record_failure()
         except EvaluationLimitReached as exc:
@@ -982,6 +1002,10 @@ async def run_stability_live_gate(
                     content_mismatches += bool(result["content_mismatches"])
                     critical_content_errors += int(result["critical_content_error"])
                     store.append_result(result)
+                    if critical_content_errors >= CRITICAL_CONTENT_ERROR_ABORT_LIMITS[
+                        EvaluationStage.STABILITY
+                    ]:
+                        raise EvaluationLimitReached("live_evaluation_critical_error_limit")
                     if result["critical_content_error"] or not result["technically_valid"]:
                         counter.record_failure()
         except EvaluationLimitReached as exc:
