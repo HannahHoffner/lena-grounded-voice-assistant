@@ -149,10 +149,10 @@ redigierte Planstand ist:
 | Interpretermodell | `alias-fast` |
 | Selectormodell | `alias-fast` |
 | Formulatormodell | `alias-fast` |
-| Interpreter Vertrag / Prompt | `4` / `9` |
+| Interpreter Vertrag / Prompt | `4` / `11` |
 | Selector Vertrag / Prompt | `1` / `3` |
 | Evidence-Vertrag | `4` |
-| Formulator Vertrag / Prompt | `2` / `16` |
+| Formulator Vertrag / Prompt | `2` / `18` |
 | Safety-Policy | `2` |
 | Temperatur | `0` |
 | Response-Format | `json_object` |
@@ -649,6 +649,36 @@ Laufreport ohne nachträgliche Rekonstruktion aus Repositoryhistorie oder
 Prüfprotokoll eindeutig einem Commit und einer Softwareversion zuordenbar; ein
 Lauf auf einem dirty Arbeitsbaum wird ohnehin bereits vor dem Start abgelehnt
 (siehe oben).
+
+## Redigierte Interpreter-Schemadiagnosen
+
+Bei `interpreter_schema_error` enthält Stufe 1 in `stage-results.jsonl`
+und `redacted-errors.jsonl` zusätzlich `schema_issues`, sofern strukturierte
+Validierungsfehler vorliegen. Jeder Eintrag besteht nur aus `field_path` und
+`error_type`, beispielsweise `{"field_path":"need","error_type":"enum"}`.
+Ein nicht objektförmiges JSON kann denselben Fehlercode ohne Felddiagnose
+auslösen; ein leeres Diagnosearray ist kein Korrektheitsnachweis.
+
+Die Projektion ist auf acht Einträge begrenzt und deshalb keine vollständige
+Fehlerliste. Erlaubte Vertragsfelder bleiben benannt; Listenindizes werden `*`,
+unbekannte Feldnamen `<extra>`, modellweite Regeln `$`. Freie Werte,
+Rohantworten, Exceptiontexte und Pydantic-Kontexte werden nicht gespeichert.
+Bekannte Konsistenzregeln besitzen geschlossene Codes, etwa
+`out_of_scope_need_mismatch`; sonstige Value-Fehler bleiben `value_error`.
+
+In E2E und Stabilität sichert `LimitedEvaluationProvider` die redigierte
+Diagnose vor der Fehlerbehandlung des Services. Der Runner ordnet sie dem
+jeweiligen `stage_errors`-Eintrag für Interpreter-Schemafehler zu und leert
+den Puffer vor jedem Turn beziehungsweise Interpreteraufruf. Fallback,
+Aufrufzähler und Gates ändern sich dadurch nicht. Auch eine diagnostisch
+erklärbare Verwerfung bleibt ein technischer Fehler.
+
+Promptversion `11` nennt die bestehende Kopplung von `out_of_scope` und
+`need=unknown` sowie die nicht leere District-Angabe ausdrücklich. Sie wird
+wie jede Promptversion im Laufmanifest gebunden. Lokale Tests beweisen die
+Diagnoseverdrahtung, nicht eine zuverlässige Vertragstreue des Live-Modells.
+Frühere Verwerfungen ohne Felddiagnosen lassen sich damit nicht rückwirkend
+rekonstruieren.
 
 ## Befehl für eine gesondert freigegebene Stufe 1
 

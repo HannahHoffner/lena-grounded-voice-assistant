@@ -18,7 +18,11 @@ from .live_evaluation import (
     EvaluationComponent,
     LiveRunLimits,
 )
-from .providers.diagnostics import HTTP_STATUS_FAILURE_KINDS, SAFE_PROVIDER_FAILURE_KINDS
+from .providers.diagnostics import (
+    HTTP_STATUS_FAILURE_KINDS, SAFE_PROVIDER_FAILURE_KINDS,
+    SchemaValidationIssue, schema_issue_records,
+)
+from .providers.llm import InterpreterError
 
 _HTTP_STATUS_FAILURE_VALUES = frozenset(item.value for item in HTTP_STATUS_FAILURE_KINDS)
 _SAFE_GROUNDING_DIAGNOSTICS = frozenset(item.value for item in GroundingDiagnosticCode)
@@ -107,6 +111,7 @@ class LimitedEvaluationProvider:
         # Wiederholungsversuch, weil er ein zweiter Aufruf durch dieselbe
         # Grenze ist. Der Inhalt entspricht dem, was Stufe 2 ohnehin sichert.
         self.formulator_rejections: list[dict[str, Any]] = []
+        self.interpreter_schema_issues: tuple[SchemaValidationIssue, ...] = ()
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self.provider, name)
@@ -123,7 +128,12 @@ class LimitedEvaluationProvider:
             raise EvaluationLimitReached("live_evaluation_runtime_limit") from exc
 
     async def interpret_query(self, **kwargs: Any) -> Any:
-        return await self._call(EvaluationComponent.INTERPRETER, "interpret_query", **kwargs)
+        self.interpreter_schema_issues = ()
+        try:
+            return await self._call(EvaluationComponent.INTERPRETER, "interpret_query", **kwargs)
+        except InterpreterError as exc:
+            self.interpreter_schema_issues = exc.schema_issues
+            raise
 
     async def select_candidates(self, **kwargs: Any) -> Any:
         return await self._call(EvaluationComponent.SELECTOR, "select_candidates", **kwargs)
@@ -221,8 +231,14 @@ class EvaluationReportStore:
         upstream_status: int | None = None,
         grounding_diagnostic_code: str | None = None,
         report_write_error: EvaluationReportWriteError | None = None,
+        schema_issues: tuple[SchemaValidationIssue, ...] = (),
     ) -> None:
         record: dict[str, Any] = {"scenario_id": scenario_id, "error_code": code[:80]}
+        issue_records = schema_issue_records(schema_issues)
+        if issue_records:
+            if code != "interpreter_schema_error":
+                raise ValueError("schema diagnostics require an interpreter schema error")
+            record["schema_issues"] = issue_records
         if report_write_error is not None:
             if code != EvaluationReportWriteError.code:
                 raise ValueError("report diagnostic requires a report write error")

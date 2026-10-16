@@ -54,6 +54,7 @@ from .llm_budget import LLMRequestBudget
 from .llm_selection import SelectorError
 from .models import Language, OfferRecord, QueryInteraction, QueryRequest, QueryResponse
 from .providers.llm import BlabladorProvider, InterpreterError
+from .providers.diagnostics import schema_issue_records
 from .service import QueryService
 from .translation_contract import TranslationRuntimePolicy
 
@@ -256,12 +257,14 @@ async def run_interpreter_live_gate(
                     "confirmed_model_identifier": _confirmed_model(provider, "interpreter"),
                     "provider_failure_kind": provider_failure_kind,
                     "upstream_status": exc.upstream_status,
+                    "schema_issues": schema_issue_records(exc.schema_issues),
                 })
                 store.append_error(
                     scenario_id=scenario.scenario_id,
                     code=exc.code,
                     provider_failure_kind=provider_failure_kind,
                     upstream_status=exc.upstream_status,
+                    schema_issues=exc.schema_issues,
                 )
                 counter.record_failure()
     except EvaluationLimitReached as exc:
@@ -653,6 +656,9 @@ async def _run_e2e_scenario(
     answers: list[dict[str, Any]] = []
     started = clock()
     for turn_index, text in enumerate(scenario.synthetic_inputs):
+        evaluation_provider = getattr(service, "blablador", None)
+        if isinstance(evaluation_provider, LimitedEvaluationProvider):
+            evaluation_provider.interpreter_schema_issues = ()
         counter.reserve_request()
         language = Language(scenario.fixture.get("second_language", scenario.language)) if turn_index > 0 else Language(scenario.language)
         response = await service.query(QueryRequest(query=text, language=language, session_id=session_id))
@@ -690,6 +696,9 @@ async def _run_e2e_scenario(
                     "recovered": not fallback_used and response.provider != "template",
                     "answer_provider": response.provider,
                 })
+                if stage == "interpreter" and code == "interpreter_schema_error":
+                    issues = getattr(evaluation_provider, "interpreter_schema_issues", ())
+                    stage_errors[-1]["schema_issues"] = schema_issue_records(issues)
         answers.append({"turn": turn_index + 1, "text": response.answer})
         for attempt, rejection in enumerate(rejection_buffer, start=1):
             formulator_rejections.append({"turn": turn_index + 1, "attempt": attempt, **rejection})

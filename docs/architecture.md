@@ -390,6 +390,21 @@ und bedingtem 112-Hinweis sowie gegebenenfalls der lokalen Hilfebus-Kontaktkarte
 ohne Marker. Kandidaten, Infrastruktur, Selector und Formulator
 laufen nicht; eine lexikalische Fachklassifikation wird nicht verwendet.
 
+Schemaverwerfungen des Interpreters tragen intern `schema_issues`: höchstens
+acht Einträge mit `field_path` und einem geschlossenen `error_type`.
+`app/providers/diagnostics.py` projiziert ausschließlich erlaubte Vertragsfelder;
+Listenpositionen erscheinen als `*`, unbekannte Feldnamen als `<extra>` und
+modellweite Konsistenzfehler unter `$`. Bekannte semantische Fehler erhalten
+Codes wie `out_of_scope_need_mismatch` oder `clarification_mismatch`.
+Eingabewerte, Rohantworten, freie Fehlermeldungen, Pydantic-Kontext und URLs
+werden nicht in diese Diagnose übernommen. Sie steht im Logereignis
+`query.interpreter.schema_invalid` und in lokalen Evaluationsberichten, nicht
+im öffentlichen Antwortvertrag oder als neues Interaktionsprotokollfeld.
+Promptversion `11` beschreibt die bestehende Kopplung
+`scope_status=out_of_scope` → `need=unknown` ausdrücklich; Vertragversion `4`
+und Validatorsemantik bleiben unverändert. Diese Vorgabe ist keine tolerante
+Reparatur ungültiger Antworten und löst keinen Interpreter-Retry aus.
+
 `app/resources.py` löst statische Paketressourcen und den rein lesbaren
 Bootstrap unabhängig vom aktuellen Arbeitsverzeichnis auf. Im Source-Checkout
 bleiben `data/` und `runtime/` kompatible Standards. Eine Wheel-Installation

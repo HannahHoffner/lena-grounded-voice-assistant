@@ -15,7 +15,7 @@ from .models import Category, ChatTurn, Language, OfferRecord
 
 
 INTERPRETER_CONTRACT_VERSION = "4"
-INTERPRETER_PROMPT_VERSION = "10"
+INTERPRETER_PROMPT_VERSION = "11"
 MAX_INTERPRETER_INPUT_CHARS = 2_000
 MAX_INTERPRETER_RESPONSE_CHARS = 8_000
 MAX_INTERPRETER_CONTEXT_TURNS = 4
@@ -36,7 +36,7 @@ The JSON object has exactly these top-level keys, no others: contract_version, n
   - gender: one of female, male, non_binary, diverse, unknown.
   - drug_use: one of yes, no, unknown.
   - no_social_benefit_entitlement: one of yes, no, unknown.
-  - district: a district name string, or null.
+  - district: a district name string, or null; district must not be empty or whitespace-only.
   - requested_day: one of monday, tuesday, wednesday, thursday, friday, saturday, sunday, today, tomorrow, tonight, or null.
   - requested_time: a 24-hour "HH:MM" string, or null.
 - uncertain_hints: array of 0-8 objects, each with exactly field (one of need, age, gender, drug_use, social_benefit_entitlement, district, requested_day, requested_time, other) and value (at most a few words, never a full sentence).
@@ -45,7 +45,7 @@ The JSON object has exactly these top-level keys, no others: contract_version, n
 - acute_risk_status: one of detected, not_detected, uncertain.
 Never add, omit, rename, or flatten any of these keys; explicit_facts must always be its own nested object, never merged into the top level.
 
-Classify need as food, drinking_water, sleep, medical, advice, toilet, general_help, or unknown. The domain covers food/basic needs, drinking water, overnight accommodation, medical help, advice/social support/streetwork, toilets, and a still-unspecified general request for help. Clearly unrelated requests are out_of_scope; incomprehensible or unresolved requests are unclear. unknown does not itself mean out_of_scope. A question about LENA's abilities is a controlled system question, not a service request.
+Classify need as food, drinking_water, sleep, medical, advice, toilet, general_help, or unknown. The domain covers food/basic needs, drinking water, overnight accommodation, medical help, advice/social support/streetwork, toilets, and a still-unspecified general request for help. Clearly unrelated requests are out_of_scope; incomprehensible or unresolved requests are unclear. If scope_status is out_of_scope, need must be unknown. unknown does not itself mean out_of_scope. A question about LENA's abilities is a controlled system question, not a service request.
 
 List explicitly requested services separately in explicit_service_requests, using only overnight_stay, food, drinking_water, hygiene, shower, laundry, clothing, postal, medical_care, wound_care, counselling, day_stay, contact, youth_support, or protection. youth_support requires an explicit request for a youth service, youth centre, youth streetwork, or a named youth organization; a numeric age alone never establishes youth_support. protection requires an explicit request for a protected place, immediate youth welfare support, or help because the person cannot safely return home. Include a service only when the user explicitly asks for it; do not expand food into hygiene or infer a service from an unrelated institution alias. Keep the broader need and the concrete service distinct.
 

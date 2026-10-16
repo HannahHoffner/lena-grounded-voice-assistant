@@ -277,7 +277,7 @@ Fallbacks, siehe Fundstellen in `app/service.py`).
 ## Öffentliche Toiletten und räumliche Ergebnisordnung
 
 Duschen, allgemeine Hygiene und Wäschewaschen sind keine Toilettenanfragen.
-Interpreterprompt 10 ordnet solche alleinigen Anfragen `general_help` mit der
+Interpreterprompt 11 ordnet solche alleinigen Anfragen `general_help` mit der
 konkreten Leistung zu. Widerspricht ein `toilet`-Bedarf einer gleichzeitig
 ausdrücklich erkannten Waschleistung, hat diese vor der Infrastrukturroute
 Vorrang. Konkrete Leistungen lösen keine erneute allgemeine Bedarfsfrage aus.

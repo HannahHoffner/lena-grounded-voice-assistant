@@ -55,7 +55,10 @@ from ..models import (
 from .diagnostics import (
     HTTP_STATUS_FAILURE_KINDS,
     ProviderFailureKind,
+    SchemaValidationIssue,
     classify_provider_failure,
+    interpreter_schema_issues,
+    schema_issue_records,
 )
 
 LOGGER = logging.getLogger(__name__)
@@ -79,7 +82,11 @@ class InterpreterError(ProviderError):
         *,
         provider_failure_kind: ProviderFailureKind | None = None,
         upstream_status: int | None = None,
+        schema_issues: tuple[SchemaValidationIssue, ...] = (),
     ) -> None:
+        schema_issue_records(schema_issues)
+        if schema_issues and code != "interpreter_schema_error":
+            raise ValueError("schema diagnostics require an interpreter schema error")
         if upstream_status is not None and (
             type(upstream_status) is not int or not 100 <= upstream_status <= 599
         ):
@@ -92,6 +99,7 @@ class InterpreterError(ProviderError):
         self.code = code
         self.provider_failure_kind = provider_failure_kind
         self.upstream_status = upstream_status
+        self.schema_issues = schema_issues
 
 
 def _interpreter_http_error(exc: BaseException) -> InterpreterError:
@@ -275,11 +283,12 @@ class BlabladorProvider:
         try:
             parsed = QueryInterpretation.model_validate(raw)
         except ValidationError as exc:
+            issues = interpreter_schema_issues(exc)
             LOGGER.warning(
                 "query.interpreter.schema_invalid",
-                extra={"error_code": "interpreter_schema_error"},
+                extra={"error_code": "interpreter_schema_error", "schema_issues": schema_issue_records(issues)},
             )
-            raise InterpreterError("interpreter_schema_error") from exc
+            raise InterpreterError("interpreter_schema_error", schema_issues=issues) from exc
         try:
             validate_no_internal_ids(parsed)
         except ValueError as exc:

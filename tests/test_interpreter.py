@@ -620,8 +620,8 @@ def test_prompt_names_every_contract_field_including_nested_explicit_facts() -> 
     assert "input_language" in INTERPRETER_SYSTEM_PROMPT
 
 
-def test_prompt_version_10_defines_risk_scope_need_and_sleeping_bag_semantics() -> None:
-    assert INTERPRETER_PROMPT_VERSION == "10"
+def test_prompt_version_11_defines_risk_scope_need_and_sleeping_bag_semantics() -> None:
+    assert INTERPRETER_PROMPT_VERSION == "11"
     assert "Toilet means an explicitly requested toilet/WC" in INTERPRETER_SYSTEM_PROMPT
     assert 'explicit_service_requests=["shower"]' in INTERPRETER_SYSTEM_PROMPT
     assert "primarily a concrete or possible immediate danger statement" in INTERPRETER_SYSTEM_PROMPT
