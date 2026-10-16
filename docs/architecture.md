@@ -299,8 +299,20 @@ Für die Leistungsprüfung wird eine vollständig zitierte Zielgruppenphrase wie
 die Beratung noch belegt sie eine angebotene Krankenversicherung. Dieselbe
 Normalisierung gilt für Aussage und zitierte Evidenz in DE/EN/PL/RO/RU.
 Nur vollständig übereinstimmende Phrasen der begrenzten Sprachmuster werden
-ausgeblendet; Verneinungen außerhalb bleiben sichtbar. Das ist keine allgemeine
-semantische Analyse und erweitert nicht die vorhandene Negationswortliste.
+ausgeblendet. Folgt innerhalb desselben Satzteils eine zweite Leistung, wird
+die Zielgruppe nur dann vor einer sprachpassenden Konjunktion abgegrenzt,
+wenn der gesamte nachfolgende Text einem separat zitierten, nicht negierten
+Leistungswert entspricht. Beim Vergleich dieses Werts werden führende
+`>`-Listenmarker und abschließende Satzzeichen entfernt. Die Leistungsphrase
+bleibt sichtbar und durchläuft die normalen Grounding-Prüfungen.
+Eine Konjunktion allein oder ein nicht zitierter beziehungsweise nur teilweise
+passender Leistungstext bildet keine Grenze. Vollständig zitierte Zielgruppen
+mit mehreren fehlenden Dingen werden weiterhin als Ganzes ausgeblendet;
+Verneinungen außerhalb bleiben sichtbar. Diese Regel gilt für DE/EN/PL/RO/RU,
+ist keine allgemeine semantische Analyse und erweitert nicht die vorhandene
+Negationswortliste. Die Regressionen in `tests/test_grounding_audience.py`
+prüfen sowohl die Abgrenzung als auch den echten Validator einschließlich
+einer gespeicherten dreisätzigen CABL-Ausgabe.
 
 Erkannte Verneinungen belegen keine positive Leistung und umgekehrt. Freie
 negative Paraphrasen werden konservativ nicht freigegeben; ein vollständig

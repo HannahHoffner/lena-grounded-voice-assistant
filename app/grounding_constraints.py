@@ -87,15 +87,24 @@ _AUDIENCE_WITHOUT = {
     Language.RU: r"(?:lyudey|lyudi|lyudyam) bez",
 }
 
+_SERVICE_COORDINATORS = {
+    Language.DE: r"und",
+    Language.EN: r"and",
+    Language.PL: r"i|oraz",
+    Language.RO: r"si",
+    Language.RU: r"i",
+}
+
 
 def service_text_without_cited_audience(text: str, facts: Sequence[Fact], language: Language) -> str:
     """Separate a verbatim evidenced audience qualifier from a service claim.
 
     Counselling *for people without healthcare* is positive counselling, not
     absent counselling (nor a promise of healthcare). Only a complete cited
-    qualifier is masked, ending at punctuation. Do not split at "and": it can
-    coordinate two things the audience lacks, not two services being offered.
-    Unmatched wording and every negation outside that span remain visible.
+    qualifier is masked, ending at punctuation. A coordinator alone is not a
+    boundary: it can join two things the audience lacks. A cited qualifier may
+    end before a coordinator only when the entire suffix is a separately cited,
+    non-negated service value. That service and all other negation stay visible.
     Returned text is normalized only for internal lexical checks, never output.
     """
     normalized = transliterated(text)
@@ -107,9 +116,28 @@ def service_text_without_cited_audience(text: str, facts: Sequence[Fact], langua
             if kind in TARGET_SUPPORT_TEXT_FACT_TYPES | {"target_group"}
             for match in pattern.finditer(transliterated(value))
         }
-        normalized = pattern.sub(
-            lambda match: " " if match.group().strip() in qualifiers else match.group(), normalized,
-        )
+        services = {
+            transliterated(value).lstrip("> ").rstrip(" .;!?")
+            for kind, value in facts
+            if kind == "service"
+            and not any(has_negation(value, candidate) for candidate in (lang, Language.DE, Language.EN))
+        }
+
+        def mask(match: re.Match[str]) -> str:
+            phrase = match.group().strip()
+            if phrase in qualifiers:
+                return " "
+            # Longest first; never consume an extra, uncited audience condition.
+            for qualifier in sorted(qualifiers, key=len, reverse=True):
+                if not phrase.startswith(qualifier + " "):
+                    continue
+                suffix = phrase[len(qualifier):].lstrip()
+                continuation = re.fullmatch(rf"(?:{_SERVICE_COORDINATORS[lang]})\s+(.+)", suffix)
+                if continuation and continuation.group(1) in services:
+                    return " " + suffix
+            return match.group()
+
+        normalized = pattern.sub(mask, normalized)
     return normalized
 
 
