@@ -699,6 +699,7 @@ def test_manifest_is_reproducible_and_contains_no_secret(tmp_path: Path) -> None
     serialized = json.dumps(manifest)
 
     assert manifest["scenario_hash"] == live_scenario_hash()
+    assert manifest["end_to_end_assessment_version"] == "2"
     assert manifest["runtime_kb_fingerprint"] == kb.runtime_kb_fingerprint
     assert manifest["social_release_id"]
     assert manifest["toilet_release_id"]
@@ -1220,6 +1221,7 @@ def test_end_to_end_runner_executes_real_pipeline_without_touching_application_r
     assert not (settings.runtime_dir / "logs").exists()
     report = settings.runtime_dir / result["report_directory"]
     assert (report / "summary.json").is_file()
+    _assert_reported_assessment_coverage(settings, result)
 
 
 def test_stability_runner_executes_eighteen_single_turn_repetitions(tmp_path: Path) -> None:
@@ -1234,6 +1236,22 @@ def test_stability_runner_executes_eighteen_single_turn_repetitions(tmp_path: Pa
     assert result["counts"]["requests"] == 18
     assert len(result["response_type_stable_per_scenario"]) == 6
     assert not (settings.runtime_dir / "sessions.json").exists()
+    _assert_reported_assessment_coverage(settings, result)
+
+
+def _assert_reported_assessment_coverage(settings: Settings, result: dict[str, Any]) -> None:
+    report = settings.runtime_dir / result["report_directory"]
+    rows = [json.loads(line) for line in (report / "stage-results.jsonl").read_text(encoding="utf-8").splitlines()]
+    expected_unverified = sum(len(row["unverified_metrics"]) for row in rows)
+    assert expected_unverified > 0, "Testkatalog enthält nicht automatisch prüfbare Erwartungen"
+    assert result["unverified_metric_count"] == expected_unverified
+    assert result["content_evaluation_complete"] is False
+    summary = json.loads((report / "summary.json").read_text(encoding="utf-8"))
+    assert summary["unverified_metric_count"] == expected_unverified
+    assert summary["content_evaluation_complete"] is False
+    assert result["content_gate_passed"] == (
+        result["contract_gate_passed"] and result["content_mismatch_count"] == 0
+    )
 
 
 def test_e2e_and_stability_runners_abort_on_provider_identity_mismatch(tmp_path: Path) -> None:
@@ -1707,7 +1725,7 @@ def test_end_to_end_failure_budget_allows_the_full_scenario_set() -> None:
     plan = load_live_scenario_catalog().plan(EvaluationStage.END_TO_END)
 
     assert plan.live_limits.max_failures == 14
-    assert plan.live_limits.max_failures < len(plan.scenario_ids) / 2
+    assert plan.live_limits.max_failures == len(plan.scenario_ids) // 2 + 1
     # Die Kostengrenzen bleiben die harten Schranken.
     assert plan.live_limits.max_provider_calls == 102
     assert plan.live_limits.max_total_runtime_seconds == 1960

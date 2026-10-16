@@ -38,6 +38,7 @@ from .live_evaluation import (
     load_live_scenario_catalog,
     redact_model_identifier,
 )
+from .live_evaluation_checks import END_TO_END_ASSESSMENT_VERSION
 from .llm_selection import (
     SELECTOR_CONTRACT_VERSION,
     SELECTOR_PROMPT_VERSION,
@@ -374,6 +375,7 @@ def build_run_manifest(
         # tragen dieses Feld nicht; sie maßen den unwiederholten Erstaufruf und
         # sind mit Läufen dieses Modus nicht unmittelbar vergleichbar.
         "formulator_measurement_mode": "application_path_with_bounded_retry",
+        "end_to_end_assessment_version": END_TO_END_ASSESSMENT_VERSION,
         "configured_timeouts": {
             "interpreter": settings.llm_interpreter_timeout_seconds,
             "selector": settings.llm_selector_timeout_seconds,

@@ -218,6 +218,41 @@ Die Callzahlen sind Abbruchgrenzen, keine Verbrauchs- oder Kostenprognose. Koste
 sind ohne eine belastbare, versionierte Preisinformation des Providers nicht
 bestimmbar; das Repository enthält keine solche Preisgrundlage.
 
+### Automatisierte Inhaltsprüfung und Prüfvollständigkeit
+
+`app/live_evaluation_checks.py` enthält die gemeinsame Auswertung für End-to-End
+und Stabilität. Das Manifest bindet sie über `end_to_end_assessment_version`.
+Jede deklarierte Required- oder Allowed-Erwartung wird geprüft oder als `null`
+in `metrics` und namentlich in `unverified_metrics` ausgewiesen. Für nicht
+operationalisierte Allowed-Bedingungen lautet der Schlüssel `allowed:<name>`,
+für symbolische Verbote `forbidden:<token>`. Ungeprüft bedeutet weder bestanden
+noch widerlegt.
+
+`requested_language` vergleicht die Sprachkennung der finalen `QueryResponse`
+mit dem Sollwert. Das prüft die Metadaten, nicht die sprachliche Qualität oder
+tatsächliche Zielsprache jedes Satzes. Der abschließend aufgelöste Bedarf ist
+in dieser Response nicht enthalten; `need` bleibt daher ausdrücklich ungeprüft.
+Die Auswertung leitet ihn weder aus Angebotskarten noch aus dem letzten
+Interpreteraufruf ab. Auch Zeitpriorität, Bezirksunabhängigkeit und symbolische
+Verbote ohne eindeutigen maschinellen Prüfer benötigen eine gesonderte Prüfung.
+
+Numerisch verbotene Angebots-IDs werden gegen Karten, Karten-IDs, Marker-IDs,
+Kartenziele, vorgelesene Ergebnis-IDs und interne Quellen-IDs geprüft.
+`forbidden_results_absent` ist falsch, sobald eine solche verbotene ID
+vorkommt. Ohne bekannten Verstoß bleibt die aggregierte Bedingung ungeprüft,
+wenn die Verbotsliste symbolische Kriterien enthält oder keine Verbotsliste
+vorliegt. Eine symbolische Bedingung wie `invented_offer` wird nicht durch
+einen bloßen Substringvergleich zu einer behaupteten Bedeutungsprüfung.
+
+Die Zusammenfassung zählt ungeprüfte Bedingungen über die tatsächlich
+ausgeführten Szenarien in `unverified_metric_count`. `content_evaluation_complete`
+ist nur bei abgeschlossenem Lauf ohne solche offenen Bedingungen wahr. Die
+Gateformeln sind davon getrennt: Das Inhaltsgate verlangt ein
+bestandenes Vertragsgate und null beobachtete Inhaltsabweichungen. Ein
+bestandenes Inhaltsgate allein belegt weder vollständige Prüfdeckung noch eine
+menschliche oder fachliche Freigabe. Dafür sind Einzelmetriken, Prüfgrenzen und
+die gesonderte manuelle Bewertung gemeinsam auszuwerten.
+
 Stufe 1 enthält pro Sprache eine reguläre In-Scope-Anfrage, eine klare
 Out-of-Scope-Anfrage und einen Safety-Fall. Über die fünf Sprachen verteilt sind
 Schlafen, Essen, Toilette, Trinkwasser, Beratung sowie akute und unklare Gefahr
