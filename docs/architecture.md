@@ -294,6 +294,18 @@ Allgemeine Leistungsbeschreibungen dürfen weiterhin ohne Zeitangabe
 stehen. Eine persönliche Schlafplatzzusage braucht kein Wort wie „garantiert“,
 um unbelegt zu sein.
 
+Vor der Satzgrenzen- und Sprachprüfung werden vollständig übereinstimmende
+belegte Zeitliterale intern maskiert. Bei `opening_time` und `stand_time`
+darf dabei der führende Darstellungsmarker `> ` des Evidence-Werts fehlen;
+der verbleibende Zeit-/Ortstext muss weiterhin vollständig übereinstimmen.
+So zählt beispielsweise das belegte `18:30 ч. Hauptbahnhof` nicht wegen
+des russischen Stundenkürzels als zusätzlicher Satz. Die sichtbare Antwort
+und die anschließenden Fakt-, Referenz- und Groundingprüfungen bleiben
+unverändert. Es gibt keine globale Ausnahme für Stundenkürzel: Zusätzliche
+Sätze außerhalb des passenden Literals bleiben sichtbar. Andere Marker,
+unbelegte Kürzel oder nur teilweise passende Zeitangaben werden durch diese
+Regel nicht normalisiert. Regression: `tests/test_grounding_schedule_literals.py`.
+
 Für die Leistungsprüfung wird eine vollständig zitierte Zielgruppenphrase wie
 „Menschen ohne Krankenversicherung“ intern ausgeblendet: Sie verneint weder
 die Beratung noch belegt sie eine angebotene Krankenversicherung. Dieselbe

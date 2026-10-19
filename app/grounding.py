@@ -220,6 +220,15 @@ def _strip_evidence_literals(text: str, evidence: FormulatorEvidence) -> str:
             FactType.EMAIL, FactType.URL, FactType.OPENING_TIME, FactType.STAND_TIME,
         }
     ]
+    # Schedule values may carry a presentation-only quote/list marker. Match
+    # the entire evidenced remainder, never an abbreviation or arbitrary prefix.
+    literals.extend(
+        fact.value[2:]
+        for offer in evidence.selected_offers
+        for fact in offer.facts
+        if fact.fact_type in {FactType.OPENING_TIME, FactType.STAND_TIME}
+        and fact.value.startswith("> ") and fact.value[2:].strip()
+    )
     for literal in sorted(literals, key=len, reverse=True):
         stripped = re.sub(re.escape(literal), " ", stripped, flags=re.IGNORECASE)
     return stripped
