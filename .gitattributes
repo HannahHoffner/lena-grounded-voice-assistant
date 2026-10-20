@@ -1,0 +1,4 @@
+# Historical development records remain in Git, outside the software release ZIP.
+docs/exec-plans export-ignore
+docs/reviews export-ignore
+docs/architecture/codebase-review.md export-ignore

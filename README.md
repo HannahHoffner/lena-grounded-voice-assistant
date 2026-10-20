@@ -72,8 +72,10 @@ Kopieren der Konfiguration erfolgt mit `cp .env.example .env`.
 - [Konfigurationsreferenz](docs/configuration.md)
 - [Datenflüsse und Schnittstellen](docs/data-flow.md)
 - [Tests und Qualitätssicherung](docs/testing.md)
+- [Docker und Reproduzierbarkeit](docs/reproducibility.md)
+- [Release und Zenodo-Archivierung](docs/release.md)
+- [Lizenz und Herkunft](THIRD_PARTY_NOTICES.md)
 - [Safety- und Fehlerpolitik](docs/safety-and-error-policy.md)
-- [Qualitätsreview und Bereinigungsnachweis, September 2026](docs/reviews/quality-review-2026-09.md)
 
 ## Projektstruktur
 
@@ -194,8 +196,10 @@ diese hashgebundenen Punkte erzeugen die VKKJ-Kartenmarker.
 Providerzugänge sind für den Start optional; normale Bedarfsauswahl benötigt
 jedoch den LLM-Interpreter. Ein Speech-Endpunkt ist nur für den serverseitigen
 Sprachpfad erforderlich.
-`edge-tts` wird standardmäßig für Sprachsynthese verwendet und benötigt eine
-Netzwerkverbindung. Leaflet wird lokal aus `app/static/vendor/` ausgeliefert; die
+Der Anwendungsdefault für Sprachsynthese ist `edge-tts` und benötigt eine
+Netzwerkverbindung. Die sichere `.env.example` und der Docker-Standard lassen
+Sprachsynthese zunächst unkonfiguriert; Edge-TTS kann ausdrücklich aktiviert
+werden. Leaflet wird lokal aus `app/static/vendor/` ausgeliefert; die
 Kartenkacheln werden im Frontend von OpenStreetMap geladen.
 
 Quelle: Stadt Leipzig, WFS Wohnungslosenhilfe,
@@ -292,11 +296,10 @@ ausdrückliche Datensatzlizenz ist nicht ausgewiesen; der Release speichert dahe
 
 ## Versionskontrolle und CI
 
-Das kanonische Repository ist `lena-grounded-voice-assistant`. Der Branch
-`modernization/code3-baseline` übernimmt den geprüften Code3-Stand auf Basis des
-historischen Commits `c20a38a`. Der Baseline-Commit dokumentiert einen
-kontrollierten Ausgangsstand; er rekonstruiert nicht die außerhalb von Git
-entstandene Entwicklungsgeschichte von Code3.
+Das kanonische Repository ist
+[`lena-grounded-voice-assistant`](https://github.com/HannahHoffner/lena-grounded-voice-assistant).
+Historische Import- und Reviewstände bleiben in Git nachvollziehbar; sie sind
+keine Rekonstruktion der zuvor außerhalb von Git entstandenen Entwicklung.
 
 Erstelle Änderungen auf kurzen Arbeitsbranches und halte Commits auf ein
 reviewbares Thema begrenzt. Echte Zugangsdaten, Sessions und lokale Runtime-
@@ -318,9 +321,16 @@ fixiert die direkte und transitive Auflösung für CPython 3.11. Ein vorhandener
 Workflow ist noch kein Nachweis eines erfolgreichen Remote-Laufs; maßgeblich ist
 der jeweilige Checkstatus auf GitHub.
 
-Der frühere unversionierte Arbeitsordner wurde nach Datei- und Secret-Prüfung in
-`Code3-archive-pre-git-20260717` umbenannt. Er ist nur ein lokales, sensibles
-Herkunftsarchiv und kein zweiter Checkout.
+Der zusätzliche CI-Job `container` baut die Docker-Test- und Runtime-Images,
+führt die vollständige Suite ohne Netzwerk aus und prüft Healthcheck und zwei
+Starts mit leerem temporärem Zustand. Dieser neue Job wurde noch nicht remote
+ausgeführt.
+
+Für plattformübergreifende Bereitstellung ist ein Ubuntu-24.04-Docker-Build mit
+Python 3.12 und hashgesperrten Abhängigkeiten vorbereitet. Der Containerbuild
+und seine Tests sind noch auszuführen; Details und sichere Startbefehle stehen
+in [Docker und Reproduzierbarkeit](docs/reproducibility.md). Eine Zenodo-DOI
+existiert für diesen vorbereiteten Stand noch nicht.
 
 ## Weiterentwicklung und Wartung
 

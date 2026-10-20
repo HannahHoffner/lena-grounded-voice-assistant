@@ -51,7 +51,7 @@ Fehlerpfad; echte Ausfälle und erholte Formulatorwiederholungen zählen
 weiterhin als technische Fehler. Katalogversion, Szenariohash und
 Assessmentversion binden die veränderte Messung. Historische Ergebnisse
 werden nicht rückwirkend neu bewertet. Der historische
-[Qualitätsreview](reviews/quality-review-2026-09.md) beschreibt seinen damaligen Stand.
+[Qualitätsreview](https://github.com/HannahHoffner/lena-grounded-voice-assistant/blob/4b3e7cf1d91fa9cc34698bc7975e151a31a54d90/docs/reviews/quality-review-2026-09.md) beschreibt seinen damaligen Stand.
 
 ### Einordnung des E2E-Diagnoselaufs auf `fa670f4`
 

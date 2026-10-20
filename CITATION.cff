@@ -1,0 +1,25 @@
+cff-version: 1.2.0
+message: >-
+  Please cite the specific archived release of LENA that you used.
+  A Zenodo DOI and release date will be added after publication.
+type: software
+title: "LENA: Grounded Multilingual Local-Referral Prototype"
+abstract: >-
+  Research prototype for multilingual access to curated local support services
+  in Leipzig, with constrained language-model interpretation and formulation,
+  deterministic candidate selection, grounding, and optional speech interfaces.
+authors:
+  - family-names: Hoffner
+    given-names: Hannah
+version: 0.2.0
+license: GPL-3.0-only
+repository-code: "https://github.com/HannahHoffner/lena-grounded-voice-assistant"
+keywords:
+  - research software
+  - homelessness
+  - Leipzig
+  - multilingual information access
+  - grounding
+  - reproducibility
+# Release preparation: do not add a fabricated DOI or publication date.
+# Add doi and date-released only for the actual archived release.

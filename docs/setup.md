@@ -1,5 +1,10 @@
 # Installation und Betrieb
 
+Für Windows, Linux und macOS steht zusätzlich der vorbereitete
+[Docker-Build](reproducibility.md) mit festgelegter Ubuntu-/Python-Umgebung zur
+Verfügung. Dessen Containerverifikation steht noch aus. Die folgenden Abschnitte
+beschreiben weiterhin die direkte Python-Installation.
+
 ## Voraussetzungen
 
 - Python 3.11 oder neuer

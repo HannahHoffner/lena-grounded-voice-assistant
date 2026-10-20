@@ -6,6 +6,12 @@ sind ignoriert und dürfen Geheimnisse enthalten. `.env.example` enthält nur
 sichere Platzhalter. Legacy-Namen mit Präfix `LENA_` werden für mehrere Provider-
 und Sessionvariablen weiterhin akzeptiert.
 
+Mit `LENA_ENV_FILE_MODE=disabled` werden beide lokalen Dateien ignoriert; diese
+Einstellung gilt für isolierte Prüfungen und den Docker-Standard. Die Tabellen
+nennen die Anwendungsdefaults. Davon abweichend deaktiviert `.env.example`
+automatische WFS-Abrufe und vollständige Interaktionslogs und lässt TTS ohne
+Zugangsdaten unkonfiguriert. Siehe [Docker und Reproduzierbarkeit](reproducibility.md).
+
 ## Anwendung und Modell
 
 | Variable | Pflicht | Standard | Zweck |

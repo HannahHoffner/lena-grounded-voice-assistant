@@ -1,5 +1,13 @@
 # Tests und Qualitätssicherung
 
+Die separate [Docker-Anleitung](reproducibility.md) beschreibt die vollständige
+Suite samt Paketierung und Frontendtests im netzwerkgesperrten Testcontainer.
+Dieser Containerlauf ist im derzeitigen Prüfungsumfeld noch nicht ausgeführt.
+Der zusätzliche CI-Job `container` baut beide Images, führt die Suite mit
+`--network none` aus und prüft zwei Runtime-Starts mit getrenntem leerem Zustand.
+Er ist vorbereitet; ein erfolgreicher Remote-Lauf wird erst nach tatsächlicher
+Ausführung des Workflows behauptet.
+
 ## Ausführung
 
 ```powershell
@@ -84,8 +92,9 @@ installiert das Artefakt in eine frische virtuelle Umgebung. Der Smoke-Test
 entfernt `PYTHONPATH`, wechselt in ein fremdes Arbeitsverzeichnis, verifiziert
 `app.__file__` unter `site-packages` und prüft Version, Startseite, Static Asset,
 Wissensbasis, Templatequery sowie externe Runtime-Schreibpfade.
-Der Workflow enthält bewusst kein Deployment, keinen Node-/Browser-Schritt und
-keine noch unkonfigurierten Linter, Type-Checker oder Security-Scanner. Ein
+Der Workflow enthält kein Deployment und keine noch unkonfigurierten Linter,
+Type-Checker oder Security-Scanner. Der zusätzliche Containerjob führt auch
+Node-Tests aus; ein Browser-E2E-Test ist darin nicht enthalten. Ein
 Remote-CI-Lauf kann erst nach Push beziehungsweise Pull Request bestätigt
 werden; die lokale Ausführung prüft nur Befehle und Workflowstruktur.
 

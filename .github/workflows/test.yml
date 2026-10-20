@@ -32,3 +32,34 @@ jobs:
 
       - name: Distributionen bauen
         run: python -m build
+
+  container:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - name: Repository auschecken
+        uses: actions/checkout@v7
+      - name: Testimage bauen
+        run: docker build --target test -t lena-check .
+      - name: Vollständige Containerprüfungen ohne Netzwerk
+        run: docker run --rm --network none lena-check
+      - name: Runtime-Image bauen
+        run: docker build --target runtime -t lena-runtime .
+      - name: Healthcheck und zweimaliger Start mit leerem Zustand
+        shell: bash
+        run: |
+          set -euo pipefail
+          trap 'docker rm -f lena-smoke >/dev/null 2>&1 || true' EXIT
+          for iteration in 1 2; do
+            docker run -d --name lena-smoke --network none --read-only \
+              --tmpfs /tmp:rw,noexec,nosuid,size=64m \
+              --health-interval=1s --health-start-period=0s lena-runtime
+            for attempt in $(seq 1 30); do
+              status=$(docker inspect --format '{{.State.Health.Status}}' lena-smoke)
+              if [ "$status" = healthy ]; then break; fi
+              sleep 1
+            done
+            test "$status" = healthy
+            docker exec lena-smoke /opt/lena/bin/python -c "import urllib.request; assert urllib.request.urlopen('http://127.0.0.1:8002/').status == 200"
+            docker rm -f lena-smoke
+          done
