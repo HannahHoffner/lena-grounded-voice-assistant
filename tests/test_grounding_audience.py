@@ -153,6 +153,9 @@ def test_coordinated_romanian_counterexamples_are_rejected(app, mutation):
     sentence = response.sentences[1]
     if mutation == "missing_citation":
         sentence.fact_ids.remove("f_f1cdef575c862948")
+        assert validate_formulation(response, evidence).sentence_count == 3
+        evidence.selected_offers[0].facts = [f for f in evidence.selected_offers[0].facts
+                                            if f.fact_id != "f_f1cdef575c862948"]
     elif mutation == "negated_service":
         sentence.text = "Nu " + sentence.text
     elif mutation == "additional_negation":

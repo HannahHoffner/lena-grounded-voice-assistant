@@ -2,11 +2,11 @@
 
 Dieses Modul beantwortet genau eine Frage: Wird ein im sichtbaren Antworttext
 erkanntes Konzept (Leistung, Zielgruppe, Aufnahme, aktuelle Verfügbarkeit) von
-den *Werten* der zitierten Fakten getragen? Es ist bewusst kein
+den *Werten* der übergebenen Fakten getragen? Es ist bewusst kein
 Entailment-Modell. Es arbeitet mit einem geschlossenen mehrsprachigen
 Stammwortschatz und trennt Prüfungsergebnisse von fehlender Prüfabdeckung:
 
-``SUPPORTED``     Das Konzept steht in einem zitierten Wert.
+``SUPPORTED``     Das Konzept steht in einem übergebenen Wert.
 ``CONTRADICTED``  Ein typisierter kuratierter Fakt schließt das Konzept aus.
 ``UNDECIDABLE``   Kein Beleg und kein Widerspruch; mit diesem Verfahren nicht
                   entscheidbar.

@@ -160,7 +160,7 @@ Tag oder einer Uhrzeit bevorzugt er Kandidaten, deren strukturierter
 `schedule_match_status` bereits deterministisch `matched` ist; er darf keine
 Zeitpassung selbst ergänzen.
 
-Die Modellantwort folgt Formulatorvertrag 2. Promptversion 18 fordert bei
+Die Modellantwort folgt Formulatorvertrag 3. Promptversion 19 fordert bei
 normalen angebotsbezogenen Antworten zwei oder drei kurze natürliche Sätze. Das
 wichtigste Angebot steht zuerst, ist aber nicht mehr an ein festes
 `Nutze ...`-Muster gebunden. Mehrere finale, nützliche Alternativen können in
@@ -176,12 +176,14 @@ nicht auf „Karten“ oder andere technische Ergebniscontainer. Eine nötige
 Orientierung wird sprachabhängig als „Mehr Infos stehen unten“ ausgedrückt; die
 eigentliche Kartenansicht und fachliche Angaben zur Kartenzahlung sind davon
 nicht betroffen.
-Belegt sein muss der Inhalt, nicht die Position einer Fakt-ID. Die Prüfung
-fasst deshalb die gültigen Faktenreferenzen antwortweit je Angebot zusammen:
-eine Angabe in Satz 1 darf durch einen Fakt belegt sein, der in Satz 2 über
-dasselbe Angebot zitiert wird. Die Zusammenfassung bleibt strikt
-angebotsgebunden; Fakten eines anderen Angebots ersetzen nie einen fehlenden
-Beleg. Eine ungültige oder angebotsfremde Referenz und ein ungeerdeter
+Belegt sein muss der Inhalt, nicht die Vollständigkeit der Modellzitate. Die
+Prüfung verwendet alle bereitgestellten Fakten desselben ausgewählten Angebots;
+Fakten anderer Angebote oder der übrigen Wissensbasis ersetzen keinen Beleg.
+Führende Nullen in Ganzzahl-IDs werden nur bei eindeutiger Paketzuordnung
+normalisiert; unbekannte/mehrdeutige IDs, Dezimalumdeutungen und fremde
+Faktreferenzen bleiben unzulässig. Deklarierte und verfügbare Fakt-IDs werden
+intern getrennt erfasst, ohne verfügbare Fakten als Modellzitate auszugeben.
+Eine ungültige oder angebotsfremde Referenz und ein ungeerdeter
 operativer Fakt verwerfen weiterhin die gesamte Antwort. Verbindliche Karten und die finale Reihenfolge werden
 deterministisch aus dem Evidence-Paket wiederhergestellt und können durch
 `card_ids` weder entfernt noch umsortiert

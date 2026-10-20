@@ -147,7 +147,7 @@ def test_negative_source_does_not_support_positive_claim_but_can_be_quoted(app):
     name = _fact(evidence, FactType.DISPLAY_NAME)
     negative = EvidenceFact(fact_id="f_1111111111111111", fact_type=FactType.SERVICE,
                             value="No sleeping accommodation is offered")
-    offer.facts.append(negative)
+    offer.facts = [name, negative]
     response = _answer(evidence,
                        ("Use Scharni.", ClaimType.ACTION, "8", [name.fact_id]),
                        ("Sleeping accommodation is offered.", ClaimType.SERVICE, "8", [negative.fact_id]))

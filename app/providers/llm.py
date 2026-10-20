@@ -117,6 +117,7 @@ class ProviderAnswer:
     card_ids: list[str]
     sentence_count: int = 1
     answer_type: AnswerType = AnswerType.GROUNDED_RESULT
+    reference_assessment: dict[str, object] | None = None
 
 
 def _strict_interpreter_content(response: dict[str, Any]) -> str:
@@ -420,4 +421,5 @@ class BlabladorProvider:
             card_ids=validated.card_ids,
             sentence_count=validated.sentence_count,
             answer_type=validated.answer_type,
+            reference_assessment=validated.reference_assessment,
         )

@@ -20,6 +20,7 @@ from app.formulation import (
     FormulatedSentence,
     FormulatorError,
     FormulatorResponse,
+    FORMULATOR_CONTRACT_VERSION,
     GroundingDiagnosticCode,
     build_drinking_water_evidence,
     build_formulator_evidence,
@@ -1021,7 +1022,7 @@ class DiagnosticFailingFormulatorProvider(FakeSelectorFormulatorProvider):
         offer = evidence.selected_offers[0]
         name = next(fact for fact in offer.facts if fact.fact_type == FactType.DISPLAY_NAME)
         rejected = FormulatorResponse(
-            contract_version="2",
+            contract_version=FORMULATOR_CONTRACT_VERSION,
             language=evidence.requested_language,
             sentences=[FormulatedSentence(
                 text=f"Use {name.value}.",
@@ -1129,7 +1130,7 @@ def test_selector_formulator_runner_persists_redacted_grounding_diagnostics(tmp_
     assert len(failed) == 3
     assert all(item["grounding_diagnostic_code"] == "proper_name_not_exact" for item in failed)
     assert all(item["structured_output"] is None for item in failed)
-    assert all(item["rejected_structured_output"]["contract_version"] == "2" for item in failed)
+    assert all(item["rejected_structured_output"]["contract_version"] == FORMULATOR_CONTRACT_VERSION for item in failed)
     assert all(item["rejected_structured_output"]["sentences"][0]["text"].startswith("Use ")
                for item in failed)
     error_records = [

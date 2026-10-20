@@ -152,7 +152,7 @@ redigierte Planstand ist:
 | Interpreter Vertrag / Prompt | `4` / `11` |
 | Selector Vertrag / Prompt | `1` / `3` |
 | Evidence-Vertrag | `4` |
-| Formulator Vertrag / Prompt | `2` / `18` |
+| Formulator Vertrag / Prompt | `3` / `19` |
 | Safety-Policy | `2` |
 | Temperatur | `0` |
 | Response-Format | `json_object` |
@@ -649,6 +649,29 @@ Laufreport ohne nachträgliche Rekonstruktion aus Repositoryhistorie oder
 Prüfprotokoll eindeutig einem Commit und einer Softwareversion zuordenbar; ein
 Lauf auf einem dirty Arbeitsbaum wird ohnehin bereits vor dem Start abgelehnt
 (siehe oben).
+
+## Angebotsgebundener Prüfvertrag und Referenzqualität
+
+Formulatorvertrag `3`, Prompt `19`: Aussagen werden gegen das vollständige
+bereitgestellte Paket desselben ausgewählten Angebots geprüft, nicht nur gegen
+die vom Modell zitierten Fakten. Unbekannte oder fremde Faktreferenzen bleiben
+Fehler. Eindeutige Ganzzahl-ID-Varianten mit führenden Nullen werden innerhalb
+des Pakets kanonisiert; mehrdeutige und nicht ausgewählte IDs werden verworfen.
+Falsche Leistungs-/Preispaare bleiben Gegenstand einer begrenzten relationalen
+Europreisprüfung. Die allgemeinen Gates und Aufrufgrenzen ändern sich nicht.
+
+Erfolgreiche Stage-2-Formulierungen enthalten `reference_assessment`;
+E2E/Stabilität schreiben `reference_assessments` mit Turnnummer. Die Felder
+`declared_fact_ids`, `available_fact_ids`, `offer_id_normalizations` und
+`scope=selected_offer_evidence` trennen Modellzitate vom verfügbaren Prüfumfang.
+`available_fact_ids` sind keine nachträglich zugewiesenen Belegzitate und keine
+vollständige semantische Ableitung. Ein akzeptierter Inhalt belegt nicht die
+Vollständigkeit seiner Modellzitate. Im regulären API-/Interaktionsschema wird
+keine zusätzliche Antwort oder Referenzbewertung veröffentlicht.
+
+Manifeste binden die neue Vertrags-/Promptversion. Historische Läufe bleiben
+unter ihrem damaligen Vertrag bewertet; lokale Regression macht einen alten
+fehlgeschlagenen Lauf nicht nachträglich bestanden.
 
 ## Redigierte Interpreter-Schemadiagnosen
 

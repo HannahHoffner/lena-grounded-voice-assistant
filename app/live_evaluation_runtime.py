@@ -111,6 +111,7 @@ class LimitedEvaluationProvider:
         # Wiederholungsversuch, weil er ein zweiter Aufruf durch dieselbe
         # Grenze ist. Der Inhalt entspricht dem, was Stufe 2 ohnehin sichert.
         self.formulator_rejections: list[dict[str, Any]] = []
+        self.formulator_reference_assessments: list[dict[str, object]] = []
         self.interpreter_schema_issues: tuple[SchemaValidationIssue, ...] = ()
 
     def __getattr__(self, name: str) -> Any:
@@ -140,7 +141,10 @@ class LimitedEvaluationProvider:
 
     async def formulate_answer(self, **kwargs: Any) -> Any:
         try:
-            return await self._call(EvaluationComponent.FORMULATOR, "formulate_answer", **kwargs)
+            result = await self._call(EvaluationComponent.FORMULATOR, "formulate_answer", **kwargs)
+            if getattr(result, "reference_assessment", None) is not None:
+                self.formulator_reference_assessments.append(result.reference_assessment)
+            return result
         except FormulatorError as exc:
             self.formulator_rejections.append({
                 "error_code": exc.code,

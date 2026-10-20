@@ -31,8 +31,10 @@ from .grounding_claims import (
 from .interpreter import Need
 from .grounding_constraints import (
     contradicts_age_bound, has_negation, schedule_matches, service_text_without_cited_audience,
+    price_services_match,
 )
 from .models import Language
+from .grounding_references import resolve_offer_evidence
 
 
 URL_RE = re.compile(r"https?://[^\s<>]+", re.IGNORECASE)
@@ -172,6 +174,7 @@ class ValidatedFormulation:
     card_ids: list[str]
     sentence_count: int
     answer_type: AnswerType
+    reference_assessment: dict[str, object] | None = None
 
 
 def _canonical(value: str) -> str:
@@ -310,50 +313,6 @@ def _validate_operational_tokens(text: str, facts: list[EvidenceFact]) -> None:
         raise _ungrounded(GroundingDiagnosticCode.CURRENCY_NOT_CITED)
 
 
-def _citation_pools(
-    response: FormulatorResponse,
-    facts_by_id: dict[str, tuple[str, EvidenceFact]],
-) -> dict[str, list[EvidenceFact]]:
-    """Fasst die gültigen Faktenreferenzen antwortweit je Angebot zusammen.
-
-    Belegt sein muss der Inhalt, nicht die Position einer Fakt-ID: eine Angabe
-    in Satz 1 darf durch einen Fakt belegt sein, der in Satz 2 über dasselbe
-    Angebot zitiert wird. Die Zusammenfassung bleibt strikt angebotsgebunden;
-    Fakten eines anderen Angebots gelangen nie in den Pool. Voraussetzung ist,
-    dass jede Referenz zuvor aufgelöst und ihrem Angebot zugeordnet wurde.
-    """
-    pools: dict[str, list[EvidenceFact]] = {}
-    for sentence in response.sentences:
-        if sentence.offer_id is None:
-            continue
-        pool = pools.setdefault(sentence.offer_id, [])
-        known = {fact.fact_id for fact in pool}
-        for fact_id in sentence.fact_ids:
-            bound = facts_by_id.get(fact_id)
-            if bound is None or bound[0] != sentence.offer_id or fact_id in known:
-                continue
-            known.add(fact_id)
-            pool.append(bound[1])
-    return pools
-
-
-def _resolve_references(
-    response: FormulatorResponse,
-    offers_by_id: dict[str, object],
-    facts_by_id: dict[str, tuple[str, EvidenceFact]],
-) -> None:
-    """Prüft vor jeder Zusammenfassung, dass jede Referenz zu ihrem Angebot gehört."""
-    for sentence in response.sentences:
-        if sentence.offer_id is None:
-            continue
-        if sentence.offer_id not in offers_by_id:
-            raise FormulatorError("formulator_invalid_fact")
-        for fact_id in sentence.fact_ids:
-            bound = facts_by_id.get(fact_id)
-            if bound is None or bound[0] != sentence.offer_id:
-                raise FormulatorError("formulator_invalid_fact")
-
-
 def _validate_service_conditions(
     text: str,
     offer,
@@ -462,6 +421,8 @@ def _validate_sentence(
         pool = pools[sentence.offer_id]
         pool_values = [(fact.fact_type.value, fact.value) for fact in pool]
         language = evidence.requested_language
+        if not price_services_match(text, pool_values, language):
+            raise _ungrounded(GroundingDiagnosticCode.PRICE_SERVICE_MISMATCH)
         # Die Rolle beschreibt, warum das Angebot ausgewaehlt wurde, nicht seinen
         # Leistungsumfang. Ein referral_contact darf seine belegten eigenen
         # Leistungen beschreiben; entscheidend ist der Beleg, nicht der Enumwert.
@@ -591,6 +552,7 @@ def validate_formulation(
     """Validiert die gesamte Modellantwort; es gibt keine Teilübernahme."""
     if response.language != evidence.requested_language:
         raise FormulatorError("formulator_invalid_language")
+    response, pools, reference_assessment = resolve_offer_evidence(response, evidence)
     offers_by_id = {offer.offer_id: offer for offer in evidence.selected_offers}
     facts_by_id = {
         fact.fact_id: (offer.offer_id, fact)
@@ -603,8 +565,6 @@ def validate_formulation(
     if not offers_by_id and response.card_ids:
         raise FormulatorError("formulator_invalid_card")
 
-    _resolve_references(response, offers_by_id, facts_by_id)
-    pools = _citation_pools(response, facts_by_id)
     visible_offer_texts = {
         offer_id: " ".join(sentence.text for sentence in response.sentences if sentence.offer_id == offer_id)
         for offer_id in pools
@@ -613,7 +573,11 @@ def validate_formulation(
         _validate_sentence(sentence, evidence, offers_by_id, facts_by_id, allowed_policies, pools, visible_offer_texts)
         for sentence in response.sentences
     ]
-    _validate_cited_names(response, texts, pools)
+    declared_pools = {
+        key: [facts_by_id[fact_id][1] for fact_id in ids]
+        for key, ids in reference_assessment["declared_fact_ids"].items()
+    }
+    _validate_cited_names(response, texts, declared_pools)
     if len({_canonical(text) for text in texts}) != len(texts):
         raise FormulatorError("formulator_contract_violation")
     answer = " ".join(texts)
@@ -632,13 +596,7 @@ def validate_formulation(
         )
         if fee_status and fee_status.value == "paid":
             fee = next((fact for fact in primary.facts if fact.fact_type == FactType.FEE), None)
-            cited_ids = {
-                fact_id
-                for sentence in response.sentences
-                if sentence.offer_id == primary.offer_id
-                for fact_id in sentence.fact_ids
-            }
-            if fee is None or fee.fact_id not in cited_ids or fee.value not in answer:
+            if fee is None or fee.value not in answer:
                 raise _ungrounded(GroundingDiagnosticCode.REQUIRED_FEE_MISSING)
 
     if evidence.need == Need.DRINKING_WATER and evidence.selected_offers:
@@ -652,7 +610,7 @@ def validate_formulation(
         ]
         first_sentence = response.sentences[0]
         if not primary_names or not any(
-            fact.fact_id in first_sentence.fact_ids and fact.value in first_sentence.text
+            fact.value in first_sentence.text
             for fact in primary_names
         ):
             raise _ungrounded(GroundingDiagnosticCode.PRIMARY_NAME_MISSING)
@@ -678,4 +636,5 @@ def validate_formulation(
         card_ids=card_ids,
         sentence_count=len(response.sentences),
         answer_type=evidence.answer_type,
+        reference_assessment=reference_assessment,
     )

@@ -17,6 +17,7 @@ from app.formulation import (
     ClaimType,
     FactType,
     FORMULATOR_PROMPT_VERSION,
+    FORMULATOR_CONTRACT_VERSION,
     FORMULATOR_SYSTEM_PROMPT,
     FormulatorError,
     GroundingDiagnosticCode,
@@ -217,7 +218,7 @@ def _formulator_json(
     fact_ids = [_fact(evidence, fact_type).fact_id for fact_type in fact_types]
     return json.dumps(
         {
-            "contract_version": "2",
+            "contract_version": FORMULATOR_CONTRACT_VERSION,
             "language": evidence.requested_language.value,
             "sentences": [
                 {
@@ -676,7 +677,7 @@ def test_provider_accepts_source_time_with_different_range_wording(monkeypatch: 
 
     async def response(_: dict) -> dict:
         content = json.dumps({
-            "contract_version": "2",
+            "contract_version": FORMULATOR_CONTRACT_VERSION,
             "language": "en",
             "sentences": [{
                 "text": "Distribution is from 16:00 to 19:00.",
@@ -713,7 +714,7 @@ def test_provider_accepts_no_card_ids_for_unsuitable_context(monkeypatch: pytest
 
     async def response(_: dict) -> dict:
         content = json.dumps({
-            "contract_version": "2",
+            "contract_version": FORMULATOR_CONTRACT_VERSION,
             "language": "de",
             "sentences": [{
                 "text": "LENA hat in den freigegebenen Daten kein passendes Angebot gefunden.",

@@ -110,9 +110,12 @@ def test_real_sentences_and_changed_schedule_details_remain_rejected(app, text):
         validate_formulation(response, evidence)
 
 
-def test_non_cited_schedule_is_not_accepted_as_evidence(app):
+def test_non_cited_schedule_is_accepted_only_while_present_in_offer_evidence(app):
     evidence, response = _recorded_uvo_response(app)
     response.sentences[-1].fact_ids = [_fact(evidence, FactType.PHONE).fact_id]
+    assert validate_formulation(response, evidence).sentence_count == 3
+    evidence.selected_offers[0].facts = [f for f in evidence.selected_offers[0].facts
+                                        if f.fact_type != FactType.OPENING_TIME]
     with pytest.raises(FormulatorError):
         validate_formulation(response, evidence)
 

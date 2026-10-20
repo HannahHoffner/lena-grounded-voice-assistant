@@ -159,11 +159,11 @@ def _interpretation(need: Need) -> QueryInterpretation:
 def test_versions_prompt_and_health_are_observable(app) -> None:
     health = TestClient(app).get("/api/health").json()
     assert EVIDENCE_CONTRACT_VERSION == "4"
-    assert FORMULATOR_CONTRACT_VERSION == "2"
-    assert FORMULATOR_PROMPT_VERSION == "18"
+    assert FORMULATOR_CONTRACT_VERSION == "3"
+    assert FORMULATOR_PROMPT_VERSION == "19"
     assert health["evidence_contract_version"] == "4"
-    assert health["formulator_contract_version"] == "2"
-    assert health["formulator_prompt_version"] == "18"
+    assert health["formulator_contract_version"] == "3"
+    assert health["formulator_prompt_version"] == "19"
     assert health["llm_request_budget_seconds"] == 45.0
     for rule in (
         "Use only EVIDENCE facts",
@@ -229,12 +229,12 @@ def test_formulator_prompt_matches_enforced_first_claim_and_reference_rules() ->
         "when the query contains an explicit day or time",
         "For a direct_service, name the unchanged display_name and explain one cited description, service, or capability",
         "Do not dump the complete card contents into the answer",
-        "the facts you cite for that offer anywhere in the answer must name that service in their values",
-        "A cited description that names the target group is enough; a separate typed fact is then not required",
-        "never state a group that a cited restriction excludes",
-        "Validation pools the fact_ids you cite per offer across the whole answer",
+        "the supplied facts of that same selected offer must name that service in their values",
+        "A supplied description that names the target group is enough; a separate typed fact is then not required",
+        "never state a group that a supplied restriction excludes",
+        "Validation checks each offer-grounded statement against ALL supplied facts",
         "Facts of a different offer never support it",
-        "If you cannot identify the required matching fact_id with certainty, omit the detail",
+        "If the supplied evidence does not support a detail, omit it",
         "immutable output token",
         "copy its value character-for-character",
         "Never translate, transliterate, abbreviate, inflect, decline, pluralize",
@@ -446,6 +446,7 @@ def test_curated_phone_name_and_price_format_must_remain_exact(app) -> None:
     assert price_error.value.diagnostic_code in {
         GroundingDiagnosticCode.NUMBER_NOT_CITED,
         GroundingDiagnosticCode.PRICE_NOT_CITED,
+        GroundingDiagnosticCode.PRICE_SERVICE_MISMATCH,
     }
 
 
@@ -505,6 +506,10 @@ def test_target_assertion_still_rejects_real_gender_and_age_claims(app) -> None:
     """Die Praezisierung darf echte Zielgruppenbehauptungen nicht durchlassen."""
     evidence = _evidence(app)
     for text in ("Scharni ist für Männer.", "Scharni ist nur für Erwachsene."):
+        if "Erwachsene" in text:
+            # Under contract 3 adulthood is supported without a citation;
+            # absence of evidence, not absence of a citation, is the negative case.
+            evidence.selected_offers[0].facts = [_fact(evidence, FactType.DISPLAY_NAME)]
         with pytest.raises(FormulatorError, match="formulator_ungrounded_claim"):
             validate_formulation(_response(evidence, text=text), evidence)
 
@@ -613,7 +618,7 @@ def test_out_of_scope_uses_only_policy_evidence(app) -> None:
         roles={},
     )
     response = FormulatorResponse(
-        contract_version="2",
+        contract_version=FORMULATOR_CONTRACT_VERSION,
         language=Language.DE,
         sentences=[
             FormulatedSentence(
@@ -823,7 +828,7 @@ def test_response_schema_rejects_extra_fields_and_more_than_three_sentences() ->
     with pytest.raises(ValidationError):
         FormulatorResponse.model_validate(
             {
-                "contract_version": "2",
+                "contract_version": FORMULATOR_CONTRACT_VERSION,
                 "language": "de",
                 "sentences": [valid_sentence],
                 "card_ids": [],
@@ -833,7 +838,7 @@ def test_response_schema_rejects_extra_fields_and_more_than_three_sentences() ->
     with pytest.raises(ValidationError):
         FormulatorResponse.model_validate(
             {
-                "contract_version": "2",
+                "contract_version": FORMULATOR_CONTRACT_VERSION,
                 "language": "de",
                 "sentences": [valid_sentence] * 4,
                 "card_ids": [],
@@ -940,7 +945,7 @@ class _Clock:
         self.value += seconds
 
 
-def test_prompt_v17_states_answer_wide_offer_bound_grounding() -> None:
+def test_prompt_v19_states_selected_offer_evidence_grounding() -> None:
     """Der Prompt muss denselben Vertrag beschreiben, den der Validator prüft."""
     assert "unless a cited fact explicitly proves a service" not in FORMULATOR_SYSTEM_PROMPT
     # Der Enumwert allein entscheidet nicht mehr; deshalb darf der Prompt die
@@ -954,7 +959,7 @@ def test_prompt_v17_states_answer_wide_offer_bound_grounding() -> None:
         assert "A referral_contact remains referral or fact" not in feedback
     for rule in (
         "referral_contact does not mean the provider offers nothing itself",
-        "A detail stated in one sentence may be supported by a fact cited in another sentence about the SAME offer",
+        "Validation checks each offer-grounded statement against ALL supplied facts of that SAME selected offer",
         "Facts of a different offer never support it",
         "Describing an evidenced service in general is allowed",
         "promising that the reader will be admitted, will get a place, or will be served right now is not",
@@ -1005,6 +1010,8 @@ def test_localized_description_establishes_the_target_group(app, language, text)
     assert validate_formulation(response, evidence).answer == text
     # Ohne den belegenden Wert bleibt dieselbe Aussage unentscheidbar.
     response.sentences[0].fact_ids = [_fact(evidence, FactType.DISPLAY_NAME).fact_id]
+    assert validate_formulation(response, evidence).answer == text
+    evidence.selected_offers[0].facts = [_fact(evidence, FactType.DISPLAY_NAME)]
     with pytest.raises(FormulatorError) as captured:
         validate_formulation(response, evidence)
     assert captured.value.diagnostic_code == GroundingDiagnosticCode.TARGET_FACT_MISSING
@@ -1029,7 +1036,7 @@ def test_referral_and_full_phone_contract_across_languages(app, language, prefix
     response.sentences[0].claim_type = ClaimType.SERVICE
     with pytest.raises(FormulatorError) as captured:
         validate_formulation(response, evidence)
-    assert captured.value.diagnostic_code == GroundingDiagnosticCode.SERVICE_ROLE_MISMATCH
+    assert captured.value.diagnostic_code == GroundingDiagnosticCode.SERVICE_FACT_MISSING
     response.sentences[0].claim_type = ClaimType.REFERRAL
     for phone in [f for f in evidence.selected_offers[0].facts if f.fact_type == FactType.PHONE]:
         assert " (" in phone.value  # Fixture covers both labels and operational restrictions.
@@ -1097,7 +1104,7 @@ def test_real_provider_retry_gets_only_closed_feedback_and_revalidates(
     else:
         # Nur der fehlende Leistungsbeleg begründet die Ablehnung, nicht die Rolle.
         bad.sentences[0].claim_type = ClaimType.SERVICE
-        diagnostic = GroundingDiagnosticCode.SERVICE_ROLE_MISMATCH
+        diagnostic = GroundingDiagnosticCode.SERVICE_FACT_MISSING
     provider = BlabladorProvider(_settings("blablador"))
     payloads = []
     clock = _Clock()

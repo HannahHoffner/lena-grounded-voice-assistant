@@ -225,14 +225,14 @@ nur freigegebene Positivlistenfelder, Kandidatenrollen, opake Faktenreferenzen
 und bindende Policies. Conditional-, Excluded- und Sozialamt-Angebote sowie
 WFS-Rohfelder, Reviewnotizen und technische Provenienz gelangen nicht hinein.
 
-Der Formulatorvertrag 2 erlaubt ein bis drei kurze Sätze. Promptversion 18
+Der Formulatorvertrag 3 erlaubt ein bis drei kurze Sätze. Promptversion 19
 verlangt für normale angebotsbezogene Antworten zwei oder drei natürliche,
 rollenrichtige Sätze ohne festes `Nutze ...`-Muster. Das erste Angebot und der
 wichtigste nächste Schritt stehen zuerst. Sind mehrere finale Angebote
 komplementär hilfreich, kann die Antwort bis zu drei davon in der bereits
 deterministisch hergestellten Evidence-Reihenfolge nennen; jeder Satz bleibt an
-genau ein Angebot gebunden; belegen darf ihn jeder Fakt, den die Antwort für
-dieses Angebot zitiert. Nur der eng begrenzte
+genau ein Angebot gebunden; belegen darf ihn jeder Fakt im übergebenen
+Evidence-Paket dieses ausgewählten Angebots. Nur der eng begrenzte
 Prompt-Injection-Pfad verwendet weiterhin einen festen sicheren Handlungssatz.
 Der sichtbare Antworttext verweist nicht auf technische UI-Container wie
 Ergebniskarten oder die Kartenansicht. Wo eine kurze Orientierung nötig ist,
@@ -249,12 +249,21 @@ Kapazitäts-, Echtzeit- und garantierte Aufnahmebehauptungen werden verworfen.
 
 ### Antwortweiter, angebotsgebundener Groundingvertrag
 
-Die Referenzen werden zuerst aufgelöst und ihrem Angebot zugeordnet, danach je
-Angebot antwortweit zusammengefasst. Geprüft wird gegen die **Werte** dieser
+`app/grounding_references.py` löst Referenzen zuerst innerhalb des ausgewählten
+Evidence-Pakets auf. Exakte IDs haben Vorrang; sonst sind ausschließlich
+ASCII-Ganzzahlvarianten mit führenden Nullen bei genau einem passenden Angebot
+zulässig. `07` kann damit `7` bedeuten, nicht aber bei einer Kollision mit
+mehreren ausgewählten IDs. Dezimal- und Namensraum-IDs werden nicht numerisch
+umgedeutet. Unbekannte/fremde Fakt-IDs bleiben Fehler. Die Modellantwort wird
+nicht verändert; eine interne Kopie trägt kanonische Angebots- und Karten-IDs.
+
+Der Prüfumfang umfasst alle angebotenen Fakten desselben ausgewählten Angebots,
+nicht die vollständige Wissensbasis und nicht andere ausgewählte Angebote.
+Geprüft wird gegen die **Werte** dieser
 Fakten, nicht gegen ihre Typen: `app/grounding_claims.py` erkennt mit einem
 geschlossenen mehrsprachigen Stammwortschatz, welche Leistungs- und
-Zielgruppenkonzepte der sichtbare Satz nennt, und sucht sie in den zitierten
-Werten. Eine zitierte lokalisierte Beschreibung kann damit eine
+Zielgruppenkonzepte der sichtbare Satz nennt, und sucht sie in den bereitgestellten
+Werten. Eine bereitgestellte lokalisierte Beschreibung kann damit eine
 Zielgruppenaussage belegen; eine zusätzliche typisierte Referenz ist dann nicht
 zwingend. Umgekehrt belegt das bloße Vorhandensein eines Fakts zulässigen Typs
 nichts mehr.
@@ -272,7 +281,7 @@ eine Leistung mit dokumentiertem Zeitfenster, darf er keine Zeit einer anderen
 Leistung dafür ausgeben.
 
 Die Konzeptprüfung unterscheidet vier Ergebnisse.
-*Belegt* wird freigegeben, auch wenn die Referenz in einem anderen Satz steht.
+*Belegt* wird freigegeben, auch wenn die passende Faktreferenz ausgelassen wurde.
 *Widersprüchlich* — eine Aussage, die eine kuratierte Beschränkung des Angebots
 ausschließt — wird verworfen. *Nicht entscheidbar* wird ebenfalls verworfen,
 aber getrennt diagnostiziert: die Antwort wird damit nicht als nachweislich
@@ -280,15 +289,29 @@ unwahr bezeichnet, sondern nur nicht ungeprüft freigegeben. Beide Fälle führe
 in denselben unveränderten begrenzten Retry beziehungsweise Templatefallback.
 *Nicht geprüft* (`NOT_CHECKED`) bedeutet dagegen, dass kein bekanntes Konzept
 erkannt wurde; es ist kein positiver Beleg. Ein `service`-Satz ohne erkanntes
-Leistungs- oder belegtes Zielgruppenkonzept braucht einen wörtlichen zitierten
+Leistungs- oder belegtes Zielgruppenkonzept braucht einen wörtlichen bereitgestellten
 Leistungswert, sonst folgt `service_fact_missing`. Kontaktanweisungen und
 operative Fakten bleiben mit ihren eigenen Prüfungen möglich.
+
+Referenzqualität und inhaltliche Prüfung bleiben getrennt: intern werden
+deklarierte Fakt-IDs, verfügbare Fakt-IDs und eindeutige ID-Normalisierungen
+erfasst. Verfügbare IDs sind der Prüfumfang, keine nachträglich erfundenen
+Modellzitate und kein Nachweis, dass jeder Fakt semantisch benötigt wurde.
+Die öffentliche QueryResponse und das Interaktionsprotokoll erhalten keine
+neuen Freitextfelder. Lokale synthetische Evaluationsberichte enthalten die
+Referenzbewertung zusätzlich zum unveränderten technischen Gate.
+
+Eurobeträge werden außerdem begrenzt an erkannte Leistungsbegriffe gebunden:
+ein Wäschepreis darf keinen Übernachtungspreis belegen. Die Prüfung verwendet
+den bestehenden mehrsprachigen Leistungswortschatz und ergänzende Wasch-/
+Wäschebegriffe. Unbekannte Satzformen, andere Währungen oder nicht erkannte
+Relationen sind damit nicht allgemein semantisch verifiziert.
 
 `app/grounding_constraints.py` prüft erkannte Altersrelationen gegen die
 typisierten Angebotsgrenzen (auch ohne deren Zitat). Bei leistungsgebundenen
 Zeitangaben werden Tagesumfang und Reihenfolge der Uhrzeiten zusammen geprüft;
 Fenster werden nicht durch Zusammenwerfen ihrer Zahlen kombiniert. Persönliche
-Erhaltzusagen brauchen die zitierte Bedingung vollständig sichtbar mit Tag und
+Erhaltzusagen brauchen die bereitgestellte Bedingung vollständig sichtbar mit Tag und
 Zeit; sie darf in einem anderen Satz über dasselbe Angebot stehen.
 Allgemeine Leistungsbeschreibungen dürfen weiterhin ohne Zeitangabe
 stehen. Eine persönliche Schlafplatzzusage braucht kein Wort wie „garantiert“,
@@ -306,19 +329,19 @@ Sätze außerhalb des passenden Literals bleiben sichtbar. Andere Marker,
 unbelegte Kürzel oder nur teilweise passende Zeitangaben werden durch diese
 Regel nicht normalisiert. Regression: `tests/test_grounding_schedule_literals.py`.
 
-Für die Leistungsprüfung wird eine vollständig zitierte Zielgruppenphrase wie
+Für die Leistungsprüfung wird eine vollständig belegte Zielgruppenphrase wie
 „Menschen ohne Krankenversicherung“ intern ausgeblendet: Sie verneint weder
 die Beratung noch belegt sie eine angebotene Krankenversicherung. Dieselbe
 Normalisierung gilt für Aussage und zitierte Evidenz in DE/EN/PL/RO/RU.
 Nur vollständig übereinstimmende Phrasen der begrenzten Sprachmuster werden
 ausgeblendet. Folgt innerhalb desselben Satzteils eine zweite Leistung, wird
 die Zielgruppe nur dann vor einer sprachpassenden Konjunktion abgegrenzt,
-wenn der gesamte nachfolgende Text einem separat zitierten, nicht negierten
+wenn der gesamte nachfolgende Text einem separat bereitgestellten, nicht negierten
 Leistungswert entspricht. Beim Vergleich dieses Werts werden führende
 `>`-Listenmarker und abschließende Satzzeichen entfernt. Die Leistungsphrase
 bleibt sichtbar und durchläuft die normalen Grounding-Prüfungen.
-Eine Konjunktion allein oder ein nicht zitierter beziehungsweise nur teilweise
-passender Leistungstext bildet keine Grenze. Vollständig zitierte Zielgruppen
+Eine Konjunktion allein oder ein nicht belegter beziehungsweise nur teilweise
+passender Leistungstext bildet keine Grenze. Vollständig belegte Zielgruppen
 mit mehreren fehlenden Dingen werden weiterhin als Ganzes ausgeblendet;
 Verneinungen außerhalb bleiben sichtbar. Diese Regel gilt für DE/EN/PL/RO/RU,
 ist keine allgemeine semantische Analyse und erweitert nicht die vorhandene

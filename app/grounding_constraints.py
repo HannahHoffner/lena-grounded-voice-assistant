@@ -12,8 +12,51 @@ from collections.abc import Sequence
 
 from .grounding_claims import (
     DAILY_LABEL, WEEKDAY_NAMES, TARGET_SUPPORT_TEXT_FACT_TYPES, Fact, transliterated,
+    detect_service_concepts,
 )
 from .models import Language
+
+
+_PRICE = re.compile(r"\b\d+(?:[,.]\d{1,2})?\s*€")
+_PRICE_CLAUSE = re.compile(r"\b(?:und|and|oraz|si|i)\b|[;.!?]")
+_LAUNDRY = {
+    Language.DE: r"\bwasche", Language.EN: r"\blaundr",
+    Language.PL: r"\bpran", Language.RO: r"\b(?:rufe|spalat)",
+    Language.RU: r"\bstirk",
+}
+
+
+def price_services_match(text: str, facts: Sequence[Fact], language: Language) -> bool:
+    """Bind recognized service/price pairs; a number elsewhere is not support.
+
+    This is a bounded check for euro amounts and the existing service vocabulary
+    plus laundry. Unrecognized grammar is not a semantic-entailment guarantee.
+    """
+    def concepts(value: str, languages: Sequence[Language]) -> set[str]:
+        found: set[str] = set()
+        for lang in languages:
+            found |= detect_service_concepts(value, lang)
+            if re.search(_LAUNDRY[lang], transliterated(value)):
+                found.add("laundry")
+        return found
+
+    prices = list(_PRICE.finditer(text))
+    for index, price in enumerate(prices):
+        before = text[prices[index - 1].end() if index else 0:price.start()]
+        after = text[price.end():prices[index + 1].start() if index + 1 < len(prices) else len(text)]
+        clause = _PRICE_CLAUSE.split(transliterated(before))[-1] + " " + _PRICE_CLAUSE.split(transliterated(after))[0]
+        stated = concepts(clause, (language,))
+        amount = " ".join(price.group().split())
+        matching = [(kind, value) for kind, value in facts
+                    if amount in {" ".join(m.group().split()) for m in _PRICE.finditer(value)}]
+        if not matching:
+            return False
+        if stated and not any(
+            kind == "fee" or stated.issubset(concepts(value, (language, Language.DE, Language.EN)))
+            for kind, value in matching
+        ):
+            return False
+    return True
 
 
 # Patterns describe age bounds, not arbitrary numbers (phone/address/time).
@@ -100,10 +143,10 @@ def service_text_without_cited_audience(text: str, facts: Sequence[Fact], langua
     """Separate a verbatim evidenced audience qualifier from a service claim.
 
     Counselling *for people without healthcare* is positive counselling, not
-    absent counselling (nor a promise of healthcare). Only a complete cited
+    absent counselling (nor a promise of healthcare). Only a complete supplied
     qualifier is masked, ending at punctuation. A coordinator alone is not a
-    boundary: it can join two things the audience lacks. A cited qualifier may
-    end before a coordinator only when the entire suffix is a separately cited,
+    boundary: it can join two things the audience lacks. A supplied qualifier may
+    end before a coordinator only when the entire suffix is a separately supplied,
     non-negated service value. That service and all other negation stay visible.
     Returned text is normalized only for internal lexical checks, never output.
     """

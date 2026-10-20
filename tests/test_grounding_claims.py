@@ -119,6 +119,8 @@ def test_a_fact_cited_in_another_sentence_supports_the_same_offer(app) -> None:
         evidence,
         ("Nutze Scharni für erwachsene Frauen.", ClaimType.ACTION, "8", [name.fact_id]),
     )
+    assert validate_formulation(alone, evidence).sentence_count == 1
+    evidence.selected_offers[0].facts = [name]
     assert _diagnostic(alone, evidence) == GroundingDiagnosticCode.TARGET_FACT_MISSING
 
 
@@ -127,6 +129,7 @@ def test_another_offers_fact_never_substitutes(app) -> None:
     evidence = _evidence(app, offer_ids=("8", "10"))
     own_name = _fact(evidence, FactType.DISPLAY_NAME, offer_id="8")
     other_description = _fact(evidence, FactType.DESCRIPTION, offer_id="10")
+    evidence.selected_offers[0].facts = [own_name]
     response = _answer(
         evidence,
         ("Nutze Scharni für Frauen.", ClaimType.ACTION, "8", [own_name.fact_id]),

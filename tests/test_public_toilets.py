@@ -25,6 +25,7 @@ from app.formulation import (
     FormulatedSentence,
     FormulatorError,
     FormulatorResponse,
+    FORMULATOR_CONTRACT_VERSION,
     build_public_toilet_evidence,
 )
 from app.grounding import validate_formulation
@@ -715,7 +716,7 @@ def test_toilet_formulation_is_grounded_and_restores_card_order() -> None:
     service = next(fact for fact in first.facts if fact.fact_type == FactType.SERVICE)
     fee = next(fact for fact in first.facts if fact.fact_type == FactType.FEE)
     response = FormulatorResponse(
-        contract_version="2",
+        contract_version=FORMULATOR_CONTRACT_VERSION,
         language=Language.DE,
         sentences=[
             FormulatedSentence(

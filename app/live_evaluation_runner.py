@@ -625,6 +625,7 @@ async def _run_formulator_scenario(
             "answer_type": answer.answer_type.value,
         },
         "metrics": {"grounding_valid": True, "requested_language_correct": True},
+        "reference_assessment": answer.reference_assessment,
         "content_mismatches": [],
         "critical_content_error": False,
         "technically_valid": True,
@@ -651,6 +652,9 @@ async def _run_e2e_scenario(
     )
     rejection_buffer.clear()
     formulator_rejections: list[dict[str, Any]] = []
+    reference_buffer = getattr(getattr(service, "blablador", None), "formulator_reference_assessments", [])
+    reference_buffer.clear()
+    reference_assessments: list[dict[str, Any]] = []
     # Sichtbare Antworten je Turn. Stufe 2 sichert den Antworttext ohnehin; ohne
     # ihn traegt ein End-to-End-Lauf keine qualitative Bewertung.
     answers: list[dict[str, Any]] = []
@@ -703,6 +707,8 @@ async def _run_e2e_scenario(
         for attempt, rejection in enumerate(rejection_buffer, start=1):
             formulator_rejections.append({"turn": turn_index + 1, "attempt": attempt, **rejection})
         rejection_buffer.clear()
+        reference_assessments.extend({"turn": turn_index + 1, **item} for item in reference_buffer)
+        reference_buffer.clear()
         technically_valid = technically_valid and not bool(
             response.interaction.interpreter_error_code
             or response.interaction.selector_error_code
@@ -730,6 +736,7 @@ async def _run_e2e_scenario(
         "formulator_rejections": formulator_rejections,
         "technically_valid": technically_valid,
         "stage_errors": stage_errors,
+        "reference_assessments": reference_assessments,
         "linguistic_review_pending": True,
         "duration_ms": round((clock() - started) * 1_000, 2),
         "last_confirmed_model_identifiers": {
