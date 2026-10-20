@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import dataclasses
 import tempfile
+from contextlib import nullcontext
 from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
@@ -40,7 +41,7 @@ from .live_evaluation import (
     load_live_scenario_catalog,
     redact_model_identifier,
 )
-from .live_evaluation_checks import _evaluate_e2e
+from .live_evaluation_checks import _evaluate_e2e, _expected_interpreter_failure
 from .live_evaluation_plan import build_run_manifest, collect_git_state
 from .live_evaluation_runtime import (
     AtomicRunCounter,
@@ -658,6 +659,7 @@ async def _run_e2e_scenario(
     # Sichtbare Antworten je Turn. Stufe 2 sichert den Antworttext ohnehin; ohne
     # ihn traegt ein End-to-End-Lauf keine qualitative Bewertung.
     answers: list[dict[str, Any]] = []
+    fault_injections: list[dict[str, Any]] = []
     started = clock()
     for turn_index, text in enumerate(scenario.synthetic_inputs):
         evaluation_provider = getattr(service, "blablador", None)
@@ -665,7 +667,15 @@ async def _run_e2e_scenario(
             evaluation_provider.interpreter_schema_issues = ()
         counter.reserve_request()
         language = Language(scenario.fixture.get("second_language", scenario.language)) if turn_index > 0 else Language(scenario.language)
-        response = await service.query(QueryRequest(query=text, language=language, session_id=session_id))
+        inject_failure = scenario.fixture.get("inject_interpreter_error") is True
+        if inject_failure and not isinstance(evaluation_provider, LimitedEvaluationProvider):
+            raise RuntimeError("live_evaluation_fault_fixture_provider_required")
+        context = evaluation_provider.interpreter_failure_fixture() if inject_failure else nullcontext(None)
+        with context as fault_observation:
+            response = await service.query(QueryRequest(query=text, language=language, session_id=session_id))
+        expected_failure = _expected_interpreter_failure(response, fault_observation)
+        if fault_observation is not None:
+            fault_injections.append({"turn": turn_index + 1, **fault_observation})
         session_id = response.session_id
         dialogue_opened = dialogue_opened or response.clarification is not None
         # Closed codes only: never persist arbitrary exception/provider text.
@@ -703,20 +713,23 @@ async def _run_e2e_scenario(
                 if stage == "interpreter" and code == "interpreter_schema_error":
                     issues = getattr(evaluation_provider, "interpreter_schema_issues", ())
                     stage_errors[-1]["schema_issues"] = schema_issue_records(issues)
+                if expected_failure and stage == "interpreter":
+                    stage_errors[-1]["expected_injected_error"] = True
         answers.append({"turn": turn_index + 1, "text": response.answer})
         for attempt, rejection in enumerate(rejection_buffer, start=1):
             formulator_rejections.append({"turn": turn_index + 1, "attempt": attempt, **rejection})
         rejection_buffer.clear()
         reference_assessments.extend({"turn": turn_index + 1, **item} for item in reference_buffer)
         reference_buffer.clear()
-        technically_valid = technically_valid and not bool(
-            response.interaction.interpreter_error_code
+        technically_valid = technically_valid and (not inject_failure or expected_failure) and not bool(
+            (response.interaction.interpreter_error_code and not expected_failure)
             or response.interaction.selector_error_code
             or response.interaction.formulator_error_code
         )
     assert response is not None
     metrics, mismatches, critical, unverified = _evaluate_e2e(
-        scenario, response, dialogue_opened_during_flow=dialogue_opened
+        scenario, response, dialogue_opened_during_flow=dialogue_opened,
+        fault_observation=fault_injections[-1] if fault_injections else None,
     )
     # Momentaufnahme nach Abschluss des Ablaufs, keine Zuordnung zu einem einzelnen Turn:
     # QueryService.query() kann Interpreter, Selector und Formulator innerhalb eines Turns
@@ -736,6 +749,7 @@ async def _run_e2e_scenario(
         "formulator_rejections": formulator_rejections,
         "technically_valid": technically_valid,
         "stage_errors": stage_errors,
+        "fault_injections": fault_injections,
         "reference_assessments": reference_assessments,
         "linguistic_review_pending": True,
         "duration_ms": round((clock() - started) * 1_000, 2),

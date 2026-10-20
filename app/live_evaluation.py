@@ -18,7 +18,7 @@ from .resources import packaged_bootstrap_data_root
 
 
 LIVE_EVALUATION_CONTRACT_VERSION = "1"
-LIVE_SCENARIO_CATALOG_VERSION = "1"
+LIVE_SCENARIO_CATALOG_VERSION = "2"
 LIVE_SMOKE_ENVIRONMENT_FLAG = "LENA_ALLOW_LIVE_SMOKE"
 LIVE_REPORT_SUBDIRECTORY = Path("live-evaluations")
 RUN_ID_RE = re.compile(r"^run_[0-9a-f]{32}$")
@@ -101,6 +101,13 @@ class LiveScenario(StrictModel):
     def validate_synthetic_inputs(self) -> "LiveScenario":
         if any(not item.strip() or len(item) > 2_000 for item in self.synthetic_inputs):
             raise ValueError("synthetic input is empty or too long")
+        if "inject_interpreter_error" in self.fixture:
+            if type(self.fixture["inject_interpreter_error"]) is not bool:
+                raise ValueError("interpreter fault fixture must be boolean")
+            if self.fixture["inject_interpreter_error"] and (
+                self.component != EvaluationComponent.END_TO_END or len(self.synthetic_inputs) != 1
+            ):
+                raise ValueError("interpreter fault fixture requires a single end-to-end turn")
         return self
 
 

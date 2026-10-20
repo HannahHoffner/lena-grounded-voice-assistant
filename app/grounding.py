@@ -30,12 +30,14 @@ from .grounding_claims import (
 )
 from .interpreter import Need
 from .grounding_constraints import (
-    contradicts_age_bound, has_negation, schedule_matches, service_text_without_cited_audience,
-    price_services_match,
+    contradicts_age_bound, has_negation, schedule_matches, service_text_without_cited_qualifiers,
+    price_services_match, contains_fee_literal,
 )
 from .models import Language
 from .grounding_references import resolve_offer_evidence
 
+
+GROUNDING_VALIDATOR_VERSION = "1"
 
 URL_RE = re.compile(r"https?://[^\s<>]+", re.IGNORECASE)
 EMAIL_RE = re.compile(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.IGNORECASE)
@@ -61,6 +63,11 @@ def _contains_sentence_break(text: str) -> bool:
         preceding = re.search(r"([A-Za-zÄÖÜäöüß]+)$", text[: match.start()])
         token = preceding.group(1).casefold() if preceding else ""
         if token in _ABBREVIATION_TOKENS or token.endswith("str"):
+            continue
+        # Unlike a general abbreviation exception, this cannot consume a new
+        # prose sentence after "tel."; a following number must still pass the
+        # independent operational-value checks against this offer's facts.
+        if token == "tel" and re.match(r"\s*\+?\d", text[match.start() + 1:]):
             continue
         return True
     return False
@@ -212,7 +219,9 @@ def _without_contact_literals(text: str) -> str:
     return URL_RE.sub(" ", EMAIL_RE.sub(" ", text))
 
 
-def _strip_evidence_literals(text: str, evidence: FormulatorEvidence) -> str:
+def _strip_evidence_literals(
+    text: str, evidence: FormulatorEvidence, *, preserve_phone_numbers: bool = False,
+) -> str:
     stripped = text
     literals = [
         fact.value
@@ -222,6 +231,7 @@ def _strip_evidence_literals(text: str, evidence: FormulatorEvidence) -> str:
             FactType.DISPLAY_NAME, FactType.ALIAS, FactType.ADDRESS, FactType.PHONE,
             FactType.EMAIL, FactType.URL, FactType.OPENING_TIME, FactType.STAND_TIME,
         }
+        and (not preserve_phone_numbers or fact.fact_type != FactType.PHONE)
     ]
     # Schedule values may carry a presentation-only quote/list marker. Match
     # the entire evidenced remainder, never an abbreviation or arbitrary prefix.
@@ -398,7 +408,10 @@ def _validate_sentence(
     text = " ".join(sentence.text.split())
     if not text or len(text.split()) > 32 or HTML_OR_MARKDOWN_RE.search(text):
         raise FormulatorError("formulator_contract_violation")
-    prose_without_evidence = _strip_evidence_literals(text, evidence).strip()
+    # Keep phone numbers for sentence detection: otherwise stripping a known
+    # phone turns "tel. 0800 ... ." into "tel. ." and loses the abbreviation's
+    # numeric context. Language checks still strip all authoritative literals.
+    prose_without_evidence = _strip_evidence_literals(text, evidence, preserve_phone_numbers=True).strip()
     if not re.search(r"[.!?]$", text) or _contains_sentence_break(prose_without_evidence):
         raise FormulatorError("formulator_contract_violation")
     if VISIBLE_ID_RE.search(text) or any(fact_id in text for fact_id in facts_by_id):
@@ -448,9 +461,9 @@ def _validate_sentence(
         )
         # The same evidence-bound audience masking applies to both directions:
         # "people without healthcare" neither negates counselling nor proves care.
-        service_text = service_text_without_cited_audience(semantic_text, pool_values, language)
+        service_text = service_text_without_cited_qualifiers(semantic_text, pool_values, language)
         scoped_values = [
-            (kind, service_text_without_cited_audience(value, pool_values, language))
+            (kind, service_text_without_cited_qualifiers(value, pool_values, language))
             for kind, value in pool_values
         ]
         # Negative service text cannot prove a positive service by keyword alone.
@@ -596,7 +609,7 @@ def validate_formulation(
         )
         if fee_status and fee_status.value == "paid":
             fee = next((fact for fact in primary.facts if fact.fact_type == FactType.FEE), None)
-            if fee is None or fee.value not in answer:
+            if fee is None or not contains_fee_literal(answer, fee.value):
                 raise _ungrounded(GroundingDiagnosticCode.REQUIRED_FEE_MISSING)
 
     if evidence.need == Need.DRINKING_WATER and evidence.selected_offers:

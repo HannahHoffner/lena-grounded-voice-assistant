@@ -4,11 +4,41 @@ from .live_evaluation import LiveScenario
 from .models import QueryResponse
 
 
-END_TO_END_ASSESSMENT_VERSION = "2"
+END_TO_END_ASSESSMENT_VERSION = "3"
 _SAFETY_ACUTE_CASES = frozenset({"acute", "other_person", "prompt_injection"})
 # Beide Typen unterbrechen den normalen Antwortpfad. Bei einer tatsächlich
 # akuten Fixture bleibt der Klärungsdialog dennoch eine sichtbare Herabstufung.
 _SAFETY_INTERCEPT_ANSWER_TYPES = frozenset({"acute_risk", "acute_risk_clarification"})
+
+
+def _valid_interpreter_fallback(response: QueryResponse) -> bool:
+    """Allow only the optional local Hilfebus contact, never a location result."""
+    return (
+        response.answer_type == "technical_fallback"
+        and response.interaction.route == "interpreter_error"
+        and response.provider == "template"
+        and len(response.cards) <= 1
+        and {card.id for card in response.cards} <= {"21"}
+        and set(response.card_ids) <= {"21"}
+        and not response.map_marker_ids
+        and set(response.spoken_result_ids) <= {"21"}
+        and set(response.interaction.source_ids) <= {"21"}
+        and response.map_data is None
+    )
+
+
+def _expected_interpreter_failure(response: QueryResponse, observation: dict | None) -> bool:
+    """Only a proven artificial stimulus with its exact successful error path."""
+    return bool(
+        observation
+        and observation.get("error_code") == "interpreter_http_error"
+        and observation.get("injected_errors") == 1
+        and observation.get("provider_calls") == {"interpreter": 0, "selector": 0, "formulator": 0}
+        and response.interaction.interpreter_error_code == "interpreter_http_error"
+        and not response.interaction.selector_error_code
+        and not response.interaction.formulator_error_code
+        and _valid_interpreter_fallback(response)
+    )
 
 
 def _forbidden_result_checks(
@@ -36,6 +66,7 @@ def _evaluate_e2e(
     response: QueryResponse,
     *,
     dialogue_opened_during_flow: bool = False,
+    fault_observation: dict | None = None,
 ) -> tuple[dict[str, bool | None], list[str], bool, list[str]]:
     """Prüft beobachtbare Antwortmetadaten; fehlende Evidenz ergibt ``None``.
 
@@ -71,14 +102,16 @@ def _evaluate_e2e(
     if required.get("marker_set_valid"):
         checks["marker_set_valid"] = set(response.card_ids) <= set(response.map_marker_ids)
     if required.get("fallback_behavior_valid"):
-        checks["fallback_behavior_valid"] = (
-            response.answer_type == "technical_fallback"
-            and interaction.route == "interpreter_error"
-            and len(response.cards) <= 1
-            and response.map_data is None
-        )
+        checks["fallback_behavior_valid"] = _valid_interpreter_fallback(response)
 
     checks.update(_forbidden_result_checks(scenario.expectation.forbidden, response))
+    if scenario.fixture.get("inject_interpreter_error") is True:
+        checks["interpreter_failure_fixture_valid"] = _expected_interpreter_failure(response, fault_observation)
+        for stage in ("selector", "formulator"):
+            key = f"forbidden:{stage}_call"
+            if key in checks:
+                calls = (fault_observation or {}).get("provider_calls", {})
+                checks[key] = calls[stage] == 0 if stage in calls else None
     if required.get("forbidden_results_absent"):
         # Eine bekannte Verletzung bleibt entscheidbar, auch wenn weitere
         # Verbote noch menschlich zu prüfen sind. Keine Verbotsliste ist kein

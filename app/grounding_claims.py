@@ -95,7 +95,7 @@ Fact = tuple[str, str]  # (fact_type, value)
 # kette: „bed" darf nicht über „ed" und „Menschen" nicht über „men" auslösen.
 SERVICE_CONCEPT_STEMS: Vocabulary = {
     "food": {
-        Language.DE: ("essen", "mahlzeit", "verpflegung", "suppe", "lebensmittel", "brot", "brotchen"),
+        Language.DE: ("essen", "mahlzeit", "verpflegung", "suppe", "lebensmittel", "brot", "brotchen", "imbiss", "mittagessen"),
         Language.EN: ("food", "meal"),
         Language.PL: ("jedzen", "posil", "zywnos"),
         Language.RO: ("mancare", "masa", "alimente"),
@@ -380,6 +380,15 @@ def assess_service_claim(
     Unentscheidbarkeit.
     """
     claimed = detect_service_concepts(text, language)
+    # A Russian fountain mention is not by itself evidence of potable water.
+    # Recognize it only on the claim side and require the typed verification
+    # AND ordinary service support from this same selected evidence packet.
+    if language == Language.RU and re.search(
+        r"\bfontan(?:a|u|om|e|y|ov|am|ami|ah)?\b", transliterated(text)
+    ):
+        claimed.add("drinking_water")
+        if ("potable_water_status", "verified") not in facts:
+            return ClaimSupport.UNDECIDABLE, claimed
     if not claimed:
         return ClaimSupport.NOT_CHECKED, set()
     open_concepts = claimed - supported_service_concepts(facts, language)

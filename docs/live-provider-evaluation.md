@@ -13,18 +13,75 @@
 
 ## Ausgeführte Läufe
 
-### Grenze des aktuellen E2E-Runners
+### Ausführbare E2E-Fehlerfixture und Prüfgrenzen
 
-Der Code-Review vom September 2026 hat Abweichungen im vorbereiteten E2E-Runner
-gefunden: `inject_interpreter_error` wird im Szenariodurchlauf nicht umgesetzt;
-die Fallbackmetrik erwartet noch eine kartenlose Antwort, obwohl der aktuelle
-Fehlerpfad einen lokalen Hilfebus-Kontakt anzeigen darf. E2E-Provideraufrufe
-werden nach dem Turn gezählt und erfassen interne Wiederholungen nicht exakt.
-Die Aufrufgrenzen sind dort deshalb nicht als vor jedem einzelnen externen
-Aufruf durchgesetzte Obergrenzen nachgewiesen. Vor einer Nutzung dieser Stufen
-als Evaluationsnachweis müssen Runner und Erwartungen abgeglichen werden.
-Historische Ergebnisse bleiben unverändert; dieser Review hat keine Live-Stufe
-ausgeführt. Details stehen im [Qualitätsreview](reviews/quality-review-2026-09.md).
+Der Runner verwendet `LimitedEvaluationProvider` als Evaluationsgrenze vor
+jedem realen Provideraufruf, einschließlich Formulatorwiederholungen. Dort
+reserviert der atomare Zähler das Aufrufbudget. Absichtlich künstliche Reize
+sind keine realen Provideraufrufe und werden getrennt ausgewiesen.
+
+Szenariokatalog `2` / E2E-Assessment `3`: `inject_interpreter_error=true`
+ist ausschließlich für einen einzelnen E2E-Turn zulässig. Ein begrenzter
+Kontext des Wrappers wirft in `interpret_query()` einen geschlossenen
+`InterpreterError("interpreter_http_error")`, bevor ein externer Aufruf
+reserviert oder ausgeführt wird. `QueryService.query()` und seine normale
+Fehlerbehandlung laufen unverändert. Auch bei einer Exception setzt der
+Kontext die Injektion zurück; Folgeszenarien bleiben unbeeinflusst.
+
+Der Ergebnissatz enthält `fault_injections` mit Turn, Fehlercode, tatsächlich
+ausgelöster Fehleranzahl und realen Aufrufdifferenzen je Stufe. Der
+Interpreterfehler bleibt in `stage_errors` sichtbar. Ausschließlich bei
+einem bestätigten künstlichen Fehler, exakt passendem Interpreterfehlercode,
+null realen Aufrufen aller drei Stufen, keinen zusätzlichen Stagefehlern und
+korrektem Template-Fallback wird er mit `expected_injected_error=true`
+markiert und nicht als technischer Testfehlschlag gezählt. Das ist eine Prüfung
+des Fehlerverhaltens, kein bestandener regulärer Interpreteraufruf. Fehlende
+Injektion oder falscher Fallback lassen das Fixturekriterium scheitern.
+
+Der technische Hilfepfad darf die lokale Hilfebus-Kontaktkarte (`21`) mit
+Vorlese-/Quellenreferenz anzeigen, aber keine fremden Karten oder
+Standort-/Markerempfehlungen. Die Fallbackmetrik prüft diese Grenze; die
+Verbote von Selector-/Formulatoraufrufen werden bei dieser Fixture anhand
+der gemessenen Aufrufdifferenzen geprüft. Andere nicht operationalisierte
+Kriterien bleiben ausdrücklich ungeprüft (`None`).
+
+Gateformeln, Lauf- und Fehlergrenzen bleiben unverändert. Die gesonderte
+Behandlung betrifft nur den nachweislich erfolgreichen künstlichen
+Fehlerpfad; echte Ausfälle und erholte Formulatorwiederholungen zählen
+weiterhin als technische Fehler. Katalogversion, Szenariohash und
+Assessmentversion binden die veränderte Messung. Historische Ergebnisse
+werden nicht rückwirkend neu bewertet. Der historische
+[Qualitätsreview](reviews/quality-review-2026-09.md) beschreibt seinen damaligen Stand.
+
+### Einordnung des E2E-Diagnoselaufs auf `fa670f4`
+
+`run_2cba16fac8834b18a206d1dabe9ffaba` (20.10.2026) gehört zum früheren
+Katalog `1` / Assessment `2`: 27 Szenarien, 34 Requests, 62 reale Calls,
+zehn technische Fehler, zwei Szenarien mit Inhaltsabweichungen, 57 ungeprüfte
+Einzelkriterien. Beide Gates sind nicht bestanden; der Lauf bleibt unverändert.
+Ein neues positives Live-Ergebnis für die korrigierte Fixture liegt nicht vor.
+
+Die gespeicherten `formulator_rejections` wurden anschließend providerfrei
+gegen Code und lokale Bestände desselben KB-Fingerprints
+`9471e7051acb8d4e0fc62d59c1d74bb54f72cec1c28b6cffe291ac15499ec0d9`
+untersucht. Das ist eine Fehlerdiagnose, keine neue Modellevaluation:
+
+| Szenario | Nachgewiesener Auslöser / Grenze | Einordnung und nächster Schritt |
+|---|---|---|
+| `e_interpreter_error` | Katalogflag wurde im gemessenen Runner nicht injiziert; deshalb reguläre Rückfrage | Runnerfehler; durch ausführbare, protokollierte Fixture und lokale Negativtests behoben. Historischer Test belegt keinen falschen Anwendungsfallback. |
+| `e_food_time` | Erstes Output: `Imbiss‑Mittagessen` löst kein food-Konzept aus, passt auch nicht als unveränderter Teilstring auf `Imbiss und Mittagessen`; Verwerfung in `grounding.py`, Service-NOT_CHECKED-Zweig. Zweiter Versuch: Timeout | Nachgewiesene Erkennungsgrenze, nicht automatisch unbelegte Leistung. Begrenzte Komposita-/Paraphrasenbehandlung später prüfen; zusätzliche Aussagen wie „warmes Essen“ und Leistungs-/Öffnungszeitbindung sind dadurch nicht validiert. |
+| `e_water` | Beide gespeicherten Outputs lokal im echten Wasserpfad wiedergegeben; alle deklarierten Fakt-IDs im neu aufgebauten Paket vorhanden. Der russische Satz mit `фонтан` erhält NOT_CHECKED statt drinking_water und scheitert am Service-Zweig | Wortschatzlücke für einen ausgewählten Trinkbrunnen. Keine Aussage, dass die gesamte Antwort korrekt sei: etwa eine zusätzliche Behauptung kostenlosen Kaffees ist gesondert zu prüfen. Keine pauschale Aufhebung von Serviceprüfungen. |
+| `e_hilfebus` | Kontaktpaket enthält Name, Telefon, Öffnungs-/Standzeiten; Modell markiert Betriebszeit als `service`. SERVICE_ROLE_MISMATCH entsteht mangels SERVICE/CAPABILITY/DESCRIPTION im angebotenen Paket | Typ-/Paketkonflikt, keine belegte falsche Uhrzeit. Typisierung operativer Fakten bzw. Prompt später gezielt abgleichen; keinen Zugriff auf den ganzen KB-Bestand freigeben. |
+| `e_out_of_scope`, `e_safety_nonacute`, `e_safety_metaphorical`, `e_safety_quoted`, `e_prompt_injection` | DOMAIN_BOUNDARY_MISSING / SUPPORTED_DOMAINS_MISSING. Mehrere Drittperson-/Flexionsvarianten passen nicht auf die festen Ich-Form-Anker; gespeicherte Antworten nennen außerdem die vorgeschriebenen unterstützten Domänen nicht ausreichend | Modellbefolgung und lexikalische Grenze trennen. Eine ergänzte Flexionsvariante allein macht diese vollständigen Antworten nicht vertragskonform. |
+| `e_dialog_continuation` | Beide Outputs im echten Toilettenpfad lokal wiedergegeben, alle Fakt-IDs vorhanden. Versuch 1: `bez barier` wird als globale Verneinung der Toilettenleistung behandelt (`has_negation`, danach Service-Negationszweig). Versuch 2: `tel.` wird als Satzgrenze behandelt (`_contains_sentence_break`) | Nachgewiesene False-Positives im Validator. Spätere Korrektur muss den Negationsbezug begrenzen bzw. die konkrete Abkürzung behandeln und echte Leistungsverneinungen / Mehrsatzverstöße weiter zurückweisen. |
+| `e_language_switch` | Interpreter-Schemafehler in `explicit_facts.age_group` und `potentially_missing_information.*`; keine Rohwerte im redigierten Report | Echte Vertragsverwerfung; konkrete falsche Werte nicht rekonstruierbar. Keine Lockerung der Enums allein für ein grünes Gate. |
+
+Sieben terminale `formulator_ungrounded_claim` bedeuten hier somit nicht sieben
+nachgewiesene Halluzinationen. Die Diagnose ändert weder Grounding/Prompts noch
+die fachlichen Szenarioerwartungen. Insbesondere bleibt bei `e_safety_nonacute`
+die Domänenabweisung statt Rückfrage eine eigenständige Inhaltsabweichung;
+der Wert `safety_priority_valid=false` ist davon abgeleitet und kein
+unabhängiger Beleg einer ausgelösten Notfallwarnung.
 
 ### Historische Ergebnisse
 
@@ -651,6 +708,49 @@ Lauf auf einem dirty Arbeitsbaum wird ohnehin bereits vor dem Start abgelehnt
 (siehe oben).
 
 ## Angebotsgebundener Prüfvertrag und Referenzqualität
+
+### Grounding-Validatorstand
+
+`grounding_validator_version=1` im Manifest beziehungsweise
+`versions.grounding_validator=1` im providerfreien Dry-Run benennt den lokalen
+Prüfstand unabhängig vom unveränderten Formulatorvertrag `3` / Prompt `19`.
+Die Korrekturen betreffen die deterministische Prüfung, nicht das vom Modell
+gelieferte Schema, den Prompt, die Daten oder die Gates:
+
+- Die deutschen Wortanfangsstämme `imbiss` und `mittagessen` erkennen auch
+  „Imbiss‑Mittagessen“. Ein benanntes Essenskonzept erfordert weiterhin einen
+  Leistungsbeleg im Paket desselben Angebots; ein Name reicht nicht.
+- Die begrenzt erfassten russischen `фонтан`-Flexionsformen werden als
+  Trinkwasserbehauptung geprüft, nicht als Trinkwasserbeleg übernommen.
+  Erforderlich sind sowohl `potable_water_status=verified` als auch ein
+  passender Leistungsbeleg im selben ausgewählten Paket. Zierbrunnen, Namen
+  oder ein unbekannter Trinkwasserstatus liefern diesen Nachweis nicht.
+- „bez barier“ wird nur bei einem exakt entsprechenden polnischen
+  `facility`-Beleg als abgegrenzter Ausstattungszusatz aus der internen
+  Leistungs-/Negationsprojektion ausgeblendet. Eine direkt koordinierte oder
+  anderweitig nicht abgegrenzte Fortsetzung bleibt konservativ sichtbar.
+  Andere Verneinungen, fehlende Belege und fremde Angebotspakete werden nicht
+  freigegeben. Der sichtbare Antworttext wird durch die Projektion nicht geändert.
+- „tel.“ wird nur vor einer Ziffer beziehungsweise einer mit `+` beginnenden
+  Nummer als Telefonabkürzung behandelt. Bekannte Telefonnummern bleiben
+  deshalb für die Satzgrenzprüfung erhalten; die Sprachprüfung blendet
+  autoritative Literale weiterhin aus. Unbekannte Zahlen/Nummern und weitere
+  Sätze unterliegen den bisherigen Prüfungen.
+- Das verpflichtende Gebührenliteral darf statt Klammern nicht dezimale
+  Kommas verwenden. Betrag, Währung und sämtliche Wörter der Zahlungsangabe
+  bleiben vollständig und in gleicher Reihenfolge erforderlich. Dezimale
+  Kommas bleiben erhalten; ein größerer oder dezimal veränderter Betrag
+  besteht nicht als Teiltreffer. Das ist keine allgemeine Preisparaphrasen-
+  oder Währungsumrechnung und keine Lockerung der Leistungs-/Preisbindung.
+
+Providerfreie Regression steht in
+`tests/test_grounding_lexical_boundaries.py`. Die vier gespeicherten Outputs
+der Wasser- und Toilettenszenarien des oben genannten Diagnoselaufs wurden
+außerdem ohne Modellaufruf gegen im echten Anfragepfad aufgebaute Pakete
+erneut geprüft und nun vom Validator akzeptiert. Das belegt die Beseitigung
+der konkreten Ablehnungen, keine vollständige semantische Richtigkeit aller
+Zusatzbehauptungen und kein neues bestandenes Live-E2E-Gate. Historische
+Reports ohne Validatorversion behalten ihren ursprünglichen Status.
 
 Formulatorvertrag `3`, Prompt `19`: Aussagen werden gegen das vollständige
 bereitgestellte Paket desselben ausgewählten Angebots geprüft, nicht nur gegen

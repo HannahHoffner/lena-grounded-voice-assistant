@@ -27,6 +27,7 @@ from .interpreter import (
     InterpreterDialogContext,
     InterpreterUserPayload,
 )
+from .grounding import GROUNDING_VALIDATOR_VERSION
 from .kb_loader import KnowledgeBase, load_active_knowledge_base
 from .live_evaluation import (
     LIVE_REPORT_SUBDIRECTORY,
@@ -309,6 +310,7 @@ def build_live_dry_run(stage: EvaluationStage | None = None) -> dict[str, Any]:
             "evidence_contract": EVIDENCE_CONTRACT_VERSION,
             "formulator_contract": FORMULATOR_CONTRACT_VERSION,
             "formulator_prompt": FORMULATOR_PROMPT_VERSION,
+            "grounding_validator": GROUNDING_VALIDATOR_VERSION,
             "safety_policy": SAFETY_POLICY_VERSION,
             "emergency_policy": EMERGENCY_POLICY.policy_version,
             "application_text": APPLICATION_COPY_VERSION,
@@ -364,6 +366,7 @@ def build_run_manifest(
         "selector_prompt_version": SELECTOR_PROMPT_VERSION,
         "formulator_contract_version": FORMULATOR_CONTRACT_VERSION,
         "formulator_prompt_version": FORMULATOR_PROMPT_VERSION,
+        "grounding_validator_version": GROUNDING_VALIDATOR_VERSION,
         "evidence_contract_version": EVIDENCE_CONTRACT_VERSION,
         "safety_policy_version": SAFETY_POLICY_VERSION,
         "runtime_kb_fingerprint": releases["runtime_kb_fingerprint"],

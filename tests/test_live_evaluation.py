@@ -700,7 +700,8 @@ def test_manifest_is_reproducible_and_contains_no_secret(tmp_path: Path) -> None
     serialized = json.dumps(manifest)
 
     assert manifest["scenario_hash"] == live_scenario_hash()
-    assert manifest["end_to_end_assessment_version"] == "2"
+    assert manifest["end_to_end_assessment_version"] == "3"
+    assert manifest["grounding_validator_version"] == "1"
     assert manifest["runtime_kb_fingerprint"] == kb.runtime_kb_fingerprint
     assert manifest["social_release_id"]
     assert manifest["toilet_release_id"]

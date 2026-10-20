@@ -26,6 +26,19 @@ _LAUNDRY = {
 }
 
 
+def contains_fee_literal(text: str, literal: str) -> bool:
+    """Allow parentheses/non-decimal commas, preserving the complete fee wording.
+
+    No amount, currency, or payment term is inferred or omitted. Decimal commas
+    stay intact; a whole literal cannot match inside a larger/decimal amount.
+    """
+    def presentation(value: str) -> str:
+        return " ".join(re.sub(r"[()]|(?<!\d),|,(?!\d)", " ", value.casefold()).split())
+
+    fee = presentation(literal)
+    return bool(fee and re.search(rf"(?<![\w.,]){re.escape(fee)}(?!\w)", presentation(text)))
+
+
 def price_services_match(text: str, facts: Sequence[Fact], language: Language) -> bool:
     """Bind recognized service/price pairs; a number elsewhere is not support.
 
@@ -181,6 +194,23 @@ def service_text_without_cited_audience(text: str, facts: Sequence[Fact], langua
             return match.group()
 
         normalized = pattern.sub(mask, normalized)
+    return normalized
+
+
+def service_text_without_cited_qualifiers(text: str, facts: Sequence[Fact], language: Language) -> str:
+    """Scope out evidenced audience/facility qualifiers, never arbitrary negation.
+
+    Polish ``bez barier`` qualifies accessibility, not absence of toilets.
+    Mask only the complete supplied facility value. An immediately coordinated
+    continuation may share ``bez`` (without barriers AND toilets), so remains
+    conservatively unmasked. This projection is internal, not output text.
+    """
+    normalized = service_text_without_cited_audience(text, facts, language)
+    if language == Language.PL and any(
+        kind == "facility" and transliterated(value).strip() == "bez barier"
+        for kind, value in facts
+    ):
+        normalized = re.sub(r"\bbez barier\b(?=\s*(?:[,;.!?]|$))", " ", normalized)
     return normalized
 
 

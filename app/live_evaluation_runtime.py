@@ -7,6 +7,8 @@ import json
 import os
 import threading
 import uuid
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 from time import monotonic, sleep
 from typing import Any
@@ -113,6 +115,28 @@ class LimitedEvaluationProvider:
         self.formulator_rejections: list[dict[str, Any]] = []
         self.formulator_reference_assessments: list[dict[str, object]] = []
         self.interpreter_schema_issues: tuple[SchemaValidationIssue, ...] = ()
+        self._inject_interpreter_error = False
+        self._injected_interpreter_errors = 0
+
+    @contextmanager
+    def interpreter_failure_fixture(self) -> Iterator[dict[str, Any]]:
+        """Inject only inside this evaluation turn; never count a fake live call."""
+        if self._inject_interpreter_error:
+            raise RuntimeError("live_evaluation_nested_fault_fixture")
+        before = self.counter.snapshot()
+        injected_before = self._injected_interpreter_errors
+        observation: dict[str, Any] = {"error_code": "interpreter_http_error"}
+        self._inject_interpreter_error = True
+        try:
+            yield observation
+        finally:
+            self._inject_interpreter_error = False
+            after = self.counter.snapshot()
+            observation["injected_errors"] = self._injected_interpreter_errors - injected_before
+            observation["provider_calls"] = {
+                stage: after[f"{stage}_calls"] - before[f"{stage}_calls"]
+                for stage in ("interpreter", "selector", "formulator")
+            }
 
     def __getattr__(self, name: str) -> Any:
         return getattr(self.provider, name)
@@ -130,6 +154,9 @@ class LimitedEvaluationProvider:
 
     async def interpret_query(self, **kwargs: Any) -> Any:
         self.interpreter_schema_issues = ()
+        if self._inject_interpreter_error:
+            self._injected_interpreter_errors += 1
+            raise InterpreterError("interpreter_http_error")
         try:
             return await self._call(EvaluationComponent.INTERPRETER, "interpret_query", **kwargs)
         except InterpreterError as exc:
