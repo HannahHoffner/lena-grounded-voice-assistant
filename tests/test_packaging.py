@@ -209,6 +209,9 @@ def test_clean_wheel_install_starts_outside_checkout(
             "DRINKING_FOUNTAIN_AUTO_SYNC": "false",
             "REWRITE_PROVIDER": "template",
             "SPEECH_SYNTHESIS_PROVIDER": "openai",
+            # This smoke explicitly verifies logging in its isolated temp root;
+            # do not inherit the runtime image's privacy-preserving default.
+            "INTERACTION_LOGGING_ENABLED": "true",
             "LENA_ENV_FILE_MODE": "disabled",
             "LENA_ALLOW_LIVE_SMOKE": "false",
         }

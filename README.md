@@ -326,10 +326,11 @@ führt die vollständige Suite ohne Netzwerk aus und prüft Healthcheck und zwei
 Starts mit leerem temporärem Zustand. Dieser neue Job wurde noch nicht remote
 ausgeführt.
 
-Für plattformübergreifende Bereitstellung ist ein Ubuntu-24.04-Docker-Build mit
-Python 3.12 und hashgesperrten Abhängigkeiten vorbereitet. Der Containerbuild
-und seine Tests sind noch auszuführen; Details und sichere Startbefehle stehen
-in [Docker und Reproduzierbarkeit](docs/reproducibility.md). Eine Zenodo-DOI
+Der Ubuntu-24.04-Docker-Build mit Python 3.12 und hashgesperrten Abhängigkeiten
+wurde am 21.10.2026 auf Linux/AMD64 unter Docker Desktop erfolgreich geprüft:
+vollständige Tests, Paketierung, Healthcheck und Neustart mit leerem temporärem
+Zustand. Details und sichere Startbefehle stehen in
+[Docker und Reproduzierbarkeit](docs/reproducibility.md). Eine Zenodo-DOI
 existiert für diesen vorbereiteten Stand noch nicht.
 
 ## Weiterentwicklung und Wartung

@@ -2,7 +2,11 @@
 
 Die separate [Docker-Anleitung](reproducibility.md) beschreibt die vollständige
 Suite samt Paketierung und Frontendtests im netzwerkgesperrten Testcontainer.
-Dieser Containerlauf ist im derzeitigen Prüfungsumfeld noch nicht ausgeführt.
+Am 21.10.2026 bestand der lokale Linux/AMD64-Containerlauf mit 1178 bestandenen
+Tests, einem bekannten `xfail` und 17 bestandenen Frontendtests. Paketierung,
+Syntax und Runtime-Smoke wurden ebenfalls geprüft. Der Clean-Install-Test
+aktiviert sein geprüftes Interaktionslogging ausdrücklich nur im temporären
+Testverzeichnis; die Runtime bleibt standardmäßig ohne vollständige Logs.
 Der zusätzliche CI-Job `container` baut beide Images, führt die Suite mit
 `--network none` aus und prüft zwei Runtime-Starts mit getrenntem leerem Zustand.
 Er ist vorbereitet; ein erfolgreicher Remote-Lauf wird erst nach tatsächlicher

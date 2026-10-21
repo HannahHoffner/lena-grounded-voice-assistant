@@ -1,3 +1,12 @@
+# Keep text exports portable, including git archive on Windows with autocrlf.
+* text=auto eol=lf
+
+# Preserve exact manifest-bound bytes, including legacy mixed line endings.
+# When introducing these rules, record the validated source files themselves;
+# previously normalized Git blobs cannot reconstruct mixed line endings.
+/data/** -text whitespace=trailing-space,space-before-tab,cr-at-eol
+/app/resources/bootstrap/** -text whitespace=trailing-space,space-before-tab,cr-at-eol
+
 # Historical development records remain in Git, outside the software release ZIP.
 docs/exec-plans export-ignore
 docs/reviews export-ignore

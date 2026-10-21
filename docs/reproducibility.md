@@ -8,10 +8,14 @@ Containern, Linux eine Docker Engine mit BuildKit. Auf ARM-Rechnern ist der
 native ARM64-Build vorgesehen; AMD64 kann ausdrücklich mit `--platform
 linux/amd64` gewählt werden. Emulation ist kein Leistungsbenchmark.
 
-Die Docker-Ausführung ist noch **nicht verifiziert**: Im lokalen Prüfungsumfeld
-vom 20.10.2026 fehlen Docker Engine und WSL. Ein vorhandener Dockerfile ist kein
-Build-, Container-Test- oder Startnachweis. Vor einer Freigabe müssen die unten
-genannten Befehle tatsächlich erfolgreich ausgeführt und protokolliert werden.
+Die Docker-Ausführung wurde am **21.10.2026 auf Linux/AMD64 unter Docker
+Desktop 4.96.0 mit Engine 29.9.1** geprüft: Test- und Runtime-Image gebaut,
+1178 Python-Tests bestanden, ein unveränderter bekannter `xfail`, 17 Frontendtests
+bestanden; außerdem Paketierung, `compileall`, `pip check` und JS-Syntax geprüft.
+Der Runtime-Healthcheck, Frontend und technischer Query-Hilfepfad funktionierten
+ohne Netzwerk als UID 10001. Ein echter Containerneustart entfernte den temporären
+Zustand. Native ARM64-Ausführung sowie zusätzliche Hostsysteme sind nicht geprüft.
+Diese Bereitstellungsprüfung ersetzt keine fachliche oder Live-Provider-Evaluation.
 
 ## Fixierte Umgebung
 
@@ -30,8 +34,13 @@ gegen den vom Server gemeldeten Digest verifiziert. Er bindet auch die
 plattformabhängigen Manifeste. Python-Paketversionen wurden gegen die
 Paketmetadaten des genannten Ubuntu-Snapshots geprüft. Die Python-Hashes stammen
 aus den PyPI-Release-Metadaten; passende Linux-Wheels für CPython 3.12 auf AMD64
-und ARM64 wurden heruntergeladen und hashgeprüft. Das ersetzt keinen
-Installationstest oder Containerlauf.
+und ARM64 wurden heruntergeladen und hashgeprüft. Die Wheelverfügbarkeit für beide Architekturen ersetzt keinen nativen ARM64-Lauf;
+der oben dokumentierte Containernachweis betrifft AMD64.
+
+Das minimale Basisimage enthält zunächst keine CA-Zertifikate. Der Dockerfile
+bezieht daher das Ubuntu-Paket `ca-certificates` vom selben Snapshot mit festem
+SHA-256 und extrahiert daraus die Start-Vertrauensbasis für HTTPS. Danach wird
+das reguläre Paket installiert. TLS- und Paketsignaturprüfung bleiben aktiv.
 
 Das festgelegte Archiv wird mit Ubuntus signierten Paketmetadaten verwendet.
 Systemabhängigkeiten werden aus diesem zeitlich festen Paketbestand aufgelöst;
@@ -124,6 +133,10 @@ sicherstellen. Diese Daten gehören nicht automatisch ins Softwarearchiv.
 2. **Anwendungsdaten:** Das Wheel enthält freigegebene, manifestgebundene
    Snapshots und Kurations-/Übersetzungsstände. Deren Provenienz und fachlich
    relevante Hashes bleiben erhalten. Checkout-Wartungsdaten sind separat.
+   `.gitattributes` verhindert die Konvertierung ihrer bestehenden Zeilenenden,
+   einschließlich gemischter historischer Zeilenenden. Die validierten
+   Originalbytes müssen auch in Git gespeichert sein; ein Softwarearchiv darf
+   sie nicht abhängig vom Hostbetriebssystem verändern.
 3. **Veränderliche Quellen:** WFS, CSV, KML und Betreiberseiten können später
    abweichen. Ein erneuter Abruf reproduziert keinen früheren Datenstand.
 4. **Externe Modelle und Dienste:** Aliaszuordnungen, Dienstversionen und

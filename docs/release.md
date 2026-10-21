@@ -8,12 +8,23 @@ einzige maschinenlesbare Zitiermetadatenquelle; eine parallele `.zenodo.json`
 ist nicht erforderlich. Autorin: Hannah Hoffner, ohne Affiliation. Eigener Code:
 GPL-3.0-only, siehe [Lizenz und Herkunft](../THIRD_PARTY_NOTICES.md).
 
-**Freigabe noch offen:** Docker-Build und Containerprüfungen sind auszuführen;
-Weitergaberechte für Daten ohne ausdrückliche Lizenz müssen vor einer öffentlichen
-Archivierung geklärt werden. Ein vorbereiteter Softwarestand ist keine
+Docker-Build, vollständige Containerprüfungen und Runtime-Neustart wurden am
+21.10.2026 auf Linux/AMD64 erfolgreich geprüft (siehe Reproduzierbarkeitsanleitung).
+**Freigabe noch offen:** Weitergaberechte für Daten ohne ausdrückliche Lizenz
+müssen vor einer öffentlichen Archivierung geklärt werden. Ein vorbereiteter Softwarestand ist keine
 Veröffentlichungsfreigabe und keine abgeschlossene Evaluation.
 
 ## Inhalt des Softwarearchivs
+
+Die `.gitattributes` legt LF für reguläre Textdateien fest und deaktiviert
+Zeilenendenkonvertierung für `data/` und `app/resources/bootstrap/`. Diese
+Ressourcen enthalten auch bestehende gemischte Zeilenenden; maßgeblich sind
+ihre validierten Originalbytes, nicht eine einheitliche LF-/CRLF-Normalisierung.
+Bei erstmaliger Einführung der Regeln müssen die betroffenen Originaldateien
+mit aufgenommen werden: Bereits normalisierte Git-Blobs können gemischte
+Zeilenenden nicht rekonstruieren. Keine Prüfsummen an exportbedingt veränderte
+Daten anpassen. Nach Änderungen an den Attributen ist ein neuer Commit nötig,
+bevor ein gewöhnliches `git archive <commit>` die korrigierten Regeln nutzt.
 
 Ein Release archiviert den überprüften, committeten Repositorystand: Quellcode,
 Frontend einschließlich Drittanbieterhinweisen, freigegebene lokale Snapshots

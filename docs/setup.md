@@ -2,8 +2,8 @@
 
 Für Windows, Linux und macOS steht zusätzlich der vorbereitete
 [Docker-Build](reproducibility.md) mit festgelegter Ubuntu-/Python-Umgebung zur
-Verfügung. Dessen Containerverifikation steht noch aus. Die folgenden Abschnitte
-beschreiben weiterhin die direkte Python-Installation.
+Verfügung. Build, Tests und Runtime wurden auf Linux/AMD64 unter Docker Desktop
+geprüft. Die folgenden Abschnitte beschreiben die direkte Python-Installation.
 
 ## Voraussetzungen
 

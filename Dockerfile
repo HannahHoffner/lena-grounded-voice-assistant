@@ -2,12 +2,19 @@
 # Official Ubuntu OCI index; registry bytes verified against this SHA-256.
 FROM ubuntu:24.04@sha256:68ee22004a9109b44973313b02ff7b1de250f1de0f5ecb628d73f579aaff33ac AS base
 
+# The minimal image has no CA bundle; the snapshot service redirects to HTTPS.
+# Bootstrap roots from the same pinned Ubuntu package, without disabling TLS.
+ADD --checksum=sha256:6bac2a01979e210d9eac1d4d56747ec709ea60654744d66705dc3c36e7629e50 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z/pool/main/c/ca-certificates/ca-certificates_20260601~24.04.1_all.deb /tmp/ca-certificates.deb
+
 # Freeze the apt universe as well as the base filesystem. Ubuntu retains its
 # signed Release/Packages verification; no third-party Python PPA is required.
-RUN sed -i 's|http://archive.ubuntu.com/ubuntu/|http://snapshot.ubuntu.com/ubuntu/20261001T000000Z/|g; s|http://security.ubuntu.com/ubuntu/|http://snapshot.ubuntu.com/ubuntu/20261001T000000Z/|g; s|http://ports.ubuntu.com/ubuntu-ports/|http://snapshot.ubuntu.com/ubuntu/20261001T000000Z/|g' /etc/apt/sources.list.d/ubuntu.sources \
+RUN dpkg-deb -x /tmp/ca-certificates.deb /tmp/ca-bootstrap \
+    && mkdir -p /etc/ssl/certs \
+    && cat /tmp/ca-bootstrap/usr/share/ca-certificates/mozilla/*.crt > /etc/ssl/certs/ca-certificates.crt \
+    && sed -i 's|http://archive.ubuntu.com/ubuntu/|http://snapshot.ubuntu.com/ubuntu/20261001T000000Z/|g; s|http://security.ubuntu.com/ubuntu/|http://snapshot.ubuntu.com/ubuntu/20261001T000000Z/|g; s|http://ports.ubuntu.com/ubuntu-ports/|http://snapshot.ubuntu.com/ubuntu/20261001T000000Z/|g' /etc/apt/sources.list.d/ubuntu.sources \
     && apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates python3.12=3.12.3-1ubuntu0.17 \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* /tmp/ca-bootstrap /tmp/ca-certificates.deb
 
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 \
     LENA_ENV_FILE_MODE=disabled REWRITE_PROVIDER=template \
