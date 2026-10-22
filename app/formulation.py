@@ -27,8 +27,8 @@ from .translation_contract import TranslationRuntimePolicy
 
 
 EVIDENCE_CONTRACT_VERSION = "4"
-FORMULATOR_CONTRACT_VERSION = "4"
-FORMULATOR_PROMPT_VERSION = "21"
+FORMULATOR_CONTRACT_VERSION = "5"
+FORMULATOR_PROMPT_VERSION = "22"
 MAX_FORMULATOR_RESPONSE_CHARS = 3_000
 FactId = Annotated[str, StringConstraints(pattern=r"^f_[0-9a-f]{16}$")]
 OfferId = Annotated[
@@ -50,13 +50,13 @@ If essential personal eligibility is unresolved, do not infer it; the applicatio
 Return exactly one JSON object with keys contract_version, language, sentences, card_ids; no markdown, HTML, reasoning or other fields.
 - contract_version: the literal string "{FORMULATOR_CONTRACT_VERSION}".
 - language: requested_language, unchanged.
-- sentences: one to three short evidence-bound text blocks, each with exactly text, claim_type, offer_id, fact_ids, policy_ids.
-  - text: at most 220 characters. A block may contain several short sentences about the SAME offer. The complete answer stays within 600 characters.
+- sentences: an array of one to three short evidence-bound text blocks (objects), each with exactly text, claim_type, offer_id, fact_ids, policy_ids.
+  - text: a string, at most 600 characters. A block may contain several short sentences about the SAME offer. All blocks combined must still stay within 600 characters.
   - claim_type: action, service, referral, fact, uncertainty, domain_boundary, or no_result. Choose the main intent; operational details such as times and contacts normally use fact. It is the content, not this label, that must be supported.
   - offer_id: the matching selected offer's ID, or null for a policy-only block. Copy IDs exactly; never invent or expose internal IDs in text.
-  - fact_ids: non-empty references from that SAME offer when offer_id is set; otherwise [].
-  - policy_ids: [] for an offer block; otherwise cite only applicable supplied policy IDs and set offer_id to null and fact_ids to [].
-- card_ids: selected offer IDs only, without duplicates. The application restores mandatory cards and their order.
+  - fact_ids: an array of up to 10 references from that SAME offer, non-empty when offer_id is set; otherwise [].
+  - policy_ids: an array, [] for an offer block; otherwise cite up to 4 applicable supplied policy IDs and set offer_id to null and fact_ids to [].
+- card_ids: an array of selected offer IDs only, without duplicates. The application restores mandatory cards and their order.
 
 One concise block can be enough; do not add details merely to reach a sentence count. A fact may come first when it directly answers the question. For water/toilet results keep the first selected offer first, because the application determined the ranking.
 Respect candidate_role: for a referral_contact, explain contacting or asking there without implying that referral itself proves the requested service. A referral_contact can also provide its own evidenced services. Direct services may be described in natural wording. Do not change offer selection, eligibility or order.
@@ -205,7 +205,7 @@ class FormulatorEvidence(StrictModel):
 
 
 class FormulatedSentence(StrictModel):
-    text: str = Field(min_length=1, max_length=220)
+    text: str = Field(min_length=1, max_length=600)
     claim_type: ClaimType
     offer_id: OfferId | None = None
     fact_ids: list[FactId] = Field(default_factory=list, max_length=10)

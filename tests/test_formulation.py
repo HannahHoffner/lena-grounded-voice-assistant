@@ -159,11 +159,11 @@ def _interpretation(need: Need) -> QueryInterpretation:
 def test_versions_prompt_and_health_are_observable(app) -> None:
     health = TestClient(app).get("/api/health").json()
     assert EVIDENCE_CONTRACT_VERSION == "4"
-    assert FORMULATOR_CONTRACT_VERSION == "4"
-    assert FORMULATOR_PROMPT_VERSION == "21"
+    assert FORMULATOR_CONTRACT_VERSION == "5"
+    assert FORMULATOR_PROMPT_VERSION == "22"
     assert health["evidence_contract_version"] == "4"
-    assert health["formulator_contract_version"] == "4"
-    assert health["formulator_prompt_version"] == "21"
+    assert health["formulator_contract_version"] == "5"
+    assert health["formulator_prompt_version"] == "22"
     assert health["llm_request_budget_seconds"] == 45.0
     for rule in (
         "Use only EVIDENCE facts",

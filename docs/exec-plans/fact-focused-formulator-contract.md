@@ -124,3 +124,34 @@ are external and bind their own prompt, validator, data and code revision.
 Implementation checks pass; post-commit results are recorded externally to keep
 the measured software revision clean. Manual linguistic/factual review remains
 necessary because unrecognized claims/grammar lie outside the finite rules.
+
+## Follow-up after the complete contract-4 measurement
+
+All four stages on a13b313 completed, with source clean throughout. Full native
+regression: 1213 passed, one known xfail (281.02 seconds). E2E: eight technical
+cases, five terminal fallbacks (four Formulator), zero automatic mismatches.
+Stability: eight technical cases, seven Formulator fallbacks. Isolated stage:
+seven failures, including schema errors. These reports remain unchanged in
+`20261022-contract4`; they are not a successful gate chain.
+
+Four separately bounded, one-call synthetic shape probes (not scored reruns)
+included one actual schema failure: a 226-character text block exceeded 220.
+The JSON object/array types and keys were correct. This confirms that keeping
+the old per-sentence cap was incompatible with multi-sentence text blocks.
+
+Before further source edits: change only the per-block cap to the existing
+600-character whole-answer budget, retaining that overall budget and all factual
+checks. Version the schema as contract 5 and prompt 22; validator stays 2.
+Specify collection types explicitly. Add a grounded >220-character example,
+an unsupported-claim counterexample within that same longer block, and a check
+that multiple blocks together still cannot exceed 600. Update the existing
+architecture documentation and run final tests/live stages once on a new clean
+commit. This is a correction of an observed defect, not repetition of unchanged
+code until passing. Final artifacts go to `20261022-contract5`.
+
+Implemented the follow-up and reviewed its diff: only block length, schema/prompt
+versions and explicit array wording changed; the 600-character total and factual
+validator are unchanged. Focused final verification: 165 passed, one known xfail
+(3.92 seconds), including the >220-character supported answer and its unsupported
+medical-claim counterpart. Final clean-commit full regression/live evidence will
+be saved externally; no further source changes during that measurement.

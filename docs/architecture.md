@@ -229,11 +229,13 @@ Die aktuelle Nutzerfrage wird separat als nicht vertrauenswürdiger Kontext in
 `current_query` übergeben, auch im Trinkwasserpfad. Sie steuert die Relevanz der
 Antwort, liefert aber keine Angebotsfakten und ändert nicht die Auswahl.
 
-Der Formulatorvertrag 4 und Promptversion 21 priorisieren die konkrete Frage
+Der Formulatorvertrag 5 und Promptversion 22 priorisieren die konkrete Frage
 und belegte Aussagen. `sentences` ist weiterhin der JSON-Feldname für ein bis
 drei angebotsgebundene Textblöcke; ein Block darf mehrere Sätze zum selben
-Angebot enthalten. Pro Block bleiben 220 Zeichen und für die vollständige
-Antwort 600 Zeichen erlaubt. Ein kurzer Block kann genügen. Ein belegter Fakt
+Angebot enthalten. Ein Block darf bis zu 600 Zeichen haben; alle Blöcke zusammen
+bleiben auf 600 Zeichen begrenzt. Die frühere Grenze von 220 Zeichen pro Block
+verwarf im Zwischenlauf bereits eine Ausgabe mit 226 Zeichen vor jeder
+Inhaltsprüfung. Ein kurzer Block kann genügen. Ein belegter Fakt
 darf vor einer Handlungsaufforderung stehen. Die festgelegte primäre Reihenfolge
 für Wasser und Toiletten bleibt erhalten.
 
