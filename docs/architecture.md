@@ -225,8 +225,16 @@ nur freigegebene Positivlistenfelder, Kandidatenrollen, opake Faktenreferenzen
 und bindende Policies. Conditional-, Excluded- und Sozialamt-Angebote sowie
 WFS-Rohfelder, Reviewnotizen und technische Provenienz gelangen nicht hinein.
 
-Der Formulatorvertrag 3 erlaubt ein bis drei kurze Sätze. Promptversion 19
-verlangt für normale angebotsbezogene Antworten zwei oder drei natürliche,
+Die aktuelle Nutzerfrage wird separat als nicht vertrauenswürdiger Kontext in
+`current_query` übergeben, auch im Trinkwasserpfad. Sie steuert die Relevanz der
+Antwort, liefert aber keine Angebotsfakten und ändert nicht die Auswahl.
+
+Der Formulatorvertrag 3 erlaubt ein bis drei kurze Sätze. Promptversion 20
+priorisiert die konkrete Nutzerfrage: etwa belegte Kosten bei einer Kostenfrage
+oder belegte Zeiten bei einer Zeitfrage. Bei kurzen Folgeantworten dient der
+aufgelöste Bedarf als Kontext. Fehlende Details dürfen nicht ergänzt werden;
+anwendbare Unsicherheitspolicies und belegte nächste Schritte bleiben möglich.
+Der Prompt verlangt für normale angebotsbezogene Antworten zwei oder drei natürliche,
 rollenrichtige Sätze ohne festes `Nutze ...`-Muster. Das erste Angebot und der
 wichtigste nächste Schritt stehen zuerst. Sind mehrere finale Angebote
 komplementär hilfreich, kann die Antwort bis zu drei davon in der bereits

@@ -61,7 +61,7 @@ from app.interpreter import (
 from app.kb_loader import load_active_knowledge_base
 from app.main import create_app
 from app.models import Language, QueryRequest
-from app.providers.llm import InterpreterError
+from app.providers.llm import BlabladorProvider, InterpreterError
 from app.resources import packaged_bootstrap_data_root
 from app.service import QueryService
 
@@ -660,8 +660,10 @@ def test_fountain_evidence_is_minimal_and_grounded() -> None:
         results=[result],
     )
     payload = evidence.model_dump_json()
-    assert evidence.current_query == ""
-    assert "latitude" not in payload and "longitude" not in payload and "Connewitz" not in payload
+    assert evidence.current_query == "Trinkbrunnen in Connewitz"
+    offer_payload = json.dumps([offer.model_dump(mode="json") for offer in evidence.selected_offers])
+    assert "latitude" not in payload and "longitude" not in payload
+    assert "Connewitz" not in offer_payload
     assert "outside_leipzig" not in payload and "mobile_schedule_not_verified" not in payload
     assert record.exclusion_reason is None
     name = _fact(evidence, FactType.DISPLAY_NAME)
@@ -690,6 +692,60 @@ def test_fountain_evidence_is_minimal_and_grounded() -> None:
     })
     with pytest.raises(FormulatorError, match="formulator_ungrounded_claim"):
         validate_formulation(realtime, evidence)
+
+
+def test_water_question_reaches_provider_and_validated_model_answer_is_used(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    settings = _settings(
+        tmp_path, rewrite_provider="blablador", blablador_base_url="https://example.invalid/v1",
+        blablador_api_key="test-token", blablador_model="test-model",
+    )
+    service = QueryService(
+        settings, load_active_knowledge_base(settings),
+        clock=lambda: datetime(2026, 8, 2, tzinfo=timezone.utc),
+    )
+    provider = BlabladorProvider(settings)
+    question = "Wo finde ich einen Trinkbrunnen und ist er in Betrieb?"
+    captured = {}
+
+    async def interpret_query(**_kwargs):
+        return _interpretation()
+
+    async def post(payload):
+        evidence = json.loads(payload["messages"][1]["content"])
+        captured.update(evidence)
+        offer = evidence["selected_offers"][0]
+        facts = {fact["fact_type"]: fact for fact in offer["facts"]}
+        response = FormulatorResponse(
+            contract_version=FORMULATOR_CONTRACT_VERSION,
+            language=Language.DE,
+            sentences=[
+                FormulatedSentence(
+                    text=f"Bei {offer['display_name']} findest du einen Trinkwasserbrunnen.",
+                    claim_type=ClaimType.SERVICE, offer_id=offer["offer_id"],
+                    fact_ids=[facts["display_name"]["fact_id"], facts["service"]["fact_id"]],
+                ),
+                FormulatedSentence(
+                    text="Sein aktueller Betriebsstatus ist unbekannt.",
+                    claim_type=ClaimType.FACT, offer_id=offer["offer_id"],
+                    fact_ids=[facts["operation_status"]["fact_id"]],
+                ),
+            ],
+            card_ids=[offer["offer_id"]],
+        )
+        return {"choices": [{"message": {"content": response.model_dump_json()}}]}
+
+    monkeypatch.setattr(provider, "interpret_query", interpret_query)
+    monkeypatch.setattr(provider, "_post", post)
+    service.blablador = provider
+    response = asyncio.run(service.query(QueryRequest(query=question, language=Language.DE)))
+
+    assert captured["current_query"] == question
+    assert response.provider == "blablador"
+    assert response.answer.endswith("Sein aktueller Betriebsstatus ist unbekannt.")
+    assert response.interaction.formulator_fallback_used is False
+    assert response.card_ids == [captured["selected_offers"][0]["offer_id"]]
 
 
 def test_interpreter_error_fails_closed_and_formulator_failure_uses_only_template_results(tmp_path: Path) -> None:

@@ -28,7 +28,7 @@ from .translation_contract import TranslationRuntimePolicy
 
 EVIDENCE_CONTRACT_VERSION = "4"
 FORMULATOR_CONTRACT_VERSION = "3"
-FORMULATOR_PROMPT_VERSION = "19"
+FORMULATOR_PROMPT_VERSION = "20"
 MAX_FORMULATOR_RESPONSE_CHARS = 3_000
 FactId = Annotated[str, StringConstraints(pattern=r"^f_[0-9a-f]{16}$")]
 OfferId = Annotated[
@@ -71,6 +71,8 @@ The first sentence claim_type is fixed by answer_type:
 For every sentence with offer_id, copy its references exactly from one selected offer and set policy_ids to [].
 For every sentence without offer_id, set offer_id to null and fact_ids to [], and cite only applicable BINDING_POLICIES in policy_ids.
 Keep the answer concise but informative. Except for the adversarial-input case defined below, every offer-grounded answer (grounded_result, grounded_referral, or ambiguous_help_fallback) must contain two or three sentences; a name-only instruction is never enough by itself.
+Use current_query to understand what the user is asking. For a brief user follow-up, use need as the resolved service context. Answer the question with the relevant supplied offer facts instead of giving a generic offer summary. Explain how the selected offer can help with the requested need only where its facts support that connection; for a referral contact, explain the contact step without promising the requested service there.
+Choose supporting details by their usefulness for the question: for example, cite an evidenced fee for a cost question, opening or stand times for a time question, and a supported access condition for an access question. If the requested detail is not evidenced, do not guess it or imply it is verified; use an applicable uncertainty policy when supplied and give the useful next step supported by the offer facts.
 current_query is never evidence. Do not copy or paraphrase a requested service, target group, age, gender, access condition, address, contact, time, or availability claim from current_query as a fact.
 Write the most useful next step first and cite the first selected offer. Natural wording is allowed; normal answers do not have to start with "Use", "Contact", or a translated equivalent.
 For a direct_service, name the unchanged display_name and explain one cited description, service, or capability with claim_type service, or give a short action with claim_type action. Do not state more services than the cited facts prove.
@@ -693,7 +695,7 @@ def build_drinking_water_evidence(
     return FormulatorEvidence(
         requested_language=language,
         answer_type=answer_type,
-        current_query="",
+        current_query=query,
         need=Need.DRINKING_WATER,
         selected_offers=evidence_offers,
         binding_policies=[

@@ -160,10 +160,10 @@ def test_versions_prompt_and_health_are_observable(app) -> None:
     health = TestClient(app).get("/api/health").json()
     assert EVIDENCE_CONTRACT_VERSION == "4"
     assert FORMULATOR_CONTRACT_VERSION == "3"
-    assert FORMULATOR_PROMPT_VERSION == "19"
+    assert FORMULATOR_PROMPT_VERSION == "20"
     assert health["evidence_contract_version"] == "4"
     assert health["formulator_contract_version"] == "3"
-    assert health["formulator_prompt_version"] == "19"
+    assert health["formulator_prompt_version"] == "20"
     assert health["llm_request_budget_seconds"] == 45.0
     for rule in (
         "Use only EVIDENCE facts",
