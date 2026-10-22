@@ -97,8 +97,6 @@ def test_saved_russian_answer_passes_provider_with_mock_transport(app, monkeypat
 
 
 @pytest.mark.parametrize("text", [
-    "Среда: 18:30 ч. Hauptbahnhof. Позвони ещё раз.",
-    "Среда: 18:30 ч. Позвони по телефону.",
     "Среда: 19:30 ч. Hauptbahnhof.",
     "Среда: 18:30 ч. UnbelegterOrt.",
     "Среда: 18:30 ч. Hauptbahnhof. Здесь есть свободные места.",
@@ -121,12 +119,21 @@ def test_non_cited_schedule_is_accepted_only_while_present_in_offer_evidence(app
 
 
 @pytest.mark.parametrize("marker", [">> ", "- ", "* ", "# "])
-def test_only_the_known_leading_marker_is_normalized(app, marker):
+def test_schedule_presentation_marker_does_not_change_verified_details(app, marker):
     evidence, response = _recorded_uvo_response(app)
     fact = _fact(evidence, FactType.OPENING_TIME, contains="Среда: 18:30")
     fact.value = marker + fact.value.removeprefix("> ")
-    with pytest.raises(FormulatorError):
-        validate_formulation(response, evidence)
+    assert validate_formulation(response, evidence).answer == " ".join(s.text for s in response.sentences)
+
+
+@pytest.mark.parametrize("text", [
+    "Среда: 18:30 ч. Hauptbahnhof. Позвони ещё раз.",
+    "Среда: 18:30 ч. Позвони по телефону.",
+])
+def test_grounded_schedule_can_include_a_contact_request(app, text):
+    evidence, response = _recorded_uvo_response(app)
+    response.sentences[-1].text = text
+    assert validate_formulation(response, evidence).answer.endswith(text)
 
 
 def test_time_abbreviation_alone_does_not_disable_sentence_detection():

@@ -8,6 +8,7 @@ grammar remains outside their coverage; it is never proof of truth.
 from __future__ import annotations
 
 import re
+import unicodedata
 from collections.abc import Sequence
 
 from .grounding_claims import (
@@ -15,6 +16,99 @@ from .grounding_claims import (
     detect_service_concepts,
 )
 from .models import Language
+
+
+def normalize_name_typography(text: str) -> str:
+    """Normalize spacing/hyphen glyphs, never letters or word boundaries."""
+    return " ".join(unicodedata.normalize("NFC", text).translate(
+        str.maketrans({char: "-" for char in "\u2010\u2011\ufe63\uff0d"})
+    ).split())
+
+
+_FEE_WORDS = {
+    Language.DE: (r"\b(?:kostenlos|kostenfrei|gratis)\b", r"\bkostenpflichtig\b"),
+    Language.EN: (r"\b(?:free|no charge)\b", r"\b(?:paid|costs money)\b"),
+    Language.PL: (r"\b(?:bezp[łl]atn\w*|darmow\w*)\b", r"\bp[łl]atn\w*\b"),
+    Language.RO: (r"\b(?:gratuit\w*|gratis|fara plata)\b", r"\b(?:contra cost|cu plata)\b"),
+    Language.RU: (r"\bbesplatn\w*\b", r"\bplatn\w*\b"),
+}
+_PAYMENT_WORDS = {
+    Language.DE: (r"\b(?:bar|bargeld)\b", r"\b(?:karte|kartenzahlung)\b", r"\bnur\b"),
+    Language.EN: (r"\bcash\b", r"\bcard\b", r"\bonly\b"),
+    Language.PL: (r"\bgotow\w*\b", r"\bkart\w*\b", r"\btylko\b"),
+    Language.RO: (r"\bnumerar\b", r"\bcard\w*\b", r"\b(?:doar|numai)\b"),
+    Language.RU: (r"\bnalich\w*\b", r"\bkart\w*\b", r"\btolko\b"),
+}
+_PAYMENT_CONTEXT = {
+    Language.DE: r"\b(?:zahl\w*|bezah\w*|kost\w*|entgelt|gebuhr\w*|bar|bargeld|akzeptier\w*)\b",
+    Language.EN: r"\b(?:pay\w*|cash|fee|cost\w*|charge|accepted)\b|\bcard only\b",
+    Language.PL: r"\b(?:p[łl]ac\w*|op[łl]at\w*|koszt\w*|gotow\w*)\b",
+    Language.RO: r"\b(?:plat\w*|cost|tax\w*|numerar)\b",
+    Language.RU: r"\b(?:oplat\w*|plat\w*|nalich\w*|stoit)\b",
+}
+
+
+def fee_claim_matches(text: str, facts: Sequence[Fact], language: Language) -> bool:
+    """Omitted fees are fine; explicit free/paid claims require that status."""
+    status = next((value for kind, value in facts if kind == "fee_status"), None)
+    if status is None:
+        return True  # Other service prices keep their independent checks.
+    normalized = transliterated(text)
+    if language == Language.EN and any(
+        kind == "facility" and transliterated(value).strip() == "barrier-free"
+        for kind, value in facts
+    ):
+        normalized = re.sub(r"\bbarrier[-\s]free\b", " ", normalized)
+    free, paid = _FEE_WORDS[language]
+    if ((re.search(free, normalized) and status != "free")
+            or (re.search(paid, normalized) and status != "paid")):
+        return False
+    supplied = transliterated(" ".join(value for kind, value in facts if kind == "fee"))
+    cash, card, only = _PAYMENT_WORDS[language]
+    claimed = {i for i, pattern in enumerate((cash, card))
+               if re.search(_PAYMENT_CONTEXT[language], normalized) and re.search(pattern, normalized)}
+    available = {i for i, pattern in enumerate((cash, card)) if re.search(pattern, supplied)}
+    return claimed <= available and not (claimed and re.search(only, normalized) and claimed != available)
+
+
+_OPERATIONAL_WORDS = {
+    Language.DE: "der die das er sie es bus fahrt einsatzzeiten einsatz geoffnet offnungszeiten offnungszeit ist sind von bis um uhr taglich telefon telefonnummer ruf an adresse am im in und oder mo di mi do fr sa so",
+    Language.EN: "the it is are bus operates daily from to at opening hours time phone call address and or documented",
+    Language.PL: "jest sa autobus codziennie od do godziny otwarcia telefon zadzwon adres i lub",
+    Language.RO: "este sunt autobuz zilnic de la pana ora program telefon adresa si sau contra cost poti plati cu cardul",
+    Language.RU: "avtobus ezhednevno s do chasy raboty telefon adres i ili pozvoni po telefonu esche raz",
+}
+
+
+def supported_operational_statement(text: str, facts: Sequence[Fact], language: Language) -> bool:
+    """Accept a mislabelled operational block only within a bounded vocabulary.
+
+    All remaining words must come from supplied operational facts or neutral
+    labels. Each clock clause must match one window with its day/time order;
+    words elsewhere cannot justify a reversed interval or an invented place.
+    Unknown services and negation are not neutral labels.
+    """
+    normalized = transliterated(text)
+    operational = [(kind, value) for kind, value in facts
+                   if kind in {"opening_time", "stand_time", "service_condition", "phone", "address", "email", "url", "fee", "fee_status"}]
+    allowed = set(_OPERATIONAL_WORDS[language].split()) | {
+        word for _, value in operational for word in re.findall(r"\w+", transliterated(value))
+    }
+    words = set(re.findall(r"\w+", normalized))
+    if not words or not words <= allowed:
+        return False
+    clock_clauses = [clause for clause in re.split(r"[,;.!?]", text) if re.search(r"\d{1,2}:\d{2}", clause)]
+    if clock_clauses:
+        return all(any(
+            kind in {"opening_time", "stand_time", "service_condition"}
+            and schedule_matches(clause, normalize_name_typography(value).replace(": ", " "), language, complete=False)
+            for kind, value in operational
+        ) for clause in clock_clauses)
+    return any(value.casefold() in text.casefold() for kind, value in operational) or any(
+        kind == "fee" and re.search(r"\d", value)
+        and set(re.findall(r"\d+", value)) <= set(re.findall(r"\d+", text))
+        for kind, value in operational
+    )
 
 
 _PRICE = re.compile(r"\b\d+(?:[,.]\d{1,2})?\s*€")
@@ -81,7 +175,7 @@ _AGE_PATTERNS = {
                   (r"\b(?:from age |at least )(\d+)\b", "ge"),
                   (r"\b(\d+) (?:and |or )?(?:over|older)\b", "ge"),
                   (r"\bup to (\d+)\b", "le")),
-    Language.PL: ((r"\bponizej (\d+)\b", "lt"), (r"\bod (\d+) lat", "ge"),
+    Language.PL: ((r"\bponizej (\d+)\b", "lt"), (r"\bod (\d+)(?=\s+(?:lat|do\b))", "ge"),
                   (r"\bpowyzej (\d+)\b", "gt"), (r"\bdo (\d+) lat", "le")),
     Language.RO: ((r"\bsub (\d+)\b", "lt"), (r"\bde la (\d+)\b", "ge"),
                   (r"\bpeste (\d+)\b", "gt"), (r"\bpana la (\d+)\b", "le")),
@@ -206,16 +300,17 @@ def service_text_without_cited_qualifiers(text: str, facts: Sequence[Fact], lang
     conservatively unmasked. This projection is internal, not output text.
     """
     normalized = service_text_without_cited_audience(text, facts, language)
-    if language == Language.PL and any(
-        kind == "facility" and transliterated(value).strip() == "bez barier"
+    qualifier = {Language.PL: "bez barier", Language.RO: "fara bariere"}.get(language)
+    if qualifier and any(
+        kind == "facility" and transliterated(value).strip() == qualifier
         for kind, value in facts
     ):
-        normalized = re.sub(r"\bbez barier\b(?=\s*(?:[,;.!?]|$))", " ", normalized)
+        normalized = re.sub(rf"\b{qualifier}\b(?=\s*(?:[,;.!?]|$))", " ", normalized)
     return normalized
 
 
 def stated_weekdays(text: str, language: Language) -> set[int]:
-    normalized = transliterated(text)
+    normalized = transliterated(normalize_name_typography(text))
     daily = (DAILY_LABEL[language], {
         Language.DE: "jeden Tag", Language.EN: "every day",
         Language.PL: "każdego dnia", Language.RO: "în fiecare zi",
@@ -223,8 +318,15 @@ def stated_weekdays(text: str, language: Language) -> set[int]:
     }[language])
     if any(transliterated(label) in normalized for label in daily):
         return set(range(7))
-    return {day for day, label in enumerate(WEEKDAY_NAMES[language])
-            if transliterated(label) in normalized}
+    labels = {transliterated(label): day for day, label in enumerate(WEEKDAY_NAMES[language])}
+    if language == Language.DE:
+        labels.update({label: day for day, label in enumerate(("mo", "di", "mi", "do", "fr", "sa", "so"))})
+    found = {day for label, day in labels.items() if re.search(rf"\b{re.escape(label)}\b", normalized)}
+    tokens = "|".join(sorted(labels, key=len, reverse=True))
+    for match in re.finditer(rf"\b({tokens})\.?\s*(?:-|bis|to|do)\s*({tokens})\b", normalized):
+        start, end = labels[match[1]], labels[match[2]]
+        found.update((start + step) % 7 for step in range((end - start) % 7 + 1))
+    return found
 
 
 _TIMES = re.compile(r"\b\d{1,2}:\d{2}\b")

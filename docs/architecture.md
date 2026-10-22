@@ -229,26 +229,36 @@ Die aktuelle Nutzerfrage wird separat als nicht vertrauenswürdiger Kontext in
 `current_query` übergeben, auch im Trinkwasserpfad. Sie steuert die Relevanz der
 Antwort, liefert aber keine Angebotsfakten und ändert nicht die Auswahl.
 
-Der Formulatorvertrag 3 erlaubt ein bis drei kurze Sätze. Promptversion 20
-priorisiert die konkrete Nutzerfrage: etwa belegte Kosten bei einer Kostenfrage
-oder belegte Zeiten bei einer Zeitfrage. Bei kurzen Folgeantworten dient der
-aufgelöste Bedarf als Kontext. Fehlende Details dürfen nicht ergänzt werden;
-anwendbare Unsicherheitspolicies und belegte nächste Schritte bleiben möglich.
-Der Prompt verlangt für normale angebotsbezogene Antworten zwei oder drei natürliche,
-rollenrichtige Sätze ohne festes `Nutze ...`-Muster. Das erste Angebot und der
-wichtigste nächste Schritt stehen zuerst. Sind mehrere finale Angebote
-komplementär hilfreich, kann die Antwort bis zu drei davon in der bereits
-deterministisch hergestellten Evidence-Reihenfolge nennen; jeder Satz bleibt an
-genau ein Angebot gebunden; belegen darf ihn jeder Fakt im übergebenen
-Evidence-Paket dieses ausgewählten Angebots. Nur der eng begrenzte
-Prompt-Injection-Pfad verwendet weiterhin einen festen sicheren Handlungssatz.
-Der sichtbare Antworttext verweist nicht auf technische UI-Container wie
-Ergebniskarten oder die Kartenansicht. Wo eine kurze Orientierung nötig ist,
-verwendet die lokalisierte Fassung sinngemäß „Mehr Infos stehen unten“.
-Tatsächliche Kartenfunktionen und belegte Angaben wie Kartenzahlung bleiben
-davon unberührt.
-Jeder Satz nennt Claimtyp, Angebots- und Faktenreferenzen oder einen erlaubten
-Policybaustein; freier Text außerhalb des JSON-Vertrags existiert nicht.
+Der Formulatorvertrag 4 und Promptversion 21 priorisieren die konkrete Frage
+und belegte Aussagen. `sentences` ist weiterhin der JSON-Feldname für ein bis
+drei angebotsgebundene Textblöcke; ein Block darf mehrere Sätze zum selben
+Angebot enthalten. Pro Block bleiben 220 Zeichen und für die vollständige
+Antwort 600 Zeichen erlaubt. Ein kurzer Block kann genügen. Ein belegter Fakt
+darf vor einer Handlungsaufforderung stehen. Die festgelegte primäre Reihenfolge
+für Wasser und Toiletten bleibt erhalten.
+
+Zusätzliche Fakten dürfen in den Kacheln verbleiben. Weder die Erwähnung der
+Toilettengebühr noch eine Aufzählung von mindestens drei Hilfebereichen ist
+Pflicht. Eine fehlende Gebühr darf aber nicht in eine Behauptung kostenlosen
+Zugangs umgedeutet werden: explizite Aussagen zu kostenlos/kostenpflichtig
+werden gegen `fee_status` geprüft, Beträge weiterhin gegen die Angebotsfakten.
+Der Prompt erlaubt kurze Verweise auf weitere Informationen in den Kacheln.
+Fehlende persönliche Eignungsdaten bearbeitet weiterhin die vorhandene
+strukturierte Dialogsteuerung; es entsteht kein zweiter freier Rückfragedialog.
+Der Formulator kann einen belegten Kontakt-/Klärungsschritt vorschlagen.
+
+Claimtypen beschreiben die Absicht des Blocks und ersetzen keinen Faktenbeleg.
+Eine als `service` etikettierte reine Zeit-/Kontaktangabe wird akzeptiert, wenn
+die begrenzte operative Prüfung alle Wörter auf belegte operative Werte oder
+neutrale Bezeichnungen zurückführt und Tages-/Zeitfolge zusammenpassen.
+Unbekannte zusätzliche Leistungen werden dadurch nicht freigegeben.
+Angebotsnamen dürfen nur in Leerraum und gleichwertigen Unicode-Bindestrichen
+abweichen; Buchstaben, Wortgrenzen, Namenszuordnung und Referenzen bleiben
+gebunden. Stilbeobachtungen (`multiple_sentences_in_block`, `formal_register`,
+`repeated_block`) werden im Referenzassessment gespeichert und verursachen
+keinen Fallback. Auch bei Injection ist kein fester Antwortwortlaut nötig;
+JSON-, Angebots- und Faktengrenzen gelten unverändert.
+
 `app/grounding.py` validiert die Antwort atomar gegen genau das Evidence-Paket:
 Fakt-Angebot-Zuordnung, operative Zahlen, Adressen, Kontakte, URLs, Zeiten,
 Zielskript, Längen, interne IDs und Kartenbindung. Mandatory-Karten und die
@@ -325,17 +335,14 @@ Allgemeine Leistungsbeschreibungen dürfen weiterhin ohne Zeitangabe
 stehen. Eine persönliche Schlafplatzzusage braucht kein Wort wie „garantiert“,
 um unbelegt zu sein.
 
-Vor der Satzgrenzen- und Sprachprüfung werden vollständig übereinstimmende
+Für Sprach- und Stilbeobachtungen werden vollständig übereinstimmende
 belegte Zeitliterale intern maskiert. Bei `opening_time` und `stand_time`
-darf dabei der führende Darstellungsmarker `> ` des Evidence-Werts fehlen;
-der verbleibende Zeit-/Ortstext muss weiterhin vollständig übereinstimmen.
-So zählt beispielsweise das belegte `18:30 ч. Hauptbahnhof` nicht wegen
-des russischen Stundenkürzels als zusätzlicher Satz. Die sichtbare Antwort
-und die anschließenden Fakt-, Referenz- und Groundingprüfungen bleiben
-unverändert. Es gibt keine globale Ausnahme für Stundenkürzel: Zusätzliche
-Sätze außerhalb des passenden Literals bleiben sichtbar. Andere Marker,
-unbelegte Kürzel oder nur teilweise passende Zeitangaben werden durch diese
-Regel nicht normalisiert. Regression: `tests/test_grounding_schedule_literals.py`.
+darf der führende Darstellungsmarker `> ` fehlen. Satzgrenzen sind keine
+faktischen Fehler mehr. Bei rein operativen Zeitblöcken müssen Tagesbezug,
+Uhrzeiten und Ortswörter weiterhin zu den bereitgestellten operativen Werten
+passen; eine zufällig an anderer Stelle im Angebot vorkommende Uhrzeit genügt
+nicht. Geänderte Zeiten und erfundene Ortsangaben bleiben Gegenproben in
+`tests/test_grounding_schedule_literals.py`.
 
 Für die Leistungsprüfung wird eine vollständig belegte Zielgruppenphrase wie
 „Menschen ohne Krankenversicherung“ intern ausgeblendet: Sie verneint weder
@@ -369,14 +376,11 @@ erlauben keine aktuelle Leistungszusage.
 Zwei ältere Regeln entschieden lexikalisch über etwas, das lexikalisch nicht
 immer entscheidbar ist; beide sind auf ihren eindeutigen Bereich zurückgeführt.
 
-Die deutsche **Anredeprüfung** wertet eine großgeschriebene Höflichkeitsform
-mitten im Satz weiterhin als Verstoß: dort schreibt das Deutsche weder „sie"
-noch „ihr" groß. Am Satzanfang wird jedes Wort großgeschrieben, dort ist „Sie
-bieten Übernachtungen an" nicht von der Aussage über den Träger zu
-unterscheiden. Ein satzinitiales „Sie"/„Ihr" gilt deshalb nur dann als
-Höflichkeitsform, wenn ihm kein Satz vorausgeht, auf den es sich beziehen
-könnte. Grenze: eine echte Höflichkeitsform am Anfang eines Folgesatzes wird
-nicht erkannt.
+Die deutsche **Anredeprüfung** ist seit Validatorversion 2 eine reine
+Stilbeobachtung. Der Prompt bevorzugt weiterhin „du“. Eine eindeutige
+Höflichkeitsform ist keine unbelegte Tatsachenbehauptung und verwirft die
+Antwort deshalb nicht mehr. Die begrenzte Pronomenheuristik bleibt für die
+Beobachtung erhalten; nicht eindeutige Formen beweisen keinen Stilfehler.
 
 Die **Namensbindung** blendet E-Mail-Adressen und URLs aus, bevor sie nach
 Eigennamen sucht. In `uvo@cab-leipzig.de` steckt der Name `UVO`, aber die

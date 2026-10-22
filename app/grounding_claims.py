@@ -263,6 +263,10 @@ def _detect(text: str, vocabulary: Vocabulary, languages: Sequence[Language]) ->
 
 def detect_service_concepts(text: str, language: Language) -> set[str]:
     """Erkennt benannte Leistungskonzepte im sichtbaren Text der Antwortsprache."""
+    if language == Language.RO:
+        # Romanian masa can mean meal or table. The complete changing-table
+        # phrase does not claim food; a separate meal mention remains visible.
+        text = re.sub(r"\bmasa de infasat\b", " ", transliterated(text))
     return _detect(text, SERVICE_CONCEPT_STEMS, (language,))
 
 

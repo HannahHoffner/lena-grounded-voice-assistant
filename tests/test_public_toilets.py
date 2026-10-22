@@ -744,8 +744,8 @@ def test_toilet_formulation_is_grounded_and_restores_card_order() -> None:
             ]
         }
     )
-    with pytest.raises(FormulatorError, match="formulator_ungrounded_claim"):
-        validate_formulation(without_fee, evidence)
+    # The fee remains on the card; omitting it is not a contradictory price.
+    assert validate_formulation(without_fee, evidence).card_ids == validated.card_ids
 
     second = evidence.selected_offers[1]
     second_name = next(fact for fact in second.facts if fact.fact_type == FactType.DISPLAY_NAME)

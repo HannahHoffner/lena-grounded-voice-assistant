@@ -132,19 +132,25 @@ def test_recorded_toilet_sentence_with_known_telephone_passes_full_validator(app
     assert validate_formulation(response, evidence).sentence_count == 1
 
 
-@pytest.mark.parametrize("change", ["unknown_phone", "second_sentence", "wrong_fee", "missing_payment"])
+@pytest.mark.parametrize("change", ["unknown_phone", "wrong_fee"])
 def test_telephone_fix_keeps_value_and_sentence_validation(app, change):
     evidence, response = _toilet_phone_response(app)
     if change == "unknown_phone":
         response.sentences[0].text = response.sentences[0].text.replace("0800 44 6666 02", "0800 44 9999 02")
-    elif change == "second_sentence":
-        response.sentences[0].text += " Druga wiadomość."
-    elif change == "wrong_fee":
-        response.sentences[0].text = response.sentences[0].text.replace("50 centów", "5 centów")
     else:
-        response.sentences[0].text = response.sentences[0].text.replace("lub karta", "")
+        response.sentences[0].text = response.sentences[0].text.replace("50 centów", "5 centów")
     with pytest.raises(FormulatorError):
         validate_formulation(response, evidence)
+
+
+@pytest.mark.parametrize("change", ["second_sentence", "missing_payment"])
+def test_optional_detail_and_multiple_sentences_do_not_make_correct_values_false(app, change):
+    evidence, response = _toilet_phone_response(app)
+    if change == "second_sentence":
+        response.sentences[0].text += " Druga wiadomość."
+    else:
+        response.sentences[0].text = response.sentences[0].text.replace("lub karta", "")
+    assert validate_formulation(response, evidence).answer == response.sentences[0].text
 
 
 @pytest.mark.parametrize("text", [

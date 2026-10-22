@@ -31,13 +31,14 @@ from .grounding_claims import (
 from .interpreter import Need
 from .grounding_constraints import (
     contradicts_age_bound, has_negation, schedule_matches, service_text_without_cited_qualifiers,
-    price_services_match, contains_fee_literal,
+    price_services_match, fee_claim_matches, normalize_name_typography,
+    supported_operational_statement,
 )
 from .models import Language
 from .grounding_references import resolve_offer_evidence
 
 
-GROUNDING_VALIDATOR_VERSION = "1"
+GROUNDING_VALIDATOR_VERSION = "2"
 
 URL_RE = re.compile(r"https?://[^\s<>]+", re.IGNORECASE)
 EMAIL_RE = re.compile(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.IGNORECASE)
@@ -139,13 +140,17 @@ DOMAIN_BOUNDARY_ANCHORS = {
         "kann dir nicht sagen",
         "beantworte diese frage nicht",
         "beantwortet diese frage nicht",
+        "kann dir nicht helfen", "kann ich dir nicht helfen",
+        "kann diese frage nicht beantworten",
+        "nicht weiterhelfen",
     ),
-    Language.EN: ("cannot answer", "can't answer"),
-    Language.PL: ("nie mog\u0119 odpowiedzie\u0107", "nie odpowiem"),
-    Language.RO: ("nu pot r\u0103spunde", "nu \u00ee\u021bi pot spune", "nu pot spune"),
+    Language.EN: ("cannot answer", "can't answer", "cannot help with", "can't help with"),
+    Language.PL: ("nie mog\u0119 odpowiedzie\u0107", "nie odpowiem", "nie mo\u017ce odpowiedzie\u0107"),
+    Language.RO: ("nu pot r\u0103spunde", "nu \u00ee\u021bi pot spune", "nu pot spune", "nu poate r\u0103spunde"),
     Language.RU: (
         "\u043d\u0435 \u043c\u043e\u0433\u0443 \u043e\u0442\u0432\u0435\u0442\u0438\u0442\u044c",
         "\u043d\u0435 \u043c\u043e\u0433\u0443 \u0441\u043a\u0430\u0437\u0430\u0442\u044c",
+        "\u043d\u0435 \u043c\u043e\u0436\u0435\u0442 \u043e\u0442\u0432\u0435\u0442\u0438\u0442\u044c",
     ),
 }
 SUPPORTED_DOMAIN_STEMS = {
@@ -166,7 +171,8 @@ SUPPORTED_DOMAIN_STEMS = {
 NO_RESULT_ANCHORS = {
     Language.DE: ("kein passendes angebot", "nichts passendes"),
     Language.EN: ("no matching offer", "nothing suitable"),
-    Language.PL: ("brak pasuj\u0105cej oferty", "nie ma pasuj\u0105cej oferty"),
+    Language.PL: ("brak pasuj\u0105cej oferty", "nie ma pasuj\u0105cej oferty", "nie znalaz\u0142am", "nie znalaz\u0142em",
+                  "nie znaleziono pasuj\u0105cej oferty", "w bazie lena nie ma dost\u0119pnych ofert"),
     Language.RO: ("nicio ofert\u0103 potrivit\u0103", "nu am g\u0103sit o ofert\u0103 potrivit\u0103"),
     Language.RU: (
         "\u043d\u0435\u0442 \u043f\u043e\u0434\u0445\u043e\u0434\u044f\u0449\u0435\u0433\u043e \u043f\u0440\u0435\u0434\u043b\u043e\u0436\u0435\u043d\u0438\u044f",
@@ -198,11 +204,13 @@ def _ungrounded(diagnostic_code: GroundingDiagnosticCode) -> FormulatorError:
 def _contains_exact_literal(text: str, literal: str, *, ignore_case: bool = False) -> bool:
     """Findet einen vollständigen Literalwert statt eines Wortpräfixes.
 
-    Kuratierte Namen dürfen nicht flektiert oder um zusätzliche Wortzeichen
-    erweitert werden. Der optionale case-insensitive Lauf dient nur dazu, eine
+    Kuratierte Namen dürfen nur in Leerraum und Unicode-Bindestrichen abweichen,
+    nicht flektiert oder um zusätzliche Wortzeichen erweitert werden.
+    Der optionale case-insensitive Lauf dient nur dazu, eine
     mögliche Namensnennung zu erkennen; die anschließende Freigabe bleibt
     case-sensitiv.
     """
+    text, literal = normalize_name_typography(text), normalize_name_typography(literal)
     flags = re.IGNORECASE if ignore_case else 0
     return re.search(rf"(?<!\w){re.escape(literal)}(?!\w)", text, flags) is not None
 
@@ -222,7 +230,7 @@ def _without_contact_literals(text: str) -> str:
 def _strip_evidence_literals(
     text: str, evidence: FormulatorEvidence, *, preserve_phone_numbers: bool = False,
 ) -> str:
-    stripped = text
+    stripped = normalize_name_typography(text)
     literals = [
         fact.value
         for offer in evidence.selected_offers
@@ -243,7 +251,7 @@ def _strip_evidence_literals(
         and fact.value.startswith("> ") and fact.value[2:].strip()
     )
     for literal in sorted(literals, key=len, reverse=True):
-        stripped = re.sub(re.escape(literal), " ", stripped, flags=re.IGNORECASE)
+        stripped = re.sub(re.escape(normalize_name_typography(literal)), " ", stripped, flags=re.IGNORECASE)
     return stripped
 
 
@@ -260,8 +268,6 @@ def _validate_language(text: str, evidence: FormulatorEvidence) -> None:
                 raise FormulatorError("formulator_invalid_language")
     if INTERNAL_TERM_RE.search(prose):
         raise FormulatorError("formulator_contract_violation")
-    if evidence.requested_language == Language.DE and _uses_formal_register(prose):
-        raise FormulatorError("formulator_contract_violation")
 
 
 def _validate_policy_answer(text: str, evidence: FormulatorEvidence) -> None:
@@ -269,11 +275,8 @@ def _validate_policy_answer(text: str, evidence: FormulatorEvidence) -> None:
     folded = text.casefold()
     if evidence.answer_type == AnswerType.OUT_OF_SCOPE:
         anchors = DOMAIN_BOUNDARY_ANCHORS[evidence.requested_language]
-        domain_stems = SUPPORTED_DOMAIN_STEMS[evidence.requested_language]
         if not any(anchor in folded for anchor in anchors):
             raise _ungrounded(GroundingDiagnosticCode.DOMAIN_BOUNDARY_MISSING)
-        if sum(stem in folded for stem in domain_stems) < 3:
-            raise _ungrounded(GroundingDiagnosticCode.SUPPORTED_DOMAINS_MISSING)
     elif evidence.answer_type == AnswerType.NO_VERIFIED_RESULT:
         if not any(anchor in folded for anchor in NO_RESULT_ANCHORS[evidence.requested_language]):
             raise _ungrounded(GroundingDiagnosticCode.NO_RESULT_BOUNDARY_MISSING)
@@ -406,13 +409,7 @@ def _validate_sentence(
     visible_offer_texts: dict[str, str],
 ) -> str:
     text = " ".join(sentence.text.split())
-    if not text or len(text.split()) > 32 or HTML_OR_MARKDOWN_RE.search(text):
-        raise FormulatorError("formulator_contract_violation")
-    # Keep phone numbers for sentence detection: otherwise stripping a known
-    # phone turns "tel. 0800 ... ." into "tel. ." and loses the abbreviation's
-    # numeric context. Language checks still strip all authoritative literals.
-    prose_without_evidence = _strip_evidence_literals(text, evidence, preserve_phone_numbers=True).strip()
-    if not re.search(r"[.!?]$", text) or _contains_sentence_break(prose_without_evidence):
+    if not text or HTML_OR_MARKDOWN_RE.search(text):
         raise FormulatorError("formulator_contract_violation")
     if VISIBLE_ID_RE.search(text) or any(fact_id in text for fact_id in facts_by_id):
         raise FormulatorError("formulator_contract_violation")
@@ -436,23 +433,26 @@ def _validate_sentence(
         language = evidence.requested_language
         if not price_services_match(text, pool_values, language):
             raise _ungrounded(GroundingDiagnosticCode.PRICE_SERVICE_MISMATCH)
+        if not fee_claim_matches(text, pool_values, language):
+            raise _ungrounded(GroundingDiagnosticCode.FEE_CLAIM_UNSUPPORTED)
         # Die Rolle beschreibt, warum das Angebot ausgewaehlt wurde, nicht seinen
         # Leistungsumfang. Ein referral_contact darf seine belegten eigenen
         # Leistungen beschreiben; entscheidend ist der Beleg, nicht der Enumwert.
-        if sentence.claim_type == ClaimType.SERVICE and not any(
-            fact.fact_type in {FactType.SERVICE, FactType.CAPABILITY, FactType.DESCRIPTION}
-            for fact in pool
-        ):
-            raise _ungrounded(GroundingDiagnosticCode.SERVICE_ROLE_MISMATCH)
         if sentence.claim_type == ClaimType.REFERRAL and offer.candidate_role != "referral_contact":
             raise _ungrounded(GroundingDiagnosticCode.REFERRAL_ROLE_MISMATCH)
 
         # Names and contact literals are not service/target claims in their own
         # right. Preserve other fact text so that its semantics are still checked.
-        semantic_text = _without_contact_literals(text)
+        semantic_text = normalize_name_typography(_without_contact_literals(text))
         for fact in offer.facts:
             if fact.fact_type in {FactType.DISPLAY_NAME, FactType.ALIAS}:
-                semantic_text = semantic_text.replace(fact.value, " ")
+                semantic_text = semantic_text.replace(normalize_name_typography(fact.value), " ")
+        operational_support = supported_operational_statement(semantic_text, pool_values, language)
+        if sentence.claim_type == ClaimType.SERVICE and not operational_support and not any(
+            fact.fact_type in {FactType.SERVICE, FactType.CAPABILITY, FactType.DESCRIPTION}
+            for fact in pool
+        ):
+            raise _ungrounded(GroundingDiagnosticCode.SERVICE_ROLE_MISMATCH)
         exact_negative_fact = any(
             fact.fact_type in {FactType.SERVICE, FactType.DESCRIPTION, FactType.NOTE}
             and has_negation(fact.value, language)
@@ -472,6 +472,12 @@ def _validate_sentence(
             if not any(has_negation(value, lang) for lang in {language, Language.DE, Language.EN})
         ]
         service_support, service_concepts = assess_service_claim(service_text, service_values, language)
+        if (sentence.claim_type == ClaimType.FACT and TIME_RE.search(text)
+                and service_support is ClaimSupport.NOT_CHECKED and not operational_support):
+            # A clock token elsewhere in this offer does not establish its
+            # relation to the stated day or location. Previously some of these
+            # mismatches were caught only by the one-sentence presentation rule.
+            raise _ungrounded(GroundingDiagnosticCode.TIME_NOT_CITED)
         if service_support in {ClaimSupport.UNDECIDABLE, ClaimSupport.CONTRADICTED} and not exact_negative_fact:
             raise _ungrounded(GroundingDiagnosticCode.SERVICE_FACT_MISSING)
         all_values = [(fact.fact_type.value, fact.value) for fact in offer.facts]
@@ -489,6 +495,7 @@ def _validate_sentence(
         if sentence.claim_type == ClaimType.SERVICE and (
             service_support is ClaimSupport.NOT_CHECKED
             and target_support is not ClaimSupport.SUPPORTED
+            and not operational_support
             and not any(
                 fact.fact_type in {FactType.SERVICE, FactType.CAPABILITY, FactType.DESCRIPTION}
                 and _canonical(fact.value).rstrip(".!?") in _canonical(semantic_text)
@@ -527,14 +534,15 @@ def _validate_sentence(
         # Die Forderung, einen zitierten Namensfakt exakt wiederzugeben, gilt
         # antwortweit je Angebot (siehe _validate_cited_names) und nicht mehr je
         # Satz: ein Satz darf den Namen mitzitieren, ohne ihn zu wiederholen.
-        named_text = _without_contact_literals(text)
+        named_text = normalize_name_typography(_without_contact_literals(text))
         for candidate in evidence.selected_offers:
             naming_facts = [
                 fact for fact in candidate.facts
                 if fact.fact_type in {FactType.DISPLAY_NAME, FactType.ALIAS} and len(fact.value) >= 2
             ]
             name_like = [
-                fact for fact in naming_facts if fact.value.casefold() in named_text.casefold()
+                fact for fact in naming_facts
+                if normalize_name_typography(fact.value).casefold() in named_text.casefold()
             ]
             if any(not _contains_exact_literal(named_text, fact.value) for fact in name_like):
                 raise _ungrounded(GroundingDiagnosticCode.PROPER_NAME_NOT_EXACT)
@@ -591,53 +599,25 @@ def validate_formulation(
         for key, ids in reference_assessment["declared_fact_ids"].items()
     }
     _validate_cited_names(response, texts, declared_pools)
-    if len({_canonical(text) for text in texts}) != len(texts):
-        raise FormulatorError("formulator_contract_violation")
     answer = " ".join(texts)
     if len(answer) > 600:
         raise FormulatorError("formulator_contract_violation")
     _validate_language(answer, evidence)
     _validate_policy_answer(answer, evidence)
+    # Presentation observations never imply false content or trigger a fallback.
+    observations = []
+    if any(_contains_sentence_break(_strip_evidence_literals(text, evidence, preserve_phone_numbers=True)) for text in texts):
+        observations.append("multiple_sentences_in_block")
+    if evidence.requested_language == Language.DE and _uses_formal_register(_strip_evidence_literals(answer, evidence)):
+        observations.append("formal_register")
+    if len({_canonical(text) for text in texts}) != len(texts):
+        observations.append("repeated_block")
+    reference_assessment["presentation_observations"] = observations
 
-    if evidence.need.value == "toilet" and evidence.selected_offers:
+    if evidence.need in {Need.TOILET, Need.DRINKING_WATER} and evidence.selected_offers:
         primary = evidence.selected_offers[0]
         if response.sentences[0].offer_id != primary.offer_id:
             raise FormulatorError("formulator_contract_violation")
-        fee_status = next(
-            (fact for fact in primary.facts if fact.fact_type == FactType.FEE_STATUS),
-            None,
-        )
-        if fee_status and fee_status.value == "paid":
-            fee = next((fact for fact in primary.facts if fact.fact_type == FactType.FEE), None)
-            if fee is None or not contains_fee_literal(answer, fee.value):
-                raise _ungrounded(GroundingDiagnosticCode.REQUIRED_FEE_MISSING)
-
-    if evidence.need == Need.DRINKING_WATER and evidence.selected_offers:
-        primary = evidence.selected_offers[0]
-        if response.sentences[0].offer_id != primary.offer_id:
-            raise FormulatorError("formulator_contract_violation")
-        primary_names = [
-            fact
-            for fact in primary.facts
-            if fact.fact_type == FactType.DISPLAY_NAME
-        ]
-        first_sentence = response.sentences[0]
-        if not primary_names or not any(
-            fact.value in first_sentence.text
-            for fact in primary_names
-        ):
-            raise _ungrounded(GroundingDiagnosticCode.PRIMARY_NAME_MISSING)
-
-    first_claim = response.sentences[0].claim_type
-    expected_first = {
-        AnswerType.GROUNDED_RESULT: {ClaimType.ACTION, ClaimType.SERVICE},
-        AnswerType.GROUNDED_REFERRAL: {ClaimType.REFERRAL},
-        AnswerType.AMBIGUOUS_HELP_FALLBACK: {ClaimType.REFERRAL},
-        AnswerType.OUT_OF_SCOPE: {ClaimType.DOMAIN_BOUNDARY},
-        AnswerType.NO_VERIFIED_RESULT: {ClaimType.NO_RESULT},
-    }.get(evidence.answer_type)
-    if expected_first and first_claim not in expected_first:
-        raise FormulatorError("formulator_contract_violation")
 
     referenced = {sentence.offer_id for sentence in response.sentences if sentence.offer_id}
     required_cards = {
