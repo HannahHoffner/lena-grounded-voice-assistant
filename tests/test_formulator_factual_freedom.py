@@ -174,6 +174,30 @@ def test_weekday_abbreviations_preserve_ranges_and_time_direction():
     assert not schedule_matches("Mo-Fr 08:00-16:00", condition, Language.DE, complete=True)
 
 
+@pytest.mark.parametrize("language,wrong,right,condition", [
+    (Language.DE, "montags", "sonntags", "Sonntag 20:00-21:00"),
+    (Language.EN, "Mondays", "Sundays", "Sunday 20:00-21:00"),
+])
+def test_weekday_inflection_never_erases_a_wrong_day(language, wrong, right, condition):
+    assert not schedule_matches(f"{wrong} 20:00-21:00", condition, language, complete=False)
+    assert schedule_matches(f"{right} 20:00-21:00", condition, language, complete=False)
+
+
+def test_inflected_weekday_range_cannot_be_supported_by_only_two_endpoints():
+    assert not schedule_matches("montags bis freitags 20:00-21:00",
+                                "Montag, Freitag 20:00-21:00", Language.DE, complete=False)
+
+
+def test_full_validator_rejects_monday_food_for_the_sunday_hilfebus_service(app):
+    evidence = _evidence(app, offer_ids=("21",), need=Need.FOOD)
+    response = _response(evidence, text="Hilfebus: Essensausgabe sonntags 20:00-21:00.", claim_type=ClaimType.SERVICE)
+    assert validate_formulation(response, evidence).answer == response.sentences[0].text
+    response.sentences[0].text = "Hilfebus: Essensausgabe montags 20:00-21:00."
+    with pytest.raises(FormulatorError) as error:
+        validate_formulation(response, evidence)
+    assert error.value.diagnostic_code == GroundingDiagnosticCode.SERVICE_CONDITION_MISMATCH
+
+
 def test_payment_method_can_be_omitted_but_not_invented_or_excluded(app):
     evidence = _fee_packet(app, Language.EN)
     response = _response(evidence, text="Use Testtoilette; payment by cash.")

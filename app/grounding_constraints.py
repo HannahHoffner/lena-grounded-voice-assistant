@@ -319,11 +319,16 @@ def stated_weekdays(text: str, language: Language) -> set[int]:
     if any(transliterated(label) in normalized for label in daily):
         return set(range(7))
     labels = {transliterated(label): day for day, label in enumerate(WEEKDAY_NAMES[language])}
+    # Preserve the earlier full-name stem recognition (montags, Mondays, ...).
+    # Word boundaries belong only to short forms such as Mo/So, not inflections.
+    found = {day for label, day in labels.items() if label in normalized}
     if language == Language.DE:
-        labels.update({label: day for day, label in enumerate(("mo", "di", "mi", "do", "fr", "sa", "so"))})
-    found = {day for label, day in labels.items() if re.search(rf"\b{re.escape(label)}\b", normalized)}
+        abbreviations = {label: day for day, label in enumerate(("mo", "di", "mi", "do", "fr", "sa", "so"))}
+        found.update(day for label, day in abbreviations.items() if re.search(rf"\b{label}\b", normalized))
+        labels.update(abbreviations)
     tokens = "|".join(sorted(labels, key=len, reverse=True))
-    for match in re.finditer(rf"\b({tokens})\.?\s*(?:-|bis|to|do)\s*({tokens})\b", normalized):
+    inflection = "s?" if language in {Language.DE, Language.EN} else ""
+    for match in re.finditer(rf"\b({tokens}){inflection}\.?\s*(?:-|bis|to|do)\s*({tokens}){inflection}\b", normalized):
         start, end = labels[match[1]], labels[match[2]]
         found.update((start + step) % 7 for step in range((end - start) % 7 + 1))
     return found

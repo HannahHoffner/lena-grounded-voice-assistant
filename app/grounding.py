@@ -38,7 +38,7 @@ from .models import Language
 from .grounding_references import resolve_offer_evidence
 
 
-GROUNDING_VALIDATOR_VERSION = "2"
+GROUNDING_VALIDATOR_VERSION = "3"
 
 URL_RE = re.compile(r"https?://[^\s<>]+", re.IGNORECASE)
 EMAIL_RE = re.compile(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.IGNORECASE)

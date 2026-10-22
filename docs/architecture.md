@@ -337,6 +337,11 @@ Allgemeine Leistungsbeschreibungen dürfen weiterhin ohne Zeitangabe
 stehen. Eine persönliche Schlafplatzzusage braucht kein Wort wie „garantiert“,
 um unbelegt zu sein.
 
+Validatorversion 3 erhält auch flektierte Wochentage wie „montags“ und
+„Mondays“. Sie dürfen nicht als fehlender Tagesbezug behandelt werden.
+Flektierte Bereiche wie „montags bis freitags“ umfassen alle Zwischentage;
+nur Montag und Freitag in der Evidenz belegen diesen Bereich nicht.
+
 Für Sprach- und Stilbeobachtungen werden vollständig übereinstimmende
 belegte Zeitliterale intern maskiert. Bei `opening_time` und `stand_time`
 darf der führende Darstellungsmarker `> ` fehlen. Satzgrenzen sind keine

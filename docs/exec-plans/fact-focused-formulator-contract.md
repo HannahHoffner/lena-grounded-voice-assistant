@@ -155,3 +155,27 @@ validator are unchanged. Focused final verification: 165 passed, one known xfail
 (3.92 seconds), including the >220-character supported answer and its unsupported
 medical-claim counterpart. Final clean-commit full regression/live evidence will
 be saved externally; no further source changes during that measurement.
+
+## Final regression correction: weekday inflections
+
+The complete contract-5 run and clean-commit native suite finished (1215 passed,
+one known xfail). A post-run adversarial check found a directly caused regression:
+`stated_weekdays("montags", de)` returned an empty set after replacing the prior
+full-name stem search with word boundaries, so a Monday claim could match a
+Sunday condition in the non-personal/general-description branch.
+
+Before editing: restore the prior recognition of inflected full weekday names,
+retain word boundaries for newly supported short abbreviations, and expand
+German/English inflected ranges. Keep contract 5 / prompt 22 / all omission and
+presentation freedom unchanged. Bump only the factual validator to 3 and update
+its observable test. Add wrong-day/full-validator and range counterexamples.
+Verify the final clean revision once, with reports in `20261022-validator3`.
+Older measurements remain bound to their original revisions and are retained.
+
+Correction implemented and reviewed; focused regression: 101 passed (4.47 s).
+The full validator now rejects Monday food distribution against the Sunday
+Hilfebus condition while accepting the Sunday wording. Additional probes cover
+English plurals and ranges whose endpoints alone would otherwise hide missing
+intermediate days. No prompt, schema, data, call limits or presentation freedom
+changed in this correction. Final post-commit verification is recorded externally
+to keep the measured revision clean.
