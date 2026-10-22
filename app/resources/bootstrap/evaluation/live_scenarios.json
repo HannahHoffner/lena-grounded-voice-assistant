@@ -1,6 +1,6 @@
 {
   "contract_version": "1",
-  "catalog_version": "2",
+  "catalog_version": "3",
   "synthetic_data_only": true,
   "synthetic_safety_notice": "All described danger situations are fictional test cases and do not represent real events.",
   "scenarios": [
@@ -79,7 +79,7 @@
       "minimum_calls":{"interpreter":15,"selector":0,"formulator":0},
       "maximum_calls":{"interpreter":15,"selector":0,"formulator":0},
       "maximum_provider_wait_seconds":225,
-      "live_limits":{"max_requests":15,"max_provider_calls":15,"max_interpreter_calls":15,"max_selector_calls":0,"max_formulator_calls":0,"max_total_runtime_seconds":300,"max_failures":3}
+      "live_limits":{"max_requests":15,"max_provider_calls":15,"max_interpreter_calls":15,"max_selector_calls":0,"max_formulator_calls":0,"max_total_runtime_seconds":300,"max_failures":16}
     },
     {
       "stage":"selector-formulator",
@@ -89,7 +89,7 @@
       "minimum_calls":{"interpreter":0,"selector":6,"formulator":10},
       "maximum_calls":{"interpreter":0,"selector":6,"formulator":20},
       "maximum_provider_wait_seconds":780,
-      "live_limits":{"max_requests":16,"max_provider_calls":26,"max_interpreter_calls":0,"max_selector_calls":6,"max_formulator_calls":20,"max_total_runtime_seconds":900,"max_failures":3}
+      "live_limits":{"max_requests":16,"max_provider_calls":26,"max_interpreter_calls":0,"max_selector_calls":6,"max_formulator_calls":20,"max_total_runtime_seconds":900,"max_failures":17}
     },
     {
       "stage":"end-to-end",
@@ -97,9 +97,9 @@
       "repetitions":1,
       "request_count":34,
       "minimum_calls":{"interpreter":30,"selector":4,"formulator":10},
-      "maximum_calls":{"interpreter":34,"selector":34,"formulator":34},
+      "maximum_calls":{"interpreter":34,"selector":34,"formulator":68},
       "maximum_provider_wait_seconds":1530,
-      "live_limits":{"max_requests":34,"max_provider_calls":102,"max_interpreter_calls":34,"max_selector_calls":34,"max_formulator_calls":34,"max_total_runtime_seconds":1960,"max_failures":14}
+      "live_limits":{"max_requests":34,"max_provider_calls":136,"max_interpreter_calls":34,"max_selector_calls":34,"max_formulator_calls":68,"max_total_runtime_seconds":1960,"max_failures":28}
     },
     {
       "stage":"stability",
@@ -107,9 +107,9 @@
       "repetitions":3,
       "request_count":18,
       "minimum_calls":{"interpreter":18,"selector":6,"formulator":15},
-      "maximum_calls":{"interpreter":18,"selector":18,"formulator":18},
+      "maximum_calls":{"interpreter":18,"selector":18,"formulator":36},
       "maximum_provider_wait_seconds":810,
-      "live_limits":{"max_requests":18,"max_provider_calls":54,"max_interpreter_calls":18,"max_selector_calls":18,"max_formulator_calls":18,"max_total_runtime_seconds":1050,"max_failures":3}
+      "live_limits":{"max_requests":18,"max_provider_calls":72,"max_interpreter_calls":18,"max_selector_calls":18,"max_formulator_calls":36,"max_total_runtime_seconds":1050,"max_failures":19}
     }
   ],
   "metrics": {

@@ -18,7 +18,7 @@ from .resources import packaged_bootstrap_data_root
 
 
 LIVE_EVALUATION_CONTRACT_VERSION = "1"
-LIVE_SCENARIO_CATALOG_VERSION = "2"
+LIVE_SCENARIO_CATALOG_VERSION = "3"
 LIVE_SMOKE_ENVIRONMENT_FLAG = "LENA_ALLOW_LIVE_SMOKE"
 LIVE_REPORT_SUBDIRECTORY = Path("live-evaluations")
 RUN_ID_RE = re.compile(r"^run_[0-9a-f]{32}$")

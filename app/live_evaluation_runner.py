@@ -761,17 +761,6 @@ async def _run_e2e_scenario(
     }
 
 
-# Die Stufendokumentation nennt fuer End-to-End vier und fuer die
-# Stabilitaetsstufe drei *kritische* Fehler als Abbruchgrenze. Die allgemeine
-# Fehlergrenze teilte sich diesen Zaehler bisher mit gewoehnlichen fachlichen
-# Verwerfungen, sodass ein sicherheitsrelevanter Befund und eine routinemaessige
-# Ablehnung dasselbe Budget verbrauchten. Beide werden jetzt getrennt gestoppt.
-CRITICAL_CONTENT_ERROR_ABORT_LIMITS = {
-    EvaluationStage.END_TO_END: 4,
-    EvaluationStage.STABILITY: 3,
-}
-
-
 async def _build_isolated_service(
     settings: Settings,
     scratch_dir: Path,
@@ -839,10 +828,8 @@ async def run_end_to_end_live_gate(
                 critical_content_errors += int(result["critical_content_error"])
                 unverified_metric_count += len(result["unverified_metrics"])
                 store.append_result(result)
-                if critical_content_errors >= CRITICAL_CONTENT_ERROR_ABORT_LIMITS[
-                    EvaluationStage.END_TO_END
-                ]:
-                    raise EvaluationLimitReached("live_evaluation_critical_error_limit")
+                # Synthetic findings remain negative evidence; collect the full
+                # catalog instead of ending the sample at a content threshold.
                 if result["critical_content_error"] or not result["technically_valid"]:
                     counter.record_failure()
         except EvaluationLimitReached as exc:
@@ -945,10 +932,6 @@ async def run_stability_live_gate(
                     critical_content_errors += int(result["critical_content_error"])
                     unverified_metric_count += len(result["unverified_metrics"])
                     store.append_result(result)
-                    if critical_content_errors >= CRITICAL_CONTENT_ERROR_ABORT_LIMITS[
-                        EvaluationStage.STABILITY
-                    ]:
-                        raise EvaluationLimitReached("live_evaluation_critical_error_limit")
                     if result["critical_content_error"] or not result["technically_valid"]:
                         counter.record_failure()
         except EvaluationLimitReached as exc:

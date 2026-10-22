@@ -765,7 +765,7 @@ def test_interpreter_runner_executes_exactly_fifteen_calls_and_no_following_stag
     assert all(json.loads(line)["confirmed_model_identifier"] == "not_yet_confirmed" for line in lines)
 
 
-def test_interpreter_runner_aborts_at_third_contract_failure(tmp_path: Path) -> None:
+def test_interpreter_runner_collects_all_contract_failures(tmp_path: Path) -> None:
     settings = _settings(tmp_path)
     plan = load_live_scenario_catalog().plan(EvaluationStage.INTERPRETER)
 
@@ -773,10 +773,11 @@ def test_interpreter_runner_aborts_at_third_contract_failure(tmp_path: Path) -> 
         run_interpreter_live_gate(settings, plan.live_limits, provider_factory=FailingInterpreterProvider)
     )
 
-    assert result["status"] == "aborted"
-    assert result["abort_reason"] == "live_evaluation_failure_limit"
-    assert result["counts"]["interpreter_calls"] == 3
-    assert result["counts"]["failures"] == 3
+    assert result["status"] == "completed"
+    assert result["abort_reason"] is None
+    assert result["counts"]["interpreter_calls"] == 15
+    assert result["counts"]["failures"] == 15
+    assert result["contract_gate_passed"] is False
     assert result["next_stage_started"] is False
 
 
@@ -792,15 +793,15 @@ def test_interpreter_runner_persists_only_redacted_http_diagnostics(tmp_path: Pa
         )
     )
 
-    assert result["status"] == "aborted"
-    assert result["abort_reason"] == "live_evaluation_failure_limit"
+    assert result["status"] == "completed"
+    assert result["abort_reason"] is None
     report = settings.runtime_dir / result["report_directory"]
     error_records = [
         json.loads(line)
         for line in (report / "redacted-errors.jsonl").read_text(encoding="utf-8").splitlines()
     ]
     scenario_errors = [item for item in error_records if item["error_code"] == "interpreter_http_error"]
-    assert len(scenario_errors) == 3
+    assert len(scenario_errors) == 15
     assert all(item["provider_failure_kind"] == "rate_limited" for item in scenario_errors)
     assert all(item["upstream_status"] == 429 for item in scenario_errors)
     assert all(set(item) <= {"scenario_id", "error_code", "provider_failure_kind", "upstream_status"}
@@ -810,7 +811,7 @@ def test_interpreter_runner_persists_only_redacted_http_diagnostics(tmp_path: Pa
         json.loads(line)
         for line in (report / "stage-results.jsonl").read_text(encoding="utf-8").splitlines()
     ]
-    assert len(stage_records) == 3
+    assert len(stage_records) == 15
     assert all(item["provider_failure_kind"] == "rate_limited" for item in stage_records)
     assert all(item["upstream_status"] == 429 for item in stage_records)
 
@@ -1121,14 +1122,14 @@ def test_selector_formulator_runner_persists_redacted_grounding_diagnostics(tmp_
         )
     )
 
-    assert result["status"] == "aborted"
+    assert result["status"] == "completed"
     report = settings.runtime_dir / result["report_directory"]
     stage_records = [
         json.loads(line)
         for line in (report / "stage-results.jsonl").read_text(encoding="utf-8").splitlines()
     ]
     failed = [item for item in stage_records if item.get("error_code") == "formulator_ungrounded_claim"]
-    assert len(failed) == 3
+    assert len(failed) == 10
     assert all(item["grounding_diagnostic_code"] == "proper_name_not_exact" for item in failed)
     assert all(item["structured_output"] is None for item in failed)
     assert all(item["rejected_structured_output"]["contract_version"] == FORMULATOR_CONTRACT_VERSION for item in failed)
@@ -1139,7 +1140,7 @@ def test_selector_formulator_runner_persists_redacted_grounding_diagnostics(tmp_
         for line in (report / "redacted-errors.jsonl").read_text(encoding="utf-8").splitlines()
     ]
     grounding_errors = [item for item in error_records if "grounding_diagnostic_code" in item]
-    assert len(grounding_errors) == 3
+    assert len(grounding_errors) == 10
     assert all(set(item) == {"scenario_id", "error_code", "grounding_diagnostic_code"}
                for item in grounding_errors)
     assert "rejected_structured_output" not in json.dumps(error_records)
@@ -1716,21 +1717,12 @@ def test_captured_rejections_stay_closed_and_scenario_bound(tmp_path: Path) -> N
     )
 
 
-def test_end_to_end_failure_budget_allows_the_full_scenario_set() -> None:
-    """Die Stufe muss unter beobachteten Ablehnungsraten zu Ende messen können.
-
-    Drei Teilläufe zeigten rund ein Drittel fachliche Verwerfungen, auf 27
-    Abläufe hochgerechnet etwa neun. Bei vier brach die Stufe nach acht bis
-    zwölf Szenarien ab, sodass Safety-, Injektions-, Sprachwechsel- und
-    Sessionabläufe live nie gemessen wurden.
-    """
-    plan = load_live_scenario_catalog().plan(EvaluationStage.END_TO_END)
-
-    assert plan.live_limits.max_failures == 14
-    assert plan.live_limits.max_failures == len(plan.scenario_ids) // 2 + 1
-    # Die Kostengrenzen bleiben die harten Schranken.
-    assert plan.live_limits.max_provider_calls == 102
-    assert plan.live_limits.max_total_runtime_seconds == 1960
+def test_failure_and_retry_budgets_cover_the_full_catalog() -> None:
+    """Even every scenario failing must fit; each formulation may retry once."""
+    for plan in load_live_scenario_catalog().stages:
+        assert plan.live_limits.max_failures > len(plan.scenario_ids) * plan.repetitions
+        if plan.stage in {EvaluationStage.END_TO_END, EvaluationStage.STABILITY}:
+            assert plan.maximum_calls.formulator == 2 * plan.request_count
 
 
 def test_raising_the_stop_cannot_turn_a_failure_into_a_passed_gate(tmp_path: Path) -> None:
@@ -1749,24 +1741,52 @@ def test_raising_the_stop_cannot_turn_a_failure_into_a_passed_gate(tmp_path: Pat
         )
     )
 
+    assert result["status"] == "completed"
+    assert result["counts"]["requests"] == plan.request_count
     assert result["counts"]["failures"] > 0
     assert result["contract_gate_passed"] is False
     assert result["content_gate_passed"] is False
 
 
-def test_critical_content_errors_stop_the_run_separately_from_ordinary_rejections() -> None:
-    """Sicherheitsrelevante Befunde dürfen sich das Budget nicht mit
+@pytest.mark.parametrize("stage,runner", [
+    (EvaluationStage.END_TO_END, run_end_to_end_live_gate),
+    (EvaluationStage.STABILITY, run_stability_live_gate),
+])
+@pytest.mark.parametrize("critical", [False, True])
+def test_all_synthetic_findings_are_collected_without_passing_the_gate(
+    tmp_path: Path, monkeypatch, stage, runner, critical: bool,
+) -> None:
+    """Ordinary and critical synthetic findings cannot truncate the sample."""
+    import app.live_evaluation_runner as module
 
-    gewöhnlichen fachlichen Verwerfungen teilen. Die Stufendokumentation nennt
-    vier kritische Fehler für End-to-End und drei für die Stabilitätsstufe.
-    """
-    from app.live_evaluation_runner import CRITICAL_CONTENT_ERROR_ABORT_LIMITS
+    settings = _settings(tmp_path)
+    plan = load_live_scenario_catalog().plan(stage)
+    observed = []
 
-    assert CRITICAL_CONTENT_ERROR_ABORT_LIMITS[EvaluationStage.END_TO_END] == 4
-    assert CRITICAL_CONTENT_ERROR_ABORT_LIMITS[EvaluationStage.STABILITY] == 3
-    # Der kritische Stopp greift unabhängig von der allgemeinen Fehlergrenze.
-    plan = load_live_scenario_catalog().plan(EvaluationStage.END_TO_END)
-    assert CRITICAL_CONTENT_ERROR_ABORT_LIMITS[EvaluationStage.END_TO_END] < plan.live_limits.max_failures
+    async def failing_scenario(scenario, service, counter, clock):
+        observed.append(scenario.scenario_id)
+        for _ in scenario.synthetic_inputs:
+            counter.reserve_request()
+        return {
+            "scenario_id": scenario.scenario_id,
+            "technically_valid": False,
+            "critical_content_error": critical,
+            "content_mismatches": ["synthetic_failure"],
+            "unverified_metrics": [],
+            "response_type": "technical_fallback",
+        }
+
+    monkeypatch.setattr(module, "_run_e2e_scenario", failing_scenario)
+    result = asyncio.run(runner(settings, plan.live_limits, provider_factory=FakeFullPipelineProvider))
+    expected = [sid for sid in plan.scenario_ids for _ in range(plan.repetitions)]
+    assert observed == expected
+    assert result["status"] == "completed"
+    assert result["abort_reason"] is None
+    assert result["counts"]["requests"] == plan.request_count
+    assert result["counts"]["failures"] == len(expected)
+    assert result["critical_content_error_count"] == (len(expected) if critical else 0)
+    assert result["contract_gate_passed"] is False
+    assert result["content_gate_passed"] is False
 
 
 def test_end_to_end_records_the_visible_answer_per_turn() -> None:

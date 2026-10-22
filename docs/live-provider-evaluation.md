@@ -11,6 +11,22 @@
   kontrolliert an der vorab festgelegten Fehlergrenze. Deshalb wurden die drei
   Folgestufen nicht gestartet.
 
+## Vollständige synthetische Erhebung (Katalogversion 3)
+
+Seit dem Auftrag vom 22.10.2026 werden alle geplanten Fälle und Wiederholungen
+auch bei technischen oder kritischen synthetischen Befunden erhoben. Die
+versionierten Fehlergrenzen liegen oberhalb der maximal möglichen Fehlerzahl;
+separate Stopps nach kritischen Inhaltsbefunden entfallen. Jeder Befund bleibt
+im Report und in der Gatebewertung erhalten. `completed` bedeutet nur, dass
+der geplante Umfang ausgeführt wurde; ein fehlerhafter Lauf besteht kein Gate.
+
+E2E und Stabilität reservieren bis zu zwei Formulatoraufrufe pro Anfrage, damit
+reguläre Retrys das Budget nicht vor dem letzten Szenario ausschöpfen. Endliche
+Request-, Komponenten-, Gesamtaufruf- und Laufzeitgrenzen sowie Identitäts- und
+Schreibfehlerprüfungen bleiben aktiv. Produktive Safety-, Grounding- und
+Fallbackregeln ändern sich nicht. Alte Laufberichte beschreiben ihre damaligen
+Limits und Ergebnisse; sie werden nicht rückwirkend umbewertet.
+
 ## Ausgeführte Läufe
 
 ### Ausführbare E2E-Fehlerfixture und Prüfgrenzen
@@ -20,7 +36,7 @@ jedem realen Provideraufruf, einschließlich Formulatorwiederholungen. Dort
 reserviert der atomare Zähler das Aufrufbudget. Absichtlich künstliche Reize
 sind keine realen Provideraufrufe und werden getrennt ausgewiesen.
 
-Szenariokatalog `2` / E2E-Assessment `3`: `inject_interpreter_error=true`
+Szenariokatalog `3` / E2E-Assessment `3`: `inject_interpreter_error=true`
 ist ausschließlich für einen einzelnen E2E-Turn zulässig. Ein begrenzter
 Kontext des Wrappers wirft in `interpret_query()` einen geschlossenen
 `InterpreterError("interpreter_http_error")`, bevor ein externer Aufruf
@@ -45,7 +61,8 @@ Verbote von Selector-/Formulatoraufrufen werden bei dieser Fixture anhand
 der gemessenen Aufrufdifferenzen geprüft. Andere nicht operationalisierte
 Kriterien bleiben ausdrücklich ungeprüft (`None`).
 
-Gateformeln, Lauf- und Fehlergrenzen bleiben unverändert. Die gesonderte
+Die Gateformeln bleiben unverändert; aktuelle Erhebungsgrenzen stehen oben.
+Die gesonderte
 Behandlung betrifft nur den nachweislich erfolgreichen künstlichen
 Fehlerpfad; echte Ausfälle und erholte Formulatorwiederholungen zählen
 weiterhin als technische Fehler. Katalogversion, Szenariohash und
@@ -247,10 +264,10 @@ nach dem vorgesehenen Gate der vorherigen Stufe ausgeführt werden.
 
 | Stufe | Umfang | Provideraufrufe min. / max. | max. Providerwartezeit | harte Laufzeit | Abbruchgrenze |
 |---|---:|---:|---:|---:|---:|
-| `interpreter` | 15 Fälle, je 3 in DE/EN/PL/RO/RU | 15 / 15 | 225 s | 300 s | 3 Fehler; Gate bestanden nur bei 0 |
-| `selector-formulator` | 6 Selector- und 10 Formulatorfälle | 16 / 26 | 780 s | 900 s | 3 Fehler |
-| `end-to-end` | 27 Abläufe, genau 34 Requests | 44 / 102 | 1.530 s | 1.960 s | 4 kritische Fehler |
-| `stability` | 6 Abläufe × 3 Wiederholungen, je nur der erste Turn | 39 / 54 | 810 s | 1.050 s | 3 kritische Fehler |
+| `interpreter` | 15 Fälle, je 3 in DE/EN/PL/RO/RU | 15 / 15 | 225 s | 300 s | 16 Fehler; Gate nur bei 0 |
+| `selector-formulator` | 6 Selector- und 10 Formulatorfälle | 16 / 26 | 780 s | 900 s | 17 Fehler; vollständige Erhebung |
+| `end-to-end` | 27 Abläufe, genau 34 Requests | 44 / 136 | 1.530 s | 1.960 s | 28 Fehler; vollständige Erhebung |
+| `stability` | 6 Abläufe × 3 Wiederholungen, je nur der erste Turn | 39 / 72 | 810 s | 1.050 s | 19 Fehler; vollständige Erhebung |
 
 Das Requestbudget jeder Stufe wird beim Laden des Katalogs gegen die Summe der
 tatsächlich benötigten Turns validiert (`LiveScenarioCatalog.validate_catalog`
@@ -383,8 +400,9 @@ Basisdomain (Punkt 4) kann erst nach dem Laden der normalen Settings geprüft
 werden, da es vorher keinen geladenen Wert zum Vergleich gibt; diese Prüfung
 liegt aber weiterhin strikt vor jeder Providerinitialisierung. Jeder Request und
 jeder Provideraufruf wird atomar reserviert, bevor er beginnen kann. Modell- oder
-Zieldomainabweichung, Limitüberschreitung und das dritte technische oder
-kritische Stufe-1-Ergebnis stoppen den Lauf geordnet. Ein einzelner
+Zieldomainabweichung und Ressourcenlimitüberschreitung stoppen den Lauf
+geordnet. Technische und kritische synthetische Befunde werden über den
+vollständigen geplanten Umfang gesammelt. Ein einzelner
 Vertragsfehler beendet die Messreihe nicht sofort, weil das Gate gerade die
 Vertragskompatibilität über die feste Stichprobe prüft; bestanden ist es dennoch
 nur mit 15 von 15 technisch gültigen Ergebnissen und ohne kritischen Fehler.
@@ -821,7 +839,7 @@ python -m app.multilingual_review live-smoke `
   --max-selector-calls 0 `
   --max-formulator-calls 0 `
   --max-total-runtime-seconds 300 `
-  --max-failures 3
+  --max-failures 16
 Remove-Item Env:LENA_ALLOW_LIVE_SMOKE
 ```
 
