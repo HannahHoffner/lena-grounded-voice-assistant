@@ -673,7 +673,7 @@ def test_live_smoke_requires_explicit_opt_in(tmp_path: Path, monkeypatch) -> Non
         "--max-requests", "15", "--max-provider-calls", "15",
         "--max-interpreter-calls", "15", "--max-selector-calls", "0",
         "--max-formulator-calls", "0", "--max-total-runtime-seconds", "300",
-        "--max-failures", "3",
+        "--max-failures", "16",
     ])
     with pytest.raises(SystemExit, match="live_smoke_requires_explicit_confirmation"):
         review_main()

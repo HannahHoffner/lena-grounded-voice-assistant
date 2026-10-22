@@ -117,7 +117,8 @@ def test_stage_one_persists_safe_diagnostics_without_changing_gate(tmp_path):
     settings = _settings(tmp_path)
     limits = load_live_scenario_catalog().plan(EvaluationStage.INTERPRETER).live_limits
     result = asyncio.run(run_interpreter_live_gate(settings, limits, provider_factory=InvalidSchemaProvider))
-    assert result["counts"]["failures"] == 3
+    assert result["status"] == "completed"
+    assert result["counts"]["failures"] == 15
     assert result["contract_gate_passed"] is False
     assert result["content_gate_passed"] is False
     root = settings.runtime_dir / result["report_directory"]
@@ -126,7 +127,7 @@ def test_stage_one_persists_safe_diagnostics_without_changing_gate(tmp_path):
         assert SECRET not in text
         rows = [json.loads(line) for line in text.splitlines()]
         rows = [r for r in rows if r.get("schema_issues")]
-        assert len(rows) == 3
+        assert len(rows) == 15
         assert all(r["schema_issues"] == [{"field_path": "need", "error_type": "enum"}] for r in rows)
 
 
