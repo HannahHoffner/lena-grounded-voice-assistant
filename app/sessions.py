@@ -35,6 +35,10 @@ def _lock_for(path: Path) -> threading.RLock:
         return _PATH_LOCKS.setdefault(key, threading.RLock())
 
 
+class SessionPersistenceError(RuntimeError):
+    """A dialog cannot be reserved safely; no downstream work may begin."""
+
+
 class ConversationSession(BaseModel):
     """Kompakter Gesprächszustand ohne vollständige Provider-Prompthistorie."""
 
@@ -240,8 +244,8 @@ class SessionStore:
             current.dialog = dialog
             current.last_activity_at = now
             loaded.sessions[current.session_id] = current
-            if loaded.writable:
-                self._write_all_unlocked(loaded.sessions)
+            if not loaded.writable or not self._write_all_unlocked(loaded.sessions):
+                raise SessionPersistenceError("session_persistence_unavailable")
             return current, dialog
 
     def _current_unlocked(

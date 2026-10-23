@@ -9,10 +9,19 @@ from __future__ import annotations
 import math
 import os
 from dataclasses import dataclass
+from contextvars import ContextVar
 from pathlib import Path
 
 from .resources import bootstrap_data_root, checkout_root, packaged_bootstrap_data_root
 from .spatial import is_valid_leipzig_coordinate
+
+_ENVIRONMENT: ContextVar[dict[str, str] | None] = ContextVar("lena_configuration", default=None)
+
+
+def _getenv(name: str, default: str | None = None) -> str | None:
+    values = _ENVIRONMENT.get()
+    return (os.environ if values is None else values).get(name, default)
+
 
 @dataclass(frozen=True)
 class Settings:
@@ -41,7 +50,7 @@ class Settings:
     speech_synthesis_base_url: str | None = None
     speech_synthesis_api_key: str | None = None
     speech_synthesis_model: str | None = None
-    speech_synthesis_provider: str = "edge"
+    speech_synthesis_provider: str = "disabled"
     speech_synthesis_voice: str = "alloy"
     speech_synthesis_response_format: str = "mp3"
     speech_synthesis_timeout_seconds: float = 45.0
@@ -85,6 +94,7 @@ class Settings:
     drinking_fountain_read_timeout_seconds: float = 30.0
     hbf_latitude: float = 51.34556
     hbf_longitude: float = 12.38222
+    map_provider: str = "osm"
     technical_log_level: str = "INFO"
     interaction_logging_enabled: bool = True
     interaction_log_path: Path | None = None
@@ -98,6 +108,10 @@ class Settings:
         object.__setattr__(self, "bootstrap_data_dir", self.bootstrap_data_dir or self.app_root / "data")
         object.__setattr__(self, "data_dir", self.data_dir or self.app_root / "data")
         object.__setattr__(self, "runtime_dir", self.runtime_dir or self.app_root / "runtime")
+        if self.map_provider not in {"osm", "disabled"}:
+            raise ValueError("MAP_PROVIDER must be osm or disabled")
+        if self.speech_synthesis_provider not in {"disabled", "edge", "openai"}:
+            raise ValueError("SPEECH_SYNTHESIS_PROVIDER must be disabled, edge or openai")
         if self.toilet_auto_promote:
             raise ValueError("TOILET_AUTO_PROMOTE is not supported in the prototype")
         if self.drinking_fountain_auto_promote:
@@ -189,31 +203,30 @@ class Settings:
 
 def _optional_env(*names: str) -> str | None:
     for name in names:
-        value = os.getenv(name, "").strip()
+        value = _getenv(name, "").strip()
         if value:
             return value
     return None
 
 
-def _load_env_file(path: Path, *, override: bool = False) -> None:
+def _load_env_file(path: Path) -> dict[str, str]:
+    """Read local configuration without changing the process environment."""
     if not path.is_file():
-        return
+        return {}
+    values: dict[str, str] = {}
     for raw_line in path.read_text(encoding="utf-8").splitlines():
         line = raw_line.strip()
         if not line or line.startswith("#") or "=" not in line:
             continue
         name, value = line.split("=", 1)
-        name = name.strip()
-        value = value.strip().strip('"').strip("'")
-        if name:
-            if override:
-                os.environ[name] = value
-            else:
-                os.environ.setdefault(name, value)
+        if name.strip():
+            values[name.strip()] = value.strip().strip('"').strip("'")
+    return values
+
 
 
 def _env_bool(name: str, default: bool) -> bool:
-    value = os.getenv(name)
+    value = _getenv(name)
     if value is None:
         return default
     return value.strip().casefold() in {"1", "true", "yes", "on"}
@@ -221,7 +234,7 @@ def _env_bool(name: str, default: bool) -> bool:
 
 def _env_float(name: str, default: float, minimum: float) -> float:
     try:
-        value = float(os.getenv(name, str(default)))
+        value = float(_getenv(name, str(default)))
     except ValueError:
         return default
     if not math.isfinite(value) or value < minimum:
@@ -232,7 +245,7 @@ def _env_float(name: str, default: float, minimum: float) -> float:
 def _env_int(name: str, default: int, minimum: int, maximum: int) -> int:
     """Liest einen Integer und begrenzt ihn auf den sicheren Betriebsbereich."""
     try:
-        value = int(os.getenv(name, str(default)))
+        value = int(_getenv(name, str(default)))
     except ValueError:
         return default
     return min(maximum, max(minimum, value))
@@ -256,14 +269,14 @@ def _hbf_coordinates(default_latitude: float, default_longitude: float) -> tuple
 
 def _default_external_root() -> Path:
     """Bestimmt ohne Zusatzabhängigkeit eine benutzerspezifische Datenwurzel."""
-    local_app_data = os.getenv("LOCALAPPDATA")
+    local_app_data = _getenv("LOCALAPPDATA")
     if local_app_data:
         return Path(local_app_data).expanduser().resolve() / "LENA"
     return Path.home().resolve() / ".local" / "share" / "lena"
 
 
 def _configured_path(name: str, default: Path) -> Path:
-    value = os.getenv(name, "").strip()
+    value = _getenv(name, "").strip()
     if not value:
         return default.resolve()
     path = Path(value).expanduser()
@@ -271,21 +284,21 @@ def _configured_path(name: str, default: Path) -> Path:
 
 
 def load_settings() -> Settings:
-    """Lädt Einstellungen und wendet sichere Standards und Untergrenzen an.
-
-    Returns:
-        Vollständig aufgelöste Einstellungen mit absoluten Projektpfaden.
-
-    Side Effects:
-        Lädt Werte aus ``.env`` und ``.env.local`` in ``os.environ``, sofern
-        ``LENA_ENV_FILE_MODE`` nicht für isolierte Tests auf ``disabled`` steht.
-    """
-    checkout = checkout_root()
-    external_root = checkout or _default_external_root()
-    app_root = external_root.resolve()
+    """Resolve .env < .env.local < process environment, without global mutation."""
+    app_root = (checkout_root() or _default_external_root()).resolve()
+    values: dict[str, str] = {}
     if os.getenv("LENA_ENV_FILE_MODE", "enabled").strip().casefold() != "disabled":
-        _load_env_file(app_root / ".env")
-        _load_env_file(app_root / ".env.local", override=True)
+        for filename in (".env", ".env.local"):
+            values.update(_load_env_file(app_root / filename) or {})
+    values.update(os.environ)
+    token = _ENVIRONMENT.set(values)
+    try:
+        return _settings_from_environment(app_root)
+    finally:
+        _ENVIRONMENT.reset(token)
+
+
+def _settings_from_environment(app_root: Path) -> Settings:
     bootstrap_root = bootstrap_data_root()
     runtime_dir = _configured_path("LENA_RUNTIME_DIR", app_root / "runtime")
     data_dir = _configured_path("LENA_DATA_DIR", app_root / "data")
@@ -322,7 +335,7 @@ def load_settings() -> Settings:
         0.1,
     )
     try:
-        max_context_chars = max(10000, int(os.getenv("BLABLADOR_MAX_CONTEXT_CHARS", "50000")))
+        max_context_chars = max(10000, int(_getenv("BLABLADOR_MAX_CONTEXT_CHARS", "50000")))
     except ValueError:
         max_context_chars = 50000
     try:
@@ -365,10 +378,10 @@ def load_settings() -> Settings:
     synthesis_model = _optional_env("SPEECH_SYNTHESIS_MODEL", "LENA_TTS_MODEL")
     synthesis_provider = (
         _optional_env("SPEECH_SYNTHESIS_PROVIDER", "LENA_TTS_PROVIDER")
-        or ("openai" if synthesis_base_url or synthesis_api_key or synthesis_model else "edge")
+        or ("openai" if synthesis_base_url or synthesis_api_key or synthesis_model else "disabled")
     ).lower()
-    if synthesis_provider not in {"edge", "openai"}:
-        synthesis_provider = "edge"
+    if synthesis_provider not in {"disabled", "edge", "openai"}:
+        synthesis_provider = "disabled"
     technical_log_level = (_optional_env("TECHNICAL_LOG_LEVEL") or "INFO").upper()
     if technical_log_level not in {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}:
         technical_log_level = "INFO"
@@ -409,23 +422,13 @@ def load_settings() -> Settings:
             1,
             20_000,
         ),
-        speech_transcription_base_url=speech_base_url or _optional_env("BLABLADOR_BASE_URL", "LENA_LLM_BASE_URL"),
-        speech_transcription_api_key=speech_api_key or _optional_env("BLABLADOR_API_KEY", "LENA_LLM_API_KEY"),
-        # "whisper-large-v3" ist auf Blablador kein registriertes Modell (404
-        # "No backend for model whisper-large-v3", live geprueft am 14.08.2026);
-        # der tatsaechliche Modellalias dort ist "faster-whisper-large-v3"
-        # (siehe GET /v1/models).
-        speech_transcription_model=speech_model or "faster-whisper-large-v3",
+        speech_transcription_base_url=speech_base_url,
+        speech_transcription_api_key=speech_api_key,
+        speech_transcription_model=speech_model,
         speech_transcription_timeout_seconds=speech_timeout,
-        speech_synthesis_base_url=(
-            synthesis_base_url
-            or (_optional_env("BLABLADOR_BASE_URL", "LENA_LLM_BASE_URL") if synthesis_provider == "openai" else None)
-        ),
-        speech_synthesis_api_key=(
-            synthesis_api_key
-            or (_optional_env("BLABLADOR_API_KEY", "LENA_LLM_API_KEY") if synthesis_provider == "openai" else None)
-        ),
-        speech_synthesis_model=synthesis_model or ("gpt-4o-mini-tts" if synthesis_provider == "openai" else None),
+        speech_synthesis_base_url=synthesis_base_url,
+        speech_synthesis_api_key=synthesis_api_key,
+        speech_synthesis_model=synthesis_model,
         speech_synthesis_provider=synthesis_provider,
         speech_synthesis_voice=_optional_env("SPEECH_SYNTHESIS_VOICE", "LENA_TTS_VOICE") or "alloy",
         speech_synthesis_response_format=(
@@ -436,7 +439,7 @@ def load_settings() -> Settings:
             _optional_env("WFS_URL")
             or "https://geodienste.leipzig.de/l3/OpenData/wohnungslosenhilfe/wfs"
         ),
-        wfs_auto_sync=_env_bool("WFS_AUTO_SYNC", True),
+        wfs_auto_sync=_env_bool("WFS_AUTO_SYNC", False),
         wfs_auto_promote=_env_bool("WFS_AUTO_PROMOTE", False),
         wfs_check_interval_hours=_env_float("WFS_CHECK_INTERVAL_HOURS", 24.0, 1.0),
         llm_interpreter_timeout_seconds=llm_interpreter_timeout,
@@ -495,6 +498,7 @@ def load_settings() -> Settings:
         ),
         hbf_latitude=hbf_latitude,
         hbf_longitude=hbf_longitude,
+        map_provider=(_optional_env("MAP_PROVIDER") or "osm").lower(),
         technical_log_level=technical_log_level,
         interaction_logging_enabled=_env_bool("INTERACTION_LOGGING_ENABLED", True),
         interaction_log_path=(

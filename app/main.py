@@ -45,6 +45,7 @@ from .kb_loader import KnowledgeBase, KnowledgeBaseError, load_active_knowledge_
 from .models import Language, QueryRequest, QueryResponse, SpeechSynthesisRequest
 from .translation_contract import TranslationRuntimePolicy
 from .service import QueryService
+from .sessions import SessionPersistenceError
 from .speech import (
     SpeechSynthesizer,
     SpeechSynthesisError,
@@ -548,6 +549,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         else:
             try:
                 response = await active_service.query(payload)
+            except SessionPersistenceError as exc:
+                raise HTTPException(status_code=503, detail="session_persistence_unavailable") from exc
             except DialogRequestError as exc:
                 raise HTTPException(status_code=409, detail="dialog_response_invalid") from exc
         trace = response.interaction

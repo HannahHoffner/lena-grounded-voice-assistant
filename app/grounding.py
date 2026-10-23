@@ -16,6 +16,7 @@ from .formulation import (
     FormulatorResponse,
     GroundingDiagnosticCode,
 )
+from .grounding_content import has_content_coverage
 from .grounding_claims import (
     ClaimSupport,
     CONCEPT_CAPABILITIES,
@@ -38,7 +39,7 @@ from .models import Language
 from .grounding_references import resolve_offer_evidence
 
 
-GROUNDING_VALIDATOR_VERSION = "3"
+GROUNDING_VALIDATOR_VERSION = "4"
 
 URL_RE = re.compile(r"https?://[^\s<>]+", re.IGNORECASE)
 EMAIL_RE = re.compile(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.IGNORECASE)
@@ -604,6 +605,14 @@ def validate_formulation(
         raise FormulatorError("formulator_contract_violation")
     _validate_language(answer, evidence)
     _validate_policy_answer(answer, evidence)
+    # Independent coverage gate: the model cannot opt out by labelling a
+    # service assertion ACTION or FACT. Existing relational diagnostics take
+    # precedence; unsupported extra content still rejects the entire response.
+    for sentence in response.sentences:
+        if sentence.offer_id is not None:
+            pool_values = [(fact.fact_type.value, fact.value) for fact in pools[sentence.offer_id]]
+            if not has_content_coverage(_without_contact_literals(sentence.text), pool_values, evidence.requested_language):
+                raise _ungrounded(GroundingDiagnosticCode.SERVICE_FACT_MISSING)
     # Presentation observations never imply false content or trigger a fallback.
     observations = []
     if any(_contains_sentence_break(_strip_evidence_literals(text, evidence, preserve_phone_numbers=True)) for text in texts):
