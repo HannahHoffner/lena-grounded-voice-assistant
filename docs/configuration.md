@@ -1,16 +1,26 @@
 # Konfiguration
 
-Die Anwendung lädt zuerst `.env` und anschließend `.env.local`; Werte aus
-`.env.local` überschreiben auch bereits gesetzte Prozessvariablen. Beide Dateien
-sind ignoriert und dürfen Geheimnisse enthalten. `.env.example` enthält nur
-sichere Platzhalter. Legacy-Namen mit Präfix `LENA_` werden für mehrere Provider-
-und Sessionvariablen weiterhin akzeptiert.
+Priorität (niedrig nach hoch): eingebaute Defaults < `.env` < `.env.local` <
+Prozessumgebung. CLI-Optionen wie `--rewrite-provider` setzen die
+Prozessumgebung und gewinnen deshalb immer; die Prozessumgebung wird beim Laden
+nicht verändert. `.env`/`.env.local` werden nur im Checkout gesucht und sind
+ignoriert; sie dürfen Geheimnisse enthalten. `.env.example` ist die vollständige,
+kommentierte Vorlage mit den sicheren Defaults. Legacy-Namen mit Präfix `LENA_`
+werden für mehrere Provider- und Sessionvariablen weiterhin akzeptiert; nicht
+unterstützte Namen (`LENA_LLM_TEMPERATURE`, `LENA_LLM_FALLBACK_PROVIDER`) und
+ungültige Profilwerte erscheinen als `configuration_warnings` in `/api/health`
+und als `config.warning` im technischen Log, jeweils nur mit Variablennamen.
 
 Mit `LENA_ENV_FILE_MODE=disabled` werden beide lokalen Dateien ignoriert; diese
-Einstellung gilt für isolierte Prüfungen und den Docker-Standard. Die Tabellen
-nennen die Anwendungsdefaults. Davon abweichend deaktiviert `.env.example`
-automatische WFS-Abrufe und vollständige Interaktionslogs und lässt TTS ohne
-Zugangsdaten unkonfiguriert. Siehe [Docker und Reproduzierbarkeit](reproducibility.md).
+Einstellung gilt für isolierte Prüfungen und den Docker-Standard. Native Starts,
+Docker und `.env.example` verwenden seit dem Audit vom 23.10.2026 dieselben
+sicheren Defaults: kein LLM, keine Server-STT/TTS, kein Quellabruf, kein
+Interaktionsprotokoll. Siehe [Docker und Reproduzierbarkeit](reproducibility.md).
+
+Jeder externe Dienst hat ein explizites Profil; `/api/health` meldet unter
+`external_services` Profil, Konfiguriertheit und fehlende Variablennamen
+(`availability: not_checked`). Eine aktive Erreichbarkeits- und
+Modellinventarprüfung liefert `python -m app.service_check [--synthesize]`.
 
 ## Anwendung und Modell
 
@@ -37,35 +47,42 @@ Zugangsdaten unkonfiguriert. Siehe [Docker und Reproduzierbarkeit](reproducibili
 | `QUERY_MAX_CHARS` | nein | `1000` | maximales Query-Feld; Bereich 1–10000 Zeichen |
 | `TRANSLATION_RUNTIME_POLICY` | nein | `reviewed_or_machine` | `reviewed_only`, `reviewed_or_machine` oder `source_language_fallback`; ungültige Werte werden abgewiesen |
 | `TECHNICAL_LOG_LEVEL` | nein | `INFO` | Level der redigierten technischen Ereignisse |
-| `INTERACTION_LOGGING_ENABLED` | nein | `true` | lokales Prototyp-Interaktionsprotokoll aktivieren; Safety-Eingaben werden redigiert |
+| `INTERACTION_LOGGING_ENABLED` | nein | `false` | lokales Prototyp-Interaktionsprotokoll aktivieren; Safety-Eingaben werden redigiert |
 | `INTERACTION_LOG_PATH` | nein | `runtime/logs/interactions.jsonl` | lokale append-basierte UTF-8-JSONL-Datei |
 
 ## Speech
 
 | Variable | Pflicht | Standard | Zweck |
 |---|---:|---|---|
-| `SPEECH_TRANSCRIPTION_BASE_URL` | für STT | Blablador-URL | Audio-Endpunkt-Basis |
-| `SPEECH_TRANSCRIPTION_API_KEY` | für STT | Blablador-Key | Zugangstoken |
-| `SPEECH_TRANSCRIPTION_MODEL` | nein | `faster-whisper-large-v3` | STT-Modell |
+| `SPEECH_TRANSCRIPTION_PROVIDER` | nein | `disabled`, bzw. `openai` bei eigenen STT-Werten | `disabled`, `blablador` (ausdrückliche Wiederverwendung von `BLABLADOR_BASE_URL`/`BLABLADOR_API_KEY`) oder `openai` |
+| `SPEECH_TRANSCRIPTION_BASE_URL` | für `openai` | – (bei `blablador`: Blablador-URL) | Audio-Endpunkt-Basis |
+| `SPEECH_TRANSCRIPTION_API_KEY` | für `openai` | – (bei `blablador`: Blablador-Key) | Zugangstoken |
+| `SPEECH_TRANSCRIPTION_MODEL` | für `openai` | – (bei `blablador`: `faster-whisper-large-v3`) | STT-Modell |
 | `STT_TIMEOUT_SECONDS` | nein | `45` | STT-Gesamt- und HTTPX-Transportgrenze, mindestens 0,1 s |
 | `SPEECH_TRANSCRIPTION_TIMEOUT_SECONDS` | nein | – | Legacy-Name für `STT_TIMEOUT_SECONDS` |
 | `SPEECH_TRANSCRIPTION_MAX_BYTES` | nein | `10485760` | maximales Audio; Bereich 1024–26214400 Bytes |
-| `SPEECH_SYNTHESIS_PROVIDER` | nein | `edge` oder automatisch `openai` | `edge`/`openai` |
-| `SPEECH_SYNTHESIS_BASE_URL` | für OpenAI-TTS | – | TTS-Endpunkt-Basis |
-| `SPEECH_SYNTHESIS_API_KEY` | für OpenAI-TTS | – | Zugangstoken |
-| `SPEECH_SYNTHESIS_MODEL` | nein | `gpt-4o-mini-tts` bei OpenAI | TTS-Modell |
+| `SPEECH_SYNTHESIS_PROVIDER` | nein | `disabled`, bzw. `openai` bei eigenen TTS-Werten | `disabled`, `edge` (externer Microsoft-Dienst über `edge-tts`) oder `openai`; nie aus dem LLM-Zugang abgeleitet |
+| `SPEECH_SYNTHESIS_BASE_URL` | für `openai` | – | TTS-Endpunkt-Basis |
+| `SPEECH_SYNTHESIS_API_KEY` | für `openai` | – | Zugangstoken |
+| `SPEECH_SYNTHESIS_MODEL` | für `openai` | – | am Endpunkt tatsächlich angebotenes TTS-Modell; Blablador bot am 23.10.2026 keines an (`gpt-4o-mini-tts` → HTTP 404) |
 | `SPEECH_SYNTHESIS_VOICE` | nein | `alloy` | Voice-Name |
 | `SPEECH_SYNTHESIS_RESPONSE_FORMAT` | nein | `mp3` | OpenAI-kompatibles Antwortformat; Edge liefert immer MP3, auch in `/api/speech/config` |
 | `TTS_TIMEOUT_SECONDS` | nein | `45` | TTS-Gesamtgrenze für OpenAI-kompatibles und Edge-TTS, mindestens 0,1 s |
 | `SPEECH_SYNTHESIS_TIMEOUT_SECONDS` | nein | – | Legacy-Name für `TTS_TIMEOUT_SECONDS` |
 | `SPEECH_SYNTHESIS_MAX_CHARS` | nein | `4000` | maximaler TTS-Text; Bereich 1–20000 Zeichen |
 
+## Karte
+
+| Variable | Pflicht | Standard | Zweck |
+|---|---:|---|---|
+| `MAP_PROVIDER` | nein | `osm` | `osm`: Browser lädt Basiskacheln von OpenStreetMap; `disabled`: keine Basiskarte, Marker bleiben lokal (Offline/datensparsam). Ausgeliefert über `/api/client-config` |
+
 ## WFS
 
 | Variable | Pflicht | Standard | Zweck |
 |---|---:|---|---|
 | `WFS_URL` | nein | städtischer Wohnungslosenhilfe-WFS | Datenquelle |
-| `WFS_AUTO_SYNC` | nein | `true` | periodische Prüfung aktivieren |
+| `WFS_AUTO_SYNC` | nein | `false` | periodische Prüfung aktivieren (externer Abruf) |
 | `WFS_AUTO_PROMOTE` | nein | `false` | geprüfte Änderungen automatisch aktivieren |
 | `WFS_CHECK_INTERVAL_HOURS` | nein | `24` | Prüfintervall, mindestens 1 h |
 | `WFS_CONNECT_TIMEOUT_SECONDS` | nein | `10` | Verbindungs-/Poolgrenze des WFS-Clients, mindestens 0,1 s |

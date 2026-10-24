@@ -1,20 +1,19 @@
-"""Deterministisches, mehrsprachiges Retrieval über die lokalen Angebote."""
+"""Historischer lexikalischer Retrievalbaseline (kein aktiver Anfragepfad).
+
+Der produktive Anfragepfad wählt Kandidaten über ``candidates.py`` aus der
+kuratierten Runtime. ``retrieve``/``select_card_offers`` bleiben als
+Forschungs- und Regressionsbaseline erhalten und werden ausschließlich von
+``tests/test_retrieval.py`` verwendet (Audit C-01/C-02). Die früher hier
+definierte, aktiv genutzte Normalisierung liegt in ``text_normalization.py``
+und wird für Kompatibilität re-exportiert.
+"""
 
 from __future__ import annotations
 
-import re
-import unicodedata
 from dataclasses import dataclass
 
 from .models import Category, OfferRecord
-
-
-def normalize_text(value: str) -> str:
-    value = value.casefold().replace("ß", "ss")
-    value = unicodedata.normalize("NFKD", value)
-    value = "".join(char for char in value if not unicodedata.combining(char))
-    value = re.sub(r"[^\w]+", " ", value, flags=re.UNICODE)
-    return " ".join(value.replace("_", " ").split())
+from .text_normalization import normalize_text  # noqa: F401  (re-export, Baseline-Kompatibilität)
 
 
 CATEGORY_TERMS: dict[Category, set[str]] = {

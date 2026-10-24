@@ -561,8 +561,8 @@ Links nur nach expliziter Protokollprüfung.
 - Ohne Interpreterzugang: Start und Health funktionieren, freie Anfragen fallen
   jedoch auf den technischen 112-Hinweis mit gegebenenfalls einer telefonischen
   Hilfebus-Kontaktkarte zurück. Fachsuche und Kartenmarker entfallen.
-  Server-Transkription fehlt ohne eigene Speech-Konfiguration;
-  Sprachsynthese kann über `edge-tts` verfügbar sein.
+  Server-Transkription und Sprachsynthese sind ohne ausdrückliches Profil
+  (`SPEECH_TRANSCRIPTION_PROVIDER`, `SPEECH_SYNTHESIS_PROVIDER`) deaktiviert.
 - Mit `REWRITE_PROVIDER=blablador`: strukturierte Interpretation und geerdete
   Formulierung mit vorgeschaltetem Akutgefahr-Signal und deterministischem
   Fallback bei jeder Provider- oder Validierungsstörung. Der enge deterministische
@@ -577,8 +577,8 @@ Links nur nach expliziter Protokollprüfung.
 
 - Blablador benötigt Base-URL, API-Key und Modell.
 - Server-STT benötigt einen OpenAI-kompatiblen Audio-Endpunkt.
-- OpenAI-kompatibles TTS benötigt Endpunkt, Key und Modell; alternativ nutzt die
-  Anwendung `edge-tts`.
+- OpenAI-kompatibles TTS benötigt Endpunkt, Key und ein dort angebotenes Modell;
+  `edge-tts` muss ausdrücklich gewählt werden (`SPEECH_SYNTHESIS_PROVIDER=edge`).
 - Kartenkacheln und `edge-tts` benötigen im Browser beziehungsweise Backend
   Netzwerkzugriff.
 - Der WFS-Client verwendet standardmäßig 10 Sekunden für den Verbindungsaufbau

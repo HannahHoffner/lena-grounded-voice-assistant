@@ -14,12 +14,13 @@ from fastapi.staticfiles import StaticFiles
 from .candidate_contract import CANDIDATE_CONTRACT_VERSION
 from .application_texts import (
     APPLICATION_COPY_VERSION,
-    application_text,
     application_text_summary,
     load_application_texts,
     public_application_copy,
 )
 from .config import Settings, load_settings
+from .external_services import external_service_statuses
+from .logging_setup import configure_technical_logging
 from .i18n import translation_summary
 from .interpreter import INTERPRETER_CONTRACT_VERSION, INTERPRETER_PROMPT_VERSION
 from .llm_selection import SELECTOR_CONTRACT_VERSION, SELECTOR_PROMPT_VERSION
@@ -116,10 +117,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         Synchronisation während des Lifecycles einen WFS-Hintergrundtask.
     """
     settings = settings or load_settings()
-    logging.basicConfig(
-        level=getattr(logging, settings.technical_log_level, logging.INFO),
-        format="%(asctime)s %(levelname)s %(name)s %(message)s",
-    )
+    configure_technical_logging(settings.technical_log_level)
+    for warning in settings.configuration_warnings:
+        reason, _, setting = warning.partition(":")
+        LOGGER.warning("config.warning", extra={"reason": reason, "setting": setting})
     kb: KnowledgeBase | None = None
     kb_error = False
     kb_error_code: str | None = None
@@ -134,6 +135,19 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     service = QueryService(settings, kb) if kb else None
     speech_transcriber = SpeechTranscriber(settings)
     speech_synthesizer = SpeechSynthesizer(settings)
+    service_statuses = external_service_statuses(
+        settings, edge_client_installed=speech_synthesizer.edge_client_installed,
+    )
+    for status in service_statuses.values():
+        LOGGER.info(
+            "config.external_service",
+            extra={
+                "service": status.service,
+                "provider": status.provider,
+                "configured": status.configured,
+                "reason": status.reason,
+            },
+        )
     interaction_writer = InteractionWriter(
         settings.interaction_log_path
         or (settings.runtime_dir or settings.app_root / "runtime") / "logs" / "interactions.jsonl",
@@ -410,6 +424,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 if active_kb and active_service
                 else None
             ),
+            # Konfiguriertheit je Profil, keine Erreichbarkeitsprüfung; siehe
+            # python -m app.service_check für eine aktive Prüfung.
+            "external_services": {
+                name: {**status.public(), "availability": "not_checked"}
+                for name, status in service_statuses.items()
+            },
+            "configuration_warnings": list(settings.configuration_warnings),
             "speech": {
                 "server_transcription_available": speech_transcriber.configured,
                 "transcription_model": settings.speech_transcription_model if speech_transcriber.configured else None,
@@ -429,6 +450,22 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 else settings.speech_synthesis_response_format
             ),
             "supported_languages": [language.value for language in Language],
+        }
+
+    @app.get("/api/client-config")
+    async def client_config() -> dict[str, object]:
+        """Browserrelevante Profile ohne Zugangsdaten oder Dienst-URLs mit Secrets."""
+        return {
+            "speech": await speech_config(),
+            "map": {
+                "tile_provider": settings.map_provider,
+                # Kartenkacheln lädt ausschließlich der Browser direkt.
+                "tile_url_template": (
+                    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    if settings.map_provider == "osm" else None
+                ),
+                "attribution": "&copy; OpenStreetMap" if settings.map_provider == "osm" else None,
+            },
         }
 
     @app.get("/api/dialogue/copy")
@@ -460,8 +497,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             )
         except SpeechTranscriptionAudioError as exc:
             LOGGER.warning(
-                "stt.audio_rejected code=%s",
-                exc.code,
+                "stt.audio_rejected",
                 extra={
                     "duration_ms": round((perf_counter() - started_at) * 1000, 2),
                     "error_code": exc.code,
@@ -479,13 +515,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             upstream_status = getattr(exc, "upstream_status", None)
             if upstream_status is not None:
                 log_context["upstream_status"] = upstream_status
-            LOGGER.warning(
-                "%s code=%s upstream_status=%s",
-                event,
-                exc.code,
-                upstream_status,
-                extra=log_context,
-            )
+            LOGGER.warning(event, extra=log_context)
             raise HTTPException(status_code=503, detail="Speech transcription failed") from exc
         LOGGER.info(
             "stt.completed",
@@ -517,10 +547,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             )
         except SpeechSynthesisError as exc:
             event = "tts.timeout" if isinstance(exc, SpeechSynthesisTimeoutError) else "tts.failed"
-            LOGGER.warning(
-                event,
-                extra={"duration_ms": round((perf_counter() - started_at) * 1000, 2)},
-            )
+            log_context: dict[str, object] = {
+                "duration_ms": round((perf_counter() - started_at) * 1000, 2),
+                "error_code": exc.code,
+                "provider": settings.speech_synthesis_provider,
+            }
+            if exc.upstream_status is not None:
+                log_context["upstream_status"] = exc.upstream_status
+            LOGGER.warning(event, extra=log_context)
             raise HTTPException(status_code=503, detail="Speech synthesis failed") from exc
         LOGGER.info(
             "tts.completed",

@@ -16,11 +16,14 @@ RUN dpkg-deb -x /tmp/ca-certificates.deb /tmp/ca-bootstrap \
     && apt-get install -y --no-install-recommends ca-certificates python3.12=3.12.3-1ubuntu0.17 \
     && rm -rf /var/lib/apt/lists/* /tmp/ca-bootstrap /tmp/ca-certificates.deb
 
+# Safe defaults: no local env files, no source auto-sync, no interaction log.
+# External services (LLM, STT, TTS) stay disabled until their profile is set
+# explicitly via -e/--env-file; map tiles are loaded by the browser (MAP_PROVIDER).
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 \
     LENA_ENV_FILE_MODE=disabled REWRITE_PROVIDER=template \
     WFS_AUTO_SYNC=false TOILET_AUTO_SYNC=false DRINKING_FOUNTAIN_AUTO_SYNC=false \
     WFS_AUTO_PROMOTE=false TOILET_AUTO_PROMOTE=false DRINKING_FOUNTAIN_AUTO_PROMOTE=false \
-    SPEECH_SYNTHESIS_PROVIDER=openai INTERACTION_LOGGING_ENABLED=false \
+    INTERACTION_LOGGING_ENABLED=false \
     LENA_ALLOW_LIVE_SMOKE=false LENA_DATA_DIR=/tmp/lena/data LENA_RUNTIME_DIR=/tmp/lena/runtime
 
 FROM base AS build

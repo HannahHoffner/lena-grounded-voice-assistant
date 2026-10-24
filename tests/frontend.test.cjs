@@ -349,3 +349,33 @@ test("language change ignores a previous-language query response while retaining
   assert.equal(state.sessionId, 'same-session');
   assert.notEqual(get('answerText').textContent, 'alte Antwort');
 });
+
+test("map base tiles follow the server map profile and never fall back to a hard-coded tile host", () => {
+  for (const [config, expectedTiles] of [
+    [{ map: { tile_url_template: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", attribution: "OSM" } }, 1],
+    [{ map: { tile_provider: "disabled", tile_url_template: null } }, 0],
+    [null, 0],
+  ]) {
+    const { context } = client();
+    const tileLayers = [];
+    const leaflet = {
+      map: () => ({}),
+      tileLayer: (url, options) => { tileLayers.push({ url, options }); return { addTo() {} }; },
+    };
+    context.L = leaflet;
+    context.window.L = leaflet;
+    vm.runInContext("applyClientConfig(globalThis.__config); state.map = null; ensureMap();",
+      Object.assign(context, { __config: config }));
+    assert.equal(tileLayers.length, expectedTiles);
+    if (expectedTiles) assert.match(tileLayers[0].url, /openstreetmap/);
+  }
+});
+
+test("client config exposes server speech availability without enabling unsupported speech", () => {
+  const { context, state } = client();
+  vm.runInContext("applyClientConfig({ speech: { server_transcription_available: true, server_synthesis_available: false } })", context);
+  assert.equal(state.serverTranscriptionAvailable, true);
+  assert.equal(state.serverSynthesisAvailable, false);
+  vm.runInContext("applyClientConfig(null)", context);
+  assert.equal(state.serverTranscriptionAvailable, false);
+});

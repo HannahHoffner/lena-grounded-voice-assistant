@@ -274,6 +274,9 @@ class GroundingDiagnosticCode(str, Enum):
     REQUIRED_FEE_MISSING = "required_fee_missing"
     FEE_CLAIM_UNSUPPORTED = "fee_claim_unsupported"
     PRIMARY_NAME_MISSING = "primary_name_missing"
+    # Leistungs-/Identitätsaussage mit offenem Inhaltswort ohne Beleg im
+    # selben Angebot, unabhängig vom deklarierten Claimtyp (grounding_content).
+    CONTENT_NOT_COVERED = "content_not_covered"
 
 
 def formulator_retry_instruction(diagnostic: GroundingDiagnosticCode) -> str:
@@ -333,6 +336,11 @@ def formulator_retry_instruction(diagnostic: GroundingDiagnosticCode) -> str:
         GroundingDiagnosticCode.FEE_CLAIM_UNSUPPORTED: (
             "Fee details may be omitted. If stated, free/paid status and payment "
             "methods must match fee_status and fee values of the same offer."
+        ),
+        GroundingDiagnosticCode.CONTENT_NOT_COVERED: (
+            "When a sentence says what an offer provides, has or is, every content word "
+            "must come from the supplied values of that same selected offer. Do not add "
+            "services, objects or descriptions that are not supplied. Otherwise omit them."
         ),
         GroundingDiagnosticCode.PRICE_SERVICE_MISMATCH: (
             "Use the price belonging to the named service in the same selected offer. "

@@ -174,8 +174,9 @@ class CandidateSelector:
             # FOOD_AGE_UNRESTRICTED gilt bewusst nur fuer minimum_age (Erwachsenen-
             # Angebote wie Diakonie/Schwanenteich): Essensausgabe ist fuer alle da,
             # auch wenn die institutionelle Zustaendigkeit (Beratung, Fallzuordnung)
-            # formal bei Erwachsenen liegt (siehe
-            # docs/exec-plans/fix-food-age-restriction.md). maximum_age
+            # formal bei Erwachsenen liegt (Entwicklungsentscheidung
+            # docs/exec-plans/fix-food-age-restriction.md, nur im Git-Checkout,
+            # nicht im Softwareexport). maximum_age
             # Jugendangebote bis 26 bleiben dagegen altersgebunden. Zusaetzlich
             # passieren sie das vorangestellte Intent-Gate nur bei ausdruecklichem
             # Jugendbedarf oder einem exakten Alias; Alter allein aktiviert sie nicht.

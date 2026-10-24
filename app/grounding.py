@@ -16,7 +16,7 @@ from .formulation import (
     FormulatorResponse,
     GroundingDiagnosticCode,
 )
-from .grounding_content import has_content_coverage
+from .grounding_content import unsupported_content_words
 from .grounding_claims import (
     ClaimSupport,
     CONCEPT_CAPABILITIES,
@@ -420,7 +420,6 @@ def _validate_sentence(
         raise FormulatorError("formulator_invalid_fact")
 
     pool: list[EvidenceFact] = []
-    cited_facts: list[EvidenceFact] = []
     if sentence.offer_id is None:
         if sentence.claim_type not in {
             ClaimType.UNCERTAINTY, ClaimType.DOMAIN_BOUNDARY, ClaimType.NO_RESULT,
@@ -428,7 +427,6 @@ def _validate_sentence(
             raise FormulatorError("formulator_contract_violation")
     else:
         offer = offers_by_id[sentence.offer_id]
-        cited_facts = [facts_by_id[fact_id][1] for fact_id in sentence.fact_ids]
         pool = pools[sentence.offer_id]
         pool_values = [(fact.fact_type.value, fact.value) for fact in pool]
         language = evidence.requested_language
@@ -564,6 +562,13 @@ def _validate_sentence(
                 raise _ungrounded(GroundingDiagnosticCode.PROPER_NAME_NOT_EXACT)
 
     _validate_operational_tokens(text, pool)
+    if sentence.offer_id is not None and unsupported_content_words(
+        semantic_text, pool_values, evidence.requested_language,
+    ):
+        # Claimtypunabhängig (Audit F-01): Eine Leistungs-, Erhalts-, Besitz-
+        # oder Identitätsaussage darf keine unbelegten offenen Inhaltswörter
+        # tragen, auch wenn das Modell sie als action oder fact deklariert.
+        raise _ungrounded(GroundingDiagnosticCode.CONTENT_NOT_COVERED)
     return text
 
 
@@ -605,14 +610,6 @@ def validate_formulation(
         raise FormulatorError("formulator_contract_violation")
     _validate_language(answer, evidence)
     _validate_policy_answer(answer, evidence)
-    # Independent coverage gate: the model cannot opt out by labelling a
-    # service assertion ACTION or FACT. Existing relational diagnostics take
-    # precedence; unsupported extra content still rejects the entire response.
-    for sentence in response.sentences:
-        if sentence.offer_id is not None:
-            pool_values = [(fact.fact_type.value, fact.value) for fact in pools[sentence.offer_id]]
-            if not has_content_coverage(_without_contact_literals(sentence.text), pool_values, evidence.requested_language):
-                raise _ungrounded(GroundingDiagnosticCode.SERVICE_FACT_MISSING)
     # Presentation observations never imply false content or trigger a fallback.
     observations = []
     if any(_contains_sentence_break(_strip_evidence_literals(text, evidence, preserve_phone_numbers=True)) for text in texts):

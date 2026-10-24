@@ -255,7 +255,17 @@ def test_health_and_frontend_work() -> None:
     assert health.json()["selector_contract_version"] == "1"
     assert health.json()["selector_prompt_version"] == SELECTOR_PROMPT_VERSION
     assert health.json()["speech"]["server_transcription_available"] is False
-    assert health.json()["speech"]["server_synthesis_available"] is True
+    # Audit F-03: Ohne ausdrückliches Profil ist keine Sprachausgabe aktiv,
+    # weder über Edge noch über einen geerbten LLM-Zugang.
+    assert health.json()["speech"]["server_synthesis_available"] is False
+    services = health.json()["external_services"]
+    assert {name: entry["provider"] for name, entry in services.items()} == {
+        "llm": "template",
+        "speech_transcription": "disabled",
+        "speech_synthesis": "disabled",
+        "map_tiles": "osm",
+    }
+    assert all(entry["availability"] == "not_checked" for entry in services.values())
     assert client.get("/").status_code == 200
 
 
@@ -267,9 +277,14 @@ def test_speech_config_reports_server_speech_availability() -> None:
     blablador_config = blablador_client.get("/api/speech/config").json()
 
     assert template_config["server_transcription_available"] is False
-    assert template_config["server_synthesis_available"] is True
+    assert template_config["server_synthesis_available"] is False
     assert blablador_config["server_transcription_available"] is True
     assert blablador_config["server_synthesis_available"] is True
+    edge_config = TestClient(create_app(replace(settings(), speech_synthesis_provider="edge"))).get(
+        "/api/speech/config"
+    ).json()
+    assert edge_config["server_synthesis_available"] is True
+    assert edge_config["synthesis_format"] == "mp3"
 
 
 def test_speech_transcription_endpoint_uses_configured_transcriber(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -854,7 +869,7 @@ def test_map_destinations_not_cited_in_the_answer_are_still_localized() -> None:
 def test_formulator_retries_once_after_grounding_failure_then_succeeds() -> None:
     """A single bad sample (contract violation, ungrounded claim, ...) must not
     fall back to the static template if a second attempt would have cited its
-    facts correctly -- see FORMULATOR_MAX_ATTEMPTS in app/service.py.
+    facts correctly -- see FORMULATOR_MAX_ATTEMPTS in app/llm_stages.py.
     """
     app = create_app(settings())
     attempts: list[int] = []

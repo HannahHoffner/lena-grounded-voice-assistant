@@ -302,7 +302,9 @@ behauptet.
 
 ## Deployment-Stand
 
-Das Repository enthält weder Dockerfile noch Service-/Cloud-Konfiguration. Ein
-Produktivbetrieb benötigt daher außerhalb dieses Codes mindestens einen
-Prozessmanager, TLS, Zugriffsschutz, Logging-, Datenschutz-, Backup- und
-Updatekonzept. Der vorhandene Startbefehl ist ein Entwicklungs-/Prototypbetrieb.
+Das Repository enthält ein geprüftes `Dockerfile` (Test- und Runtime-Ziel,
+siehe README und [Docker und Reproduzierbarkeit](reproducibility.md)), aber
+keine Service-/Cloud- oder Compose-Konfiguration. Ein Produktivbetrieb benötigt
+außerhalb dieses Codes mindestens einen Prozessmanager, TLS, Zugriffsschutz,
+Logging-, Datenschutz-, Backup- und Updatekonzept. Container und Startbefehl
+sind ein lokaler Forschungs-/Prototypbetrieb mit genau einem Prozess.

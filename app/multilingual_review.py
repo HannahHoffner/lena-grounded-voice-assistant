@@ -29,7 +29,7 @@ from .live_evaluation_runner import (
 from .llm_selection import SELECTOR_CONTRACT_VERSION, SELECTOR_PROMPT_VERSION
 from .models import Language
 from .resources import packaged_bootstrap_data_root
-from .service import FORMULATOR_MAX_ATTEMPTS
+from .llm_stages import FORMULATOR_MAX_ATTEMPTS
 
 
 REVIEW_OUTPUT_VERSION = "1"

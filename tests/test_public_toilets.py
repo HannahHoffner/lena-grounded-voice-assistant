@@ -832,6 +832,8 @@ def test_invalid_interpreter_output_fails_closed_before_toilet_results(
         blablador_base_url="https://provider.invalid/v1",
         blablador_api_key="test-token",
         blablador_model="test-model",
+        # Interaktionslogs sind seit Audit F-04 standardmäßig aus; hier geprüft.
+        interaction_logging_enabled=True,
         interaction_log_path=tmp_path / "runtime" / "logs" / "interactions.jsonl",
     )
     app = __import__("app.main", fromlist=["create_app"]).create_app(settings)

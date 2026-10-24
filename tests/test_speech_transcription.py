@@ -17,6 +17,7 @@ from fastapi.testclient import TestClient
 
 import app.speech as speech
 from app.config import Settings
+from app.logging_setup import TechnicalLogFormatter
 from app.main import create_app
 from app.models import Language
 from app.speech import (
@@ -40,8 +41,13 @@ def test_stt_failure_log_exposes_safe_cause_without_changing_public_error(monkey
         )
     assert response.status_code == 503
     assert response.json() == {"detail": "Speech transcription failed"}
-    assert "code=stt_provider_http_error upstream_status=404" in caplog.text
-    assert "test-token" not in caplog.text
+    record = next(item for item in caplog.records if item.getMessage() == "stt.failed")
+    assert (record.error_code, record.upstream_status) == ("stt_provider_http_error", 404)
+    # Die Felder erscheinen auch im tatsächlich serialisierten technischen Log.
+    rendered = TechnicalLogFormatter().format(record)
+    assert "stt.failed" in rendered
+    assert "error_code=stt_provider_http_error upstream_status=404" in rendered
+    assert "test-token" not in caplog.text and "test-token" not in rendered
 
 
 @pytest.mark.parametrize("payload", [[], None, {"text": []}, {"text": 123}, {"text": " "}])

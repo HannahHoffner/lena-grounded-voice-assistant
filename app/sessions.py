@@ -1,4 +1,18 @@
-"""Atomare, begrenzte Session-Persistenz für den lokalen Einzelprozessbetrieb."""
+"""Atomare, begrenzte Session-Persistenz für den lokalen Einzelprozessbetrieb.
+
+Vertrag bei Schreibfehlern: Gewöhnliche Turns und Sprachwechsel werden auch
+ohne Persistenz beantwortet (der Verlauf geht dann verloren). Dialoge dagegen
+sind nur mit erfolgreicher Persistenz zulässig: Eine Reservierung
+(``claim_dialog``) und ein neu angebotener Dialog (``set_dialog``) lösen
+``SessionPersistenceError`` aus, wenn sie nicht gespeichert werden konnten,
+damit weder eine Antwort doppelt verarbeitet noch eine nicht beantwortbare
+Rückfrage angezeigt wird. Die Locks koordinieren nur Threads *eines*
+Prozesses; mehrere Worker benötigen einen anderen Speicher.
+
+Aufbewahrung: Sessions verfallen nach ``timeout_seconds`` beim nächsten Zugriff.
+Beschädigte Dateien werden zur Diagnose in Quarantäne verschoben; höchstens
+``max_quarantine_files`` davon bleiben erhalten, ältere werden gelöscht.
+"""
 
 from __future__ import annotations
 
@@ -36,7 +50,7 @@ def _lock_for(path: Path) -> threading.RLock:
 
 
 class SessionPersistenceError(RuntimeError):
-    """A dialog cannot be reserved safely; no downstream work may begin."""
+    """Ein Dialogzustand konnte nicht gespeichert werden; kein Folgeschritt darf beginnen."""
 
 
 class ConversationSession(BaseModel):
@@ -84,6 +98,9 @@ class SessionStore:
     # full sentences into the session store on every such turn. Bounded the
     # same way turns/sessions already are, not left to grow with the result set.
     max_speakable_texts: int = 40
+    # Quarantänedateien enthalten unlesbare, potenziell personenbezogene
+    # Sessiondaten; sie werden zur Diagnose begrenzt aufbewahrt.
+    max_quarantine_files: int = 3
     _lock: threading.RLock = field(init=False, repr=False)
 
     def __post_init__(self) -> None:
@@ -92,6 +109,7 @@ class SessionStore:
             or self.max_turns <= 0
             or self.max_sessions <= 0
             or self.max_speakable_texts <= 0
+            or self.max_quarantine_files <= 0
         ):
             raise ValueError("Sessiongrenzen müssen positive Ganzzahlen sein")
         self._lock = _lock_for(self.path)
@@ -211,8 +229,13 @@ class SessionStore:
             current.dialog = dialog.model_copy(deep=True) if dialog else None
             current.last_activity_at = now
             loaded.sessions[current.session_id] = current
-            if loaded.writable:
-                self._write_all_unlocked(loaded.sessions)
+            persisted = loaded.writable and self._write_all_unlocked(loaded.sessions)
+            if dialog and not persisted:
+                # Eine Rückfrage, deren Zustand nicht gespeichert ist, könnte
+                # nicht beantwortet werden (409). Lieber kontrolliert abbrechen.
+                raise SessionPersistenceError("session_persistence_unavailable")
+            if not persisted:
+                LOGGER.warning("session.dialog_clear.not_persisted")
             return current
 
     def claim_dialog(
@@ -347,14 +370,32 @@ class SessionStore:
 
     def _quarantine_unlocked(self) -> bool:
         recovery = self.path.with_name(
-            f"sessions.corrupt.{utc_now():%Y%m%dT%H%M%S}.{uuid.uuid4().hex}.json"
+            f"sessions.corrupt.{utc_now():%Y%m%dT%H%M%S%f}.{uuid.uuid4().hex}.json"
         )
         try:
             os.replace(self.path, recovery)
         except OSError as exc:
             LOGGER.error("session.load.failed", extra={"error_type": type(exc).__name__})
             return False
+        self._prune_quarantine_unlocked()
         return True
+
+    def _prune_quarantine_unlocked(self) -> None:
+        # Der Dateiname beginnt mit dem UTC-Quarantänezeitpunkt; lexikalische
+        # Ordnung ist damit chronologisch (die mtime stammt vom Originalinhalt).
+        recoveries = sorted(self.path.parent.glob("sessions.corrupt.*.json"), key=lambda item: item.name)
+        removed = 0
+        for stale in recoveries[: max(0, len(recoveries) - self.max_quarantine_files)]:
+            try:
+                stale.unlink()
+                removed += 1
+            except OSError as exc:
+                LOGGER.warning("session.quarantine_prune.failed", extra={"error_type": type(exc).__name__})
+        if removed:
+            LOGGER.info(
+                "session.quarantine_pruned",
+                extra={"removed_count": removed, "retained_count": len(recoveries) - removed},
+            )
 
     def _write_all_unlocked(self, sessions: dict[str, ConversationSession]) -> bool:
         started = time.perf_counter()

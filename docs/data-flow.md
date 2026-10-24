@@ -45,7 +45,7 @@ sequenceDiagram
     opt geerdete Formulierung verfügbar
         S->>S: Evidence-Vertrag 4 aus finalen Angeboten
         S->>L: Evidence + bindende Policies
-        L-->>S: Satzvertrag 2 + Card-IDs
+        L-->>S: Formulatorvertrag 5 + Card-IDs
         S->>S: Fakten, Rollen, Sprache und Karten atomar validieren
     end
     S-->>A: QueryResponse oder Template-Fallback
@@ -143,7 +143,8 @@ validiert. Eine einzelne fremde ID verwirft die gesamte Antwort. Danach setzt
 die Anwendung Mandatory-Kandidaten vor die gewählte Menge und stellt die
 kuratierte stabile Reihenfolge wieder her. Erst daraus entsteht ein
 `FormulatorEvidence`-Paket mit Evidence-Version 4 und Formulatorpromptversion
-17. Es enthält
+22 (Stand Version 0.2.0; maßgeblich sind die Konstanten in `app/formulation.py`
+und `/api/health`). Es enthält
 pro finalem Angebot Rolle, Mandatory-Status und ausschließlich freigegebene
 Fakten mit opaken Referenzen. Evidence 4 ergänzt leistungsgebundene
 Bedingungsfakten (`service_condition`): vorhandene feste Zeitfenster der
@@ -160,8 +161,9 @@ Tag oder einer Uhrzeit bevorzugt er Kandidaten, deren strukturierter
 `schedule_match_status` bereits deterministisch `matched` ist; er darf keine
 Zeitpassung selbst ergänzen.
 
-Die Modellantwort folgt Formulatorvertrag 3. Promptversion 19 fordert bei
-normalen angebotsbezogenen Antworten zwei oder drei kurze natürliche Sätze. Das
+Die Modellantwort folgt Formulatorvertrag 5 (ein bis drei Textblöcke, zusammen
+höchstens 600 Zeichen). Der Prompt fordert bei normalen angebotsbezogenen
+Antworten kurze natürliche Sätze. Das
 wichtigste Angebot steht zuerst, ist aber nicht mehr an ein festes
 `Nutze ...`-Muster gebunden. Mehrere finale, nützliche Alternativen können in
 Evidence-Reihenfolge mit je einem eigenen belegten Satz genannt werden. Bei
@@ -171,7 +173,12 @@ begrenzte Prompt-Injection-Pfad bleibt als sichere Ausnahme einsätzig und fest
 formuliert. Alle Sätze enthalten Claimtyp sowie Fakten- oder Policyreferenzen;
 die Antwort enthält höchstens vier Card-IDs. Das Backend baut den sichtbaren
 Text erst nach vollständiger Vertrags-, Sprach-, Rollen-, Fakten- und
-Kartenprüfung zusammen. Sichtbare Modell- und Fallbacktexte verweisen dabei
+Kartenprüfung zusammen. Seit Groundingvalidator 4 hängt die Inhaltsprüfung nicht
+mehr vom vom Modell deklarierten Claimtyp ab: Leistungs-, Erhalts-, Besitz- und
+(DE/EN) Identitätsaussagen dürfen keine offenen Inhaltswörter ohne Beleg im
+selben Angebot enthalten (`app/grounding_content.py`, Diagnose
+`content_not_covered`). Das ist eine begrenzte regelbasierte Prüfung, keine
+allgemeine semantische Wahrheitsgarantie. Sichtbare Modell- und Fallbacktexte verweisen dabei
 nicht auf „Karten“ oder andere technische Ergebniscontainer. Eine nötige
 Orientierung wird sprachabhängig als „Mehr Infos stehen unten“ ausgedrückt; die
 eigentliche Kartenansicht und fachliche Angaben zur Kartenzahlung sind davon
@@ -507,8 +514,9 @@ sprechbaren Angebots-, Marker- oder Rückfragetext desselben Turns und derselben
 Session und Sprache entsprechen; fremde,
 veränderte oder veraltete Texte enden mit dem redigierten HTTP-409-Fehler
 `tts_text_invalid`. Leere, unbekanntsprachige oder zu lange Payloads enden mit
-422 vor dem Provider. Je nach Konfiguration wird ein
-OpenAI-kompatibler Endpunkt oder `edge-tts` genutzt. Bei Providerfehlern
+422 vor dem Provider. Je nach ausdrücklichem Profil wird ein
+OpenAI-kompatibler Endpunkt oder `edge-tts` genutzt; ohne Profil antwortet der
+Endpunkt mit 503 (`tts_not_configured` im technischen Log). Bei Providerfehlern
 antworten beide Endpunkte mit HTTP 503 und geben keine internen Zugangsdaten
 aus. Unmittelbar vor beiden Syntheseprovidern ersetzt `normalize_tts_text()`
 das Token `112` durch sprachabhängig einzeln gesprochene Ziffern; im Browser

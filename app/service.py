@@ -17,8 +17,6 @@ from .i18n import load_translation_catalog, localize_offer_card
 from .spoken_text import offer_spoken_text
 from .formulation import (
     AnswerType,
-    FormulatorError,
-    GroundingDiagnosticCode,
     build_drinking_water_evidence,
     build_formulator_evidence,
     build_public_toilet_evidence,
@@ -60,15 +58,9 @@ from .interpreter import (
     interpreter_alias_hints,
 )
 from .kb_loader import KnowledgeBase
-from .llm_selection import (
-    SelectionOutcome,
-    SelectorBypassReason,
-    SelectorError,
-    bypass_outcome,
-    fallback_outcome,
-    selected_outcome,
-)
-from .llm_budget import LLMBudgetExhausted, LLMRequestBudget
+from .llm_selection import SelectionOutcome, SelectorBypassReason
+from .llm_budget import LLMRequestBudget
+from .llm_stages import call_formulator_with_retry, run_formulator, run_interpreter, run_selector
 from .maps import build_map_data
 from .models import (
     ChatTurn,
@@ -80,8 +72,8 @@ from .models import (
     QueryRequest,
     QueryResponse,
 )
-from .providers.llm import BlabladorProvider, InterpreterError, ProviderAnswer, ProviderError
-from .retrieval import normalize_text
+from .providers.llm import BlabladorProvider, ProviderError
+from .text_normalization import normalize_text
 from .result_ordering import order_social_results
 from .safety import (
     SafetyPath,
@@ -96,20 +88,6 @@ from .translation_contract import TranslationRuntimePolicy
 
 
 LOGGER = logging.getLogger(__name__)
-
-# A `FormulatorError` (contract violation, ungrounded claim, ...) is usually a
-# single sampling weakness of the model, not a structural fault -- see
-# docs/exec-plans/fix-formulator-fallback-sie-and-menschen-collision.md. One
-# retry with a fresh sample clears a meaningful share of these without
-# loosening the citation requirement itself. 2 = the original attempt plus one
-# retry.
-FORMULATOR_MAX_ATTEMPTS = 2
-
-# Transport-level failures, not sampling weaknesses -- retrying buys nothing
-# (a timeout is likely to time out again) and only spends the shared LLM
-# request budget that another stage may still need.
-_FORMULATOR_NON_RETRYABLE_ERRORS = frozenset({"formulator_timeout", "formulator_http_error"})
-
 
 def _fallback_text(language: Language, key: str, **values: str) -> str:
     try:
@@ -564,6 +542,261 @@ class QueryService:
         response.interaction = interaction
         return response
 
+    def _apply_safety_decision(
+        self,
+        payload: QueryRequest,
+        interpretation: QueryInterpretation,
+        active_dialog: DialogState | None,
+        interaction: QueryInteraction,
+        visible_question: str,
+    ) -> tuple[_CoreOutcome | None, QueryInterpretation, DialogState | None]:
+        """Wendet die Akutgefahr- und Safety-Dialogentscheidung vor jeder Fachlogik an.
+
+        Returns:
+            Ein Abschluss (Safety-Stopp oder erneute Rückfrage) oder ``None``
+            mit der gegebenenfalls um Dialogfakten ergänzten Interpretation
+            und dem danach noch offenen Dialog.
+        """
+        language = payload.language
+        query = payload.query
+
+        interaction.acute_risk_status = interpretation.acute_risk_status.value
+        if interpretation.acute_risk_status == AcuteRiskStatus.DETECTED:
+            outcome = self._safety_stop(
+                language,
+                interaction,
+                path=SafetyPath.INTERPRETER_DETECTED,
+                kind=SafetyTextKind.DETECTED,
+                risk_status=AcuteRiskStatus.DETECTED,
+                dialogue_result=("confirmed" if active_dialog else None),
+                visible_question=visible_question,
+            )
+            return outcome, interpretation, active_dialog
+        if interpretation.acute_risk_status == AcuteRiskStatus.UNCERTAIN:
+            explicitly_unsure = bool(
+                active_dialog
+                and active_dialog.dialog_type == DialogType.ACUTE_RISK_CONFIRMATION
+                and "immediate_danger_unsure" in payload.choice_values
+            )
+            if explicitly_unsure or (
+                active_dialog
+                and active_dialog.dialog_type == DialogType.ACUTE_RISK_CONFIRMATION
+                and active_dialog.attempt_count >= active_dialog.max_attempts
+            ):
+                outcome = self._safety_stop(
+                    language,
+                    interaction,
+                    path=SafetyPath.UNCERTAIN_CONSERVATIVE,
+                    kind=SafetyTextKind.UNCERTAIN,
+                    risk_status=AcuteRiskStatus.UNCERTAIN,
+                    dialogue_result="uncertain",
+                    visible_question=visible_question,
+                )
+                return outcome, interpretation, active_dialog
+            outcome = self._safety_dialog(
+                language,
+                interpretation,
+                interaction,
+                attempt_count=(active_dialog.attempt_count + 1 if active_dialog else 1),
+                visible_question=visible_question,
+            )
+            return outcome, interpretation, active_dialog
+
+        if active_dialog and active_dialog.dialog_type == DialogType.ACUTE_RISK_CONFIRMATION:
+            explicit_no = "immediate_danger_no" in payload.choice_values
+            compatible_text_denial = (
+                not payload.choice_values
+                and safety_dialog_explicit_denial(query, language)
+                and interpretation.scope_status == ScopeStatus.IN_SCOPE
+                and (
+                    # Ein Safety-Dialog mit generischem Ausgangsbedarf kennt noch
+                    # keinen belastbaren Fachbedarf; eine ausdrückliche Verneinung
+                    # darf deshalb die erste echte Bedarfsangabe übernehmen.
+                    active_dialog.originating_need == Need.GENERAL_HELP
+                    or interpretation.need in {
+                        active_dialog.originating_need,
+                        Need.UNKNOWN,
+                        Need.GENERAL_HELP,
+                    }
+                )
+            )
+            if not (explicit_no or compatible_text_denial):
+                if active_dialog.attempt_count >= active_dialog.max_attempts:
+                    outcome = self._safety_stop(
+                        language,
+                        interaction,
+                        path=SafetyPath.UNCERTAIN_CONSERVATIVE,
+                        kind=SafetyTextKind.UNCERTAIN,
+                        risk_status=AcuteRiskStatus.UNCERTAIN,
+                        dialogue_result="unresolved",
+                        visible_question=visible_question,
+                    )
+                    return outcome, interpretation, active_dialog
+                retry_interpretation = merge_dialog_facts(interpretation, active_dialog)
+                retry_interpretation.acute_risk_status = AcuteRiskStatus.UNCERTAIN
+                outcome = self._safety_dialog(
+                    language,
+                    retry_interpretation,
+                    interaction,
+                    attempt_count=active_dialog.attempt_count + 1,
+                    visible_question=visible_question,
+                )
+                return outcome, interpretation, active_dialog
+            interpretation = merge_dialog_facts(interpretation, active_dialog)
+            interaction.safety_path = SafetyPath.DIALOGUE_CLEARED.value
+            interaction.safety_dialogue_used = True
+            interaction.safety_dialogue_result = "denied"
+            interaction.safety_response_language = language
+            interaction.dialog_type = active_dialog.dialog_type.value
+            interaction.dialog_attempt_count = active_dialog.attempt_count
+            interaction.dialog_result_status = "resolved"
+            active_dialog = None
+        return None, interpretation, active_dialog
+
+    async def _resolve_conditional_or_dialog_answer(
+        self,
+        *,
+        query: str,
+        language: Language,
+        interpretation: QueryInterpretation,
+        selection_context,
+        decision: CandidateDecision,
+        selected_offers: list[OfferRecord],
+        active_dialog: DialogState | None,
+        interaction: QueryInteraction,
+        llm_budget: LLMRequestBudget,
+        visible_question: str,
+    ) -> _CoreOutcome | None:
+        """Deterministische, formulatorfreie Abschlüsse nach Fachregeln.
+
+        Bedingter Schlafkontakt bei unbekanntem Alter (FR-03) sowie eindeutige
+        Ergebnisse eines beantworteten Bezirks-/Organisationsdialogs. Liefert
+        ``None``, wenn die reguläre Auswahl mit Selector/Formulator folgen soll.
+        """
+        by_id = self.kb.by_id()
+
+        # Ein unbekanntes Alter bleibt unbekannt. Der vorhandene bedingte
+        # Hinweis reicht als Abschluss; eine weitere Pflichtfrage ist unnötig.
+        facts = interpretation.explicit_facts
+        if (
+            interpretation.need == Need.SLEEP
+            and not selection_context.alias
+            and facts.gender.value == "female"
+            and facts.age is None
+            and facts.age_group.value == "unknown"
+        ):
+            ruecke = next((offer for offer in self.kb.offers if "general_sleep_contact_first" in offer.priority_rules), None)
+            scharni = next((offer for offer in self.kb.offers if "female" in offer.eligible_genders and offer.minimum_age == 18), None)
+            cards = [offer for offer in (ruecke, scharni) if offer]
+            interaction.route = "sleep_conditional_contact"
+            interaction.answer_type = AnswerType.GROUNDED_REFERRAL.value
+            if active_dialog:
+                interaction.dialog_type = active_dialog.dialog_type.value
+                interaction.dialog_attempt_count = active_dialog.attempt_count
+                interaction.dialog_result_status = "resolved_conditionally"
+            _record_selector_bypass(interaction, SelectorBypassReason.NO_ELIGIBLE_CANDIDATE)
+            return _CoreOutcome(
+                QueryResponse(
+                    answer=(
+                        dialogue_text(language, "answers", "scharni_conditional") + " "
+                        + dialogue_text(language, "answers", "sleep_intro")
+                    ),
+                    cards=[_card(offer, language, self.translation_catalog, self.translation_policy) for offer in cards],
+                    language=language,
+                    provider="template",
+                    status="ok",
+                ),
+                visible_question=visible_question,
+            )
+
+        if active_dialog:
+            interaction.dialog_type = active_dialog.dialog_type.value
+            interaction.dialog_attempt_count = active_dialog.attempt_count
+            # Bewusst ohne Formulator: der Kandidat ist nach dem Bezirksdialog bereits
+            # eindeutig (genau ein conditional_candidate), unabhängig vom Bedarfstyp.
+            # Ohne Auswahl- oder Formulierungsspielraum ergäbe ein LLM-Aufruf nur
+            # zusätzliche Latenz und Fehlerfläche; der kuratierte Dialogtext nennt
+            # die bedingte Zuständigkeit (Fachregel FR-08, Mehrdeutige Aliase).
+            district_team = None
+            if (
+                active_dialog.dialog_type == DialogType.ORGANIZATION_DISTRICT
+                and selection_context.alias
+                and selection_context.alias.district_narrowed
+                and not selected_offers
+                and len(decision.conditional_candidates) == 1
+            ):
+                district_team = by_id.get(decision.conditional_candidates[0].offer_id)
+            if district_team:
+                interaction.route = "dialog_district_contact"
+                interaction.answer_type = AnswerType.GROUNDED_REFERRAL.value
+                interaction.dialog_result_status = "resolved_conditionally"
+                _record_selector_bypass(interaction, SelectorBypassReason.NO_ELIGIBLE_CANDIDATE)
+                return _CoreOutcome(
+                    QueryResponse(
+                        answer=dialogue_text(language, "answers", "district_contact_conditional"),
+                        cards=[_card(district_team, language, self.translation_catalog, self.translation_policy)],
+                        language=language,
+                        provider="template",
+                        status="ok",
+                    ),
+                    visible_question=visible_question,
+                )
+            # Bewusst ohne Formulator: derselbe Grund wie bei district_team oben, nur
+            # für den Organisationsdienst-Dialog statt den Bezirksdialog.
+            organization_offer = None
+            if (
+                active_dialog.dialog_type == DialogType.ORGANIZATION_NEED
+                and len(decision.conditional_candidates) == 1
+            ):
+                organization_offer = by_id.get(decision.conditional_candidates[0].offer_id)
+            if organization_offer:
+                interaction.route = "dialog_organization_service"
+                interaction.answer_type = AnswerType.GROUNDED_RESULT.value
+                interaction.dialog_result_status = "resolved_conditionally"
+                _record_selector_bypass(interaction, SelectorBypassReason.NO_ELIGIBLE_CANDIDATE)
+                return _CoreOutcome(
+                    QueryResponse(
+                        answer=dialogue_text(language, "answers", "organization_service_conditional"),
+                        cards=[_card(organization_offer, language, self.translation_catalog, self.translation_policy)],
+                        language=language,
+                        provider="template",
+                        status="ok",
+                    ),
+                    visible_question=visible_question,
+                )
+            unresolved_alias = bool(
+                selection_context.alias
+                and selection_context.alias.alias_kind == "organization"
+                and len(selection_context.alias.offer_ids) > 1
+                and not selected_offers
+            )
+            sleep_answer_missing = (
+                active_dialog.dialog_type == DialogType.SLEEP_TARGET_GROUP
+                and interpretation.explicit_facts.gender.value == "unknown"
+                and interpretation.explicit_facts.age is None
+                and interpretation.explicit_facts.age_group.value == "unknown"
+            )
+            still_unclear = (
+                decision.need in {Need.UNKNOWN, Need.GENERAL_HELP}
+                and not interpretation.explicit_service_requests
+            ) or sleep_answer_missing
+            if unresolved_alias or still_unclear or not selected_offers:
+                interaction.route = "dialog_hilfebus"
+                interaction.dialog_result_status = "unresolved"
+                _record_selector_bypass(interaction, SelectorBypassReason.NO_ELIGIBLE_CANDIDATE)
+                return _CoreOutcome(
+                    await self._hilfebus_response(
+                        language,
+                        query=query,
+                        interaction=interaction,
+                        budget=llm_budget,
+                        provider_failed=False,
+                    ),
+                    visible_question=visible_question,
+                )
+            interaction.dialog_result_status = "resolved"
+        return None
+
     async def _query_core(
         self,
         payload: QueryRequest,
@@ -627,44 +860,20 @@ class QueryService:
         if payload.choice_values and active_dialog:
             interpretation = interpretation_from_choices(active_dialog, payload.choice_values, language)
             visible_question = visible_choice_text(active_dialog, payload.choice_values, language)
-        elif self.blablador:
-            try:
-                allocation = llm_budget.begin(self.settings.llm_interpreter_timeout_seconds)
-                try:
-                    interpretation = await self.blablador.interpret_query(
-                        query=query or (payload.category.value if payload.category else "help"),
-                        language=language,
-                        category=payload.category,
-                        aliases=self.interpreter_aliases,
-                        conversation_history=[] if active_dialog else conversation_history,
-                        dialog_context=(interpreter_dialog_context(active_dialog) if active_dialog else None),
-                        timeout_seconds=allocation.timeout_seconds,
-                    )
-                finally:
-                    llm_budget.finish(allocation)
-                LOGGER.info(
-                    "query.interpreter.completed",
-                    extra={"contract_version": interpretation.contract_version},
-                )
-            except LLMBudgetExhausted:
-                interpreter_failed = True
-                interaction.fallback_used = True
-                interaction.interpreter_error_code = "llm_budget_exhausted"
-                interaction.llm_budget_status = "llm_budget_exhausted"
-                LOGGER.warning("query.llm_budget.exhausted", extra={"stage": "interpreter"})
-            except InterpreterError as exc:
-                interpreter_failed = True
-                interaction.fallback_used = True
-                interaction.interpreter_error_code = exc.code
-                if llm_budget.exhausted:
-                    interaction.llm_budget_status = "llm_budget_exhausted"
-                LOGGER.warning(
-                    "query.interpreter.failed",
-                    extra={"error_code": exc.code},
-                )
-                LOGGER.info("query.fallback.used", extra={"stage": "interpreter"})
         else:
-            interpreter_failed = True
+            interpretation = await run_interpreter(
+                self.blablador,
+                self.settings,
+                llm_budget,
+                interaction,
+                query=query or (payload.category.value if payload.category else "help"),
+                language=language,
+                category=payload.category,
+                aliases=self.interpreter_aliases,
+                conversation_history=[] if active_dialog else conversation_history,
+                dialog_context=(interpreter_dialog_context(active_dialog) if active_dialog else None),
+            )
+            interpreter_failed = interpretation is None
 
         if interpreter_failed:
             if active_dialog:
@@ -680,92 +889,11 @@ class QueryService:
         if interpretation is None:
             return self._technical_safety_fallback(language, interaction, visible_question=visible_question)
 
-        interaction.acute_risk_status = interpretation.acute_risk_status.value
-        if interpretation.acute_risk_status == AcuteRiskStatus.DETECTED:
-            return self._safety_stop(
-                language,
-                interaction,
-                path=SafetyPath.INTERPRETER_DETECTED,
-                kind=SafetyTextKind.DETECTED,
-                risk_status=AcuteRiskStatus.DETECTED,
-                dialogue_result=("confirmed" if active_dialog else None),
-                visible_question=visible_question,
-            )
-        if interpretation.acute_risk_status == AcuteRiskStatus.UNCERTAIN:
-            explicitly_unsure = bool(
-                active_dialog
-                and active_dialog.dialog_type == DialogType.ACUTE_RISK_CONFIRMATION
-                and "immediate_danger_unsure" in payload.choice_values
-            )
-            if explicitly_unsure or (
-                active_dialog
-                and active_dialog.dialog_type == DialogType.ACUTE_RISK_CONFIRMATION
-                and active_dialog.attempt_count >= active_dialog.max_attempts
-            ):
-                return self._safety_stop(
-                    language,
-                    interaction,
-                    path=SafetyPath.UNCERTAIN_CONSERVATIVE,
-                    kind=SafetyTextKind.UNCERTAIN,
-                    risk_status=AcuteRiskStatus.UNCERTAIN,
-                    dialogue_result="uncertain",
-                    visible_question=visible_question,
-                )
-            return self._safety_dialog(
-                language,
-                interpretation,
-                interaction,
-                attempt_count=(active_dialog.attempt_count + 1 if active_dialog else 1),
-                visible_question=visible_question,
-            )
-
-        if active_dialog and active_dialog.dialog_type == DialogType.ACUTE_RISK_CONFIRMATION:
-            explicit_no = "immediate_danger_no" in payload.choice_values
-            compatible_text_denial = (
-                not payload.choice_values
-                and safety_dialog_explicit_denial(query, language)
-                and interpretation.scope_status == ScopeStatus.IN_SCOPE
-                and (
-                    # Ein Safety-Dialog mit generischem Ausgangsbedarf kennt noch
-                    # keinen belastbaren Fachbedarf; eine ausdrückliche Verneinung
-                    # darf deshalb die erste echte Bedarfsangabe übernehmen.
-                    active_dialog.originating_need == Need.GENERAL_HELP
-                    or interpretation.need in {
-                        active_dialog.originating_need,
-                        Need.UNKNOWN,
-                        Need.GENERAL_HELP,
-                    }
-                )
-            )
-            if not (explicit_no or compatible_text_denial):
-                if active_dialog.attempt_count >= active_dialog.max_attempts:
-                    return self._safety_stop(
-                        language,
-                        interaction,
-                        path=SafetyPath.UNCERTAIN_CONSERVATIVE,
-                        kind=SafetyTextKind.UNCERTAIN,
-                        risk_status=AcuteRiskStatus.UNCERTAIN,
-                        dialogue_result="unresolved",
-                        visible_question=visible_question,
-                    )
-                retry_interpretation = merge_dialog_facts(interpretation, active_dialog)
-                retry_interpretation.acute_risk_status = AcuteRiskStatus.UNCERTAIN
-                return self._safety_dialog(
-                    language,
-                    retry_interpretation,
-                    interaction,
-                    attempt_count=active_dialog.attempt_count + 1,
-                    visible_question=visible_question,
-                )
-            interpretation = merge_dialog_facts(interpretation, active_dialog)
-            interaction.safety_path = SafetyPath.DIALOGUE_CLEARED.value
-            interaction.safety_dialogue_used = True
-            interaction.safety_dialogue_result = "denied"
-            interaction.safety_response_language = language
-            interaction.dialog_type = active_dialog.dialog_type.value
-            interaction.dialog_attempt_count = active_dialog.attempt_count
-            interaction.dialog_result_status = "resolved"
-            active_dialog = None
+        safety_outcome, interpretation, active_dialog = self._apply_safety_decision(
+            payload, interpretation, active_dialog, interaction, visible_question,
+        )
+        if safety_outcome is not None:
+            return safety_outcome
 
         if interpretation.scope_status == ScopeStatus.OUT_OF_SCOPE:
             interaction.route = "out_of_scope"
@@ -884,124 +1012,20 @@ class QueryService:
                 visible_question=visible_question,
             )
 
-        # Ein unbekanntes Alter bleibt unbekannt. Der vorhandene bedingte
-        # Hinweis reicht als Abschluss; eine weitere Pflichtfrage ist unnötig.
-        facts = interpretation.explicit_facts
-        if (
-            interpretation.need == Need.SLEEP
-            and not selection_context.alias
-            and facts.gender.value == "female"
-            and facts.age is None
-            and facts.age_group.value == "unknown"
-        ):
-            ruecke = next((offer for offer in self.kb.offers if "general_sleep_contact_first" in offer.priority_rules), None)
-            scharni = next((offer for offer in self.kb.offers if "female" in offer.eligible_genders and offer.minimum_age == 18), None)
-            cards = [offer for offer in (ruecke, scharni) if offer]
-            interaction.route = "sleep_conditional_contact"
-            interaction.answer_type = AnswerType.GROUNDED_REFERRAL.value
-            if active_dialog:
-                interaction.dialog_type = active_dialog.dialog_type.value
-                interaction.dialog_attempt_count = active_dialog.attempt_count
-                interaction.dialog_result_status = "resolved_conditionally"
-            _record_selector_bypass(interaction, SelectorBypassReason.NO_ELIGIBLE_CANDIDATE)
-            return _CoreOutcome(
-                QueryResponse(
-                    answer=(
-                        dialogue_text(language, "answers", "scharni_conditional") + " "
-                        + dialogue_text(language, "answers", "sleep_intro")
-                    ),
-                    cards=[_card(offer, language, self.translation_catalog, self.translation_policy) for offer in cards],
-                    language=language,
-                    provider="template",
-                    status="ok",
-                ),
-                visible_question=visible_question,
-            )
-
-        if active_dialog:
-            interaction.dialog_type = active_dialog.dialog_type.value
-            interaction.dialog_attempt_count = active_dialog.attempt_count
-            # Bewusst ohne Formulator: der Kandidat ist nach dem Bezirksdialog bereits
-            # eindeutig (genau ein conditional_candidate), unabhängig vom Bedarfstyp --
-            # kein Auswahl- oder Formulierungsspielraum, siehe Untersuchung Zeile 11.
-            district_team = None
-            if (
-                active_dialog.dialog_type == DialogType.ORGANIZATION_DISTRICT
-                and selection_context.alias
-                and selection_context.alias.district_narrowed
-                and not selected_offers
-                and len(decision.conditional_candidates) == 1
-            ):
-                district_team = by_id.get(decision.conditional_candidates[0].offer_id)
-            if district_team:
-                interaction.route = "dialog_district_contact"
-                interaction.answer_type = AnswerType.GROUNDED_REFERRAL.value
-                interaction.dialog_result_status = "resolved_conditionally"
-                _record_selector_bypass(interaction, SelectorBypassReason.NO_ELIGIBLE_CANDIDATE)
-                return _CoreOutcome(
-                    QueryResponse(
-                        answer=dialogue_text(language, "answers", "district_contact_conditional"),
-                        cards=[_card(district_team, language, self.translation_catalog, self.translation_policy)],
-                        language=language,
-                        provider="template",
-                        status="ok",
-                    ),
-                    visible_question=visible_question,
-                )
-            # Bewusst ohne Formulator: derselbe Grund wie bei district_team oben, nur
-            # für den Organisationsdienst-Dialog statt den Bezirksdialog.
-            organization_offer = None
-            if (
-                active_dialog.dialog_type == DialogType.ORGANIZATION_NEED
-                and len(decision.conditional_candidates) == 1
-            ):
-                organization_offer = by_id.get(decision.conditional_candidates[0].offer_id)
-            if organization_offer:
-                interaction.route = "dialog_organization_service"
-                interaction.answer_type = AnswerType.GROUNDED_RESULT.value
-                interaction.dialog_result_status = "resolved_conditionally"
-                _record_selector_bypass(interaction, SelectorBypassReason.NO_ELIGIBLE_CANDIDATE)
-                return _CoreOutcome(
-                    QueryResponse(
-                        answer=dialogue_text(language, "answers", "organization_service_conditional"),
-                        cards=[_card(organization_offer, language, self.translation_catalog, self.translation_policy)],
-                        language=language,
-                        provider="template",
-                        status="ok",
-                    ),
-                    visible_question=visible_question,
-                )
-            unresolved_alias = bool(
-                selection_context.alias
-                and selection_context.alias.alias_kind == "organization"
-                and len(selection_context.alias.offer_ids) > 1
-                and not selected_offers
-            )
-            sleep_answer_missing = (
-                active_dialog.dialog_type == DialogType.SLEEP_TARGET_GROUP
-                and interpretation.explicit_facts.gender.value == "unknown"
-                and interpretation.explicit_facts.age is None
-                and interpretation.explicit_facts.age_group.value == "unknown"
-            )
-            still_unclear = (
-                decision.need in {Need.UNKNOWN, Need.GENERAL_HELP}
-                and not interpretation.explicit_service_requests
-            ) or sleep_answer_missing
-            if unresolved_alias or still_unclear or not selected_offers:
-                interaction.route = "dialog_hilfebus"
-                interaction.dialog_result_status = "unresolved"
-                _record_selector_bypass(interaction, SelectorBypassReason.NO_ELIGIBLE_CANDIDATE)
-                return _CoreOutcome(
-                    await self._hilfebus_response(
-                        language,
-                        query=query,
-                        interaction=interaction,
-                        budget=llm_budget,
-                        provider_failed=False,
-                    ),
-                    visible_question=visible_question,
-                )
-            interaction.dialog_result_status = "resolved"
+        resolved = await self._resolve_conditional_or_dialog_answer(
+            query=query,
+            language=language,
+            interpretation=interpretation,
+            selection_context=selection_context,
+            decision=decision,
+            selected_offers=selected_offers,
+            active_dialog=active_dialog,
+            interaction=interaction,
+            llm_budget=llm_budget,
+            visible_question=visible_question,
+        )
+        if resolved is not None:
+            return resolved
 
         dialog = None if active_dialog else choose_dialog(
             interpretation,
@@ -1011,8 +1035,9 @@ class QueryService:
             timeout_seconds=self.settings.session_timeout_seconds,
         )
         # Bewusst ohne Formulator: ein eindeutiger Organisations-Alias-Treffer ganz
-        # ohne Dialog (derselbe Grund wie district_team/organization_offer oben) --
-        # kein Auswahl- oder Formulierungsspielraum, siehe Untersuchung Zeile 11.
+        # ohne Dialog (derselbe Grund wie district_team/organization_offer in
+        # _resolve_conditional_or_dialog_answer): kein Auswahl- oder
+        # Formulierungsspielraum, daher kuratierter Text statt Modellaufruf.
         direct_alias_offer = None
         if (
             not active_dialog
@@ -1064,43 +1089,17 @@ class QueryService:
                 visible_question,
             )
 
-        selector_method = getattr(self.blablador, "select_candidates", None) if self.blablador else None
-        selection = bypass_outcome(
+        selection, selector_provider_failed = await run_selector(
+            self.blablador,
+            self.settings,
+            llm_budget,
+            interaction,
             decision,
-            selector_available=callable(selector_method),
-            interpreter_succeeded=True,
+            query=query or decision.need.value,
+            language=language,
+            interpretation=interpretation,
+            offers=self.kb.offers,
         )
-        selector_provider_failed = False
-        if selection is None:
-            try:
-                allocation = llm_budget.begin(self.settings.llm_selector_timeout_seconds)
-                try:
-                    selector_result = await selector_method(
-                        query=query or decision.need.value,
-                        language=language,
-                        interpretation=interpretation,
-                        decision=decision,
-                        offers=self.kb.offers,
-                        timeout_seconds=allocation.timeout_seconds,
-                    )
-                finally:
-                    llm_budget.finish(allocation)
-                selection = selected_outcome(decision, selector_result)
-                LOGGER.info(
-                    "query.selector.completed",
-                    extra={"selected_count": len(selection.final_ids)},
-                )
-            except LLMBudgetExhausted:
-                selector_provider_failed = True
-                interaction.llm_budget_status = "llm_budget_exhausted"
-                selection = fallback_outcome(decision, SelectorError("llm_budget_exhausted"))
-                LOGGER.warning("query.llm_budget.exhausted", extra={"stage": "selector"})
-            except SelectorError as exc:
-                selector_provider_failed = True
-                selection = fallback_outcome(decision, exc)
-                if llm_budget.exhausted:
-                    interaction.llm_budget_status = "llm_budget_exhausted"
-                LOGGER.warning("query.selector.failed", extra={"error_code": exc.code})
         _record_selector_outcome(interaction, decision, selection)
         mandatory_order = [item.offer_id for item in decision.mandatory_candidates]
         priority_tiers = {item.offer_id: item.priority_tier for item in decision.candidates}
@@ -1195,52 +1194,13 @@ class QueryService:
         evidence,
         budget: LLMRequestBudget,
         interaction: QueryInteraction,
-    ) -> ProviderAnswer:
-        """Ruft den Formulator auf und wiederholt einmal bei einem Grounding-Fehlschlag.
+    ):
+        """Anwendungs-Retry eines einzelnen Formulatoraufrufs (siehe ``llm_stages``).
 
-        Jeder der drei Formulator-Aufrufer (`_formulate_or_fallback`,
-        `_drinking_water_response`, `_public_toilet_response`) ruft diese eine
-        Stelle statt eigener Retry-Logik auf, siehe `FORMULATOR_MAX_ATTEMPTS`.
-
-        Grounding-/Parsing-Verstöße lösen höchstens einen zweiten Versuch aus.
-        Wenn vorhanden, erhält dieser die geschlossene Groundingdiagnose als
-        Korrekturhinweis, niemals den verworfenen Text. Ohne Diagnose bleibt
-        die Wiederholung unverändert. `formulator_timeout`/`formulator_http_error` sind
-        Transportfehler, kein Stichprobenproblem -- ein Retry würde dort nur
-        das ohnehin knappe Zeitbudget für ein zweites, ebenso wahrscheinliches
-        Scheitern verbrauchen (siehe
-        `test_formulator_timeout_uses_existing_template_fallback`).
-        `LLMBudgetExhausted` aus `budget.begin()` wird bewusst nicht
-        abgefangen: ist die Zeit aufgebraucht, ist ein weiterer Versuch
-        ohnehin sinnlos und soll den Aufrufer wie bisher direkt erreichen.
+        Bleibt als Einstieg für die Live-Evaluation erhalten, damit diese genau
+        die Retrypolitik der Anwendung misst und keinen bloßen Erstaufruf.
         """
-        retry_feedback: dict[str, GroundingDiagnosticCode] = {}
-        for attempt in range(FORMULATOR_MAX_ATTEMPTS):
-            allocation = budget.begin(self.settings.llm_formulator_timeout_seconds)
-            interaction.formulator_used = True
-            try:
-                result: ProviderAnswer = await formulator_method(
-                    evidence=evidence,
-                    timeout_seconds=allocation.timeout_seconds,
-                    **retry_feedback,
-                )
-            except FormulatorError as exc:
-                interaction.formulator_error_code = exc.code
-                retryable = exc.code not in _FORMULATOR_NON_RETRYABLE_ERRORS
-                if retryable and attempt + 1 < FORMULATOR_MAX_ATTEMPTS:
-                    # No rejected text, free-form exception or extra provider call.
-                    if exc.diagnostic_code is not None:
-                        retry_feedback = {"retry_diagnostic": exc.diagnostic_code}
-                    LOGGER.warning(
-                        "query.formulation.retry",
-                        extra={"error_code": exc.code, "attempt": attempt + 1},
-                    )
-                    continue
-                raise
-            finally:
-                budget.finish(allocation)
-            return result
-        raise AssertionError("unreachable: the loop above always returns or raises")
+        return await call_formulator_with_retry(formulator_method, self.settings, budget, interaction, evidence)
 
     async def _formulate_or_fallback(
         self,
@@ -1262,8 +1222,12 @@ class QueryService:
         interaction.answer_type = answer_type.value
         interaction.formulator_offer_count = len(offers)
         interaction.formulator_language = language
-        try:
-            evidence = build_formulator_evidence(
+        result = await run_formulator(
+            self.blablador,
+            self.settings,
+            budget,
+            interaction,
+            build_evidence=lambda: build_formulator_evidence(
                 query=query,
                 language=language,
                 answer_type=answer_type,
@@ -1273,56 +1237,21 @@ class QueryService:
                 mandatory_ids=mandatory_ids,
                 translation_catalog=self.translation_catalog,
                 translation_policy=self.translation_policy,
-            )
-        except (KeyError, ValueError):
-            interaction.formulator_error_code = "formulator_contract_violation"
-            interaction.formulator_fallback_used = True
-            interaction.fallback_used = True
-            LOGGER.warning(
-                "query.formulation.failed",
-                extra={"error_code": "formulator_contract_violation"},
-            )
+            ),
+            provider_failed=provider_failed,
+        )
+        if result is not None:
+            by_id = {offer.id: offer for offer in offers}
             return QueryResponse(
-                answer=fallback_answer,
-                cards=[_card(offer, language, self.translation_catalog, self.translation_policy) for offer in offers],
+                answer=result.answer,
+                cards=[
+                    _card(by_id[offer_id], language, self.translation_catalog, self.translation_policy)
+                    for offer_id in result.card_ids
+                ],
                 language=language,
-                provider="template",
+                provider="blablador",
                 status=status,
             )
-        formulator_method = getattr(self.blablador, "formulate_answer", None) if self.blablador else None
-        if callable(formulator_method) and not provider_failed:
-            try:
-                if not self.blablador.context_fits(evidence):
-                    raise FormulatorError("formulator_contract_violation")
-                result: ProviderAnswer = await self._call_formulator(
-                    formulator_method, evidence=evidence, budget=budget, interaction=interaction
-                )
-                interaction.formulator_sentence_count = result.sentence_count
-                by_id = {offer.id: offer for offer in offers}
-                return QueryResponse(
-                    answer=result.answer,
-                    cards=[
-                        _card(by_id[offer_id], language, self.translation_catalog, self.translation_policy)
-                        for offer_id in result.card_ids
-                    ],
-                    language=language,
-                    provider="blablador",
-                    status=status,
-                )
-            except LLMBudgetExhausted:
-                interaction.llm_budget_status = "llm_budget_exhausted"
-                interaction.formulator_error_code = "formulator_skipped_budget"
-                LOGGER.warning("query.llm_budget.exhausted", extra={"stage": "formulator"})
-            except FormulatorError as exc:
-                interaction.formulator_error_code = exc.code
-                if budget.exhausted:
-                    interaction.llm_budget_status = "llm_budget_exhausted"
-                LOGGER.warning("query.formulation.failed", extra={"error_code": exc.code})
-        elif provider_failed:
-            interaction.formulator_error_code = "formulator_skipped_provider"
-
-        interaction.formulator_fallback_used = bool(self.blablador or provider_failed)
-        interaction.fallback_used = interaction.fallback_used or interaction.formulator_fallback_used
         return QueryResponse(
             answer=fallback_answer,
             cards=[_card(offer, language, self.translation_catalog, self.translation_policy) for offer in offers],
@@ -1413,43 +1342,33 @@ class QueryService:
             fallback_sentences.append(_fallback_text(language, "water_more_markers"))
         fallback = " ".join(fallback_sentences[:3])
 
-        formulator_method = getattr(self.blablador, "formulate_answer", None) if self.blablador else None
-        if callable(formulator_method) and not provider_failed:
-            try:
-                evidence = build_drinking_water_evidence(
-                    query=query,
-                    language=language,
-                    results=list(results.spoken_results),
-                )
-                if not self.blablador.context_fits(evidence):
-                    raise FormulatorError("formulator_contract_violation")
-                result: ProviderAnswer = await self._call_formulator(
-                    formulator_method, evidence=evidence, budget=budget, interaction=interaction
-                )
-                cards_by_id = {card.id: card for card in cards}
-                interaction.formulator_sentence_count = result.sentence_count
-                interaction.formulator_offer_count = len(result.card_ids)
-                interaction.formulator_language = language
-                return QueryResponse(
-                    answer=result.answer,
-                    cards=[cards_by_id[result_id] for result_id in result.card_ids],
-                    language=language,
-                    provider="blablador",
-                    status="ok",
-                    map_data=map_data,
-                    spoken_result_ids=results.spoken_result_ids,
-                    card_ids=result.card_ids,
-                    map_marker_ids=[item.id for item in map_data.destinations] if map_data else [],
-                )
-            except LLMBudgetExhausted:
-                interaction.llm_budget_status = "llm_budget_exhausted"
-                interaction.formulator_error_code = "formulator_skipped_budget"
-            except FormulatorError as exc:
-                interaction.formulator_error_code = exc.code
-        elif provider_failed:
-            interaction.formulator_error_code = "formulator_skipped_provider"
-        interaction.formulator_fallback_used = bool(self.blablador or provider_failed)
-        interaction.fallback_used = interaction.formulator_fallback_used
+        result = await run_formulator(
+            self.blablador,
+            self.settings,
+            budget,
+            interaction,
+            build_evidence=lambda: build_drinking_water_evidence(
+                query=query,
+                language=language,
+                results=list(results.spoken_results),
+            ),
+            provider_failed=provider_failed,
+        )
+        if result is not None:
+            cards_by_id = {card.id: card for card in cards}
+            interaction.formulator_offer_count = len(result.card_ids)
+            interaction.formulator_language = language
+            return QueryResponse(
+                answer=result.answer,
+                cards=[cards_by_id[result_id] for result_id in result.card_ids],
+                language=language,
+                provider="blablador",
+                status="ok",
+                map_data=map_data,
+                spoken_result_ids=results.spoken_result_ids,
+                card_ids=result.card_ids,
+                map_marker_ids=[item.id for item in map_data.destinations] if map_data else [],
+            )
         return QueryResponse(
             answer=fallback,
             cards=cards,
@@ -1536,45 +1455,35 @@ class QueryService:
         fallback = " ".join(fallback_sentences[:3])
         map_data = toilet_map_data(results.map_results, language, origin=self.hbf_origin)
         _adopt_card_spoken_text(map_data, cards)
-        formulator_method = getattr(self.blablador, "formulate_answer", None) if self.blablador else None
-        if callable(formulator_method) and not provider_failed:
-            try:
-                distances = {record.id: card.distance_meters for record, card in zip(results.card_results, cards, strict=True)}
-                evidence = build_public_toilet_evidence(
-                    query=query,
-                    language=language,
-                    toilets=list(results.spoken_results),
-                    distances=distances,
-                )
-                if not self.blablador.context_fits(evidence):
-                    raise FormulatorError("formulator_contract_violation")
-                result: ProviderAnswer = await self._call_formulator(
-                    formulator_method, evidence=evidence, budget=budget, interaction=interaction
-                )
-                by_id = {card.id: card for card in cards}
-                interaction.formulator_sentence_count = result.sentence_count
-                interaction.formulator_offer_count = len(result.card_ids)
-                interaction.formulator_language = language
-                return QueryResponse(
-                    answer=result.answer,
-                    cards=[by_id[record_id] for record_id in result.card_ids],
-                    language=language,
-                    provider="blablador",
-                    status="ok",
-                    map_data=map_data,
-                    spoken_result_ids=results.spoken_result_ids,
-                    card_ids=result.card_ids,
-                    map_marker_ids=results.map_marker_ids,
-                )
-            except LLMBudgetExhausted:
-                interaction.llm_budget_status = "llm_budget_exhausted"
-                interaction.formulator_error_code = "formulator_skipped_budget"
-            except FormulatorError as exc:
-                interaction.formulator_error_code = exc.code
-        elif provider_failed:
-            interaction.formulator_error_code = "formulator_skipped_provider"
-        interaction.formulator_fallback_used = bool(self.blablador or provider_failed)
-        interaction.fallback_used = interaction.formulator_fallback_used
+        distances = {record.id: card.distance_meters for record, card in zip(results.card_results, cards, strict=True)}
+        result = await run_formulator(
+            self.blablador,
+            self.settings,
+            budget,
+            interaction,
+            build_evidence=lambda: build_public_toilet_evidence(
+                query=query,
+                language=language,
+                toilets=list(results.spoken_results),
+                distances=distances,
+            ),
+            provider_failed=provider_failed,
+        )
+        if result is not None:
+            by_id = {card.id: card for card in cards}
+            interaction.formulator_offer_count = len(result.card_ids)
+            interaction.formulator_language = language
+            return QueryResponse(
+                answer=result.answer,
+                cards=[by_id[record_id] for record_id in result.card_ids],
+                language=language,
+                provider="blablador",
+                status="ok",
+                map_data=map_data,
+                spoken_result_ids=results.spoken_result_ids,
+                card_ids=result.card_ids,
+                map_marker_ids=results.map_marker_ids,
+            )
         return QueryResponse(
             answer=fallback,
             cards=cards,

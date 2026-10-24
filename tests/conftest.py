@@ -15,6 +15,9 @@ import app.config as config
 
 
 CHECKOUT_ROOT = Path(__file__).resolve().parents[1]
+# The suite fixture below replaces the env-file reader; precedence tests use
+# the real reader explicitly on temporary files only.
+REAL_LOAD_ENV_FILE = config._load_env_file
 
 PROVIDER_ENV_NAMES = {
     "REWRITE_PROVIDER",
@@ -39,6 +42,9 @@ PROVIDER_ENV_NAMES = {
     "LENA_TTS_MODEL",
     "SPEECH_SYNTHESIS_PROVIDER",
     "LENA_TTS_PROVIDER",
+    "SPEECH_TRANSCRIPTION_PROVIDER",
+    "LENA_STT_PROVIDER",
+    "MAP_PROVIDER",
     "LENA_ALLOW_LIVE_SMOKE",
 }
 

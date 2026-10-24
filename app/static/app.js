@@ -32,6 +32,8 @@ const state = {
   audioChunks: [],
   listeningMode: null,
   serverSynthesisAvailable: false,
+  // Basiskarte nur bei aktivem Kartenprofil (MAP_PROVIDER); Marker sind lokal.
+  mapTiles: null,
   currentSpeechAudio: null,
   currentSpeechAbort: null,
   currentSpeechCleanup: null,
@@ -83,17 +85,25 @@ function voiceInputAvailable() {
   );
 }
 
-async function loadSpeechConfig() {
+function applyClientConfig(config) {
+  const speech = (config && config.speech) || {};
+  state.serverTranscriptionAvailable = Boolean(speech.server_transcription_available);
+  state.serverSynthesisAvailable = Boolean(speech.server_synthesis_available);
+  const map = (config && config.map) || {};
+  state.mapTiles = map.tile_url_template
+    ? { url: String(map.tile_url_template), attribution: String(map.attribution || "") }
+    : null;
+}
+
+async function loadClientConfig() {
   try {
-    const response = await fetch("/api/speech/config");
+    const response = await fetch("/api/client-config");
     if (!response.ok) return;
-    const config = await response.json();
-    state.serverTranscriptionAvailable = Boolean(config.server_transcription_available);
-    state.serverSynthesisAvailable = Boolean(config.server_synthesis_available);
+    applyClientConfig(await response.json());
     updateVoiceStatusReady();
   } catch (_) {
-    state.serverTranscriptionAvailable = false;
-    state.serverSynthesisAvailable = false;
+    // Fehlende Konfiguration degradiert auf Text ohne Serversprache und Basiskarte.
+    applyClientConfig(null);
   }
 }
 
@@ -149,7 +159,7 @@ async function setLanguage(language) {
         // Freie Text- und Spracheingabe bleiben bei einem Copy-Fehler erhalten.
       }
     }
-    await loadSpeechConfig();
+    await loadClientConfig();
     if (activeViewToken !== state.viewToken) return;
     await speakIntroThenListen();
   })();
@@ -586,10 +596,12 @@ function ensureMap() {
   if (!window.L) return null;
   if (state.map) return state.map;
   state.map = L.map("answerMap", { scrollWheelZoom: false });
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "&copy; OpenStreetMap",
-    maxZoom: 19
-  }).addTo(state.map);
+  if (state.mapTiles) {
+    L.tileLayer(state.mapTiles.url, {
+      attribution: state.mapTiles.attribution,
+      maxZoom: 19
+    }).addTo(state.map);
+  }
   return state.map;
 }
 
@@ -1186,5 +1198,5 @@ void (async () => {
   } catch (_) {
     byId("languageTitle").textContent = "LENA";
   }
-  await loadSpeechConfig();
+  await loadClientConfig();
 })();

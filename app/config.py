@@ -1,7 +1,18 @@
 """Lädt die datei- und umgebungsbasierte Laufzeitkonfiguration von LENA.
 
-Lokale Werte werden aus ``.env`` und anschließend mit höherer Priorität aus
-``.env.local`` gelesen. Das Modul protokolliert oder überträgt keine Geheimnisse.
+Priorität (niedrig nach hoch): eingebaute Defaults < ``.env`` < ``.env.local``
+< Prozessumgebung. Eine CLI-Option wie ``--rewrite-provider`` setzt die
+Prozessumgebung und gewinnt deshalb immer. Die lokalen Dateien werden nur im
+Checkout gesucht, nicht im aktuellen Arbeitsverzeichnis einer Wheel-
+Installation, und mit ``LENA_ENV_FILE_MODE=disabled`` vollständig ignoriert.
+Die Prozessumgebung wird beim Laden nicht verändert.
+
+Externe Dienste besitzen explizite Profile (``REWRITE_PROVIDER``,
+``SPEECH_TRANSCRIPTION_PROVIDER``, ``SPEECH_SYNTHESIS_PROVIDER``,
+``MAP_PROVIDER``). Kein Profil übernimmt stillschweigend Zugangsdaten eines
+anderen Dienstes. Ungültige Werte und nicht unterstützte Variablennamen werden
+als ``configuration_warnings`` (nur Variablennamen, nie Werte) gemeldet.
+Das Modul protokolliert oder überträgt keine Geheimnisse.
 """
 
 from __future__ import annotations
@@ -14,6 +25,17 @@ from pathlib import Path
 
 from .resources import bootstrap_data_root, checkout_root, packaged_bootstrap_data_root
 from .spatial import is_valid_leipzig_coordinate
+
+LLM_PROVIDERS = frozenset({"template", "blablador"})
+TRANSCRIPTION_PROVIDERS = frozenset({"disabled", "blablador", "openai"})
+SYNTHESIS_PROVIDERS = frozenset({"disabled", "edge", "openai"})
+MAP_PROVIDERS = frozenset({"osm", "disabled"})
+# Auf dem Blablador-Endpunkt registrierte STT-Kennung (GET /v1/models,
+# geprüft 14.08. und 23.10.2026). "whisper-large-v3" existiert dort nicht.
+BLABLADOR_TRANSCRIPTION_MODEL = "faster-whisper-large-v3"
+# Früher dokumentierte oder lokal verwendete Namen ohne Leser im Code. Sie
+# werden gemeldet statt still ignoriert (Audit C-27).
+UNSUPPORTED_VARIABLES = ("LENA_LLM_TEMPERATURE", "LENA_LLM_FALLBACK_PROVIDER")
 
 _ENVIRONMENT: ContextVar[dict[str, str] | None] = ContextVar("lena_configuration", default=None)
 
@@ -47,10 +69,16 @@ class Settings:
     speech_transcription_api_key: str | None = None
     speech_transcription_model: str | None = None
     speech_transcription_timeout_seconds: float = 45.0
+    # None = aus den Werten abgeleitet: eigene STT-Werte wählen "openai",
+    # sonst "disabled". "blablador" übernimmt den LLM-Zugang nur ausdrücklich.
+    speech_transcription_provider: str | None = None
     speech_synthesis_base_url: str | None = None
     speech_synthesis_api_key: str | None = None
     speech_synthesis_model: str | None = None
-    speech_synthesis_provider: str = "disabled"
+    # None = aus den Werten abgeleitet: eigene TTS-Werte wählen "openai",
+    # sonst "disabled". Edge-TTS ist ein eigener externer Dienst und wird nur
+    # ausdrücklich gewählt.
+    speech_synthesis_provider: str | None = None
     speech_synthesis_voice: str = "alloy"
     speech_synthesis_response_format: str = "mp3"
     speech_synthesis_timeout_seconds: float = 45.0
@@ -96,21 +124,33 @@ class Settings:
     hbf_longitude: float = 12.38222
     map_provider: str = "osm"
     technical_log_level: str = "INFO"
-    interaction_logging_enabled: bool = True
+    interaction_logging_enabled: bool = False
     interaction_log_path: Path | None = None
     bootstrap_data_dir: Path | None = None
     data_dir: Path | None = None
     runtime_dir: Path | None = None
     curation_path: Path | None = None
+    configuration_warnings: tuple[str, ...] = ()
 
     def __post_init__(self) -> None:
         """Verhindert nicht positive oder nicht endliche Laufzeitgrenzen."""
         object.__setattr__(self, "bootstrap_data_dir", self.bootstrap_data_dir or self.app_root / "data")
         object.__setattr__(self, "data_dir", self.data_dir or self.app_root / "data")
         object.__setattr__(self, "runtime_dir", self.runtime_dir or self.app_root / "runtime")
-        if self.map_provider not in {"osm", "disabled"}:
+        if self.speech_transcription_provider is None:
+            object.__setattr__(self, "speech_transcription_provider", "openai" if (
+                self.speech_transcription_base_url or self.speech_transcription_api_key
+                or self.speech_transcription_model
+            ) else "disabled")
+        if self.speech_synthesis_provider is None:
+            object.__setattr__(self, "speech_synthesis_provider", "openai" if (
+                self.speech_synthesis_base_url or self.speech_synthesis_api_key or self.speech_synthesis_model
+            ) else "disabled")
+        if self.map_provider not in MAP_PROVIDERS:
             raise ValueError("MAP_PROVIDER must be osm or disabled")
-        if self.speech_synthesis_provider not in {"disabled", "edge", "openai"}:
+        if self.speech_transcription_provider not in TRANSCRIPTION_PROVIDERS:
+            raise ValueError("SPEECH_TRANSCRIPTION_PROVIDER must be disabled, blablador or openai")
+        if self.speech_synthesis_provider not in SYNTHESIS_PROVIDERS:
             raise ValueError("SPEECH_SYNTHESIS_PROVIDER must be disabled, edge or openai")
         if self.toilet_auto_promote:
             raise ValueError("TOILET_AUTO_PROMOTE is not supported in the prototype")
@@ -184,7 +224,8 @@ class Settings:
     @property
     def speech_transcription_configured(self) -> bool:
         return bool(
-            self.speech_transcription_base_url
+            self.speech_transcription_provider != "disabled"
+            and self.speech_transcription_base_url
             and self.speech_transcription_api_key
             and self.speech_transcription_model
         )
@@ -284,7 +325,7 @@ def _configured_path(name: str, default: Path) -> Path:
 
 
 def load_settings() -> Settings:
-    """Resolve .env < .env.local < process environment, without global mutation."""
+    """Löst Defaults < .env < .env.local < Prozessumgebung ohne globale Mutation auf."""
     app_root = (checkout_root() or _default_external_root()).resolve()
     values: dict[str, str] = {}
     if os.getenv("LENA_ENV_FILE_MODE", "enabled").strip().casefold() != "disabled":
@@ -298,7 +339,24 @@ def load_settings() -> Settings:
         _ENVIRONMENT.reset(token)
 
 
+def _choice(
+    names: tuple[str, ...], allowed: frozenset[str], default: str, warnings: list[str],
+) -> str:
+    """Liest ein Profil; ungültige Werte fallen auf den sicheren Default zurück."""
+    raw = _optional_env(*names)
+    if raw is None:
+        return default
+    value = raw.casefold()
+    if value not in allowed:
+        warnings.append(f"invalid_value:{names[0]}")
+        return default
+    return value
+
+
 def _settings_from_environment(app_root: Path) -> Settings:
+    warnings: list[str] = [
+        f"unsupported_variable:{name}" for name in UNSUPPORTED_VARIABLES if _getenv(name) is not None
+    ]
     bootstrap_root = bootstrap_data_root()
     runtime_dir = _configured_path("LENA_RUNTIME_DIR", app_root / "runtime")
     data_dir = _configured_path("LENA_DATA_DIR", app_root / "data")
@@ -308,9 +366,7 @@ def _settings_from_environment(app_root: Path) -> Settings:
         bootstrap_curation = packaged_bootstrap_data_root() / "curation" / "social_offers.json"
     default_curation = external_curation if external_curation.is_file() else bootstrap_curation
 
-    provider = (_optional_env("REWRITE_PROVIDER", "LENA_REWRITE_PROVIDER") or "template").lower()
-    if provider not in {"template", "blablador"}:
-        provider = "template"
+    provider = _choice(("REWRITE_PROVIDER", "LENA_REWRITE_PROVIDER"), LLM_PROVIDERS, "template", warnings)
 
     legacy_llm_timeout = _optional_env("BLABLADOR_TIMEOUT_SECONDS", "LENA_LLM_TIMEOUT_SECONDS")
     try:
@@ -376,14 +432,28 @@ def _settings_from_environment(app_root: Path) -> Settings:
     synthesis_base_url = _optional_env("SPEECH_SYNTHESIS_BASE_URL", "LENA_TTS_BASE_URL")
     synthesis_api_key = _optional_env("SPEECH_SYNTHESIS_API_KEY", "LENA_TTS_API_KEY")
     synthesis_model = _optional_env("SPEECH_SYNTHESIS_MODEL", "LENA_TTS_MODEL")
-    synthesis_provider = (
-        _optional_env("SPEECH_SYNTHESIS_PROVIDER", "LENA_TTS_PROVIDER")
-        or ("openai" if synthesis_base_url or synthesis_api_key or synthesis_model else "disabled")
-    ).lower()
-    if synthesis_provider not in {"disabled", "edge", "openai"}:
-        synthesis_provider = "disabled"
+    synthesis_provider = _choice(
+        ("SPEECH_SYNTHESIS_PROVIDER", "LENA_TTS_PROVIDER"),
+        SYNTHESIS_PROVIDERS,
+        "openai" if synthesis_base_url or synthesis_api_key or synthesis_model else "disabled",
+        warnings,
+    )
+    transcription_provider = _choice(
+        ("SPEECH_TRANSCRIPTION_PROVIDER", "LENA_STT_PROVIDER"),
+        TRANSCRIPTION_PROVIDERS,
+        "openai" if speech_base_url or speech_api_key or speech_model else "disabled",
+        warnings,
+    )
+    if transcription_provider == "blablador":
+        # Ausdrücklich gewählte Wiederverwendung des LLM-Zugangs; eigene
+        # STT-Werte haben Vorrang, das Modell hat einen geprüften Default.
+        speech_base_url = speech_base_url or _optional_env("BLABLADOR_BASE_URL", "LENA_LLM_BASE_URL")
+        speech_api_key = speech_api_key or _optional_env("BLABLADOR_API_KEY", "LENA_LLM_API_KEY")
+        speech_model = speech_model or BLABLADOR_TRANSCRIPTION_MODEL
+    map_provider = _choice(("MAP_PROVIDER",), MAP_PROVIDERS, "osm", warnings)
     technical_log_level = (_optional_env("TECHNICAL_LOG_LEVEL") or "INFO").upper()
     if technical_log_level not in {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}:
+        warnings.append("invalid_value:TECHNICAL_LOG_LEVEL")
         technical_log_level = "INFO"
     configured_interaction_path = _optional_env("INTERACTION_LOG_PATH")
     hbf_latitude, hbf_longitude = _hbf_coordinates(51.34556, 12.38222)
@@ -426,6 +496,7 @@ def _settings_from_environment(app_root: Path) -> Settings:
         speech_transcription_api_key=speech_api_key,
         speech_transcription_model=speech_model,
         speech_transcription_timeout_seconds=speech_timeout,
+        speech_transcription_provider=transcription_provider,
         speech_synthesis_base_url=synthesis_base_url,
         speech_synthesis_api_key=synthesis_api_key,
         speech_synthesis_model=synthesis_model,
@@ -498,9 +569,9 @@ def _settings_from_environment(app_root: Path) -> Settings:
         ),
         hbf_latitude=hbf_latitude,
         hbf_longitude=hbf_longitude,
-        map_provider=(_optional_env("MAP_PROVIDER") or "osm").lower(),
+        map_provider=map_provider,
         technical_log_level=technical_log_level,
-        interaction_logging_enabled=_env_bool("INTERACTION_LOGGING_ENABLED", True),
+        interaction_logging_enabled=_env_bool("INTERACTION_LOGGING_ENABLED", False),
         interaction_log_path=(
             Path(configured_interaction_path)
             if configured_interaction_path and Path(configured_interaction_path).is_absolute()
@@ -515,4 +586,5 @@ def _settings_from_environment(app_root: Path) -> Settings:
         data_dir=data_dir,
         runtime_dir=runtime_dir,
         curation_path=_configured_path("LENA_CURATION_PATH", default_curation),
+        configuration_warnings=tuple(dict.fromkeys(warnings)),
     )

@@ -14,7 +14,7 @@ from app.dialogue import DialogType, new_dialog
 from app.interpreter import Need
 from app.main import create_app
 from app.models import Language
-from app.sessions import ConversationSession, SessionStore
+from app.sessions import ConversationSession, SessionPersistenceError, SessionStore
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -266,6 +266,7 @@ def test_session_write_failure_does_not_block_api_or_interaction_record(tmp_path
         blablador_model=None,
         blablador_timeout_seconds=1,
         blablador_max_context_chars=50_000,
+        interaction_logging_enabled=True,
         interaction_log_path=tmp_path / "runtime" / "logs" / "interactions.jsonl",
     )
     app = create_app(settings)
@@ -299,3 +300,65 @@ def test_session_limits_require_positive_integers(tmp_path: Path) -> None:
             blablador_max_context_chars=50_000,
             session_max_entries=0,
         )
+
+
+FINGERPRINT = "fingerprint-current"
+
+
+def _dialog(fingerprint: str = FINGERPRINT):
+    return new_dialog(DialogType.SLEEP_TARGET_GROUP, need=Need.SLEEP, fingerprint=fingerprint, session_timeout_seconds=180)
+
+
+def test_failed_dialog_reservation_is_reported_and_leaves_dialog_answerable(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Audit F-06: Ein Schreibfehler darf keine scheinbar erfolgreiche Reservierung liefern."""
+    store = SessionStore(tmp_path / "sessions.json")
+    session = store.set_dialog(store.create(Language.DE, FINGERPRINT), _dialog())
+    dialog_id = session.dialog.dialog_id
+    monkeypatch.setattr(SessionStore, "_write_all_unlocked", lambda self, sessions: False)
+    with pytest.raises(SessionPersistenceError):
+        store.claim_dialog(session, dialog_id=dialog_id, choice_values=["under_18"])
+    monkeypatch.undo()
+    persisted = SessionStore(store.path).get(session.session_id)
+    assert persisted.dialog.status.value == "awaiting_answer"
+    _, claimed = SessionStore(store.path).claim_dialog(persisted, dialog_id=dialog_id, choice_values=["under_18"])
+    assert claimed.status.value == "processing"
+
+
+def test_new_dialog_requires_persistence_but_clearing_does_not(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture,
+) -> None:
+    store = SessionStore(tmp_path / "sessions.json")
+    session = store.create(Language.DE, FINGERPRINT)
+    monkeypatch.setattr(SessionStore, "_write_all_unlocked", lambda self, sessions: False)
+    with pytest.raises(SessionPersistenceError):
+        store.set_dialog(session, _dialog())
+    with caplog.at_level(logging.WARNING):
+        assert store.set_dialog(session, None).dialog is None
+    assert "session.dialog_clear.not_persisted" in caplog.text
+
+
+def test_api_refuses_an_unpersistable_clarification_with_a_controlled_503(tmp_path: Path) -> None:
+    settings = Settings(
+        app_root=tmp_path, kb_path=KB_PATH, rewrite_provider="template",
+        blablador_base_url=None, blablador_api_key=None, blablador_model=None,
+        blablador_timeout_seconds=1, blablador_max_context_chars=50_000,
+    )
+    app = create_app(settings)
+    blocked_parent = tmp_path / "blocked"
+    blocked_parent.write_text("file blocks directory creation", encoding="utf-8")
+    app.state.service.sessions.path = blocked_parent / "sessions.json"
+    # Leere Anfrage ohne Kategorie eröffnet ohne LLM einen Bedarfsdialog.
+    response = TestClient(app).post("/api/query", json={"query": ""})
+    assert response.status_code == 503
+    assert response.json() == {"detail": "session_persistence_unavailable"}
+
+
+def test_quarantine_files_are_retained_only_up_to_the_limit(tmp_path: Path) -> None:
+    path = tmp_path / "sessions.json"
+    for index in range(5):
+        path.write_text(f"{{broken {index}", encoding="utf-8")
+        SessionStore(path, max_quarantine_files=3).create(Language.DE, "kb-v1")
+    recoveries = sorted(item.read_text(encoding="utf-8") for item in tmp_path.glob("sessions.corrupt.*.json"))
+    assert recoveries == ["{broken 2", "{broken 3", "{broken 4"]

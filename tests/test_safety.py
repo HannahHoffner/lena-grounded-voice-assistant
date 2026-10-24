@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from dataclasses import replace
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -296,7 +297,7 @@ def test_tts_normalizes_112_before_existing_synthesis_provider(
     monkeypatch: pytest.MonkeyPatch,
     language: Language,
 ) -> None:
-    synthesizer = SpeechSynthesizer(_settings())
+    synthesizer = SpeechSynthesizer(replace(_settings(), speech_synthesis_provider="edge"))
     captured: dict[str, str] = {}
 
     async def synthesize_edge(self, text: str, *, language: Language) -> bytes:

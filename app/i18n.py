@@ -22,7 +22,6 @@ from .translation_contract import (
     FactualIntegrityStatus,
     LinguisticReviewStatus,
     OfferTranslationEntry,
-    TRANSLATABLE_FIELDS,
     TranslationFields,
     TranslationRecord,
     TranslationRuntimePolicy,

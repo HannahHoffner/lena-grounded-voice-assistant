@@ -142,10 +142,12 @@ python -m pytest tests/test_drinking_fountains.py tests/test_public_toilets.py -
 
 Im Projekt sind derzeit keine Linter-, Type-Checker-, Coverage- oder
 Dokumentations-Linkprüfungen konfiguriert. Es gibt außerdem keine Browser-End-to-
-End-Suite. Die Python-3.11-Constraints fixieren Versionen, aber noch keine
-Artefakthashes und sind kein universeller Lock für andere Python-Versionen oder
-Plattformen. Ein Hash-Lock und zusätzliche Werkzeuge benötigen eine bewusste
-Projektentscheidung in einem separaten Paket.
+End-Suite. Die Python-3.11-Constraints (native Installation, CI) fixieren Versionen, aber
+keine Artefakthashes. Für den Docker-Weg (CPython 3.12, Linux amd64/arm64)
+existieren hashgesicherte Locks `requirements/runtime-py312.lock` und
+`requirements/build-py312.lock`; der Containerbuild installiert ausschließlich
+daraus. Keiner dieser Stände ist ein universeller Lock für andere
+Python-Versionen oder Plattformen.
 
 Die Dialogoberfläche wird statisch, über API-Integration und mit ausführbaren
 JavaScript-Verhaltenstests geprüft.

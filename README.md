@@ -1,14 +1,31 @@
 # LENA
 
-LENA ist eine lokal betriebene, mehrsprachige Webanwendung zur Suche nach
-Hilfsangeboten für wohnungslose Menschen in Leipzig. Ein statisches Browser-
-Frontend spricht mit einem FastAPI-Backend. Antworten werden ausschließlich aus
-lokal freigegebenen, getrennt geprüften Beständen für soziale Angebote,
-öffentliche Toiletten und feste Trinkwasserbrunnen abgeleitet. Die normale
-Bedarfsauswahl benötigt einen konfigurierten LLM-Interpreter. Nachgelagerte
-LLM-Auswahl und Formulierung haben deterministische Rückfälle; das Modell ist
-keine Wissensquelle. Ohne Interpreter startet die Anwendung, liefert bei
-normalen Anfragen aber nur den technischen Hilfepfad.
+LENA ist ein lokal betriebener, mehrsprachiger **Forschungsprototyp** zur Suche
+nach Hilfsangeboten für wohnungslose Menschen in Leipzig. Ein statisches
+Browser-Frontend spricht mit einem FastAPI-Backend. Fachliche Inhalte stammen
+aus lokal freigegebenen, getrennt geprüften Beständen für soziale Angebote,
+öffentliche Toiletten und feste Trinkwasserbrunnen; das Sprachmodell ist keine
+Wissensquelle. Die Verarbeitung ist in vier Schichten getrennt:
+
+| Schicht | Module | Verantwortung |
+|---|---|---|
+| Datenbasis | `kb_loader`, `curation`, `*_releases`, `official_offer_source` | hashgebundene, manuell freigegebene Bestände |
+| Fachregeln | `candidates`, `candidate_context`, `dialogue_flow`, `result_time`, `result_ordering` | deterministische Kandidatenbegrenzung, Dialoge, Zeit- und Ortsregeln vor jedem Modellaufruf |
+| LLM-Formulierung | `providers/llm`, `llm_stages`, `formulation` | Interpreter, kontrollierte Auswahl, Formulierung aus einem Evidence-Paket; Budget, Retry, Template-Rückfall |
+| Faktenprüfung | `grounding*` | atomare Prüfung jeder Modellantwort gegen das Evidence-Paket; ohne Zugriff auf Provider, Wissensbasis oder Fachregeln |
+
+`app/service.py` orchestriert diese Schichten; `tests/test_architecture_boundaries.py`
+sichert die Importgrenzen. Die Faktenprüfung ist eine **begrenzte regelbasierte
+Kontrolle, keine allgemeine semantische Wahrheitsgarantie**: Sie verwirft unter
+anderem unbelegte Leistungs-, Erhalts-, Besitz- und (DE/EN) Identitätsaussagen
+unabhängig vom vom Modell deklarierten Claimtyp, nicht belegte Zielgruppen-,
+Aufnahme-, Verfügbarkeits-, Zeit-, Preis- und Kontaktangaben. Nicht erkannte
+Satzformen bleiben ungeprüft (siehe [Systemgrenzen](#systemgrenzen)).
+
+Die normale Bedarfsauswahl benötigt einen konfigurierten LLM-Interpreter. Ohne
+ihn startet die Anwendung, liefert bei normalen Anfragen aber nur den
+technischen Hilfepfad. LENA ersetzt keine Notfallversorgung, medizinische oder
+soziale Beratung und kennt weder freie Kapazitäten noch eine garantierte Aufnahme.
 
 Die Anwendung richtet sich an technisch betreuende Personen sowie an Fachkräfte,
 die LENA installieren, Datenänderungen prüfen, Übersetzungen pflegen und die
@@ -23,7 +40,7 @@ Vor einer manuellen Prüfung: [Evaluationsvoraussetzungen](docs/manual-evaluatio
 - kontrollierte optionale LLM-Auswahl nur innerhalb zulässiger Kandidaten sowie satz- und faktengebundene Formulierung
 - Karten und Kartenansicht für Angebote mit verwertbaren Koordinaten
 - lokale Sitzungsverläufe für kurze Folgefragen
-- serverseitige Speech-to-Text- und Text-to-Speech-Schnittstellen
+- optionale serverseitige Speech-to-Text- und Text-to-Speech-Schnittstellen
 - unveränderliche WFS-Releases mit Manifest, Diff, atomarer Aktivierung und Rollback
 - separat freigegebene Releases der amtlichen Leipziger Toiletten-CSV mit
   HBF-Luftlinienordnung und getrennten Primär-, Karten- und Markerlisten
@@ -35,12 +52,74 @@ Vor einer manuellen Prüfung: [Evaluationsvoraussetzungen](docs/manual-evaluatio
 - deterministische Safety-Policy mit zentral gebundener 112, dreistufigem
   Risikosignal und strukturiertem Safety-Dialog
 
-LENA ersetzt keine Notfallversorgung, medizinische oder soziale Beratung und
-kennt weder freie Kapazitäten noch eine garantierte Aufnahme.
+## Voraussetzungen
 
-## Schnellstart
+| Zweck | Voraussetzung |
+|---|---|
+| Empfohlener, geprüfter Weg | Docker mit Linux-Containern (geprüft: Linux/AMD64, Docker Engine 29.9.1 / Desktop 4.96.0), Browser, freier lokaler Port |
+| Erster Docker-Build | Internet zu Docker Hub, `snapshot.ubuntu.com` und PyPI (hashgeprüft); kein Projekt-Secret |
+| Nativer Start | Python 3.11 oder neuer (CI 3.11, Container 3.12.3, Host geprüft 3.14.3) |
+| JavaScript-Tests nativ | Node.js (im Docker-Testziel enthalten) |
+| Normale Textsuche | erreichbarer OpenAI-kompatibler LLM-Endpunkt mit Zugang, z. B. Blablador |
+| Sprache (optional) | Mikrofon/Lautsprecher, Browserfreigabe; für Server-STT/TTS je ein konfigurierter Dienst |
 
-Voraussetzung ist Python 3.11 oder neuer.
+Keine GPU, keine lokalen Modellgewichte, kein Ollama, keine Vektordatenbank und
+kein zusätzlicher Server sind nötig.
+
+## Schnellstart mit Docker (empfohlen)
+
+Aus diesem Verzeichnis (`code/`); Befehle gelten in PowerShell und Bash:
+
+```text
+# 1. Vollständige Tests offline im Container (Python, Packaging, JavaScript)
+docker build --target test -t lena-check .
+docker run --rm --network none lena-check
+
+# 2. Runtime-Image bauen und flüchtig starten (Kernprofil ohne Zugangsdaten)
+docker build --target runtime -t lena:0.2.0 .
+docker run --rm --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m -p 127.0.0.1:8002:8002 lena:0.2.0
+```
+
+Öffne `http://127.0.0.1:8002`; `http://127.0.0.1:8002/api/health` zeigt Daten-
+und Dienststatus. Den Port immer an `127.0.0.1` binden: Es gibt weder
+Authentifizierung noch TLS.
+
+**Textsuche mit LLM:** Zugangsdaten nie in Befehlszeilen oder Dateien im
+Repository schreiben. Eine geschützte Datei außerhalb des Repositorys (Vorlage:
+[`.env.example`](.env.example)) mit `--env-file` übergeben, mindestens:
+
+```text
+REWRITE_PROVIDER=blablador
+BLABLADOR_BASE_URL=https://api.blablador.fz-juelich.de/v1
+BLABLADOR_API_KEY=<eigener Zugang>
+BLABLADOR_MODEL=alias-fast
+```
+
+```text
+docker run --rm --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m --env-file <pfad/zur/lena.env> -p 127.0.0.1:8002:8002 lena:0.2.0
+```
+
+**Persistenter Zustand (optional):** Standardmäßig liegt der Zustand im
+flüchtigen `/tmp` und verschwindet mit dem Container. Für Sessions über Neustarts
+hinweg ein Named Volume einmalig für UID 10001 vorbereiten und einbinden:
+
+```text
+docker volume create lena-state
+docker run --rm --user 0 --entrypoint /bin/sh -v lena-state:/persist lena:0.2.0 -c "mkdir -p /persist/runtime /persist/data && chown -R 10001:10001 /persist && chmod 700 /persist"
+docker run -d --name lena --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m -v lena-state:/persist -e LENA_RUNTIME_DIR=/persist/runtime -e LENA_DATA_DIR=/persist/data -p 127.0.0.1:8002:8002 lena:0.2.0
+```
+
+Sessions sind sensible Daten (Session-ID wirkt als Zugriffsschlüssel). Ein
+Reset in der Oberfläche löscht keine Serverdaten; Sessions verfallen nach 180 s
+beim nächsten Zugriff, beschädigte Sessiondateien werden höchstens dreifach in
+Quarantäne aufbewahrt. Volume bei Bedarf mit `docker volume rm lena-state` löschen.
+Der Store ist für **genau einen Prozess** ausgelegt.
+
+Eine Compose-Datei ist bewusst nicht enthalten: LENA ist ein einzelner Prozess
+ohne eigene Begleitdienste (LLM, STT, TTS und Kartenkacheln sind externe Dienste,
+keine Container dieses Projekts). Compose würde nur die obigen Optionen bündeln.
+
+## Nativer Start
 
 ```powershell
 cd code
@@ -51,19 +130,91 @@ Copy-Item .env.example .env
 python -m app --port 8002
 ```
 
-Öffne `http://127.0.0.1:8002`. Ohne konfigurierten Interpreter startet die
-Anwendung. Freie Anfragen erhalten einen lokalisierten technischen Hinweis mit
-bedingter 112-Angabe und, falls in der Wissensbasis vorhanden, die telefonische
-Hilfebus-Kontaktkarte. Eine fachliche Suche oder Standortempfehlung findet dann
-nicht statt; der mobile Hilfebus erhält dabei keinen Kartenmarker.
+Unter Linux oder macOS: `source .venv/bin/activate` und `cp .env.example .env`.
+Native Starts verwenden dieselben sicheren Defaults wie Docker (kein LLM, keine
+Server-Sprache, kein Quellabruf, kein Interaktionsprotokoll). Priorität:
+Defaults < `.env` < `.env.local` < Prozessumgebung; `--rewrite-provider` gewinnt
+immer. Der Server bindet standardmäßig nur lokal; nicht lokale Hosts erfordern
+`--allow-public`, das weder TLS noch Authentifizierung ergänzt.
 
-Der Server bindet standardmäßig nur lokal. Nicht lokale Hosts erfordern
-zusätzlich `--allow-public`; dieses Flag ersetzt keine TLS-, Authentifizierungs-
-oder Reverse-Proxy-Konfiguration. Query-, STT- und TTS-Eingaben besitzen
-serverseitige, in `docs/configuration.md` beschriebene Grenzen.
+## Betriebsprofile und externe Dienste
 
-Unter Linux oder macOS lautet die Aktivierung `source .venv/bin/activate`; das
-Kopieren der Konfiguration erfolgt mit `cp .env.example .env`.
+Jeder externe Dienst hat ein **explizites Profil**; kein Profil übernimmt
+Zugangsdaten eines anderen stillschweigend. Fehlt etwas, startet LENA trotzdem
+und degradiert kontrolliert.
+
+| Dienst | Profilvariable (Default) | Ohne Konfiguration | Datenempfänger bei Nutzung |
+|---|---|---|---|
+| LLM (Interpreter, Selector, Formulator) | `REWRITE_PROVIDER` (`template`) | kein fachliches Suchergebnis; technischer Hinweis mit 112-Angabe und Hilfebus-Kontaktkarte | LLM-Anbieter: aktuelle Frage, kurze Sessionnutzertexte, begrenztes Evidence-Paket |
+| Server-STT | `SPEECH_TRANSCRIPTION_PROVIDER` (`disabled`; `blablador` nur ausdrücklich) | Browser-Spracherkennung, falls vorhanden, sonst Texteingabe | STT-Anbieter: normalisierte Audioaufnahme |
+| TTS | `SPEECH_SYNTHESIS_PROVIDER` (`disabled`; `edge` oder `openai` ausdrücklich) | kein Vorlesen; Text vollständig nutzbar | TTS-Anbieter (Edge: Microsoft): vorgelesener Antworttext |
+| Kartenkacheln | `MAP_PROVIDER` (`osm`) | `disabled`: Marker ohne Basiskarte | OpenStreetMap, direkt aus dem Browser |
+| Quellabgleich WFS/Toiletten/Brunnen | `*_AUTO_SYNC` (`false`) | gebündelte, hashgeprüfte Bootstrap-Daten | städtische Quellen, nur bei Wartung |
+
+Für Blablador gilt: Der Zugang reicht für die geprüfte **Textsuche**; das
+Modellinventar bot am 23.10.2026 `faster-whisper-large-v3` (STT), aber **kein**
+TTS-Modell (`gpt-4o-mini-tts` → HTTP 404). Sprachausgabe erfordert daher Edge-TTS
+oder einen anderen kompatiblen TTS-Endpunkt.
+
+## Offline-Grenzen
+
+Ohne Netzwerk funktionieren: Start, Healthcheck, Oberfläche, lokale Daten,
+Sessions, Safety-Preflight, technischer Hilfepfad mit Hilfebus-Kontakt,
+alle automatisierten Tests (`docker run --network none lena-check`). **Nicht**
+offline verfügbar: fachliche Freitextsuche (benötigt LLM), Server-STT, TTS,
+Browser-Spracherkennung einiger Browser, OpenStreetMap-Basiskarte sowie jeder
+Docker-Neubau (Basisimage, Ubuntu-Snapshot, PyPI).
+
+## Fehlerdiagnose
+
+| Beobachtung | Ursache / Prüfung |
+|---|---|
+| Jede Anfrage liefert `answer_type=technical_fallback` | LLM-Profil fehlt oder unvollständig: `/api/health` → `external_services.llm` (`missing` nennt fehlende Variablen) bzw. `interpreter_error_code` im Interaktionstrace |
+| Vorlese-/Mikrofonknopf fehlt | Profil `disabled` oder unvollständig: `external_services.speech_synthesis` / `speech_transcription` |
+| „konfiguriert“, aber Dienst scheitert | `python -m app.service_check` bzw. im Container `docker run --rm --env-file <datei> --entrypoint /opt/lena/bin/python lena:0.2.0 -m app.service_check`: prüft Erreichbarkeit und Modellinventar ohne Secrets in der Ausgabe; `--synthesize` sendet zusätzlich „LENA.“ an den TTS-Dienst |
+| `tts.failed error_code=tts_provider_http_error upstream_status=404` im Log | TTS-Modell am Endpunkt nicht vorhanden |
+| HTTP 503 `session_persistence_unavailable` | Runtimeverzeichnis nicht beschreibbar; eine Rückfrage kann ohne gespeicherten Zustand nicht sicher beantwortet werden |
+| `config.warning reason=… setting=…` im Log | ungültiger Profilwert oder nicht unterstützte Variable (nur Name, nie Wert) |
+| `runtime_kb_status=degraded`, `source_status=pointer_error` | kein externer Active-Pointer; paketierter Bootstrap wurde korrekt geladen (Normalfall im Container) |
+
+Das technische Log (stdout) schreibt Ereignisname plus erlaubnislistenbasierte
+Felder, z. B. `request.completed method=POST path=/api/query status_code=200 duration_ms=…`.
+Nutzertexte, Antworten, Session-IDs, Tokens und Provider-Rohantworten werden nie
+technisch protokolliert. Vollständige Frage/Antwort-Paare entstehen nur mit
+`INTERACTION_LOGGING_ENABLED=true`.
+
+## Tests
+
+```text
+python -m pytest                          # vollständige Python-Suite inkl. Packaging
+node --test tests/frontend.test.cjs       # Frontend-Verhaltenstests
+docker run --rm --network none lena-check # beides offline im fixierten Container
+```
+
+Kein Test benötigt Providerzugänge; `tests/conftest.py` sperrt externe
+Netzwerkzugriffe. Ein bewusst dokumentierter `strict xfail`
+(`tests/test_formulation.py`, „minor injuries“) markiert eine bekannte
+Überablehnung und zählt nicht als bestanden. Live-Provider-Läufe sind getrennt
+freizugeben ([Live-Provider-Evaluation](docs/live-provider-evaluation.md)).
+Aktueller Prüfstand: [IMPLEMENTATION_REPORT.md](IMPLEMENTATION_REPORT.md).
+
+## Systemgrenzen
+
+- Forschungsprototyp für isolierten lokalen Betrieb: keine Authentifizierung,
+  kein TLS, keine Rate-Limits, ein Prozess; nicht für öffentlichen Betrieb.
+- Die Faktenprüfung erkennt eine endliche Menge mehrsprachiger Satzformen und
+  Wortklassen. Für Polnisch, Rumänisch und Russisch sind Leistungsaussagen nur
+  über den Konzeptwortschatz belegbar (Fakten liegen deutsch vor); zusätzliche
+  freie Wörter führen dort zur sicheren Ablehnung und damit häufiger zum
+  Template. Kopulasätze ohne unbestimmten Artikel sowie PL/RO/RU-Kopulasätze
+  werden nur durch Konzept-, Zielgruppen-, Alters-, Entgelt- und Zahlenprüfungen
+  begrenzt. Interpreter-`explicit_facts` werden nicht gegen Quellspannen geprüft.
+- Modellantworten sind nicht deterministisch wiederholbar; Modellaliase des
+  Anbieters können sich ändern.
+- Datenweitergaberechte: Für die Trinkbrunnendaten ist keine ausdrückliche
+  Datensatzlizenz ausgewiesen; die konkrete Lizenzzuordnung des WFS-Endpunkts ist
+  nicht abschließend belegt (siehe [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md),
+  [Release](docs/release.md)). Vor öffentlicher Weitergabe klären.
 
 ## Dokumentation
 
@@ -82,15 +233,18 @@ Kopieren der Konfiguration erfolgt mit `cp .env.example .env`.
 | Pfad | Verantwortung |
 |---|---|
 | `app/main.py` | FastAPI-App, Lifecycle und HTTP-Endpunkte |
-| `app/service.py` | Anfrageorchestrierung, Sicherheits- und Fallbackpfade |
+| `app/service.py` | Anfrageorchestrierung: Safety-Entscheidung, Fachregelpfade, Ergebnisprojektion |
+| `app/llm_stages.py` | Aufrufsteuerung der drei LLM-Stufen: Budget, Retry, Fehlerklassen, Template-Rückfall |
 | `app/safety.py`, `app/policy_facts.py` | versionierte Safety-Policy, enger Preflight, zentrale 112 und synthetischer Szenariovertrag |
 | `app/interpreter.py` | versionierter Interpretervertrag, Prompt und minimale Alias-Hinweise |
 | `app/candidate_contract.py`, `app/candidates.py` | strikter Auswahlvertrag und deterministische Kandidatenbegrenzung |
 | `app/llm_selection.py` | kompakter Selectorvertrag, Prompt, Bypass, ID-Validierung und deterministischer Fallback |
 | `app/formulation.py`, `app/grounding.py` | versioniertes Evidence-/Satzschema, Prompt sowie atomare Fakten-, Rollen-, Sprach- und Kartenprüfung |
+| `app/grounding_claims.py`, `app/grounding_constraints.py`, `app/grounding_content.py`, `app/grounding_references.py` | Konzept-, Relations- und claimtypunabhängige Inhaltsprüfung, Evidence-Pools je Angebot |
 | `app/llm_budget.py` | kumulatives monotones Zeitbudget der drei externen LLM-Stufen |
 | `app/dialogue.py`, `app/dialogue_flow.py` | versionierter Dialogzustand, lokalisierte Rückfragen und begrenzte Auflösung |
-| `app/retrieval.py` | isolierte lexikalische Hilfsfunktionen; kein Fallback bei Interpreterausfall |
+| `app/text_normalization.py` | gemeinsame Textnormalisierung des Anfragepfads |
+| `app/retrieval.py` | historischer lexikalischer Retrievalbaseline, nur durch Tests genutzt; kein Fallback bei Interpreterausfall |
 | `app/providers/llm.py` | getrennte Blablador-Aufrufe für Interpretation, Auswahl und geerdete Formulierung |
 | `app/wfs_sync.py`, `app/wfs_releases.py` | WFS-Validierung, Releasevertrag, Promotion und Rollback |
 | `app/infrastructure.py`, `app/toilet_sync.py`, `app/toilet_releases.py` | gemeinsame Infrastrukturmodelle sowie Toiletten-CSV und manuell aktivierte Releases |
@@ -103,7 +257,9 @@ Kopieren der Konfiguration erfolgt mit `cp .env.example .env`.
 | `app/sessions.py` | lokale, zeitlich begrenzte Gesprächszustände |
 | `app/interactions.py` | lokales, vollständiges JSONL-Interaktionsprotokoll des Prototyps |
 | `app/maps.py` | Kartendaten aus kuratierten Ortstypen und Einsatzzeitregeln |
-| `app/speech.py` | serverseitige Transkription und Sprachsynthese |
+| `app/speech.py` | serverseitige Transkription und Sprachsynthese mit geschlossenen Fehlercodes |
+| `app/config.py`, `app/external_services.py`, `app/service_check.py` | Profile und Priorität, secretfreier Dienststatus, aktive Verfügbarkeitsprüfung |
+| `app/logging_setup.py` | technisches Logformat mit Erlaubnisliste der Diagnosefelder |
 | `app/static/` | Browser-Frontend und vendored Leaflet-Dateien |
 | `data/canonical/` | normalisierte Quelle für Wartung/Migration, kein ungefilterter Runtime-Fallback |
 | `data/wfs/releases/`, `data/wfs/active_release.json` | unveränderliche Releases und atomarer Active-Pointer |
@@ -117,8 +273,8 @@ Kopieren der Konfiguration erfolgt mit `cp .env.example .env`.
 # Anwendung starten
 python -m app --port 8002
 
-# Tests ausführen
-python -m pytest
+# konfigurierte externe Dienste aktiv prüfen (ohne Secrets in der Ausgabe)
+python -m app.service_check
 
 # WFS nur prüfen und Änderungen bereitstellen
 python -m app.wfs_sync --check
@@ -166,6 +322,7 @@ Dokumentationsdateien.
 | `GET` | `/api/i18n/copy` | versionierte UI-Texte für eine Sprache |
 | `GET` | `/api/dialogue/copy` | kompatible Teilansicht der Dialogressourcen |
 | `GET` | `/api/speech/config` | verfügbare Speech-Funktionen melden |
+| `GET` | `/api/client-config` | Speech-Verfügbarkeit und Kartenkachelprofil für den Browser |
 | `POST` | `/api/speech/transcribe` | rohe Audiodaten transkribieren |
 | `POST` | `/api/speech/synthesize` | freigegebene Antwort-, Rückfrage- und Angebotstexte des letzten Session-Turns vorlesen |
 | `POST` | `/api/query` | Frage beantworten und Karten liefern |
@@ -194,13 +351,11 @@ Die Quelle wird im Nutzerpfad nicht live abgerufen. Die Betreiberseiten
 veröffentlichen für beide Anschriften strukturierte WGS84-Koordinaten; nur
 diese hashgebundenen Punkte erzeugen die VKKJ-Kartenmarker.
 Providerzugänge sind für den Start optional; normale Bedarfsauswahl benötigt
-jedoch den LLM-Interpreter. Ein Speech-Endpunkt ist nur für den serverseitigen
-Sprachpfad erforderlich.
-Der Anwendungsdefault für Sprachsynthese ist `edge-tts` und benötigt eine
-Netzwerkverbindung. Die sichere `.env.example` und der Docker-Standard lassen
-Sprachsynthese zunächst unkonfiguriert; Edge-TTS kann ausdrücklich aktiviert
-werden. Leaflet wird lokal aus `app/static/vendor/` ausgeliefert; die
-Kartenkacheln werden im Frontend von OpenStreetMap geladen.
+jedoch den LLM-Interpreter. Server-STT und TTS sind standardmäßig deaktiviert und
+werden nur über ihre Profile aktiviert (siehe
+[Betriebsprofile](#betriebsprofile-und-externe-dienste)). Leaflet wird lokal aus
+`app/static/vendor/` ausgeliefert; die Kartenkacheln lädt der Browser bei
+`MAP_PROVIDER=osm` von OpenStreetMap.
 
 Quelle: Stadt Leipzig, WFS Wohnungslosenhilfe,
 [Datenlizenz Deutschland – Namensnennung – Version 2.0](https://www.govdata.de/dl-de/by-2-0).
@@ -280,8 +435,9 @@ ausdrückliche Datensatzlizenz ist nicht ausgewiesen; der Release speichert dahe
   geprüft und nicht als technische Werte im Chat oder Forschungsprotokoll gespeichert.
   Mehrere Serverprozesse werden nicht
   koordiniert.
-- `runtime/logs/interactions.jsonl` enthält bei Standardkonfiguration grundsätzlich
-  Anfrage-Antwort-Paare für Evaluation und Verbesserung. Safety-Eingaben werden
+- `runtime/logs/interactions.jsonl` entsteht nur mit
+  `INTERACTION_LOGGING_ENABLED=true` und enthält dann Anfrage-Antwort-Paare für
+  Evaluation und Verbesserung; es hat keine automatische Löschfrist. Safety-Eingaben werden
   durch einen festen Redaktionstoken ersetzt; gespeichert werden nur minimale
   Statusfelder, nicht Gefahrenbeschreibung, Modellbegründung, Diagnose oder Score. Andere Daten sind nicht
   anonym und die einfache lokale Speicherung ist nicht produktionsreif; Details
@@ -329,8 +485,12 @@ ausgeführt.
 Der Ubuntu-24.04-Docker-Build mit Python 3.12 und hashgesperrten Abhängigkeiten
 wurde am 21.10.2026 auf Linux/AMD64 unter Docker Desktop erfolgreich geprüft:
 vollständige Tests, Paketierung, Healthcheck und Neustart mit leerem temporärem
-Zustand. Details und sichere Startbefehle stehen in
-[Docker und Reproduzierbarkeit](docs/reproducibility.md). Eine Zenodo-DOI
+Zustand. Am 23.10.2026 wurde der Stand nach Umsetzung der Audit-Maßnahmen
+erneut aus einem sauberen Export ohne Cache gebaut und geprüft (1.343 Python-Tests
+bestanden, ein bekannter `xfail`, 19 Frontendtests, Volume/Neustart, Start ohne
+Zugangsdaten, Blablador-Textanfrage, Edge-TTS); siehe
+[IMPLEMENTATION_REPORT.md](IMPLEMENTATION_REPORT.md). Details und sichere
+Startbefehle stehen in [Docker und Reproduzierbarkeit](docs/reproducibility.md). Eine Zenodo-DOI
 existiert für diesen vorbereiteten Stand noch nicht.
 
 ## Weiterentwicklung und Wartung

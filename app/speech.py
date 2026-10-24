@@ -129,12 +129,42 @@ class SpeechTranscriptionTimeoutError(SpeechTranscriptionError):
     code = "stt_timeout"
 
 
+class SpeechTranscriptionNotConfiguredError(SpeechTranscriptionError):
+    """Das STT-Profil ist deaktiviert oder unvollständig konfiguriert."""
+
+    code = "stt_not_configured"
+
+
 class SpeechSynthesisError(RuntimeError):
-    pass
+    """Basisklasse für redigierbare TTS-Fehler ohne Providerinhalte.
+
+    Dieselbe Struktur wie bei STT: ein geschlossener ``code`` und optional der
+    HTTP-Status des Upstreams, nie Antworttext, URL oder Zugangsdaten.
+    """
+
+    code = "tts_failed"
+
+    def __init__(self, message: str = "Speech synthesis failed", *, upstream_status: int | None = None) -> None:
+        super().__init__(message)
+        self.upstream_status = upstream_status
+
+
+class SpeechSynthesisNotConfiguredError(SpeechSynthesisError):
+    """Das TTS-Profil ist deaktiviert oder unvollständig konfiguriert."""
+
+    code = "tts_not_configured"
+
+
+class SpeechSynthesisProviderError(SpeechSynthesisError):
+    """Der externe TTS-Dienst hat abgelehnt oder war nicht erreichbar."""
+
+    code = "tts_provider_http_error"
 
 
 class SpeechSynthesisTimeoutError(SpeechSynthesisError):
     """Kennzeichnet eine abgelaufene TTS-Gesamtgrenze."""
+
+    code = "tts_timeout"
 
 
 @dataclass(frozen=True)
@@ -153,7 +183,7 @@ class SpeechTranscriber:
             SpeechTranscriptionError: Bei fehlender Konfiguration oder Providerfehlern.
         """
         if not self.configured:
-            raise SpeechTranscriptionError("Speech transcription is not configured")
+            raise SpeechTranscriptionNotConfiguredError("Speech transcription is not configured")
         if not audio:
             raise SpeechTranscriptionError("No audio was supplied")
 
@@ -210,9 +240,13 @@ class SpeechSynthesizer:
     settings: Settings
 
     @property
+    def edge_client_installed(self) -> bool:
+        return importlib.util.find_spec("edge_tts") is not None
+
+    @property
     def configured(self) -> bool:
         if self.settings.speech_synthesis_provider == "edge":
-            return importlib.util.find_spec("edge_tts") is not None
+            return self.edge_client_installed
         return self.settings.speech_synthesis_configured
 
     @property
@@ -223,7 +257,7 @@ class SpeechSynthesizer:
 
     async def synthesize(self, text: str, *, language: Language) -> bytes:
         if not self.configured:
-            raise SpeechSynthesisError("Speech synthesis is not configured")
+            raise SpeechSynthesisNotConfiguredError("Speech synthesis is not configured")
         normalized = normalize_tts_text(text, language)
         if not normalized:
             raise SpeechSynthesisError("No text was supplied")
@@ -261,8 +295,11 @@ class SpeechSynthesizer:
                 response.raise_for_status()
         except httpx.TimeoutException as exc:
             raise SpeechSynthesisTimeoutError("Speech synthesis timed out") from exc
+        except httpx.HTTPStatusError as exc:
+            # Z. B. 404 bei einem Endpunkt ohne das konfigurierte TTS-Modell.
+            raise SpeechSynthesisProviderError(upstream_status=exc.response.status_code) from exc
         except httpx.HTTPError as exc:
-            raise SpeechSynthesisError("Speech synthesis request failed") from exc
+            raise SpeechSynthesisProviderError() from exc
 
         if not response.content:
             raise SpeechSynthesisError("Speech synthesis response contains no audio")
@@ -282,7 +319,7 @@ class SpeechSynthesizer:
                 if chunk["type"] == "audio":
                     chunks.append(chunk["data"])
         except Exception as exc:
-            raise SpeechSynthesisError("Edge speech synthesis request failed") from exc
+            raise SpeechSynthesisProviderError("Edge speech synthesis request failed") from exc
 
         audio = b"".join(chunks)
         if not audio:

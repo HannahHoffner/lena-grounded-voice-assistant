@@ -425,6 +425,32 @@ ADMISSION_PATTERNS: dict[Language, tuple[str, ...]] = {
     Language.RO: ("te primeste", "vei fi primit"),
     Language.RU: ("tebya primut", "budesh prinyat"),
 }
+# Dieselben Zusagen mit eingeschobenen Wörtern innerhalb eines Teilsatzes
+# (trennbare Verben, Adverbien): „nimmt dich heute garantiert auf“. Die feste
+# Phrasenliste oben erkennt nur die zusammenhängende Form.
+_GAP = r"(?:\s+[^\s,;.!?]+){0,4}\s+"
+ADMISSION_REGEXES: dict[Language, tuple[re.Pattern[str], ...]] = {
+    Language.DE: (
+        re.compile(rf"\b(?:nimmt|nehmen|nimm)\s+dich{_GAP}auf\b"),
+        re.compile(rf"\bwirst{_GAP}aufgenommen\b"),
+    ),
+    Language.EN: (
+        re.compile(rf"\b(?:take|takes)\s+you{_GAP}in\b"),
+        re.compile(r"\badmits?\s+you\b"),
+    ),
+    Language.PL: (re.compile(rf"\bprzyjm\w*{_GAP}cie\b|\bcie{_GAP}przyjm\w*"),),
+    Language.RO: (re.compile(rf"\bte{_GAP}prim\w*"),),
+    Language.RU: (re.compile(rf"\btebya{_GAP}prim\w*|\bprimut{_GAP}tebya\b"),),
+}
+# Garantiezusagen folgen aus keinem kuratierten Fakt; Kapazität und Aufnahme
+# entscheidet immer die Einrichtung.
+GUARANTEE_STEMS: dict[Language, tuple[str, ...]] = {
+    Language.DE: ("garantiert", "garantie", "auf jeden fall", "ganz sicher"),
+    Language.EN: ("guarantee", "definitely", "for sure"),
+    Language.PL: ("gwarant", "na pewno"),
+    Language.RO: ("garant", "cu siguranta"),
+    Language.RU: ("garantir", "garantiya", "navernyaka"),
+}
 # Ortsbegriffe, die aus einer Erhaltzusage eine Aufnahmezusage machen.
 PLACE_STEMS: dict[Language, tuple[str, ...]] = {
     Language.DE: ("schlafplatz", "platz", "bett", "unterkunft"),
@@ -475,6 +501,10 @@ def claims_admission(text: str, language: Language) -> bool:
     """
     haystack = transliterated(text)
     if _contains_phrase(haystack, ADMISSION_PATTERNS.get(language, ())):
+        return True
+    if any(pattern.search(haystack) for pattern in ADMISSION_REGEXES.get(language, ())):
+        return True
+    if _contains_stem(haystack, GUARANTEE_STEMS.get(language, ())):
         return True
     return (
         _contains_phrase(haystack, PERSONAL_RECEIPT_PATTERNS.get(language, ()))

@@ -48,6 +48,12 @@ _PAYMENT_CONTEXT = {
 }
 
 
+def fee_or_payment_word(word: str, language: Language) -> bool:
+    """True for a single transliterated word that ``fee_claim_matches`` evaluates."""
+    patterns = (*_FEE_WORDS[language], *_PAYMENT_WORDS[language], _PAYMENT_CONTEXT[language])
+    return any(re.fullmatch(pattern.replace(r"\b", ""), word) for pattern in patterns)
+
+
 def fee_claim_matches(text: str, facts: Sequence[Fact], language: Language) -> bool:
     """Omitted fees are fine; explicit free/paid claims require that status."""
     status = next((value for kind, value in facts if kind == "fee_status"), None)
@@ -77,6 +83,12 @@ _OPERATIONAL_WORDS = {
     Language.PL: "jest sa autobus codziennie od do godziny otwarcia telefon zadzwon adres i lub",
     Language.RO: "este sunt autobuz zilnic de la pana ora program telefon adresa si sau contra cost poti plati cu cardul",
     Language.RU: "avtobus ezhednevno s do chasy raboty telefon adres i ili pozvoni po telefonu esche raz",
+}
+
+# Öffentliche, unveränderliche Sicht derselben neutralen Beschriftungen für die
+# claimtypunabhängige Inhaltsprüfung (grounding_content), ohne zweite Liste.
+OPERATIONAL_LABEL_WORDS: dict[Language, frozenset[str]] = {
+    language: frozenset(words.split()) for language, words in _OPERATIONAL_WORDS.items()
 }
 
 
