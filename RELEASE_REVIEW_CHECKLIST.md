@@ -1,11 +1,31 @@
 # Manueller Release-Review – LENA, Stand 26.10.2026
 
-**Status: technisch geprüfter Arbeitsbaum, Review und Versionierung ausstehend.**
+**Aktueller Status: Commit 2462e7d versioniert, vierstufige Messung abgeschlossen; menschlicher Release-Review und manuelle Evaluation ausstehend.**
 Keine uneingeschränkte Abgabe- oder Veröffentlichungsempfehlung. Diese Liste
 ist ein Reviewinstrument; offene Punkte sind keine bereits erteilten Freigaben.
 In diesem Dokumentationsauftrag wurden keine neuen Tests, Builds, Liveaufrufe,
 Commits, Tags oder Pushes ausgeführt. Anwendung, Daten und Konfiguration bleiben
 auf dem geprüften technischen Stand.
+
+## Aktuelles Messergebnis vom 26.10.2026
+
+Die folgende Vorabcheckliste bleibt als Reviewinstrument erhalten; ihre offenen
+Rechte-/Sprach-/Bedien-/Aufbewahrungspunkte sind nicht automatisch abgehakt.
+Commit und einmalige vierstufige Messung sind technisch erledigt. Ergebnis:
+
+| Stufe / Run-ID | Anfragen / Provideraufrufe | Fehlerfälle | Inhaltsabweichungen / kritisch | Vertragsgate / Inhaltsgate |
+|---|---|---|---|---|
+| Interpreter `run_7d26ad94463c490fbdbb8f02122e4c28` | 15 / 15 | 0 | 1 / 0 | bestanden / nicht bestanden |
+| Selector/Formulator `run_4a90aba53e164c4593d14cd2d39f0237` | 16 / 18 | 0 terminale | 0 / 0 | bestanden / bestanden |
+| E2E `run_f61552f6c5fc4e4daaa83024b4163a7d` | 34 / 52 | 2 | 0 / 0 | nicht bestanden / nicht bestanden |
+| Stabilität `run_642870f9c3c746e999acba1c094ca81f` | 18 / 37 | 1 | 0 / 0 | nicht bestanden / nicht bestanden |
+
+E2E/Stabilität zählen 2/1 erholte Formulatorfehler; kein katalogseitig kritischer
+Fehler, sechs Antworttypen dreimal stabil. 54/51 Kriterien und menschliches
+Review offen. Empfehlung für formative manuelle Evaluation mit dokumentierten
+Grenzen, keine vollständige Freigabekette. [Bericht 12](IMPLEMENTATION_REPORT.md#12-abschließende-vierstufige-live-messung-am-commit-2462e7d).
+Die älteren Aussagen „noch nicht gemessen/versioniert“ unten beschreiben den
+Vorbereitungsstand und werden nicht als heutiger Messstatus gelesen.
 
 ## 1. Vorhandene technische Nachweise prüfen
 
@@ -38,10 +58,11 @@ Es ist noch kein veröffentlichtes Evidenzpaket. Tests/Builds vom 23.–25.10.
 behalten ihre ursprünglichen Identitäten und werden nicht auf neue Stände
 umetikettiert.
 
-## 2. Offene vollständige Live-Evaluationsgates
+## 2. Historische Ausgangsgates und Reviewmaßstab
 
-Letzte vollständige Reihe vom 25.10., vor der Blockerkorrektur; seitdem **nicht
-erneut erhoben**. Ein historisch bestandenes Gate ist keine neue Messung des
+Vorherige vollständige Reihe vom 25.10., vor der Blockerkorrektur.
+Sie wurde am 26.10. am Commit 2462e7d neu erhoben (Ergebnisse oben); die
+folgenden Zahlen bleiben historische Ausgangswerte. Ein historisch bestandenes Gate ist keine neue Messung des
 korrigierten Stands. Stufenfehler zählen auch bei anschließend erholtem Retry.
 
 | Stufe | Historisch Anfragen / Provideraufrufe | Fehlerfälle / Inhaltsabweichungen | Reviewauftrag am finalen Stand |
@@ -177,3 +198,20 @@ Groundingvalidator 6. [Live-Verfahren](docs/live-provider-evaluation.md) und
 Reviewperson: __________  Datum: __________  beabsichtigter Commit: __________
 
 Entscheidung / akzeptierte Grenzen / offene Punkte: _________________________
+
+## Nächster Abschluss für die manuelle Erhebung
+
+- [x] Geprüften Code versionieren: Commit 2462e7d; Arbeitsbaum während Messung sauber.
+- [x] Alle vier offiziellen Stufen genau einmal mit unveränderten Limits durchführen;
+  Gates/Fehler/ungeprüfte Kriterien erhalten. Negative Gates bleiben sichtbar.
+- [x] Einzelergebnisse technisch sichten und als Codex-Analyse dokumentieren;
+  dies ist kein menschliches Sprach-/Fachreview.
+- [ ] Menschliche Entscheidung zur formativen Evaluation mit L-01-Scopegrenze,
+  erholten Formulatorfehlern, Relevanz-/Kontakt-/Ausschlussgrenzen dokumentieren.
+- [ ] Zielrechner-Browsercheck durchführen, manuelle Fälle/Kriterien/Reviewer
+  festlegen, Daten/Profil/Evidenz gemeinsam einfrieren und dann erheben.
+- [ ] Thesis mit neuer Messung und anschließend tatsächlich erhobenen manuellen
+  Ergebnissen finalisieren; Rechte/Logginggrenzen unverändert berücksichtigen.
+
+Dieser Auftrag änderte nur Ergebnisdokumentation nach allen Messungen, keine
+Anwendung/Tests/Daten/Providerkonfiguration und keine Gates. Kein Commit/Tag/Push.

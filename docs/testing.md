@@ -2,8 +2,9 @@
 
 ## Technisch geprüfter Stand vom 26.10.2026
 
-Diese Fortschreibung wertet vorhandene Nachweise aus; es wurde dabei kein
-neuer Test- oder Live-Lauf ausgeführt. Archiv:
+Die folgende technische Testübersicht übernimmt vorhandene Nachweise der
+Blockerprüfung; die Unit-Suiten wurden nicht erneut gestartet. Die anschließende
+Vierstufen-Live-Messung am Commit 2462e7d wird getrennt dokumentiert (siehe unten). Archiv:
 `C:/Users/User/AppData/Local/LENA/verification/2026-10-25-blockers/`.
 Anwendungscode/Tests gehören zum Export `source-final/` auf Basis `15a912f`;
 HEAD allein ist nicht der uncommittierte Prüfstand. Manifest und Imagekennungen
@@ -27,9 +28,9 @@ Test. Historische Wort-/Providerreplays bleiben von produktiven Planprüfungen
 getrennt. Die unten genannten früheren Zahlen sind datierte Vergleichsstände.
 
 Die Zehn-Fälle-Live-Stichprobe (neun gültig, eine korrekte Ablehnung) ist keine
-vollständige Evaluation. Frühere negative Gates wurden seit der Blockerkorrektur
-nicht erneut erhoben; menschliche Sprach-/Datenprüfung und manuelle Evaluation
-bleiben offen. Siehe [Release-Review](../RELEASE_REVIEW_CHECKLIST.md).
+vollständige Evaluation. Die zuvor offenen Gates wurden anschließend am
+Commit 2462e7d neu erhoben; auch diese Reihe besteht nicht alle Gates.
+Menschliche Sprach-/Datenprüfung und manuelle Evaluation bleiben offen. Siehe [Release-Review](../RELEASE_REVIEW_CHECKLIST.md).
 
 ## Bisherige Prüfstruktur und historische Nachweise
 
@@ -218,3 +219,13 @@ einzelne Stufe, Flag, unabhängige Umgebungsfreigabe, erwartete Provideridentit�
 und sieben exakte Laufgrenzen. Der vollständige providerfreie Plan wird mit
 `python -m app.multilingual_review live-dry-run --stage all` geprüft; Details
 stehen in [Kontrollierte Live-Provider-Evaluation](live-provider-evaluation.md).
+
+## Getrennter vollständiger Live-Lauf am Commit 2462e7d
+
+26.10.2026: 83 Anfragen/122 Provideraufrufe, alle vier Stufen abgeschlossen.
+Selector/Formulator beide Gates bestanden, Interpreter nur Vertragsgate;
+E2E/Stabilität beide Gates negativ wegen 2/1 erholten Formulatorfehlern.
+Ein Scope-Inhaltsmismatch im Interpreter, kein katalogseitig kritischer Fehler.
+54/51 Kriterien ungeprüft; sechs Antworttypen innerhalb Stabilitätsreihe dreimal
+stabil, kein Nachweis gleicher Texte/globaler Deterministik. Kein neuer Unit-/
+Dockerlauf, keine Codeänderung. [Einzelbefunde und Messgrenzen](../IMPLEMENTATION_REPORT.md#12-abschließende-vierstufige-live-messung-am-commit-2462e7d).

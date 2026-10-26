@@ -14,7 +14,20 @@ Die früheren Angaben bleiben datierte historische Befunde. Damals geprüfte Sui
 Nur Interpreter-Live-Gates bestanden; siehe Ergänzung unten und Bericht 10.
 Die 42 Anforderungen und 13 Fachregeln bleiben unverändert als Register erhalten.
 
-## Aktueller Reviewbezug 26.10.2026
+## Aktuelle Live-Evidenz am Commit 2462e7d, 26.10.2026
+
+Vier offizielle Stufen neu ausgeführt: 83 Anfragen/122 Provideraufrufe. Vertrags-
+und Inhaltsgate Selector/Formulator bestanden; Interpreter Vertragsgate bestanden,
+Inhaltsgate wegen einer Scopeabweichung negativ. E2E/Stabilität wegen 2/1 erholten
+Formulatorfehlern beide Gates negativ, keine automatisch festgestellten
+Inhaltsabweichungen oder kritischen Fehler dort. Alle sechs Antworttypen dreimal
+stabil; 54/51 Kriterien und menschliches Sprach-/Fachreview weiter offen.
+Belege: [Bericht 12](IMPLEMENTATION_REPORT.md#12-abschließende-vierstufige-live-messung-am-commit-2462e7d),
+vier Manifeste/Summaries/JSONL im Archiv `2026-10-26-final-live`.
+Die folgenden 42 Anforderungen/13 Fachregeln bleiben als technischer Vertrag
+erhalten; neue Messung ist keine pauschale Erfüllungsbestätigung.
+
+## Technischer Reviewbezug vor der abschließenden Live-Messung, 26.10.2026
 
 Basis-HEAD `15a912f657a3e47e2c0d96a6a9201a693ea134db` plus uncommittierte
 Blockerkorrekturen. Geprüfter Export `source-final/`, 220 Dateien; SHA-256
@@ -225,3 +238,22 @@ manuelle Fachevaluation, Datenweitergaberechte, N-03-Logging und vorgelagerte
 LLM-/Safety-Ausfallgrenzen. Informationsarme Kontakt- und allgemeine
 Ausschlussantworten explizit bewerten. Keine uneingeschränkte Abgabe- oder
 Veröffentlichungsempfehlung aus Regression oder Stichprobe ableiten.
+
+## Fortschreibung der Traceability durch die Vierstufenmessung am Commit 2462e7d
+
+Die 42/13 Registerzeilen bleiben unverändert vollständig; neue Belege präzisieren
+den aktuellen Erfüllungsgrad, ändern keine Anforderung und keine Fachregel.
+
+| Thesis-/Registerstelle | Neue belegte Aussage | Konkreter Nachweis | Status / notwendige Darstellung |
+|---|---|---|---|
+| R-18, R-20, R-34, R-35; Interpretation/Safety | 15 technisch gültige Interpreterantworten, ein Scopefehler bei `i_pl_acute`; akutes Risiko korrekt erkannt | Interpreterlauf `run_7d26ad94463c490fbdbb8f02122e4c28`, `stage-results.jsonl`; `app/service.py` `_query_core`/`_apply_safety_decision` | teilweise korrekt; Scopegrenze benennen, kein nachgewiesener unterlassener Safety-Stopp |
+| R-19–R-23; kontrollierte Auswahl/Planung | Stufe 2 besteht beide Gates, 16 Fälle/18 Aufrufe; zwei reguläre Formulatorretrys | `run_4a90aba53e164c4593d14cd2d39f0237` Summary/JSONL, stderr; `app/live_evaluation_runner.py` `_run_formulator_scenario` | Messgrenze: Stufe 2 zählt terminale Fehler, erholte Erstversuche nicht fallweise diagnostiziert; keine Halluzinationsquote |
+| R-21/R-23; E2E und Stabilität | 2/1 erholte Stagefehler, jeweils finale Blabladorantwort; E2E/Stabilität beide Gates negativ | `run_f61552f6c5fc4e4daaa83024b4163a7d`, `run_642870f9c3c746e999acba1c094ca81f`, `stage_errors`/`formulator_rejections`; `app/answer_plan.py:230–232` | teilweise korrekt; kein vollständiges Gatebestehen, keine terminalen Ausfälle durch diese Fehler; Schemaursache Toilette mangels Erstplan offen |
+| FR-08, R-32/R-34; Dialoge | e_mobile mit Rückfrage/Grünau erreicht Haupttreffer 19.2; Hilfebus-, Sprachwechsel-/Folgedialoge ohne Stagefehler | E2E-JSONL `e_mobile`, `e_hilfebus`, `e_language_switch`, `e_dialog_continuation`, `e_session_continuation`; vorhandene Dialog-/Interpretertests | gezielt belegt, keine universelle Kontext-/Scopegarantie |
+| R-04/R-08/R-21; Darstellung | Fünf Assessments `length_limited`, keine terminale Längenverwerfung; Relevanz und Natürlichkeit offen | E2E Essen/Beratung/Sessionfortsetzung und Stabilität Essen 1/2; `app/answer_plan.py` `_fit_answer` | teilweise korrekt; informationsarme/überladene Texte und allgemeine Ausschlüsse manuell bewerten |
+| Ergebnis-/Stabilitätsaussagen | Null katalogseitig kritische Fehler; sechs Antworttypen dreimal stabil; Wortlaut/Details variieren, Injection zwischen Stufen unterschiedlich geroutet | alle vier Summaries, Stabilitäts-JSONL; E2E `e_prompt_injection` | keine globale Deterministik oder allgemeine Sicherheit ableiten; 54/51 Kriterien und menschliches Review offen |
+
+Thesis selbst nicht geändert. Neuer Messstand 2462e7d getrennt von älteren
+Messungen und der Zehn-Fälle-Stichprobe berichten. Für formative manuelle
+Evaluation mit dokumentierten Grenzen geeignet; keine uneingeschränkte
+Abgabe-/Veröffentlichungsempfehlung. Belege und Einordnung: Bericht 12.

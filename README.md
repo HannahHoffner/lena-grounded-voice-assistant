@@ -215,9 +215,14 @@ bekannte Starlette-TestClient-DeprecationWarning bleibt sichtbar. Sauberer
 Docker-Neubau, HTTP-Runtime, Blablador und Sessionerhalt nach Neustart und
 Containerersatz sind geprüft. Zehn direkte Live-Formulatorfälle ergaben neun
 gültige Pläne und eine korrekte Ablehnung; das ersetzt keinen vollständigen
-Vierstufenlauf. Frühere negative Gates sind weiterhin offen.
+Vierstufenlauf. Anschließend wurde am Commit `2462e7d` die vollständige
+Reihe neu erhoben: 83 Anfragen/122 Provideraufrufe. Selector/Formulator besteht
+beide Gates, Interpreter nur Vertragsgate; E2E/Stabilität bleiben wegen erholter
+Fehler negativ. Kein katalogseitig kritischer Fehler in dieser Reihe; menschliche
+Prüfung und manuelle Evaluation weiter offen.
 Nachweise: [IMPLEMENTATION_REPORT.md, Abschnitt 11](IMPLEMENTATION_REPORT.md#11-technisch-geprüfter-stand-für-den-manuellen-release-review-26102026).
-Vor Commit und manueller Evaluation: [Release-Review-Checkliste](RELEASE_REVIEW_CHECKLIST.md).
+Neue Live-Bewertung: [Bericht 12](IMPLEMENTATION_REPORT.md#12-abschließende-vierstufige-live-messung-am-commit-2462e7d).
+Vor manueller Evaluation: [Release-Review-Checkliste](RELEASE_REVIEW_CHECKLIST.md).
 Keine uneingeschränkte Abgabe- oder Veröffentlichungsempfehlung.
 
 Der [diagnostische Promptvergleich vom 24.10.2026](docs/formulator-prompt-comparison.md)
@@ -530,7 +535,8 @@ auch der korrigierte Blockerstand den sauberen Neubau, vollständige netzlose
 Containerregression und Runtime-/Volumeprüfung (1476 + 1 XFAIL, JS 19/19).
 Zwei vorausgehende Buildversuche scheiterten am Ubuntu-Snapshotserver; der
 erfolgreiche dritte Versuch änderte keine Locks. Historische Messungen bleiben
-standgebunden; die vollständigen Live-Gates sind nicht erneut durchgeführt.
+standgebunden; der anschließende vollständige Live-Lauf am Commit 2462e7d
+ist separat in Bericht 12 dokumentiert und besteht nicht alle Gates.
 Details und sichere
 Startbefehle stehen in [Docker und Reproduzierbarkeit](docs/reproducibility.md). Eine Zenodo-DOI
 existiert für diesen vorbereiteten Stand noch nicht.

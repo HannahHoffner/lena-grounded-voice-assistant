@@ -110,8 +110,9 @@ insbesondere `final-source-manifest.json`, `native-pytest.xml`,
 Vollständige Build-/Imageidentität: [Bericht 11](../IMPLEMENTATION_REPORT.md#11-technisch-geprüfter-stand-für-den-manuellen-release-review-26102026).
 
 Die folgende historische Vierstufenreihe bleibt unverändert negativ bei
-Selector/Formulator, E2E und Stabilität. Seit den Korrekturen wurde sie **nicht
-erneut durchgeführt**. Sichtbarer Browser-/Mikrofon-/Karten-/Hörnachweis,
+Selector/Formulator, E2E und Stabilität. Beim Abschluss der Blockerprüfung lag
+noch kein neuer vollständiger Lauf vor; anschließend am Commit 2462e7d erhoben
+(siehe Ergänzung unten). Sichtbarer Browser-/Mikrofon-/Karten-/Hörnachweis,
 menschliches Sprach-/Datenreview und manuelle Fachevaluation bleiben offen;
 auch N-03-Logging und Datenrechte sind unverändert. Kein neuer TTS-/STT-Lauf
 bei der finalen Blockerprüfung. Diese Dokumentationsfortschreibung führt keine
@@ -163,3 +164,18 @@ Manifest, Build-/Testlogs, Live-JSONL und `runtime-smoke.json`. Diese sind ein
 lokales Evidenzarchiv und noch kein veröffentlichtes wissenschaftliches Paket.
 Browserbedienung, Mikrofon, tatsächliches Anhören, Kartenkacheln und ein neuer
 STT-Lauf wurden nicht geprüft. Keine menschliche Evaluation oder Abgabefreigabe.
+
+## Vollständiger Live-Nachweis am Commit 2462e7d
+
+26.10.2026, unveränderte Implementierung: 83 Anfragen/122 Provideraufrufe.
+Selector/Formulator besteht beide Gates nach zwei erfolgreichen regulären
+Formulatorretrys (zehn Fälle/zwölf Aufrufe); Interpreter Inhaltsgate wegen einer
+Scopeabweichung negativ. E2E/Stabilität bleiben wegen 2/1 erholten Fehlern
+negativ. Wassererstpläne missachteten den Primärvertrag, ein Toilettenplan das
+Schema; alle drei final über regulären Retry erholt. Keine terminale
+Längenverwerfung; fünf Assessments `length_limited`. Null katalogseitig kritische
+Fehler, keine allgemeine Fakten-/Safetygarantie. Alle sechs Antworttypen innerhalb
+Stabilitätsreihe stabil; Detailtexte variieren. 54/51 Kriterien und menschliche
+Bewertung offen. [Bericht 12](../IMPLEMENTATION_REPORT.md#12-abschließende-vierstufige-live-messung-am-commit-2462e7d)
+enthält Rohbelege, genaue Zählgrenzen und Empfehlung für formative Evaluation.
+Die frühere Zehn-Fälle-Stichprobe bleibt ein separater Nachweis.

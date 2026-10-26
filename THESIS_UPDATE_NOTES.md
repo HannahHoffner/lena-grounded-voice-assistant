@@ -1,6 +1,6 @@
 # Notwendige Thesis-Anpassungen nach der Audit-Umsetzung
 
-Release-Review-Fortschreibung 26.10.2026. Aktuelle notwendige Änderungen stehen in Abschnitt H; Abschnitte A–G bleiben datierte Änderungshinweise und Messhistorie. Ausgangsstand dieses Dokuments: 24.10.2026, unabhängige Messungen vom 23.10.2026. Bezug: Umsetzung der Audit-Befunde im Repository `code/`
+Fortschreibung nach vollständiger Live-Messung am Commit 2462e7d, 26.10.2026. Aktuelle neue Messergebnisse stehen in Abschnitt I, technische Blockerkorrekturen in H; Abschnitte A–G bleiben datierte Änderungshinweise und Messhistorie. Ausgangsstand dieses Dokuments: 24.10.2026, unabhängige Messungen vom 23.10.2026. Bezug: Umsetzung der Audit-Befunde im Repository `code/`
 (Ausgangscommit `597e1f0`, Teilversuch `bd2c65f`, Details in
 [IMPLEMENTATION_REPORT.md](IMPLEMENTATION_REPORT.md)). **Die Thesis wurde nicht
 geändert.** Fundstellen beziehen sich auf den Arbeitsbaum `../thesis/` vom
@@ -163,3 +163,24 @@ Live-Gates getrennt messen, Code/Daten/Modellkonfiguration/Evidenz einfrieren
 und anschließend manuell evaluieren. Noch keine uneingeschränkte akademische
 Abgabe- oder Veröffentlichungsempfehlung; siehe
 [RELEASE_REVIEW_CHECKLIST.md](RELEASE_REVIEW_CHECKLIST.md).
+
+## I. Neue vollständige Live-Messung am Commit 2462e7d, 26.10.2026
+
+Die in H noch ausstehende Vierstufenmessung wurde jetzt genau einmal am
+sauberen Commit ausgeführt. H bleibt der technische Vorabstand; manuelle
+Evaluation und menschliches Sprach-/Fachreview sind weiterhin nicht durchgeführt.
+
+| Thesis-Fundstelle | Notwendige korrekte Ergänzung | Beleg |
+|---|---|---|
+| `Chapters/6Resultsneu.tex:173–233`, technische Liveevaluation | Neue getrennte Reihe: 83 Anfragen/122 Provideraufrufe. Interpreter 15/15, 0 technische Fehler, 1 Scopeabweichung: Vertragsgate ja/Inhaltsgate nein. Selector/Formulator 16/18, 0 terminale Fehler: beide Gates ja. E2E 34/52, 2 erholte Fehler: beide Gates nein. Stabilität 18/37, 1 erholter Fehler: beide Gates nein. Null katalogseitig kritische Fehler in dieser Reihe | Vier neue `manifest.json`/`summary.json` unter `2026-10-26-final-live/runtime/live-evaluations/`; Bericht 12 |
+| Gleicher Abschnitt und Diskussion | Stufe 2 enthält zwei erfolgreiche Formulatorretrys (12 Aufrufe für 10 Fälle), zählt aber nur terminale Fehler. E2E/Stabilität zählen auch erholte Fehler. Keine einheitliche Halluzinations-/Erstversuchsfehlerquote aus den Zählern bilden | `_run_formulator_scenario`, `_run_e2e_scenario` in `app/live_evaluation_runner.py`; stdout/stderr und JSONL |
+| Interpretation/Safety, R-18/R-34 | `i_pl_acute`: Risiko detected, Scope out_of_scope statt in_scope. Nicht-kritische Katalogabweichung; Safety wird in der Anwendung vor Scope verarbeitet. Kein gemessener unterlassener Stopp auf genau diesen Satz | Interpreter-JSONL; `app/service.py` `_apply_safety_decision`/`_query_core` |
+| E2E-/Groundinggrenzen | Toilettenschemafehler und zwei Wasser-Primärreihenfolgefehler werden je durch regulären Retry erholt. Fremde Wasserfakten hier nicht nachgewiesen; erster Wasserakt ließ Primärangebot 22 aus. Schemafehlerfeld Toilette mangels gespeichertem Erstplan nicht rekonstruierbar | E2E `e_toilet`, `e_water`; Stabilität `e_water` Wiederholung 2; `formulator_rejections`; `app/answer_plan.py:230–232` |
+| Stabilität, `Chapters/6Resultsneu.tex:224–233` | Sechs Antworttypen innerhalb der dreifachen Reihe stabil; Details/Wortlaut variieren. Injection wird zwischen E2E und Stabilität unterschiedlich, jeweils erlaubt, geroutet. Keine globale Deterministik. 54/51 Inhaltskriterien ungeprüft | Stabilitäts-Summary/JSONL, E2E-JSONL; `content_evaluation_complete=false` |
+| Anhang Reproduktion/Messidentität | Commit 2462e7d, sauberer Arbeitsbaum bei jeder Stufe, source-manifest SHA256 2259d32533a8cddfba240f69c0489e87ae9e00c9216a1fdcac593e4dbf75a3f4; gleicher Datenfingerprint/Modellprofil. Dokumentation erst nach Messung ergänzt, keine Codeänderung | `source-manifest.json`, `source-2462e7d.zip`, `*-process.json`, `measurement-profile.json`; Bericht 12 |
+| Manuelle Ergebnisplatzhalter und Diskussion | Menschliche Fach-/Sprachbewertung und sichtbare Bedienprüfung bleiben offen. Codex-Sichtung zu Relevanz, langen Hinweisen, Kontakt-/Ausschlussantworten nicht als manuelle Evaluation ausgeben. Formative Evaluation dieses Standes mit dokumentierten Grenzen sinnvoll; keine vollständige Freigabe | Externe `RESULT_ASSESSMENT.md`, Bericht 12.2; Release-Checkliste |
+
+Frühere negative Messungen bleiben standgebunden gültig. Neuer Lauf ist eine
+abschließende Providerregression im bereits verwendeten Katalog, keine unabhängige
+Generalisierungsstudie oder kausale Vorher-/Nachhermessung. Datenrechte,
+N-03-Logging und organisatorische Grenzen bleiben offen. Keine Thesisänderung.
