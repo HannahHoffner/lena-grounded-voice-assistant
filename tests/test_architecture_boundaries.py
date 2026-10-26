@@ -19,7 +19,7 @@ import pytest
 
 APP = Path(__file__).resolve().parents[1] / "app"
 
-FACT_CHECK = {"grounding", "grounding_claims", "grounding_constraints", "grounding_content", "grounding_references"}
+FACT_CHECK = {"grounding", "grounding_claims", "grounding_constraints", "grounding_content", "grounding_references", "answer_plan", "answer_act_texts"}
 DOMAIN_RULES = {"candidates", "candidate_context", "candidate_contract", "dialogue_flow", "result_time", "result_ordering"}
 DATA_BASIS = {"kb_loader", "curation", "official_offer_source", "wfs_releases", "toilet_releases", "drinking_fountain_releases"}
 LLM_ADAPTERS = {"providers"}

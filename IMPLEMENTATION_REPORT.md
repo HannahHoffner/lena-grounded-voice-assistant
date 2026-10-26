@@ -1,6 +1,15 @@
 # Umsetzung des LENA-Audits
 
-> **Unabhängige Nachprüfung vom 23.10.2026:** Die lokale Reproduzierbarkeit wurde bestätigt. Die neuen Live-Stufen bestehen jedoch nur das Interpreter-Gate; E2E und Stabilität sind negativ, einschließlich einer katalogseitig kritischen Abweichung. Grounding und datensparsames Logging sind nur teilweise abgesichert. **Noch keine uneingeschränkte Freigabe als final validierter Abgabestand.** Maßgeblich für den aktuellen Prüfstatus ist Abschnitt 8; die Abschnitte 0–7 dokumentieren den vorherigen Umsetzungsabschluss.
+> **Release-Review-Stand 26.10.2026, Abschnitt 11:** Die nachgewiesenen
+> Vertrags-/Schema-, Längen- und `e_mobile`-Blocker sind korrigiert. Nativ und
+> im netzlosen Container: 1.476 Python-Tests bestanden, ein bekannter strikter
+> XFAIL; jeweils 19/19 JavaScript-Tests. Die Zehn-Fälle-Live-Stichprobe ersetzt
+> keinen vollständigen Vierstufenlauf. Frühere negative Gates sind nicht erneut
+> geprüft. Keine uneingeschränkte Abgabe- oder Veröffentlichungsempfehlung.
+> Der aktuelle Arbeitsbaum wartet auf manuellen Review und Versionierung;
+> [RELEASE_REVIEW_CHECKLIST.md](RELEASE_REVIEW_CHECKLIST.md) enthält die offenen Schritte.
+
+> **Unabhängige Nachprüfung vom 23.10.2026:** Die lokale Reproduzierbarkeit wurde bestätigt. Die neuen Live-Stufen bestehen jedoch nur das Interpreter-Gate; E2E und Stabilität sind negativ, einschließlich einer katalogseitig kritischen Abweichung. Grounding und datensparsames Logging sind nur teilweise abgesichert. **Noch keine uneingeschränkte Freigabe als final validierter Abgabestand.** Abschnitt 8 dokumentiert den damaligen Prüfstatus; Abschnitte 0–10 sind datierte Entwicklungs- und Messhistorie. Maßgeblich für den heutigen Review ist Abschnitt 11.
 
 Messungen: 23.10.2026; Berichtsabschluss und Bewertung des Folgevorschlags: 24.10.2026. Repository `code/`, Branch `maintenance/repository-cleanup`.
 Ausgangspunkt: auditierter Commit `597e1f0` und der darauf folgende, ungeprüfte
@@ -235,7 +244,7 @@ Beim ursprünglichen Umsetzungsabschluss lag noch kein neuer Vier-Stufen-Live-La
   Forschungsbetriebs; dokumentiert.
 - **Löschungen ohne Freigabe** (Cleanup-Plan „nach Rückfrage“/„unklar“): keine.
 
-## 7. Verbleibende Risiken
+## 7. Damalige verbleibende Risiken (23.10.2026)
 
 1. Die Faktenprüfung bleibt endlich: unerkannte Satzformen, Kopulasätze ohne
    unbestimmten Artikel und PL/RO/RU-Kopula; Interpreter-`explicit_facts` ohne
@@ -364,3 +373,369 @@ Die drei Ergebnisdokumente wurden bereits im Rahmen des beauftragten Prüfabschl
 **Praktischer nächster Auftrag:** den geprüften Stand mit eindeutigem Snapshotbezug sichern; ausschließlich N-03 sowie die benannten Betriebs-/Dokumentationswidersprüche beheben; Regression und echte Prozess-/Container-Loggegenprobe durchführen; Browsercheck protokollieren; daraus einen eindeutig bezeichneten Evaluationsstand erstellen. N-01/N-02/N-04 bleiben dabei konkrete Forschungsgrenzen, bis eine getrennte fachliche Entscheidung bzw. strukturelle Bearbeitung erfolgt. Die vorgeschlagenen Commits und Implementierungsarbeiten wurden durch „überlege den Vorschlag“ nicht beauftragt.
 
 **Abschlusskontrolle:** Die 40 bereits archivierten Belegdateien stimmen weiterhin mit ihrem SHA-256-Index überein. Das Traceability-Register enthält weiterhin genau 42 Anforderungen und 13 Fachregeln; Tabellenstruktur, lokale Dokumentlinks und `git diff --check` wurden geprüft. Anwendungscode, Tests, Konfiguration und Daten sind bytegleich zum Messsnapshot; abweichend sind nur `IMPLEMENTATION_REPORT.md`, `THESIS_UPDATE_NOTES.md` und `THESIS_CODE_TRACEABILITY.md`. Deshalb wurden die erfolgreichen Tests nicht allein wegen dieser Markdown-Korrekturen erneut gestartet. Die drei ausschließlich für diese Prüfung angelegten Container und ihr synthetisches Testvolume wurden nach Belegsicherung beendet und entfernt; Prüfimages und Nachweisarchiv bleiben erhalten. Der kanonische HEAD und die Thesis sind unverändert, die Implementierungsänderungen weiterhin uncommittiert.
+
+## 9. Beauftragter Promptvergleich am 24.10.2026
+
+**Neuer Ausgangsstand:** Der Nutzer hat die Implementierung samt Berichten als
+`15a912f657a3e47e2c0d96a6a9201a693ea134db` („Grounding“) committiert.
+Vor dem Vergleich war der Arbeitsbaum sauber; Anwendung, Tests, Konfiguration
+und Daten entsprechen weiterhin dem Nachprüfungssnapshot vom 23.10.
+Die in Abschnitt 8 erwähnte fehlende kanonische Versionierung ist damit für
+diesen Softwarestand nachgeholt. Andere offene Release-/Thesisfragen bleiben.
+
+Auf ausdrücklichen Auftrag wurde ein engerer Formulator-Prompt gegen Prompt 22
+mit identischen synthetischen Belegpaketen geprüft. Der produktive Prompt,
+Vertrag 5, Validator 4, Fachregeln und Daten wurden **nicht** verändert.
+Neue Werkzeuge: `app/prompt_comparison.py`,
+`app/prompt_comparison_cases.py`; 12 Offline-Tests in
+`tests/test_prompt_comparison.py`. Details, Befundbeispiele und Reproduktion:
+[docs/formulator-prompt-comparison.md](docs/formulator-prompt-comparison.md).
+
+Die ursprüngliche Reihe umfasst 60 Pakete (12 Familien × fünf Sprachen),
+zwei Arme und fünf zusätzliche Wiederholungen je Arm: **130 Provideraufrufe**.
+Wegen vollständig fehlender Entwicklungsentwürfe dreier Familien wurde ein
+einmaliger **separater Ergänzungsdurchgang mit 30 Aufrufen** registriert.
+Ursprüngliche Ausfälle bleiben erhalten; kein nachträgliches Ersetzen und
+kein Promptnachbessern zwischen den Erhebungen. Zusätzlich ein Modellinventar-
+GET und eine minimale Completion zur gesonderten Verfügbarkeitsdiagnose.
+
+| Ursprüngliche Reihe je Arm | Bisheriger Prompt | Kandidat |
+|---|---:|---:|
+| Aufrufe / tatsächlich zurückgegebene Entwürfe | 65 / 50 | 65 / 50 |
+| Durch bisherige Parser-/Groundingstrecke akzeptiert | 13 | 22 |
+| Nach Codex belegt und hilfreich, vor dem Gate | 48 | 50 |
+| Nach Codex belegte Entwürfe vom Grounding verworfen | 28 | 22 |
+| Inhaltlich richtige Entwürfe mit Schemafehler | 8 | 6 |
+| Providerfehler ohne Entwurf | 15 | 15 |
+| Nach Codex wesentliche unbelegte Aussage | 1 | 0 |
+
+**Keine unabhängige menschliche Semantik-/Sprachbewertung:** Diese Einzelurteile
+stammen von Codex mit archivierten Begründungen. Im Abschlussteil wurden alle
+50 HTTP-Statuswerte zusätzlich beobachtet: 200; ursprüngliche Providerfehler
+haben keinen gesicherten Upstreamstatus und sind nicht als bewiesenes Rate-Limit
+zu bezeichnen. Der Ergänzungsdurchgang wird getrennt ausgewiesen; er erbrachte
+je 15 Entwürfe, je fünf Gateakzeptanzen, 14/15 nach Codex belegte hilfreiche
+Baseline- und 15/15 Kandidatenentwürfe.
+
+**Ursache/Entscheidung:** Ein besserer Prompt hilft in dieser Stichprobe, behebt
+aber die Vertrags-/Groundingprobleme nicht. Die 14 ursprünglichen Schemafehler
+betreffen jeweils `non-offer sentence requires policy`: eine korrekte
+Unbekanntheitsaussage besitzt im gelieferten Vertrag keine explizite passende
+Policybindung. Weitere korrekte Negations-/Zeitformulierungen werden verworfen.
+Die freie synthetische Leistungszeitbedingung entspricht dabei nicht dem
+kanonischen Runtime-Builderformat; daraus keine allgemeine Aussage über alle
+realen Hilfebuspakete ableiten. N-01 wird durch einen besseren Prompt ebenfalls
+nicht als technisch geschlossen nachgewiesen.
+
+**Keine produktive Übernahme und kein Abschalten der Faktenprüfung.** Der
+Kandidat ist eine dokumentierte Forschungsalternative. Nächste strukturelle
+Maßnahme: fehlende Information als ausdrücklich gebundenen Antwortakt abbilden,
+kontrolliert ausgeben und belegte Fakten-/Paraphrasenpfade gegen unabhängige
+Referenzfälle prüfen. Ein zusätzlicher produktiver LLM-Judge ist durch diesen
+Vergleich nicht als nötig oder überlegen belegt. Dies ist eine begründete
+Nicht-Übernahme, keine behauptete Beseitigung der offenen Auditbefunde.
+
+**Tests:** vollständige native Python-Suite **1355 bestanden, 1 bekannter XFAIL**,
+4795,88 s (ungewöhnlich lange Laufzeit, keine Performanceaussage); 19/19 JS,
+beide JS-Syntaxprüfungen erfolgreich. Neue Offlinefälle prüfen auch die echte
+Parser-/Groundingstrecke, identische Payloads und Grenzen von 80/50 Aufrufen.
+Keine bestehenden Tests verändert, gelöscht oder abgeschwächt. Kein neuer
+Dockerneubau oder Vier-Stufen-E2E-Lauf in diesem Promptvergleich, da keine
+produktiven Abläufe/Abhängigkeiten verändert wurden; keine alten Ergebnisse
+als neue Prüfung ausgeben. Thesis unverändert, keine Commits durch Codex.
+
+Nachweise: `C:/Users/User/AppData/Local/LENA/verification/2026-10-24-formulator-prompts/`.
+Die gemessenen App-Pythonquellen sind dort unverändert kopiert und gehasht.
+
+## 10. Strukturelle Überarbeitung am 25.10.2026
+
+### 10.1 Entscheidung und Umsetzung
+
+Der Nutzer hat die strukturelle Überarbeitung im bisherigen Aufbau beauftragt.
+Interpreter, deterministische Fachregeln/Kandidatenentscheidung, Selector und
+Formulator bleiben. Ein zusätzlicher LLM-Prüfer ist nicht eingeführt.
+Der produktive Formulator liefert nun **Vertrag 6 / Prompt 23**: einen
+geschlossenen Plan statt sichtbarer Modellprosa. Evidence bleibt Version 4,
+Validator wird Version 5. `app/answer_plan.py` prüft und rendert `facts`,
+`contact`, `unknown` und `boundary`; `app/answer_act_texts.py` enthält feste
+fünfsprachige Akte und Labels. `app/providers/llm.py.formulate_answer` akzeptiert
+ausschließlich diesen Vertrag, auch bei einem Retry.
+
+Das ist die strukturelle Lösung für N-01/N-02: Beliebige Leistungsprosa kann
+nicht mehr durch Wahl eines Claimtyps oder einer unbekannten Wortform passieren.
+Richtige Quellwerte müssen nicht mehr eine lexikalische Paraphrasenprüfung
+überstehen. Unbekannte Kennungen, fremde Fakten, freie Textfelder und erfundene
+Gründe werden abgelehnt. Die Ausgabe stammt aus demselben Faktenpaket;
+relevante Zugang-/Alter-/Zielgruppen-/Zeitbedingungen werden serverseitig
+mitgeführt. Mehr als 600 Zeichen führen zum atomaren Rückfall, nicht zum
+Abschneiden von Bedingungen. Unbekanntheitsakte behaupten keine globale
+Abwesenheit aus fehlenden typisierten Feldern; bekannte explizite Felder sperren
+den zugehörigen Akt. Statische Daten garantieren keine aktuelle Aufnahme.
+
+Bewusster Preis: weniger freie und teilweise aufzählende Sprache. Der Renderer
+beurteilt keine beliebigen Sätze semantisch; er verhindert deren produktive
+Ausgabe. Datenaktualität, Interpretation, Auswahl und sprachliche Eignung bleiben
+eigene Qualitätsfragen. Keine allgemeine Wahrheits- oder Sicherheitsgarantie.
+
+Forschungsartefakte bleiben erhalten: Vertrag 5, Prompt 22, lexikalischer
+Validator und die Promptstudie. Deren vier verbatim Providerreplays laufen jetzt
+ausdrücklich über den historischen `ComparisonProvider`, ohne produktive Route.
+Andere historische Direktprüfungen bleiben bestehen. Neue produktive Tests
+prüfen Vertrag 6, auch die Ablehnung von Freitext mit vorgetäuschter Version 6.
+Keine Fachregel wurde abgeschwächt; das Register R-01–R-42 / FR-01–FR-13 bleibt
+erhalten. Keine Daten, Quellen, Secrets oder historischen Implementierungen
+gelöscht; keine Thesisänderung und kein kanonischer Commit durch diesen Auftrag.
+
+### 10.2 Prüfstand und Regression
+
+Basis im kanonischen Repository: `15a912f657a3e47e2c0d96a6a9201a693ea134db`.
+Geprüfter eigenständiger Git-Snapshot außerhalb des Repositories:
+`e8b5181e5d913d55b4fd36dde9f056c7aadced7c`.
+219 Quelldateien im Manifest; SHA-256 des `source-manifest.json`:
+`2da6d08c95b4ec3d3e0ea784fbc0c61e080b3a678d1ad3afd3715fa2e83d4f7e`.
+Die danach ergänzte Dokumentation ändert den geprüften Anwendungscode nicht.
+
+| Prüfung | Ergebnis |
+|---|---|
+| Neue gezielte Plantests | 64 parameterisierte Tests; fünf Sprachen, Fakten/Unbekanntheit, Bindungen, Bedingungen, Kontakte, Policies, Längen und produktiver Provider |
+| Vollständige native Python-Suite | 1419 passed, 1 bekannter strikter XFAIL, 1 bekannte Starlette-Deprecation; 408,24 s |
+| Native JS-Suite | 19/19 bestanden; beide JS-Dateien ohne Syntaxfehler |
+| Docker-Testbuild | `--pull --no-cache --target test`, erfolgreich, 94,50 s |
+| Vollständige Suite im neuen Container, `--network none` | 1419 passed, 1 XFAIL; JS 19/19; compileall, pip check und JS-Syntaxprüfung erfolgreich |
+| Runtimeimage aus derselben Buildkette | erfolgreich gebaut, SHA-256 `ea54e0b3a57fc20aae75944313b42452c9a200526a4859818170b4d0daff7920` |
+| Start ohne Zugangsdaten | Healthcheck gesund, 28 soziale Angebote geladen, technischer Hilfepfad; TTS kontrolliert 503 |
+| Persistenz und Ports | Loopback-Port erreichbar; gleiche Session nach Neustart und Containerwechsel, Historienlängen 1/2/3; read-only Container mit schreibbarem Runtimevolume |
+| Drei echte HTTP-Textanfragen | Toilette: Template-Ergebnis; Beratung und Essen: belegte Ergebnisse mit Provider `blablador` |
+| Edge-TTS | 200, MPEG mit 147888 Byte gespeichert; fremder Sitzungstext 409 |
+
+Ein erster vollständiger Lauf hatte sechs Fehler bei der Umstellung historischer
+Testantworten auf den neuen Vertrag (`native-pytest-initial.xml`). Diese wurden
+durch explizite Legacy-Replayabgrenzung bzw. aktuelle Plan-Fixtures behoben;
+keine Tests gelöscht oder erwartete Negativfälle gelockert. Anschließend liefen
+die vollständigen Suiten erfolgreich. Ein irrtümlicher nativer Node-Aufruf mit
+einem nicht passenden Dateimuster führte zunächst null Tests aus; maßgeblich ist
+der danach korrekt ausgeführte Lauf `node --test tests/frontend.test.cjs`, 19/19.
+Der XFAIL betrifft weiterhin „minor injuries“ im historischen Wortvalidator und
+ist kein bestandener Test des neuen Renderers.
+
+Health `ok` bedeutet nicht ausschließlich aktivierte Datenreleases:
+`runtime_kb_status=degraded`, `source_status=pointer_error`,
+`runtime_source=packaged_bootstrap` beim frischen Runtimevolume. Der mitgelieferte
+und im Fingerprint identifizierte Bootstrap wird verwendet; kein fremder
+aktueller Datenstand behauptet. Ein dauerhaft kuratierter Releasebetrieb bleibt
+eine gesonderte Datenbereitstellung.
+
+### 10.3 Neue Live-Reihe, keine nachträglich gelockerten Gates
+
+Unveränderter synthetischer Katalog 3; Runtimefingerprint
+`9471e7051acb8d4e0fc62d59c1d74bb54f72cec1c28b6cffe291ac15499ec0d9`.
+Alle Stufen verwenden effektiv `alias-fast`, vom Dienst als
+`01_-_GPT-OSS-120b_-_an_open_model_released_by_OpenAI_in_August_2025` bestätigt.
+4096 Tokens, Kontextlimit 50000 Zeichen, Zeitlimits Interpreter/Selector/
+Formulator 15/30/30 Sekunden, gemeinsames Budget 45 Sekunden. Kein Tuning
+zwischen Stufen und keine Wiederholung auf Grün. Die zusätzlichen Bezeichnungen
+`LLM_*_MODEL` im Prüfhelfer sind keine vom Programm gelesenen Overrides; die
+effektive gemeinsame Modellzuweisung kommt aus `BLABLADOR_MODEL=alias-fast`
+und ist in den Manifesten bestätigt.
+
+| Stufe / Run-ID | Anfragen / Provideraufrufe | Fehlerfälle / Inhaltsabweichungen | Ergebnis |
+|---|---|---|---|
+| Interpreter `886821fadd7a45e692e73047f197fc9e` | 15 / 15 | 0 / 0 | beide Gates bestanden |
+| Selector/Formulator `0aacfccc428e4eaeb71e1404b62d0941` | 16 / 21 | 4 / 0 | beide Gates negativ |
+| E2E `72e201130f0a489396e61922ff4fb9af` | 34 / 59 | 6 / 1 | beide Gates negativ |
+| Stabilität `eb09267067a44ba08998ed8fe3f2f17f` | 18 / 40 | 8 / 0 | beide Gates negativ |
+
+Gesamt 83 Anfragen und 135 Provideraufrufe. Die CLI-Prozessrückgaben waren 0,
+weil die Erhebung abgeschlossen wurde, **nicht**, weil die Gates bestanden.
+Die späteren Stufen wurden nach negativen Gates nur diagnostisch ausgeführt;
+keine automatische Freigabekette behaupten. Fehlerfälle zählen auch erholte
+Retrys; keine Halluzinationsquote aus dieser Zahl ableiten.
+
+Konkrete Grenzen: In Stufe 2 waren DE-Injection, PL- und RO-Grundantwort
+Schemafehler, die RU-Grundantwort eine Vertragsverletzung. Die konkreten freien
+Rohantworten der Schemafehler sind nicht gespeichert; eine genaue Ursache ist
+damit nicht belegt. Bei `e_mobile` lieferte E2E zweimal `out_of_scope` und
+verfehlte das erwartete Hauptresultat. Das ist eine vorgelagerte Bedarfs-/
+Routingabweichung, keine neu erfundene Leistung im Renderer. Keine katalogseitig
+kritische Abweichung in dieser Reihe; daraus keine allgemeine Sicherheit ableiten.
+Sechs von sechs Antworttypen waren bei dreifacher Wiederholung stabil;
+54 E2E-/51 Stabilitätskriterien und das unabhängige Sprachreview bleiben offen.
+
+### 10.4 Belege, Dokumentation und offene Punkte
+
+Lokales Archiv:
+`%LOCALAPPDATA%/LENA/verification/2026-10-25-answer-acts/`.
+Wesentlich: `source-manifest.json`, separater Snapshot `source/`,
+`native-pytest.xml`, `native-tests.log`, `native-js-tests.log`,
+`docker-build-test.log`, `container-tests.log`, `docker-build-runtime.log`,
+`runtime-smoke.json`, `controlled-answer.mp3` und die vier Verzeichnisse unter
+`live-runtime/live-evaluations/` mit Manifest/Summary/JSONL.
+Das lokale Archiv ist noch kein veröffentlichtes Evidenzpaket.
+
+README, Architektur-/Datenfluss-/Konfigurationsdokumentation,
+Evaluationsvoraussetzungen, historische Vergleichsdokumentation, Traceability
+und Thesishinweise wurden konsistent fortgeschrieben. `.env.example` ist
+unverändert richtig: keine neuen Dienste oder Variablen erforderlich.
+Kein Compose ergänzt; weiterhin ein Prozess ohne eigenen Begleitdienst.
+
+Bewusst offen: neues UI-/Mikrofon-/STT-/Karten-/Hörreview, sprachliche Bewertung,
+manuelle Fachevaluation, Datenrechte und abschließende Versionierung des
+Abgabe-/Thesis-Evidenzpakets. N-03 (rohe URL-/Uvicorn-Querylogs) und N-04
+(vorgelagerte Interpretations-/Safety-/Timeoutgrenzen) sind nicht durch den
+Renderer behoben. Lange NOTE-Fakten können nicht frei gekürzt werden und
+deshalb zum Rückfall führen; sprachliche Qualität kann durch wörtliche
+Quellwerte beeinträchtigt sein. Keine vollständige Neuordnung der Quelldaten
+oder zusätzliche LLM-Prüfinstanz als lokaler Workaround eingeführt.
+
+**Bewertung:** Reproduzierbar lokal startbar unter den dokumentierten
+Docker-/Providerbedingungen. Die strukturelle Prosa-Groundinglücke ist im
+produktiven Format geschlossen; die Live-Ergebnisse rechtfertigen noch keine
+uneingeschränkte Empfehlung als final validierten Abgabestand. Vor der manuellen
+Evaluation insbesondere Schema-/Längenrückfälle und `e_mobile` priorisieren,
+dann unverändert gemessenen Stand versionieren und Evaluation einfrieren.
+
+## 11. Technisch geprüfter Stand für den manuellen Release-Review, 26.10.2026
+
+### 11.1 Identität und Reichweite
+
+Grundlage ist die vollständig gelesene technische Übergabe
+`C:/Users/User/AppData/Local/LENA/verification/2026-10-25-blockers/HANDOVER.md`
+und deren vorhandene Logs/XML/JSON. In dieser Dokumentationsfortschreibung
+wurden **keine neuen Tests, Builds oder Provideraufrufe ausgeführt**. Anwendung,
+Tests, Daten, Docker und Providerkonfiguration werden nicht geändert. Keine
+Thesisänderung, kein Commit, Tag oder Push.
+
+Der kanonische HEAD bleibt `15a912f657a3e47e2c0d96a6a9201a693ea134db`;
+er allein enthält die nachfolgenden uncommittierten Verbesserungen nicht.
+Der geprüfte Export `source-final/` enthält 220 Dateien. SHA-256 der Datei
+`final-source-manifest.json`:
+`a393b01071b7c70f0dd1a6a0c6db523bae811006a742ad22853314377aab6917`.
+Der Vergleich vor der heutigen Dokumentation fand keine Abweichung. Die
+heutigen Dokumentationsänderungen sind zusätzlich auszuweisen; der alte Hash
+wird dadurch nicht als Hash eines künftigen vollständigen Commits ausgegeben.
+Runtime-KB-Fingerprint:
+`9471e7051acb8d4e0fc62d59c1d74bb54f72cec1c28b6cffe291ac15499ec0d9`.
+
+| Vertrag / Prüfstand | Aktuell |
+|---|---|
+| Interpreter Vertrag / Prompt | 4 / 12 (`app/interpreter.py`) |
+| Selector Vertrag / Prompt | 1 / 3 (`app/llm_selection.py`) |
+| Evidence | 4 (`app/formulation.py`) |
+| Formulator Vertrag / Prompt | 6 / 24 (`app/formulation.py`, `app/answer_plan.py`) |
+| Groundingvalidator | 6 (`app/grounding.py`) |
+
+### 11.2 Tatsächlich umgesetzte Blockerkorrekturen
+
+| Blocker und belegte Ursache | Umsetzung und konkreter Beleg | Verbleibende Grenze |
+|---|---|---|
+| Schema: Rohantworten nutzten `fact`/`offer` statt `facts`, Angebotsakte enthielten unzulässige Policies | `app/answer_plan.py:64` (`formulator_plan_prompt`) ergänzt das echte Pydantic-Schema; `app/formulation.py` Prompt 24 enthält Enumregeln und Strukturbeispiel. `app/providers/llm.py:356` nutzt diesen Prompt; `tests/test_answer_plan.py:121,212` prüfen echte Adapterverdrahtung und Ablehnung falscher Akte/Policies | Ein korrekt beschriebenes Schema garantiert keine vollständige Modellbefolgung; Parser bleibt strikt |
+| Interne Capability-/Typfakten waren als auswählbare Ausgabefakten angeboten und wurden dann abgelehnt | `app/answer_plan.py:81` (`planner_evidence_payload`) bietet nur renderbare Referenzen; Validierung weiter gegen das unveränderte Originalpaket. `tests/test_answer_plan.py:121` prüft Payload und Quellwertbindung | Keine neue Wissensquelle und keine freie Faktenerfindung; Auswahlqualität bleibt eigene Frage |
+| Lange belegte Fakten oder mehrere lange Unbekanntheitsakte überschritten 600 Zeichen und lösten Gesamtrückfall aus | `app/answer_plan.py:151,170,192` validiert zuerst alle Akte und wählt ganze Fakten samt Pflichtbedingungen; reserviert kurze Akte und erhält Karten. `length_limited` / `emitted_fact_ids` machen Darstellung sichtbar. `tests/test_answer_plan.py:97,163,182,200` prüfen Bedingungen, fünf Sprachen, lange Namen und ungültige späte Referenzen | Passt keine Faktengruppe, bleibt ein Kontaktakt; dieser kann informationsarm sein. Unzulässige Pläne werden weiterhin atomar zurückgewiesen |
+| `e_mobile`: Kübel wurde teils als fachfremd interpretiert; unklare Kontakt-/Dienstintention und Folgedialog konnten passende Teams verlieren | Interpreterprompt 12 und `app/interpreter.py:334` (`resolve_named_lookup`) ergänzen nur vollständige kuratierte Namenssuchen; Aufruf nach Safety, außerhalb offenen Dialogs in `app/service.py`. `app/candidates.py:66`, `app/dialogue_flow.py:49,162` erhalten Dienstkontext und lösen benannten Kontakt als Verweisung. `tests/test_interpreter.py:755,769,777`, `tests/test_candidates.py:240`, `tests/test_dialogue.py:79,104,344` | Keine freie Wort-Scope-Übersteuerung, keine erfundene Eignung. Zusätzliche Wörter, unbekannte Namen und akute/ungeklärte Gefahr passen nicht auf den begrenzten Lookup. Andere LLM-Interpretationsfehler bleiben möglich |
+
+Bestehende A1/Schoppi-Kontaktleistung bleibt spezifisch erhalten; ein Alias
+belegt weder Drogenkonsum noch Alter. Bei Kübel folgt nach Grünau nur Team
+19.2 mit ausdrücklichem Vorbehalt fachlicher Zuständigkeit. Fachregeln wurden
+nicht gelockert. Das vollständige Register mit 42 Anforderungen und 13 Regeln
+steht in [THESIS_CODE_TRACEABILITY.md](THESIS_CODE_TRACEABILITY.md).
+
+### 11.3 Vorhandene vollständige Test- und Buildnachweise
+
+Alle nachstehenden Dateien liegen unter dem oben genannten Archiv
+`2026-10-25-blockers/`; das Verzeichnis wurde am 25.10. begonnen, die finalen
+Prüfungen am 26.10. abgeschlossen. Es ist ein lokales Belegarchiv, kein bereits
+veröffentlichtes wissenschaftliches Evidenzpaket.
+
+| Prüfung / tatsächlich verwendeter Befehl | Ergebnis | Rohbeleg |
+|---|---|---|
+| Nativ Windows / Python 3.14: `python -m pytest -o addopts='' -q --junitxml=<externer-pfad>/native-pytest.xml` | **1476 bestanden, 1 strikter historischer XFAIL, 0 Fehler**, 282,63 s; 1 bekannte TestClient-DeprecationWarning | `native-tests.log`, `native-pytest.xml` (1477 Fälle einschließlich XFAIL) |
+| Nativ: `node --test tests/frontend.test.cjs` | **19/19**, 0 Fehler, 0 übersprungen; 200,3357 ms | `native-js-tests.log` |
+| Letzte gezielte Vertrag/API-, Domänen- und Lookupprüfungen | 171/171, 295/295, 13/13; keine Fehler | `targeted-final.xml`, `targeted-domain-final.xml`, `targeted-lookup-safety-fixed.xml` |
+| Sauberer Export: `docker build --pull --no-cache --target test -t lena-blockers-test .` | Dritter Versuch erfolgreich; zwei frühere Versuche scheiterten an HTTP 503/Verbindung zum Ubuntu-Snapshotserver. Quellen und Locks unverändert | `docker-build-final-test.log`, `docker-build-final-test-retry.log`, `docker-build-final-test-third.log` |
+| `docker run --rm --network none --label lena.verification=blockers-20261026 lena-blockers-test` | Python 3.12: **1476 bestanden, 1 XFAIL, 0 Fehler**, 215,66 s; dieselbe DeprecationWarning. JS **19/19**; compileall, pip check und beide JS-Syntaxprüfungen bestanden | `docker-final-tests.log` |
+| Runtime aus derselben frischen Buildkette: `docker build --target runtime -t lena-blockers-runtime .` | erfolgreich; kein zweiter No-Cache-Neubau behauptet | `docker-runtime-final-build.log` |
+| Abschließende statische Kontrolle | 220 Exportdateien hashgleich; `git diff --check` bestanden; keine defekten relativen Dokumentlinks; Vergleich gegen einen tatsächlich konfigurierten Secretwert ohne Treffer | `final-checks.json` |
+
+Testimage Linux/AMD64:
+`sha256:b5cd125f952f4e04df48c18365a1a6fa09d4599895837abd6e58c436a73d0f40`.
+Runtimeimage Linux/AMD64:
+`sha256:d7f18e75c11eb830448035242addf79e13c9a221e24267a5d9b70570a62efa0d`.
+Kein Nachweis für ARM64/macOS oder eine Mindesthardware. Der bekannte strikte
+XFAIL `test_known_limitation_non_target_minor_should_not_trigger_target_check`
+in `tests/test_formulation.py:1018` betrifft `minor injuries` im historischen
+Wortvalidator und zählt nicht als bestanden. Die Starlette-TestClient-Warnung
+weist auf den veraltenden httpx-Testtransport hin; sie wurde nicht unterdrückt.
+Zwischenläufe/Prüfskriptfehler bleiben in den ursprünglichen Logs erhalten.
+
+### 11.4 Live-Stichprobe und gesonderte Runtimeprüfungen
+
+Die **zehn direkten Formulatorfälle** in `verified/results.json` ergaben neun
+gültige Pläne, eine korrekte Ablehnung `formulator_invalid_fact` bei
+`f_ru_injection` und null Schemafehler. Der abgelehnte Plan wollte eine nicht
+zugelassene `out_of_scope_boundary` verwenden. Es gab pro Fall einen direkten
+Versuch, keinen Aufruf der vollständigen Stufe 2 mit deren Anwendungs-Retry.
+`verified/calls.json` enthält die synthetischen Request-/Response-Bodies ohne
+Authorizationheader. Modellalias `alias-fast`, im Antwortfeld bestätigt als
+`01 - GPT-OSS-120b - an open model released by OpenAI in August 2025`;
+4096 Tokens, 50000 Kontextzeichen, Stufenlimits 15/30/30 s, Budget 45 s.
+Das ist kein repräsentativer Erfolgsanteil und kein bestandenes Live-Gate;
+Einzelergebnisse: [Live-Dokumentation](docs/live-provider-evaluation.md#zehn-fälle-stichprobe-vom-26102026).
+
+Getrennt davon enthält `verified/` gezielte E2E-Diagnosen mit realem Blablador
+für Essen, WC, Wasser und drei unabhängige zweistufige `e_mobile`-Sitzungen.
+24 Provideraufrufe sind die Summe dieser gesamten Diagnose, **nicht** die Zahl
+der zehn direkten Formulatoraufrufe. Bei `e_mobile` sind lokale Rückfrage und
+Verweisung absichtliche fachliche Templateabschlüsse, keine LLM-Ausfälle.
+
+`runtime-final-results.json` / `runtime-final.log` belegen zusätzlich echten
+HTTP-Zugriff auf das finale Runtimeimage: Oberfläche, Docker-Healthcheck,
+Portbindung ausschließlich an 127.0.0.1, schreibgeschütztes Root-Dateisystem,
+eigenes Volume für UID 10001, Start ohne Schlüssel mit kontrolliertem Hilfepfad.
+Mit Blablador lieferte die explizite Essensfrage für heute 13 Uhr ein
+`grounded_result` mit Karten 22/10/9. Die Kübel-Sitzung blieb nach Neustart
+erhalten; eine zweite Sitzung auch nach Containerersatz. Nach Grünau jeweils
+nur 19.2. Prüfcontainer und -volume wurden anschließend entfernt.
+
+Zusätzlicher negativer Runtimefall: Scharni (ID 8) ist für `sleep` kuratiert;
+die Nebencapability Grundversorgung belegt keine eigenständige Essensausgabe.
+Die Essenszeitenfrage wird mit `no_verified_result` beantwortet. Replays um
+08/13/18 Uhr ergeben `need_not_supported` (`time-diagnostic/alias-replay.json`),
+keinen nachgewiesenen Fehler des Zeitfilters. Die ursprüngliche externe Probe
+erwartete irrtümlich ID 22 bzw. zuvor `clarification.dialog_type` statt `type`;
+Fehlannahmen und Rohdaten sind unter `runtime-initial*` und
+`runtime-additional-question*` bewahrt. Die allgemeine Ausschlussantwort
+erklärt diese Kurationsgrenze noch nicht ausreichend konkret.
+
+Edge-TTS ist weiterhin optional, Default `disabled`, gepinnter Client 7.3.1.
+Der Audioerfolg aus Abschnitt 10.2 bleibt eine frühere Messung; bei der finalen
+Blockerprüfung wurde TTS nicht erneut gemessen. Kein neues Hör-/STT-/Mikrofon-,
+sichtbares Browser- oder Kartenkachelreview behaupten. Frisches Volume nutzt
+den identifizierten paketierten Bootstrap mit dokumentiertem
+`degraded`/`pointer_error`; ein gesunder Prozess beweist keine aktuellen Quellen.
+
+### 11.5 Offene Gates und Bewertung
+
+Die vollständigen Stufen Interpreter, Selector/Formulator, E2E und Stabilität
+wurden seit den Blockerkorrekturen **nicht erneut durchgeführt**. Am 25.10.
+bestanden nur die Interpreter-Gates; Stufen 2–4 blieben negativ (Abschnitt 10.3).
+Diese Messungen bleiben historisch gültig und werden durch die Zehn-Fälle-Probe
+nicht nachträglich bestanden. Auch der frühere kritische Safety-Ausfallbefund
+aus Abschnitt 8 wird nicht als allgemein behoben ausgegeben. Sprachreview,
+54 E2E-/51 Stabilitätskriterien der alten Reihe und manuelle Fachevaluation
+bleiben offen; neue Läufe müssen ihre eigenen offenen Kriterien ausweisen.
+
+Weiter bestehen N-03 (Rohpfade, Uvicorn-Querylogs, ungefilterte Grundnachrichten/
+Exceptions), fehlerhafte Interpretationen und ungültige LLM-Pläne,
+informationsarme Kontaktantworten, allgemeine Ausschlussantworten, unvollständig
+menschlich geprüfte Übersetzungen/Daten sowie ungeklärte Datenweitergaberechte.
+Fingerprint und grüne Regression sind weder Aktualitäts- noch Wirksamkeitsbeleg.
+Runtime/Archiv außerhalb Cloudsync und feste Aufbewahrung bleiben nötig;
+personenbezogene Eingaben sind dadurch nicht freigegeben.
+
+**Bewertung:** lokal reproduzierbar startbar im geprüften Linux/AMD64-Dockerweg,
+mit erreichbarem LLM für normale Suche. Die nachgewiesenen technischen Blocker
+sind korrigiert; vorbereitet für manuellen Release-Review und den nächsten
+kontrollierten vollständigen Live-Lauf. **Keine uneingeschränkte Abgabe- oder
+Veröffentlichungsempfehlung.** Nächste Schritte samt Commitvoraussetzungen,
+vierstufigem Lauf und Einfrieren vor manueller Evaluation stehen in der
+[Release-Review-Checkliste](RELEASE_REVIEW_CHECKLIST.md).

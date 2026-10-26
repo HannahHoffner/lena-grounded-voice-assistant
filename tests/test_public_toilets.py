@@ -25,7 +25,7 @@ from app.formulation import (
     FormulatedSentence,
     FormulatorError,
     FormulatorResponse,
-    FORMULATOR_CONTRACT_VERSION,
+    LEGACY_FORMULATOR_CONTRACT_VERSION as FORMULATOR_CONTRACT_VERSION,
     build_public_toilet_evidence,
 )
 from app.grounding import validate_formulation

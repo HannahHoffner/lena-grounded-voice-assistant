@@ -199,7 +199,10 @@ def test_recorded_romanian_counselling_response_passes_real_provider_validation(
         ("Oferă consiliere socială pentru persoane fără acces regulat la sistemul de sănătate.",
          ClaimType.SERVICE, "24", [service.fact_id]),
     )
-    provider = BlabladorProvider(_settings("blablador"))
+    # Historical recorded free-text response uses its explicit research adapter.
+    from app.prompt_comparison import ComparisonProvider
+    from app.formulation import LEGACY_FORMULATOR_SYSTEM_PROMPT
+    provider = ComparisonProvider(_settings("blablador"), LEGACY_FORMULATOR_SYSTEM_PROMPT)
 
     async def post(_payload):
         return {"choices": [{"message": {"content": recorded.model_dump_json()}}]}

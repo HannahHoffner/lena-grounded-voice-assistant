@@ -229,6 +229,24 @@ Die aktuelle Nutzerfrage wird separat als nicht vertrauenswürdiger Kontext in
 `current_query` übergeben, auch im Trinkwasserpfad. Sie steuert die Relevanz der
 Antwort, liefert aber keine Angebotsfakten und ändert nicht die Auswahl.
 
+Seit 25.10.2026 verwendet der produktive Formulator **Vertrag 6, Prompt 24,
+Evidence 4 und Validator 6**. Er liefert keinen sichtbaren Freitext, sondern
+einen geschlossenen Plan aus Fakten-, Kontakt-, Unbekanntheits- und Grenzakten.
+`app/answer_plan.py` prüft die Bindungen und erzeugt die Ausgabe aus belegten
+Quellwerten und festen Texten (`app/answer_act_texts.py`). Bedingungen werden
+serverseitig mitgeführt, Karten und ihre Reihenfolge wiederhergestellt.
+Der Renderer hält 600 Zeichen ein, indem er nur vollständige Fakten mit
+allen Bedingungen übernimmt; passt keine solche Aussage, bleibt ein Kontaktakt.
+Es gibt keinen zusätzlichen LLM und keinen produktiven Legacy-Umschalter.
+Die aktuelle Frage steuert nur die Relevanz, liefert keine Angebotsfakten.
+Details, Einschränkungen und neue Live-Ergebnisse:
+[Kontrollierte Antwortakte](controlled-answer-acts.md).
+
+<details>
+<summary>Historischer Freitextvertrag 5 / Prompt 22: Forschungsstand bis 24.10.2026</summary>
+
+Die folgende Beschreibung gilt nur für historische Replays und den alten Wortvalidator, nicht für den produktiven Provider.
+
 Der Formulatorvertrag 5 und Promptversion 22 priorisieren die konkrete Frage
 und belegte Aussagen. `sentences` ist weiterhin der JSON-Feldname für ein bis
 drei angebotsgebundene Textblöcke; ein Block darf mehrere Sätze zum selben
@@ -416,6 +434,9 @@ Alters-/Zeitparaphrasen können weiterhin außerhalb der Prüfabdeckung liegen.
 Umgekehrt kann ein
 lexikalisch passender Treffer inhaltlich danebenliegen (dokumentiert am
 Beispiel „minor injuries"). Eine manuelle Evaluation bleibt deshalb erforderlich.
+
+
+</details>
 
 Scheitert der Selector technisch, verwendet die Anfrage nur die stabile
 deterministische CandidateDecision und den Templatepfad; der gleiche Provider

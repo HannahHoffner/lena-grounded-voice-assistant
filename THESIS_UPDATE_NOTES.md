@@ -1,6 +1,6 @@
 # Notwendige Thesis-Anpassungen nach der Audit-Umsetzung
 
-Stand 24.10.2026; unabhängige Messungen vom 23.10.2026. Bezug: Umsetzung der Audit-Befunde im Repository `code/`
+Release-Review-Fortschreibung 26.10.2026. Aktuelle notwendige Änderungen stehen in Abschnitt H; Abschnitte A–G bleiben datierte Änderungshinweise und Messhistorie. Ausgangsstand dieses Dokuments: 24.10.2026, unabhängige Messungen vom 23.10.2026. Bezug: Umsetzung der Audit-Befunde im Repository `code/`
 (Ausgangscommit `597e1f0`, Teilversuch `bd2c65f`, Details in
 [IMPLEMENTATION_REPORT.md](IMPLEMENTATION_REPORT.md)). **Die Thesis wurde nicht
 geändert.** Fundstellen beziehen sich auf den Arbeitsbaum `../thesis/` vom
@@ -13,7 +13,7 @@ werden. Die alten Live-Gates bleiben für ihren damaligen Stand gültig. Nach de
 den finalen Softwarestand, müssen die folgenden Stellen angepasst oder als
 Stand `597e1f0` ausgewiesen werden.
 
-## A. Inhaltliche Korrekturen (Aussage sonst zu stark oder veraltet)
+## A. Historische inhaltliche Korrekturen für den Stand vom 23.10.2026
 
 | # | Fundstelle | Bisherige Aussage | Korrekte Aussage (Vorschlag) | Code-/Testbeleg |
 |---|---|---|---|---|
@@ -40,7 +40,7 @@ Stand `597e1f0` ausgewiesen werden.
 | 16 | Kap. 5.2.3 Architektur `Chapters/5Solutionneu.tex:63–286` | Orchestrierung: LLM-Stufensteuerung liegt in `app/llm_stages.py` (gemeinsamer Formulator-Rückfall für soziale Angebote, Toiletten und Trinkwasser); Safety-Entscheidung und formulatorfreie Fachregelabschlüsse sind eigene Methoden. Fachliches Verhalten unverändert. | `app/llm_stages.py`; `app/service.py` `_apply_safety_decision`, `_resolve_conditional_or_dialog_answer` |
 | 17 | Ergänzung zu Kap. 5.2.7 | Historischer Retrievalbaseline (`app/retrieval.py`) ist nur Test-/Forschungsartefakt; die aktive Normalisierung liegt getrennt in `app/text_normalization.py`. | `app/retrieval.py` Moduldocstring |
 
-## C. Zahlen, die nur mit Commitbindung verwendet werden dürfen
+## C. Historische Zahlen des Umsetzungsstands vom 23.10.2026
 
 | Fundstelle | Bisher (Commit `597e1f0`) | Neuer Stand (Arbeitsbaum nach Umsetzung) |
 |---|---|---|
@@ -72,3 +72,94 @@ Dauerhafte Rohbelege: `C:/Users/User/AppData/Local/LENA/verification/2026-10-23-
 | `Chapters/AppendixLenaDesign.tex:54–70`; Summary/Ergebnisplatzhalter | Erst kanonischen Commit samt nötigen neuen Dateien sichern, Messsnapshot eindeutig zuordnen und den vorgesehenen Evaluationsstand festlegen. Spätere reine Dokumentations-/Loggingänderungen separat benennen; fachliche Äquivalenz muss begründet werden. Neue fachliche Änderungen benötigen neue relevante Messungen. Die alten Messungen bleiben für ihren jeweiligen Stand gültig. | Quellmanifest, Git-Bundle; Bericht 8.1 und 8.6 |
 
 Eine formative manuelle Untersuchung mit synthetischen Fällen ist auch bei negativen Gates sinnvoll. Sie darf deren Ergebnisse nicht als bestanden voraussetzen und ersetzt keine personenbezogene Einsatzfreigabe. Ob die Thesis diese Grenzen wissenschaftlich angemessen behandelt, entscheidet sich an ihrer tatsächlichen Überarbeitung und der transparenten Ergebnisdarstellung; eine technische Prüfung erteilt keine akademische Abgabefreigabe.
+
+## F. Diagnostischer Promptvergleich vom 24.10.2026
+
+Ausgangspunkt nun kanonischer Commit `15a912f` („Grounding“). Der Nutzer hat den
+zuvor uncommittierten Stand gesichert. Der Vergleich selbst ergänzt nur
+Evaluationswerkzeuge und Dokumentation; produktiv weiterhin Prompt 22,
+Formulatorvertrag 5, Groundingvalidator 4. Keine Thesisänderung.
+
+| Thesis-Stelle | Korrekte Ergänzung bei Aufnahme des neuen Vergleichs | Beleg |
+|---|---|---|
+| `Chapters/5Solutionneu.tex:488–508`; R-20/R-21 | Einen experimentellen Kandidatenprompt von der produktiven Konfiguration unterscheiden. Der Kandidat wurde nicht übernommen; der Vergleich beweist weder allgemeine Faktentreue noch die Entbehrlichkeit der Prüfung. | `app/prompt_comparison.py`, `app/prompt_comparison_cases.py`; `docs/formulator-prompt-comparison.md` |
+| `Chapters/6Resultsneu.tex:173–233` | Gesonderte Moduldiagnose: 130 ursprüngliche Aufrufe auf 60 fünfsprachigen Paketen inklusive Wiederholungen, zusätzlich 30 separat registrierte Ergänzungsaufrufe nach Providerfehlern. Keine neue reguläre Vier-Stufen-E2E und keine manuelle Fachbewertung. | eingefrorenes Manifest, originale JSONL-Dateien, `supplement-plan.json`, getrennte Summaries |
+| `Chapters/7Discussion.tex:7–113` | In der ursprünglichen Reihe wurden 13/65 bisherige bzw. 22/65 Kandidatenantworten akzeptiert. Codex bewertet 48 bzw. 50 Entwürfe als belegt und hilfreich; 28 bzw. 22 belegte Entwürfe wurden vom Grounding abgelehnt. Je 15 Providerfehler ohne Entwurf. Die absichtlich schwierigen synthetischen Fälle erlauben keine repräsentative Fehlerquote. | `complete-summary.json`, begründete Einzelurteile; Bericht Abschnitt 9 |
+| `Chapters/5Solutionneu.tex:504–508`; Diskussion | Fehlende Preis-/Leistungsinformation wird von den Modellen häufig richtig beschrieben, besitzt aber keine explizite Policybindung im Vertrag; 14 ursprüngliche Schemafehler `non-offer sentence requires policy`. Schema nicht einfach lockern. Zum Studienzeitpunkt waren strukturelle Antwortakte noch nicht implementiert; Umsetzung am 25.10. siehe G. | `app/formulation.py:FormulatedSentence.validate_references`; `schema-diagnosis.json` |
+| `Chapters/6Resultsneu.tex:235–243`; manuelle Ergebnisplatzhalter | Einzelbewertungen stammen von Codex; unabhängiges menschliches Sprach-/Fachreview steht weiter aus. Die neuen Zahlen dürfen die geplante manuelle Evaluation nicht ersetzen. | `reviews.json`, `reviews-supplement.json`: `reviewer=codex` |
+| Automatisierte Regression, `Chapters/6Resultsneu.tex:69–89` | Nach Ergänzung von 12 Evaluationswerkzeugtests nativ 1355 bestanden und 1 bekannter XFAIL; 19 JS-Tests. Für diese neuen Werkzeuge kein neuer Docker-/Vier-Stufen-Lauf behaupten. | neue JUnit und JS-Lauf; Bericht Abschnitt 9 |
+
+Ausführliche Einschränkungen, Modell-/Prompthashes und Reproduktionsbefehle:
+[docs/formulator-prompt-comparison.md](docs/formulator-prompt-comparison.md).
+Rohbelege außerhalb Cloudsync:
+`C:/Users/User/AppData/Local/LENA/verification/2026-10-24-formulator-prompts/`.
+
+## G. Geschlossener Antwortplan vom 25.10.2026
+
+Die Thesis wurde nicht bearbeitet. Diese Ergänzung ersetzt Gegenwartsaussagen
+über den alten freien Formulator; frühere Studien bleiben standgebunden.
+
+| Fundstelle | Korrekte Aussage für den neuen Stand | Code-/Testbeleg |
+|---|---|---|
+| `Chapters/5Solutionneu.tex:488–508`, Architektur und Grounding | Die bestehende Pipeline bleibt. Der Formulator wählt Fakten und geschlossene Akte, statt sichtbare Sätze frei zu formulieren. Kein zusätzlicher LLM-Prüfer. Vertrag 6, Prompt 23, Evidence 4, Validator 5 | `app/formulation.py`, `app/providers/llm.py.formulate_answer`, `app/answer_plan.py.FormulatorPlan`; `tests/test_answer_plan.py` |
+| Gleicher Abschnitt, Faktenprüfung | Der Renderer sichert Paket-/Angebots-/Faktenbindung, Pflichtbedingungen und atomare Länge. Keine allgemeine semantische Prüfung beliebiger Modelltexte; diese sind im produktiven Format ausgeschlossen. Historischer Wortvalidator bleibt nur für Forschung | `render_answer_plan`, produktive Ablehnung von Freitext auch mit Version 6; Legacy-Replays über `ComparisonProvider` |
+| R-04/R-08/R-20/R-21, Systemgrenzen und Diskussion | Weniger freie, teilweise aufzählende Sprache. Unbekanntheitsakte sind begrenzte Nicht-Zusagen, keine Behauptung vollständiger Datenabwesenheit. Bekannte explizite Felder sperren entsprechende Unbekanntheitsakte. Quellwerte können sprachlich unvollständig lokalisiert sein; lange Bedingungen können Rückfälle auslösen | `app/answer_act_texts.py`, `_unknown`, `_render_facts`; fünfsprachige Positiv-/Negativtests und Längenprüfung |
+| `Chapters/6Resultsneu.tex:69–89`, Engineeringtests | Neue Reihe: 1419 passed + 1 historischer XFAIL, JS 19/19, nativ und im neuen netzlosen Container. Der erste Übergangslauf hatte sechs behobene Testprotokollfehler. Historische Worttests und produktive Plantests unterscheiden | `native-pytest.xml`, `container-tests.log`, `tests/test_answer_plan.py`; Bericht 10.2 |
+| `Chapters/6Resultsneu.tex:173–233`, Liveevaluation | Neue getrennte Reihe vom 25.10.: 83 Anfragen, 135 Provideraufrufe; Fehlerfälle Interpreter/Selector-Formulator/E2E/Stabilität 0/4/6/8; Inhaltsabweichungen 0/0/1/0. Nur Interpreter-Gates bestanden; CLI exit 0 bedeutet abgeschlossene Erhebung. Keine kausale Verbesserung gegenüber der alten Messung beweisen | Vier neue Manifeste und Summaries, Bericht 10.3 |
+| Gleicher Abschnitt, Stabilität | Sechs Antworttypen bei dreifacher Wiederholung stabil. 54/51 Inhaltskriterien ungeprüft, unabhängiges Sprachreview offen. `e_mobile` verfehlt erwartetes Hauptresultat; Schema-/Vertragsrückfälle bleiben | `stage-results.jsonl`, `summary.json` vom 25.10. |
+| Packaging/Reproduzierbarkeit und Grenzen | Read-only Docker mit Runtimevolume, Health, Loopback, Sessionerhalt nach Neustart/Containerwechsel, echte Blablador-Textantworten und Edge-Audio geprüft. Frische Volumeinitialisierung verwendet identifizierten packaged Bootstrap; kein aktueller externer Datenrelease behauptet. Browser/Mikrofon/STT/Hör-/Kartenprüfung nicht erneut erfolgt | `runtime-smoke.json`, `controlled-answer.mp3`, Build-/Testlogs; Bericht 10.2 |
+| `Chapters/6Resultsneu.tex:235–243` und Diskussion | Manuelle Evaluation und unabhängiges Sprachreview bleiben ausstehend. Der neue Stand darf nicht mit Messungen vom 22.–24.10. als validiert bezeichnet werden. Commit und Evidenzpaket vor endgültiger Evaluation festhalten | Snapshot `e8b5181e5d913d55b4fd36dde9f056c7aadced7c`, Manifest; noch kein kanonischer Commit dieses Auftrags |
+
+Architekturbeschreibung und vollständige Einschränkungen:
+[docs/controlled-answer-acts.md](docs/controlled-answer-acts.md).
+Die Rechte-/Logging-/Interpretationsgrenzen aus früheren Hinweisen bleiben
+offen; der kontrollierte Ausgabeplan hebt sie nicht auf.
+
+## H. Notwendige Thesis-Anpassungen für den Reviewstand vom 26.10.2026
+
+Diese Aussagen ersetzen bei Beschreibung des heutigen Systems die älteren
+Gegenwartsformulierungen aus A–G. Historische Ergebnisse bleiben unter ihrer
+ursprünglichen Version bestehen. Die Thesis wird in diesem Auftrag nicht
+bearbeitet. Fundstellen: bisherige TeX-Abschnitte des Abgleichs; aktuelle
+Code-/Testfundstellen stehen vollständig in
+[THESIS_CODE_TRACEABILITY.md](THESIS_CODE_TRACEABILITY.md). Messbelege und
+Identität: [Bericht 11](IMPLEMENTATION_REPORT.md#11-technisch-geprüfter-stand-für-den-manuellen-release-review-26102026).
+
+### H.1 Technisch belegt: notwendige Beschreibungs- und Ergebniskorrekturen
+
+| Thesis-Fundstelle | Notwendige korrekte Aussage | Code-/Test-/Messbeleg |
+|---|---|---|
+| `Chapters/5Solutionneu.tex:488–508`; Anhang R-20/R-21 | Pipeline bleibt Interpreter → Fachregeln/Kandidaten → Selector → Formulator → Prüfung/Renderer. LLM wählt geschlossene Akte und Faktreferenzen; der Server erzeugt sichtbaren Text. Kein zusätzlicher LLM-Judge. Interpreter 4/12, Selector 1/3, Evidence 4, Formulator 6/24, Validator 6. Beschreibungen von Claimwort-/Prosa-Grounding ausdrücklich als historischen Stand kennzeichnen | `app/providers/llm.py:356`, `app/grounding.py:576`, `app/answer_plan.py:24,51,64,192`; `tests/test_answer_plan.py:63,121,148,212` |
+| Gleicher Abschnitt, Vertrag und Datenflussmatrix `:748–800` | Tatsächliches Pydantic-Schema steht im Prompt; interne Capability-/Typfakten sind nicht als Ausgabefakten auswählbar. Originale Evidence bleibt Referenzautorität; Frage ist Relevanzkontext, keine zusätzliche Faktenquelle | `app/answer_plan.py:64,81`, `app/providers/llm.py:356`; `tests/test_answer_plan.py:121` |
+| `Chapters/5Solutionneu.tex:502`; R-04/R-08/R-21 | Ein bis drei Antwortakte, höchstens 600 Zeichen. Zuerst vollständige Validierung, danach ganze Fakten samt Bedingungen in Prioritätsreihenfolge einpassen. Kein Abschneiden; wenn nichts passt Kontaktakt, für Unbekanntheit feste Kurzformen. Karten bleiben erhalten; `length_limited` und tatsächlich ausgegebene Referenzen unterscheiden | `app/answer_plan.py:131,151,170,192`; `tests/test_answer_plan.py:97,163,182,200` |
+| Alias-/Dialog-/Fachregeln `Chapters/5Solutionneu.tex:639–703,762–807`; FR-01/04/08/11 | Eng begrenzte vollständige Namenssuche gegen kuratierte Aliase kann nach Safety eine falsche Scopeentscheidung korrigieren. Sie belegt weder persönlichen Zugang noch Leistungsbedarf. Kontakt ist ggf. Verweisung; ausdrückliche Dienste bleiben im offenen Dialog erhalten. Kübel → Stadtteilfrage → Grünau ergibt nur Team 19.2 mit Zuständigkeitsvorbehalt; A1-Kontaktdienst bleibt spezifisch | `app/interpreter.py:334`, `app/candidates.py:66`, `app/dialogue_flow.py:49,162`, `app/service.py`; `tests/test_interpreter.py:755,769,777`, `tests/test_dialogue.py:79,104,344` |
+| `Chapters/6Resultsneu.tex:26,69–89`; Summary und Anhang Testzahlen | Neue getrennte Messung: nativ und im netzlosen Container je 1476 bestanden, 1 bekannter strikter XFAIL, 0 Fehler; je JS 19/19. XFAIL `minor injuries` betrifft den historischen Wortvalidator und zählt nicht als bestanden. Bekannte Starlette-TestClient-DeprecationWarning transparent nennen. Keine neue Modulzahl erfinden | `native-pytest.xml`, `native-tests.log`, `docker-final-tests.log`, `native-js-tests.log` im Archiv `2026-10-25-blockers`; `tests/test_formulation.py:1018` |
+| Reproduktion `Chapters/AppendixLenaDesign.tex:14–70` | Sauberer No-Cache-Testbuild aus Export; zwei externe Snapshotserverfehler vor Erfolg beim dritten Versuch. Runtime aus derselben frischen Buildkette; read-only, Loopback, Health, Volume, Neustart/Containerersatz und Blablador-HTTP geprüft. Nur Linux/AMD64 nachgewiesen. Exportmanifest statt HEAD allein bezeichnet den uncommittierten Prüfstand; heutige Dokumentänderungen separat zuordnen | Bericht 11.1–11.4; Buildlogs, `runtime-final-results.json`, `final-source-manifest.json`, `final-checks.json` |
+| Liveergebnisse `Chapters/6Resultsneu.tex:173–233` | Zehn direkte synthetische Formulatorfälle: neun gültige Pläne, ein korrekt abgelehnter Plan, null Schemafehler. Je ein direkter Versuch, kein vollständiger Stufe-2-/Vierstufenlauf. Kein repräsentativer Erfolgsanteil und kein neues bestandenes Gate. Frühere negative Gates bleiben offen | `verified/results.json`, `verified/calls.json`; [Zehn-Fälle-Stichprobe](docs/live-provider-evaluation.md#zehn-fälle-stichprobe-vom-26102026) |
+| TTS-/Betriebsbeschreibung `Chapters/5Solutionneu.tex:450,795–816`; R-10/R-12 | Explizite optionale TTS-Profile; Client 7.3.1 in den Constraints/Lock. Erfolgreicher Edge-Audiotransport stammt aus früherer Prüfung, kein neuer Hör- oder Akustiknachweis am 26.10. Ohne LLM nur technischer Hilfepfad, keine lokale Modellabhängigkeit | `app/config.py`, `app/speech.py`, `requirements/runtime-py312.lock`; Bericht 10.2 und 11.4; README und `.env.example` |
+
+### H.2 Noch durch manuelle Evaluation zu prüfen
+
+| Thesis-Fundstelle | Offener Nachweis / zulässige Formulierung | Beleg für offenen Status |
+|---|---|---|
+| `FrontBackmatter/Summary.tex:25`, `Chapters/6Resultsneu.tex:235–243`, `Chapters/7Discussion.tex:49–54` | Ergebnisplatzhalter erst nach tatsächlicher manueller Erhebung ersetzen; bis dahin „noch nicht durchgeführt“. Keine Nutzerwirksamkeit oder Facheignung aus Unit-Tests ableiten | Keine manuellen Ergebnisse in Übergabe; technische Suite und Stichprobe haben ausdrücklich begrenzten Zweck |
+| R-04/R-05/R-07/R-08/R-09/R-12; UI-/Sprachbeschreibung `Chapters/5Solutionneu.tex:423–470` | Verständlichkeit, Natürlichkeit, angemessene Kürze und fachliche Brauchbarkeit einschließlich informationsarmer Kontakt- und allgemeiner Ausschlussantworten prüfen. Sichtbare Browserbedienung, Mikrofon/Hören, Karten und Assistenztechnik separat dokumentieren | `app/answer_act_texts.py`; `tests/frontend.test.cjs` verwendet Doubles, kein echter Browser; Bericht 11.4 |
+| `Chapters/6Resultsneu.tex:173–233`; Auswahl-/Safety-/Stabilitätsaussagen | Vollständigen Vierstufenlauf nach Review/Versionierung erneut erheben; menschlich offene Kriterien und kritische Ausfälle bewerten. Frühere negative Gates dürfen weder gelöscht noch aufgrund der Stichprobe auf „bestanden“ gesetzt werden | Bericht 10.3/11.5; letzte vollständige Reihe nur Interpreter positiv, keine erneute volle Reihe nach Korrektur |
+| Datenbeschreibung Kap. 4.4 und R-42 | Aktualität, Zuständigkeit, Zugangsvoraussetzungen und operative Daten fachkundig bestätigen; alle fünf Sprachen einschließlich neuer Kurzakte menschlich bewerten | Kurations-/Übersetzungsstatus: `app/resources/bootstrap/curation/social_offers.json`, `app/resources/bootstrap/i18n/`; Fingerprint ist Integrität, keine Sachprüfung |
+
+### H.3 Bekannte Systemgrenzen, die in der Thesis bleiben müssen
+
+| Thesis-Fundstelle | Notwendige Grenze | Code-/Test-/Nachweisbeleg |
+|---|---|---|
+| R-18/R-20/R-21/R-22/FR-11; Diskussion `Chapters/7Discussion.tex:7–113` | Pakettreue ist keine allgemeine Wahrheitsgarantie. Fehlerhafte LLM-Interpretation/Auswahl und falsche/veraltete Quellen bleiben möglich; statische Daten belegen keine freie Kapazität. Ungültige Pläne werden weiter verworfen | `app/answer_plan.py:192`, `app/interpreter.py:232`; RU-Injection in `verified/results.json` |
+| R-04/R-08; Diskussion | Sichere Längenbehandlung kann nur Kontaktauftrag übrig lassen. Fehlende typisierte Felder beweisen keine globale Datenabwesenheit. Die allgemeine Kein-Treffer-Antwort erklärt konkrete Ausschlüsse noch unzureichend | `_fit_facts`, `_fit_answer`, `_unknown`; `runtime-final-results.json` (Scharni); `time-diagnostic/alias-replay.json` |
+| Logging/Sitzungen `Chapters/5Solutionneu.tex:762–807`; R-37 | Interaktionslog standardmäßig aus, Sessions enthalten trotzdem nicht-akute Texte. Diagnose-Erlaubnisliste verhindert keine sensiblen Roh-URL-/Query-/Exceptioninhalte; kein allgemeiner Ausschluss personenbezogener Daten oder Secrets. Einzelprozess, TTL bei Zugriff, keine automatische Interaktionslog-Löschfrist | `app/logging_setup.py:25,86`, `app/main.py:244`, `app/__main__.py:45`, `app/sessions.py`, N-03 |
+| Datenrechte `Chapters/4Approachneu.tex:291–294`; Reproduktion/Veröffentlichung | Trinkbrunnen-Weitergaberecht und konkrete WFS-Lizenzzuordnung ungeklärt; widersprüchliche Notices/UI-Attribution sind keine Rechteklärung. Paket-Bootstrap ist eingefrorener Quellenstand, kein aktueller externer Release | `THIRD_PARTY_NOTICES.md`, `app/static/index.html`, Trinkbrunnenmanifest; Bericht 11.5 |
+| Reproduktion/Validität und R-38/R-41 | Normale Suche braucht externes LLM; Sprache/Kacheln weitere optionale Dienste. Modellaliase/Edge und Buildserver können sich ändern. Keine zugesicherte Providerinteroperabilität, Mindesthardware, Remote-CI- oder Plattformbreite | README, `.env.example`, Dockerfile; zwei Snapshotserverausfälle; Bericht 11.3/11.5 |
+
+Vor Übernahme neuer Zahlen den geprüften Code-/Daten-/Modellstand und die
+historische Evidenz eindeutig zuordnen. Nach Review versionieren, vollständige
+Live-Gates getrennt messen, Code/Daten/Modellkonfiguration/Evidenz einfrieren
+und anschließend manuell evaluieren. Noch keine uneingeschränkte akademische
+Abgabe- oder Veröffentlichungsempfehlung; siehe
+[RELEASE_REVIEW_CHECKLIST.md](RELEASE_REVIEW_CHECKLIST.md).

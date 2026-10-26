@@ -74,6 +74,40 @@ class FailingDialogueProvider(DialogueProvider):
         raise InterpreterError("interpreter_timeout")
 
 
+@pytest.mark.parametrize("initial_scope", [ScopeStatus.IN_SCOPE, ScopeStatus.OUT_OF_SCOPE, ScopeStatus.UNCLEAR])
+@pytest.mark.parametrize("services", [[], [RequestedService.CONTACT]])
+def test_e_mobile_contact_request_preserves_alias_across_district_answer(tmp_path, initial_scope, services) -> None:
+    client, provider = client_with(tmp_path, [
+        interpretation(Need.UNKNOWN, scope=initial_scope, services=services),
+        interpretation(Need.GENERAL_HELP, services=services, facts={"district": "Grünau"}),
+    ])
+    opened = client.post("/api/query", json={"query": "Ich suche Kübel.", "language": "de"}).json()
+    assert opened["clarification"]["type"] == "organization_district"
+    resolved = client.post("/api/query", json={"query": "Ich bin in Grünau.", "language": "de",
+                                             "session_id": opened["session_id"]}).json()
+    assert [card["id"] for card in resolved["cards"]] == ["19.2"]
+    assert resolved["clarification"] is None
+    assert provider.calls[1]["dialog_context"].alias == "Kübel"
+    assert provider.calls[1]["dialog_context"].originating_services == services
+    assert provider.calls[1]["conversation_history"] == []
+
+
+@pytest.mark.parametrize("query", ["Ich möchte einen Kübel kaufen.", "Mein Mobiltelefon ist kaputt."])
+def test_unrelated_noun_sense_does_not_force_an_organization_result(tmp_path, query) -> None:
+    client, _ = client_with(tmp_path, [interpretation(Need.UNKNOWN, scope=ScopeStatus.OUT_OF_SCOPE)])
+    result = client.post("/api/query", json={"query": query, "language": "de"}).json()
+    assert result["cards"] == []
+    assert result["clarification"] is None
+    assert result["status"] == "no_results"
+
+
+def test_named_contact_preserves_a_single_curated_contact_service(tmp_path) -> None:
+    client, _ = client_with(tmp_path, [interpretation(Need.GENERAL_HELP, services=[RequestedService.CONTACT])])
+    result = client.post("/api/query", json={"query": "Ich suche Schoppi."}).json()
+    assert result["clarification"] is None
+    assert [card["id"] for card in result["cards"]] == ["11"]
+
+
 def client_with(tmp_path, responses: list[QueryInterpretation]) -> tuple[TestClient, DialogueProvider]:
     settings = Settings(
         app_root=ROOT,

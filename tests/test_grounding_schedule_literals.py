@@ -83,7 +83,10 @@ def test_saved_russian_answer_passes_real_validator_unchanged(app):
 
 def test_saved_russian_answer_passes_provider_with_mock_transport(app, monkeypatch):
     evidence, response = _recorded_uvo_response(app)
-    provider = BlabladorProvider(_settings("blablador"))
+    # Historical recorded free-text response uses its explicit research adapter.
+    from app.prompt_comparison import ComparisonProvider
+    from app.formulation import LEGACY_FORMULATOR_SYSTEM_PROMPT
+    provider = ComparisonProvider(_settings("blablador"), LEGACY_FORMULATOR_SYSTEM_PROMPT)
     calls = []
 
     async def post(payload):

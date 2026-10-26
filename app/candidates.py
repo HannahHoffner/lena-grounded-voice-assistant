@@ -110,6 +110,10 @@ class CandidateSelector:
         excluded: list[ExcludedItem] = []
         global_missing: set[MissingFact] = set()
         alias_ids = set(context.alias.offer_ids) if context.alias else None
+        named_contact = bool(alias_ids and need in {Need.GENERAL_HELP, Need.UNKNOWN}
+                             and explicit_services == {RequestedService.CONTACT}
+                             and not any(offer.id in alias_ids and "contact" in offer.capabilities for offer in offers))
+        unresolved_alias = bool(alias_ids and need in {Need.GENERAL_HELP, Need.UNKNOWN} and not explicit_services)
         minor = facts.age_group == AgeGroup.UNDER_18 or (
             facts.age is not None and facts.age <= 17
         )
@@ -159,6 +163,11 @@ class CandidateSelector:
                 referral_match = False
             if need == Need.GENERAL_HELP and not interpretation.explicit_service_requests:
                 direct_match = False
+            # Reaching a named institution is not a claim that it provides a
+            # capability called "contact". Keep eligibility checks below and
+            # resolve multiple teams/services before returning a referral.
+            if named_contact or unresolved_alias:
+                referral_match = True
             if not direct_match and not referral_match:
                 excluded.append(ExcludedItem(offer_id=offer.id, reason_codes=[ReasonCode.NEED_NOT_SUPPORTED]))
                 continue
@@ -310,7 +319,13 @@ class CandidateSelector:
                 priority = 0
                 role = CandidateRole.REFERRAL_CONTACT
             if context.alias and context.alias.alias_kind == "organization" and len(context.alias.offer_ids) > 1:
-                matching_ids = [item for item in offers if item.id in context.alias.offer_ids and (need.value in item.needs or need.value in item.referral_needs)]
+                # Keep unresolved names and generic contact lookups ambiguous.
+                # For explicit services, use the same capability match as above;
+                # otherwise a missing district disappears before the dialog.
+                matching_ids = [item for item in offers if item.id in context.alias.offer_ids and (
+                    named_contact or unresolved_alias or need.value in item.needs or need.value in item.referral_needs
+                    or (need == Need.GENERAL_HELP and bool(requested.intersection(item.capabilities)))
+                )]
                 if len(matching_ids) > 1 and not context.alias.district_narrowed:
                     missing.add(MissingFact.DISTRICT if all(item.maximum_age == 26 for item in matching_ids) else MissingFact.NEED)
                     reasons.append(ReasonCode.AMBIGUOUS_ORGANIZATION_ALIAS)

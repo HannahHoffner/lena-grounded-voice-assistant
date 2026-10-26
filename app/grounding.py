@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from .answer_plan import FormulatorPlan, render_answer_plan
 
 from .formulation import (
     AnswerType,
@@ -39,7 +40,7 @@ from .models import Language
 from .grounding_references import resolve_offer_evidence
 
 
-GROUNDING_VALIDATOR_VERSION = "4"
+GROUNDING_VALIDATOR_VERSION = "6"
 
 URL_RE = re.compile(r"https?://[^\s<>]+", re.IGNORECASE)
 EMAIL_RE = re.compile(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.IGNORECASE)
@@ -573,10 +574,17 @@ def _validate_sentence(
 
 
 def validate_formulation(
-    response: FormulatorResponse,
+    response: FormulatorResponse | FormulatorPlan,
     evidence: FormulatorEvidence,
 ) -> ValidatedFormulation:
-    """Validiert die gesamte Modellantwort; es gibt keine Teilübernahme."""
+    """Validiert atomar; Vertrag 6 rendert ausschließlich gebundene Akte.
+
+    FormulatorResponse (5) bleibt nur für historische Forschungsgegenproben.
+    Der produktive Provider akzeptiert ausschließlich FormulatorPlan (6).
+    """
+    if isinstance(response, FormulatorPlan):
+        answer, cards, assessment = render_answer_plan(response, evidence)
+        return ValidatedFormulation(answer, cards, len(response.sentences), evidence.answer_type, assessment)
     if response.language != evidence.requested_language:
         raise FormulatorError("formulator_invalid_language")
     response, pools, reference_assessment = resolve_offer_evidence(response, evidence)

@@ -10,17 +10,18 @@ Wissensquelle. Die Verarbeitung ist in vier Schichten getrennt:
 | Schicht | Module | Verantwortung |
 |---|---|---|
 | Datenbasis | `kb_loader`, `curation`, `*_releases`, `official_offer_source` | hashgebundene, manuell freigegebene Bestände |
-| Fachregeln | `candidates`, `candidate_context`, `dialogue_flow`, `result_time`, `result_ordering` | deterministische Kandidatenbegrenzung, Dialoge, Zeit- und Ortsregeln vor jedem Modellaufruf |
-| LLM-Formulierung | `providers/llm`, `llm_stages`, `formulation` | Interpreter, kontrollierte Auswahl, Formulierung aus einem Evidence-Paket; Budget, Retry, Template-Rückfall |
-| Faktenprüfung | `grounding*` | atomare Prüfung jeder Modellantwort gegen das Evidence-Paket; ohne Zugriff auf Provider, Wissensbasis oder Fachregeln |
+| Fachregeln | `candidates`, `candidate_context`, `dialogue_flow`, `result_time`, `result_ordering` | deterministische Kandidatenbegrenzung, Dialoge, Zeit- und Ortsregeln nach Interpretation und vor Auswahl/Formulator |
+| LLM-Stufen | `providers/llm`, `llm_stages`, `formulation` | Interpretation, kontrollierte Auswahl und Antwortplanung aus einem Evidence-Paket; Budget, Retry, Template-Rückfall |
+| Prüfung/Renderer | `grounding`, `answer_plan`, `answer_act_texts` | atomare Plan-/Referenzprüfung und Text aus gebundenen Fakten/Akten; ohne Zugriff auf Provider, Wissensbasis oder Fachregeln |
 
 `app/service.py` orchestriert diese Schichten; `tests/test_architecture_boundaries.py`
-sichert die Importgrenzen. Die Faktenprüfung ist eine **begrenzte regelbasierte
-Kontrolle, keine allgemeine semantische Wahrheitsgarantie**: Sie verwirft unter
-anderem unbelegte Leistungs-, Erhalts-, Besitz- und (DE/EN) Identitätsaussagen
-unabhängig vom vom Modell deklarierten Claimtyp, nicht belegte Zielgruppen-,
-Aufnahme-, Verfügbarkeits-, Zeit-, Preis- und Kontaktangaben. Nicht erkannte
-Satzformen bleiben ungeprüft (siehe [Systemgrenzen](#systemgrenzen)).
+sichert die Importgrenzen. Der produktive Formulator liefert einen
+**geschlossenen Antwortplan**; der Server prüft Referenzen und setzt Quellwerte
+mit festen Antwortakten ein. Freie Modellprosa wird nicht ausgegeben. Das ist
+Pakettreue, keine allgemeine semantische Wahrheitsgarantie: Interpretation,
+Auswahl, Quellaktualität und sprachliche Eignung können weiterhin fehlerhaft sein
+(siehe [Systemgrenzen](#systemgrenzen)). Die frühere lexikalische
+Claimprüfung bleibt als historisches Forschungsartefakt erhalten.
 
 Die normale Bedarfsauswahl benötigt einen konfigurierten LLM-Interpreter. Ohne
 ihn startet die Anwendung, liefert bei normalen Anfragen aber nur den
@@ -37,7 +38,7 @@ Vor einer manuellen Prüfung: [Evaluationsvoraussetzungen](docs/manual-evaluatio
 
 - Textanfragen in Deutsch, Englisch, Polnisch, Rumänisch und Russisch
 - deterministische, begründete Kandidatenbegrenzung mit Mandatory-/Selectable-Trennung
-- kontrollierte optionale LLM-Auswahl nur innerhalb zulässiger Kandidaten sowie satz- und faktengebundene Formulierung
+- kontrollierte optionale LLM-Auswahl nur innerhalb zulässiger Kandidaten sowie faktengebundene Antwortplanung mit serverseitiger Ausgabe
 - Karten und Kartenansicht für Angebote mit verwertbaren Koordinaten
 - lokale Sitzungsverläufe für kurze Folgefragen
 - optionale serverseitige Speech-to-Text- und Text-to-Speech-Schnittstellen
@@ -154,7 +155,17 @@ und degradiert kontrolliert.
 Für Blablador gilt: Der Zugang reicht für die geprüfte **Textsuche**; das
 Modellinventar bot am 23.10.2026 `faster-whisper-large-v3` (STT), aber **kein**
 TTS-Modell (`gpt-4o-mini-tts` → HTTP 404). Sprachausgabe erfordert daher Edge-TTS
-oder einen anderen kompatiblen TTS-Endpunkt.
+oder einen anderen kompatiblen TTS-Endpunkt. Die gepinnten Constraints und der
+Docker-Lock verwenden `edge-tts 7.3.1`; der frühere Client 7.2.8 wurde vom
+externen Dienst mit HTTP 403 abgewiesen. Edge bleibt optional und dienstabhängig.
+Der Audioerfolg vom 25.10. ist kein neuer Hör-/TTS-Nachweis für den 26.10.
+
+Das tatsächlich geprüfte Blablador-Messprofil setzt zusätzlich 4096 Tokens und
+15/30/30 Sekunden Stufenlimits bei 45 Sekunden Gesamtbudget. Die Minimalwerte
+oben aktivieren den Zugang; ohne Overrides gelten 1200 Tokens im Code bzw.
+2000 beim Übernehmen der Vorlage und 10 Sekunden Selectorlimit. Das kommentierte
+Messprofil in `.env.example` dokumentiert die Abweichung; keine Erfolgsgarantie
+für jedes Modell oder jede Anfrage.
 
 ## Offline-Grenzen
 
@@ -179,8 +190,10 @@ Docker-Neubau (Basisimage, Ubuntu-Snapshot, PyPI).
 
 Das technische Log (stdout) schreibt Ereignisname plus erlaubnislistenbasierte
 Felder, z. B. `request.completed method=POST path=/api/query status_code=200 duration_ms=…`.
-Nutzertexte, Antworten, Session-IDs, Tokens und Provider-Rohantworten werden nie
-technisch protokolliert. Vollständige Frage/Antwort-Paare entstehen nur mit
+Zusätzliche Diagnosefelder werden über eine Erlaubnisliste begrenzt. Ein
+vollständiger Ausschluss sensibler Inhalte aus technischen Logs ist derzeit
+nicht gewährleistet: Rohpfade und Uvicorn-Query-Strings werden protokolliert
+(Nachprüfung N-03). Vollständige Frage/Antwort-Paare entstehen mit
 `INTERACTION_LOGGING_ENABLED=true`.
 
 ## Tests
@@ -196,19 +209,40 @@ Netzwerkzugriffe. Ein bewusst dokumentierter `strict xfail`
 (`tests/test_formulation.py`, „minor injuries“) markiert eine bekannte
 Überablehnung und zählt nicht als bestanden. Live-Provider-Läufe sind getrennt
 freizugeben ([Live-Provider-Evaluation](docs/live-provider-evaluation.md)).
-Aktueller Prüfstand: [IMPLEMENTATION_REPORT.md](IMPLEMENTATION_REPORT.md).
+Aktueller Prüfstand vom 26.10.2026: nativ und im netzlosen Container jeweils
+**1476 Python-Tests bestanden, 1 bekannter strikter XFAIL**, je **19/19 JS**;
+bekannte Starlette-TestClient-DeprecationWarning bleibt sichtbar. Sauberer
+Docker-Neubau, HTTP-Runtime, Blablador und Sessionerhalt nach Neustart und
+Containerersatz sind geprüft. Zehn direkte Live-Formulatorfälle ergaben neun
+gültige Pläne und eine korrekte Ablehnung; das ersetzt keinen vollständigen
+Vierstufenlauf. Frühere negative Gates sind weiterhin offen.
+Nachweise: [IMPLEMENTATION_REPORT.md, Abschnitt 11](IMPLEMENTATION_REPORT.md#11-technisch-geprüfter-stand-für-den-manuellen-release-review-26102026).
+Vor Commit und manueller Evaluation: [Release-Review-Checkliste](RELEASE_REVIEW_CHECKLIST.md).
+Keine uneingeschränkte Abgabe- oder Veröffentlichungsempfehlung.
+
+Der [diagnostische Promptvergleich vom 24.10.2026](docs/formulator-prompt-comparison.md)
+trennt ungefilterte Modellantworten, Schemafehler und Grounding-Ergebnis.
+130 ursprüngliche und 30 separat ergänzende Liveaufrufe wurden ausgewertet;
+Semantikurteile stammen von Codex, menschliches Review bleibt offen. Der
+Kandidatenprompt ist nicht produktiv übernommen. Nach Ergänzung von zwölf
+Offline-Werkzeugtests: nativ 1355 bestanden, ein bekannter XFAIL; JS 19/19.
 
 ## Systemgrenzen
 
 - Forschungsprototyp für isolierten lokalen Betrieb: keine Authentifizierung,
   kein TLS, keine Rate-Limits, ein Prozess; nicht für öffentlichen Betrieb.
-- Die Faktenprüfung erkennt eine endliche Menge mehrsprachiger Satzformen und
-  Wortklassen. Für Polnisch, Rumänisch und Russisch sind Leistungsaussagen nur
-  über den Konzeptwortschatz belegbar (Fakten liegen deutsch vor); zusätzliche
-  freie Wörter führen dort zur sicheren Ablehnung und damit häufiger zum
-  Template. Kopulasätze ohne unbestimmten Artikel sowie PL/RO/RU-Kopulasätze
-  werden nur durch Konzept-, Zielgruppen-, Alters-, Entgelt- und Zahlenprüfungen
-  begrenzt. Interpreter-`explicit_facts` werden nicht gegen Quellspannen geprüft.
+- Seit 25.10.2026 liefert der Formulator einen geschlossenen Antwortplan
+  (Vertrag 6, Prompt 24, Validator 6). Das Backend setzt ausgewählte Fakten
+  und feste Antwortakte ein; freie Modellprosa wird nicht ausgegeben. Die
+  frühere Wortprüfung bleibt ausschließlich für historische Replays erhalten.
+  Das verhindert frei erfundene Leistungsformulierungen, garantiert aber weder
+  richtige Bedarfserkennung noch passende Auswahl oder aktuelle Quelldaten.
+  Der Renderer hält 600 Zeichen durch vollständige Faktengruppen samt
+  Pflichtbedingungen ein; passt keine Gruppe, bleibt ein kurzer Kontaktauftrag. Fremdsprachige
+  Rohfelder können in der Quellsprache verbleiben. Die festen Texte sind noch
+  nicht unabhängig sprachlich geprüft. Interpreter-`explicit_facts` werden
+  weiterhin nicht gegen Quellspannen geprüft.
+  Aufbau und neue Prüfbelege: [Kontrollierte Antwortakte](docs/controlled-answer-acts.md).
 - Modellantworten sind nicht deterministisch wiederholbar; Modellaliase des
   Anbieters können sich ändern.
 - Datenweitergaberechte: Für die Trinkbrunnendaten ist keine ausdrückliche
@@ -239,8 +273,8 @@ Aktueller Prüfstand: [IMPLEMENTATION_REPORT.md](IMPLEMENTATION_REPORT.md).
 | `app/interpreter.py` | versionierter Interpretervertrag, Prompt und minimale Alias-Hinweise |
 | `app/candidate_contract.py`, `app/candidates.py` | strikter Auswahlvertrag und deterministische Kandidatenbegrenzung |
 | `app/llm_selection.py` | kompakter Selectorvertrag, Prompt, Bypass, ID-Validierung und deterministischer Fallback |
-| `app/formulation.py`, `app/grounding.py` | versioniertes Evidence-/Satzschema, Prompt sowie atomare Fakten-, Rollen-, Sprach- und Kartenprüfung |
-| `app/grounding_claims.py`, `app/grounding_constraints.py`, `app/grounding_content.py`, `app/grounding_references.py` | Konzept-, Relations- und claimtypunabhängige Inhaltsprüfung, Evidence-Pools je Angebot |
+| `app/formulation.py`, `app/grounding.py`, `app/answer_plan.py`, `app/answer_act_texts.py` | Evidence, Prompt, strikter Planvertrag und Renderer; gebundene Fakten/Akte, Bedingungen, Länge und Karten |
+| `app/grounding_claims.py`, `app/grounding_constraints.py`, `app/grounding_content.py`, `app/grounding_references.py` | historische Freitext-/Claimprüfung und zugehörige Forschungsreplays; kein produktives freies Ausgabeformat |
 | `app/llm_budget.py` | kumulatives monotones Zeitbudget der drei externen LLM-Stufen |
 | `app/dialogue.py`, `app/dialogue_flow.py` | versionierter Dialogzustand, lokalisierte Rückfragen und begrenzte Auflösung |
 | `app/text_normalization.py` | gemeinsame Textnormalisierung des Anfragepfads |
@@ -357,8 +391,10 @@ werden nur über ihre Profile aktiviert (siehe
 `app/static/vendor/` ausgeliefert; die Kartenkacheln lädt der Browser bei
 `MAP_PROVIDER=osm` von OpenStreetMap.
 
-Quelle: Stadt Leipzig, WFS Wohnungslosenhilfe,
-[Datenlizenz Deutschland – Namensnennung – Version 2.0](https://www.govdata.de/dl-de/by-2-0).
+Quelle: Stadt Leipzig, WFS Wohnungslosenhilfe. Die vorhandenen Notices/UI
+ordnen die [Datenlizenz Deutschland – Namensnennung – Version 2.0](https://www.govdata.de/dl-de/by-2-0)
+zu; die konkrete Endpunkt-/Weitergabeberechtigung ist noch nicht abschließend
+belegt. Diese Attribution ersetzt die offene Rechteklärung nicht.
 
 Öffentliche Toiletten stammen aus dem amtlichen Datensatz „Öffentliche
 Toiletten, Stadt Leipzig“. Ressourcen-URL, Abrufzeit, SHA-256, Lizenz und
@@ -413,7 +449,7 @@ ausdrückliche Datensatzlizenz ist nicht ausgewiesen; der Release speichert dahe
 - Toiletten- und Trinkbrunnenstände werden nie automatisch promotet; `fetch` erzeugt höchstens
   einen Pending-Release. Ein mobiler Essensstand ohne verifizierte Lage erhält
   weder Distanzrang noch ersatzweise einen Marker an der Büroadresse.
-- Die gespeicherten Fremdsprachen und dynamischen LLM-Antworten sind derzeit
+- Die gespeicherten Fremdsprachen und gebundenen Antworttexte sind derzeit
   nicht als muttersprachlich oder professionell geprüft freigegeben. Die
   Standardpolicy `reviewed_or_machine` nutzt nur lokal integritätsgültige
   Maschinenübersetzungen und weist diesen Zustand in `/api/health` aus;
@@ -489,7 +525,13 @@ Zustand. Am 23.10.2026 wurde der Stand nach Umsetzung der Audit-Maßnahmen
 erneut aus einem sauberen Export ohne Cache gebaut und geprüft (1.343 Python-Tests
 bestanden, ein bekannter `xfail`, 19 Frontendtests, Volume/Neustart, Start ohne
 Zugangsdaten, Blablador-Textanfrage, Edge-TTS); siehe
-[IMPLEMENTATION_REPORT.md](IMPLEMENTATION_REPORT.md). Details und sichere
+[IMPLEMENTATION_REPORT.md](IMPLEMENTATION_REPORT.md). Am 26.10.2026 bestand
+auch der korrigierte Blockerstand den sauberen Neubau, vollständige netzlose
+Containerregression und Runtime-/Volumeprüfung (1476 + 1 XFAIL, JS 19/19).
+Zwei vorausgehende Buildversuche scheiterten am Ubuntu-Snapshotserver; der
+erfolgreiche dritte Versuch änderte keine Locks. Historische Messungen bleiben
+standgebunden; die vollständigen Live-Gates sind nicht erneut durchgeführt.
+Details und sichere
 Startbefehle stehen in [Docker und Reproduzierbarkeit](docs/reproducibility.md). Eine Zenodo-DOI
 existiert für diesen vorbereiteten Stand noch nicht.
 

@@ -30,7 +30,7 @@ from app.drinking_fountain_source import (
 )
 from app.drinking_fountain_sync import diff_live_source, fetch_drinking_fountains, run_command
 from app.formulation import (
-    FORMULATOR_CONTRACT_VERSION,
+    LEGACY_FORMULATOR_CONTRACT_VERSION as FORMULATOR_CONTRACT_VERSION,
     ClaimType,
     FactType,
     FormulatedSentence,
@@ -717,19 +717,14 @@ def test_water_question_reaches_provider_and_validated_model_answer_is_used(
         captured.update(evidence)
         offer = evidence["selected_offers"][0]
         facts = {fact["fact_type"]: fact for fact in offer["facts"]}
-        response = FormulatorResponse(
-            contract_version=FORMULATOR_CONTRACT_VERSION,
+        from app.answer_plan import AnswerAct, FormulatorPlan
+        response = FormulatorPlan(
+            contract_version="6",
             language=Language.DE,
             sentences=[
-                FormulatedSentence(
-                    text=f"Bei {offer['display_name']} findest du einen Trinkwasserbrunnen.",
-                    claim_type=ClaimType.SERVICE, offer_id=offer["offer_id"],
-                    fact_ids=[facts["display_name"]["fact_id"], facts["service"]["fact_id"]],
-                ),
-                FormulatedSentence(
-                    text="Sein aktueller Betriebsstatus ist unbekannt.",
-                    claim_type=ClaimType.FACT, offer_id=offer["offer_id"],
-                    fact_ids=[facts["operation_status"]["fact_id"]],
+                AnswerAct(
+                    act="facts", offer_id=offer["offer_id"],
+                    fact_ids=[facts["service"]["fact_id"], facts["operation_status"]["fact_id"]],
                 ),
             ],
             card_ids=[offer["offer_id"]],
@@ -743,7 +738,7 @@ def test_water_question_reaches_provider_and_validated_model_answer_is_used(
 
     assert captured["current_query"] == question
     assert response.provider == "blablador"
-    assert response.answer.endswith("Sein aktueller Betriebsstatus ist unbekannt.")
+    assert "aktueller Betriebsstatus unbekannt" in response.answer
     assert response.interaction.formulator_fallback_used is False
     assert response.card_ids == [captured["selected_offers"][0]["offer_id"]]
 

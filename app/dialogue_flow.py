@@ -178,9 +178,13 @@ def choose_dialog(
         }
     ):
         mobile_like = MissingFact.DISTRICT in decision.missing_information
+        if (not mobile_like and interpretation.explicit_service_requests == [RequestedService.CONTACT]
+                and len(decision.conditional_candidates) + len(decision.candidates) == 1):
+            return None  # The curated contact service is already unambiguous.
         if not mobile_like and not (
             interpretation.need in {Need.UNKNOWN, Need.GENERAL_HELP}
-            and not interpretation.explicit_service_requests
+            and (not interpretation.explicit_service_requests
+                 or interpretation.explicit_service_requests == [RequestedService.CONTACT])
         ):
             return None
         dialog_type = DialogType.ORGANIZATION_DISTRICT if mobile_like else DialogType.ORGANIZATION_NEED
@@ -191,6 +195,7 @@ def choose_dialog(
             session_timeout_seconds=timeout_seconds,
             facts=known_facts(interpretation),
             alias=alias.alias,
+            services=list(interpretation.explicit_service_requests),
         )
     if interpretation.need == Need.SLEEP:
         facts = interpretation.explicit_facts

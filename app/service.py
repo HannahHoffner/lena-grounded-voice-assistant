@@ -56,6 +56,7 @@ from .interpreter import (
     RequestedService,
     ScopeStatus,
     interpreter_alias_hints,
+    resolve_named_lookup,
 )
 from .kb_loader import KnowledgeBase
 from .llm_selection import SelectionOutcome, SelectorBypassReason
@@ -894,6 +895,9 @@ class QueryService:
         )
         if safety_outcome is not None:
             return safety_outcome
+
+        if active_dialog is None:
+            interpretation = resolve_named_lookup(query, interpretation, self.interpreter_aliases)
 
         if interpretation.scope_status == ScopeStatus.OUT_OF_SCOPE:
             interaction.route = "out_of_scope"

@@ -1,5 +1,38 @@
 # Tests und Qualitätssicherung
 
+## Technisch geprüfter Stand vom 26.10.2026
+
+Diese Fortschreibung wertet vorhandene Nachweise aus; es wurde dabei kein
+neuer Test- oder Live-Lauf ausgeführt. Archiv:
+`C:/Users/User/AppData/Local/LENA/verification/2026-10-25-blockers/`.
+Anwendungscode/Tests gehören zum Export `source-final/` auf Basis `15a912f`;
+HEAD allein ist nicht der uncommittierte Prüfstand. Manifest und Imagekennungen
+stehen in [IMPLEMENTATION_REPORT.md, Abschnitt 11](../IMPLEMENTATION_REPORT.md#11-technisch-geprüfter-stand-für-den-manuellen-release-review-26102026).
+
+| Vorhandene Abschlussprüfung | Ergebnis | Beleg im Archiv |
+|---|---|---|
+| Python nativ, Windows/Python 3.14 | 1476 bestanden, 1 bekannter strikter XFAIL, 0 Fehler; 282,63 s | `native-pytest.xml`, `native-tests.log` |
+| Python im frisch gebauten Linux/AMD64-Testimage, `--network none`, Python 3.12 | 1476 bestanden, gleicher XFAIL, 0 Fehler; 215,66 s | `docker-final-tests.log` |
+| JavaScript nativ / im netzlosen Container | je 19/19, 0 Fehler | `native-js-tests.log`, `docker-final-tests.log` |
+| compileall, beide JS-Syntaxprüfungen, Container-pip-check | bestanden | vorhandene Abschlussprotokolle |
+| Letzte gezielte Vertrag/API-, Domänen- und Lookupprüfung | 171/171, 295/295, 13/13 | `targeted-final.xml`, `targeted-domain-final.xml`, `targeted-lookup-safety-fixed.xml` |
+| Clean-Room-Dockerbuild `--pull --no-cache --target test` | erfolgreich beim dritten Versuch; zwei externe Ubuntu-Snapshotserverfehler zuvor | `docker-build-final-test*.log` |
+| Runtime, echter HTTP-Zugriff und persistentes Volume | Health, Loopback, Start ohne Schlüssel, Blablador, `e_mobile` nach Neustart und Containerersatz bestanden | `runtime-final-results.json` |
+
+Beide Python-Läufe enthalten eine bekannte Starlette-TestClient-
+DeprecationWarning (`httpx`-Testtransport). Der strikte XFAIL
+`tests/test_formulation.py::test_known_limitation_non_target_minor_should_not_trigger_target_check`
+betrifft `minor injuries` im historischen Wortvalidator und ist kein bestandener
+Test. Historische Wort-/Providerreplays bleiben von produktiven Planprüfungen
+getrennt. Die unten genannten früheren Zahlen sind datierte Vergleichsstände.
+
+Die Zehn-Fälle-Live-Stichprobe (neun gültig, eine korrekte Ablehnung) ist keine
+vollständige Evaluation. Frühere negative Gates wurden seit der Blockerkorrektur
+nicht erneut erhoben; menschliche Sprach-/Datenprüfung und manuelle Evaluation
+bleiben offen. Siehe [Release-Review](../RELEASE_REVIEW_CHECKLIST.md).
+
+## Bisherige Prüfstruktur und historische Nachweise
+
 Die separate [Docker-Anleitung](reproducibility.md) beschreibt die vollständige
 Suite samt Paketierung und Frontendtests im netzwerkgesperrten Testcontainer.
 Am 21.10.2026 bestand der lokale Linux/AMD64-Containerlauf mit 1178 bestandenen
@@ -47,10 +80,15 @@ oder Barrierefreiheitsnachweis. Für den manuellen Übergang gilt die
 | Datei | Schwerpunkt |
 |---|---|
 | `tests/test_api.py` | Health, Query-API, LLM-Stufen und Fallbacks |
-| `tests/test_interpreter.py` | versionierter Vertrag, fünf Sprachen, Fakten/Hinweise, Aliase, Sessionkontext, Injection, Parserfehler, Scope und Akutrisiko-Reihenfolge |
+| `tests/test_interpreter.py` | versionierter Vertrag, fünf Sprachen, Fakten/Hinweise, Aliase, Sessionkontext, begrenzte vollständige kuratierte Namenssuche mit Sicherheitsgegenproben, Injection, Parserfehler, Scope und Akutrisiko-Reihenfolge |
 | `tests/test_candidates.py` | strikter Kandidatenvertrag, Leistungen, Rollen, Zielgruppen, Aliasbegrenzung, U18-Schlafmatrix, explizites Jugend-Intent-Gate, Zeitregeln, Reason Codes und sprachunabhängige Entscheidungen |
 | `tests/test_llm_selection.py` | Selectorvertrag und -prompt, Positivlisteninventar, Mandatory/Selectable, ID-Angriffe, Mehrsprachigkeit, Bypässe und Providerfehler |
-| `tests/test_formulation.py` | Evidence- und Satzvertrag, Grounding, Rollen, Karten, fünf Sprachen, OOS-/Hilfebus-Policies, Promptangriffe, Gesamtbudget und TTS-Textbindung |
+| `tests/test_answer_plan.py` | produktiver Planvertrag 6: Fakten/Akte/Policies, echtes generiertes Providerschema, renderbare Referenzen, keine Modellprosa, ganze Bedingungen, 600 Zeichen, fünfsprachige Kurzakte und ungültige späte Referenzen |
+| `tests/test_formulation.py` | Evidence, produktiver Plan-/Retrypfad und ausdrücklich historische Satz-/Wortvalidatorprüfungen; bekannter strikter XFAIL bleibt sichtbar |
+| `tests/test_architecture_boundaries.py` | Importgrenzen und keine ungeprüfte Formulatorrückgabe aus dem Provider |
+| `tests/test_configuration_profiles.py` | explizite Providerprofile, Defaults, Priorität, keine stille TTS-Vererbung, kontrollierter 503-Pfad und Dienststatus |
+| `tests/test_technical_logging.py` | Erlaubnisliste und Diagnoseformat; kein Nachweis vollständiger URL-/Exceptionredaktion (N-03) |
+| `tests/test_prompt_comparison.py` | isolierte historische Promptvergleichswerkzeuge; kein produktives alternatives Ausgabeformat |
 | `tests/test_dialogue.py` | Dialogvertrag, Schlafmatrix, A1/Schoppi, Mobile/Kübel, Hilfebus, Buttons, Text/STT, Sprache/Thema, Fehler, Replay, TTL, Datenschutz und I18n-Status |
 | `tests/test_dialogue_frontend.py` | semantische Buttons, unsichtbare technische Werte, Doppelklickschutz und Sprachwechselbindung |
 | `tests/test_kb_loader.py` | Markdown- und kanonisches JSON-Laden |
@@ -130,7 +168,7 @@ python -m pytest tests/test_observability.py -q
 python -m pytest tests/test_interpreter.py tests/test_safety.py tests/test_safety_policy.py -q
 python -m pytest tests/test_candidates.py tests/test_curation.py tests/test_api.py -q
 python -m pytest tests/test_llm_selection.py tests/test_provider_timeouts.py -q
-python -m pytest tests/test_formulation.py tests/test_api.py -q
+python -m pytest tests/test_answer_plan.py tests/test_formulation.py tests/test_api.py -q
 python -m pytest tests/test_provider_timeouts.py -q
 python -m pytest tests/test_translation_quality.py -q
 python -m pytest tests/test_session_persistence.py -q
@@ -143,7 +181,7 @@ python -m pytest tests/test_drinking_fountains.py tests/test_public_toilets.py -
 Im Projekt sind derzeit keine Linter-, Type-Checker-, Coverage- oder
 Dokumentations-Linkprüfungen konfiguriert. Es gibt außerdem keine Browser-End-to-
 End-Suite. Die Python-3.11-Constraints (native Installation, CI) fixieren Versionen, aber
-keine Artefakthashes. Für den Docker-Weg (CPython 3.12, Linux amd64/arm64)
+keine Artefakthashes. Für den geprüften Docker-Weg (CPython 3.12, Linux/AMD64; ARM64 nicht geprüft)
 existieren hashgesicherte Locks `requirements/runtime-py312.lock` und
 `requirements/build-py312.lock`; der Containerbuild installiert ausschließlich
 daraus. Keiner dieser Stände ist ein universeller Lock für andere
@@ -165,8 +203,9 @@ node --check app/static/dialogue.js
 Die Verhaltenstests führen die echten Browserskripte mit lokalen DOM- und
 Transport-Doubles aus. Sie prüfen Folgedialoge, Sprachwechsel während einer
 Anfrage, Doppelsenden, Fehler-Recovery sowie Sessionbindung und Freigabe von
-TTS-Audio. Sie sind im Source-Archiv enthalten und laufen getrennt von Pytest
-und der bisherigen Python-CI. Ein echter Browser-/Screenreader-Test bleibt offen.
+TTS-Audio. Sie sind im Source-Archiv enthalten und laufen getrennt von Pytest;
+der Container-CI-Job führt sie im Docker-Testziel ebenfalls aus. Ein erfolgreicher
+Remote-Lauf dieses Jobs wird damit nicht behauptet. Ein echter Browser-/Screenreader-Test bleibt offen.
 
 Automatische Mehrsprachigkeitstests belegen Schema, Kontrollfluss,
 Tokenintegrität, Grounding und offensichtliche Skriptfehler. Sie belegen weder

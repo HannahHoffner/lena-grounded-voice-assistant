@@ -134,7 +134,10 @@ def test_recorded_coordinated_romanian_response_passes_validator(app):
 
 def test_recorded_response_passes_real_provider_validation(app, monkeypatch):
     evidence, response = _recorded_cabl_response(app)
-    provider = BlabladorProvider(_settings("blablador"))
+    # Historical recorded free-text response uses its explicit research adapter.
+    from app.prompt_comparison import ComparisonProvider
+    from app.formulation import LEGACY_FORMULATOR_SYSTEM_PROMPT
+    provider = ComparisonProvider(_settings("blablador"), LEGACY_FORMULATOR_SYSTEM_PROMPT)
     calls = []
 
     async def post(payload):

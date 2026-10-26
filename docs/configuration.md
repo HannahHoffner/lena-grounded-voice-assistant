@@ -287,3 +287,10 @@ geeigneten Reverse Proxy sowie ein Datenschutz- und Betriebskonzept.
 - Technische Logs enthalten keine vollständigen Anfrage-/Antworttexte. Das
   getrennte Interaktions-JSONL enthält diese Volltexte absichtlich und ist daher
   als besonders schützenswerte lokale Forschungsdatei zu behandeln.
+
+## Ausgabeprotokoll ab 25.10.2026
+
+Formulatorvertrag 6, Prompt 24 und Validator 6 verwenden einen geschlossenen
+Antwortplan. Dafür sind keine neuen Umgebungsvariablen oder Dienste nötig.
+Ein Rückschalter auf freie Modellprosa ist nicht vorgesehen.
+Siehe [Antwortakte](controlled-answer-acts.md).

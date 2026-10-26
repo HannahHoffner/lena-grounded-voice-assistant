@@ -14,7 +14,7 @@ und keine Freigabe für öffentliche Nutzung oder personenbezogene Testeingaben.
    Freigabe: aus einer erfolgreichen Hashprüfung folgt keine Aktualität der
    Öffnungszeiten oder Erreichbarkeit. Kein Pending-Release ungeprüft aktivieren.
 3. Lokal und mit einem Prozess starten (`python -m app`). Keine öffentliche
-   Bindung, keine Mehrprozess-Worker. `.env.local` kann Prozesswerte übersteuern;
+   Bindung, keine Mehrprozess-Worker. Prozesswerte übersteuern `.env.local` und `.env`;
    für ein vollständig explizites Profil `LENA_ENV_FILE_MODE=disabled` verwenden.
    WFS-/Toiletten-/Brunnen-Synchronisation für einen eingefrorenen Teststand
    deaktivieren. Ohne LLM-Interpreter gibt es nur den technischen Hilfepfad,
@@ -33,12 +33,12 @@ und keine Freigabe für öffentliche Nutzung oder personenbezogene Testeingaben.
    kann noch enden. Server-TTL-Bereinigung erfolgt bei Zugriff, nicht als
    garantierter zeitgesteuerter Löschdienst. Sprachwechsel erhält die Sitzung.
 6. Netzwerkpfade separat berücksichtigen: LLM, Browser-Spracherkennung,
-   serverseitiges STT, standardmäßiges Edge-TTS und OSM-Kacheln sind nicht
+   optionales serverseitiges STT, ausdrücklich aktiviertes TTS und OSM-Kacheln sind nicht
    vollständig lokal. Texterfassung bleibt bei fehlender Sprachfunktion möglich.
    Ein erneuter Klick auf die aktive Vorleseschaltfläche stoppt die Ausgabe.
 7. Bekannte Grenzen protokollieren: maschinelle, nicht vollständig sprachlich
    geprüfte Übersetzungen; keine reale Akustik-/WCAG-/Screenreader-Validierung;
-   heuristische Grounding-Prüfung; kein Nachweis aktueller Aufnahmekapazitäten;
+   Faktenpakettreue statt allgemeiner semantischer Wahrheitsprüfung; kein Nachweis aktueller Aufnahmekapazitäten;
    Luftlinien statt Routen; keine automatische vollständige Standortverlagerung.
 
 ## Beschlossener Zeit- und Vermittlungsvertrag
@@ -165,3 +165,14 @@ keine echten Browser-, Touch-, Assistenztechnik- oder Akustiktests.
 `live-dry-run` ist providerfreie Vorbereitung; das `--dry-run` der
 Übersetzungswartung bedeutet dagegen nur, dass kein Store geschrieben wird:
 es kann echte Provideraufrufe ausführen. Nicht als Offline-Test verwenden.
+
+## Neuer Antwortstand vom 25.10.2026
+
+Für eine Evaluation dieses Stands Vertrag 6 / Prompt 24 / Validator 6 und den
+genauen Commit nach abschließender Versionierung festhalten. Der Formulator
+wählt Fakten und geschlossene Akte; der Server rendert den sichtbaren Text.
+Fünfsprachige Verständlichkeit und die geringere sprachliche Freiheit müssen
+mitbewertet werden. Die neuen Live-Gates sind außerhalb des Interpreters noch
+negativ; die technische Vorbereitung ist keine uneingeschränkte Freigabe.
+[Ergebnisse und Grenzen](controlled-answer-acts.md) vor der Festlegung des
+Abgabestands prüfen. Keine alten Messzahlen auf den neuen Renderer übertragen.

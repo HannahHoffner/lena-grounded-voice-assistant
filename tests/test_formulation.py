@@ -17,9 +17,9 @@ from app.candidate_contract import CandidateRole
 from app.config import Settings
 from app.formulation import (
     EVIDENCE_CONTRACT_VERSION,
-    FORMULATOR_CONTRACT_VERSION,
-    FORMULATOR_PROMPT_VERSION,
-    FORMULATOR_SYSTEM_PROMPT,
+    LEGACY_FORMULATOR_CONTRACT_VERSION as FORMULATOR_CONTRACT_VERSION,
+    LEGACY_FORMULATOR_PROMPT_VERSION as FORMULATOR_PROMPT_VERSION,
+    LEGACY_FORMULATOR_SYSTEM_PROMPT as FORMULATOR_SYSTEM_PROMPT,
     AnswerType,
     BindingPolicy,
     ClaimType,
@@ -162,8 +162,8 @@ def test_versions_prompt_and_health_are_observable(app) -> None:
     assert FORMULATOR_CONTRACT_VERSION == "5"
     assert FORMULATOR_PROMPT_VERSION == "22"
     assert health["evidence_contract_version"] == "4"
-    assert health["formulator_contract_version"] == "5"
-    assert health["formulator_prompt_version"] == "22"
+    assert health["formulator_contract_version"] == "6"
+    assert health["formulator_prompt_version"] == "24"
     assert health["llm_request_budget_seconds"] == 45.0
     for rule in (
         "Use only EVIDENCE facts",
@@ -844,7 +844,9 @@ def test_provider_requires_pure_json_and_exact_language(app, monkeypatch: pytest
     with pytest.raises(FormulatorError, match="formulator_invalid_json"):
         asyncio.run(provider.formulate_answer(evidence=evidence))
 
-    response = _response(evidence, text="Go to Scharni.", language=Language.EN)
+    from app.answer_plan import AnswerAct, FormulatorPlan
+    response = FormulatorPlan(contract_version="6", language=Language.EN,
+        sentences=[AnswerAct(act="contact", offer_id=evidence.selected_offers[0].offer_id)])
 
     async def wrong_language(_: dict) -> dict:
         return {"choices": [{"message": {"content": response.model_dump_json()}}]}
@@ -882,7 +884,10 @@ def test_provider_maps_parser_and_contract_failures_to_stable_codes(
 def test_provider_rejects_a_schema_valid_but_unknown_fact_reference(app, monkeypatch: pytest.MonkeyPatch) -> None:
     provider = BlabladorProvider(_settings("blablador"))
     evidence = _evidence(app)
-    response = _response(evidence, text="Geh zu Scharni.")
+    from app.answer_plan import AnswerAct, FormulatorPlan
+    response = FormulatorPlan(contract_version="6", language=evidence.requested_language,
+        sentences=[AnswerAct(act="facts", offer_id=evidence.selected_offers[0].offer_id,
+            fact_ids=["f_0000000000000000"])])
     response.sentences[0].fact_ids = ["f_0000000000000000"]
 
     async def model_response(_: dict) -> dict:
@@ -1027,61 +1032,60 @@ def test_known_limitation_non_target_minor_should_not_trigger_target_check(app) 
 def test_real_provider_retry_gets_only_closed_feedback_and_revalidates(
     app, monkeypatch, caplog, failure, corrected,
 ) -> None:
-    """Exercise shared orchestration through real parsing/grounding with mocked HTTP."""
+    """Current plan protocol: reject bad access, injected phone prose and raw codes."""
+    from app.answer_plan import AnswerAct, FormulatorPlan
+    from app.answer_plan import formulator_plan_prompt
+    current_prompt = formulator_plan_prompt()
     referral = failure != "target"
     evidence = _evidence(app, language=Language.EN, offer_ids=("21",) if referral else ("8",),
                          answer_type=AnswerType.GROUNDED_REFERRAL if referral else AnswerType.GROUNDED_RESULT,
                          roles={"21": CandidateRole.REFERRAL_CONTACT} if referral else None)
-    name = _fact(evidence, FactType.DISPLAY_NAME)
-    claim = ClaimType.REFERRAL if referral else ClaimType.ACTION
-    good = _response(evidence, text=f"{'Contact' if referral else 'Use'} {name.value}.", claim_type=claim)
-    bad = good.model_copy(deep=True)
+    offer = evidence.selected_offers[0]
+    good = FormulatorPlan(contract_version="6", language=Language.EN,
+        sentences=[AnswerAct(act="contact", offer_id=offer.offer_id)])
+    bad = good.model_dump(mode="json")
     if failure == "target":
-        # Angebot 8 ist für volljährige Frauen kuratiert; „minors“ widerspricht
-        # der kuratierten Altersgrenze, auch ohne deren Zitat.
-        bad.sentences[0].text = f"Use {name.value} for minors."
+        bad["sentences"][0].update(act="unknown", reason="access")
         diagnostic = GroundingDiagnosticCode.TARGET_CLAIM_CONTRADICTED
+        error_code = "formulator_ungrounded_claim"
     elif failure == "phone":
-        phone = _fact(evidence, FactType.PHONE)
-        bad.sentences[0].text = f"Contact {name.value}: {phone.value.split(' (')[0]}."
-        bad.sentences[0].fact_ids.append(phone.fact_id)
-        diagnostic = GroundingDiagnosticCode.PHONE_NOT_EXACT
+        bad["sentences"][0]["text"] = "Call 99999999."
+        diagnostic = None
+        error_code = "formulator_schema_error"
     else:
-        # Nur der fehlende Leistungsbeleg begründet die Ablehnung, nicht die Rolle.
-        bad.sentences[0].claim_type = ClaimType.SERVICE
-        diagnostic = GroundingDiagnosticCode.SERVICE_FACT_MISSING
+        fact = _fact(evidence, FactType.CAPABILITY)
+        bad["sentences"][0].update(act="facts", fact_ids=[fact.fact_id])
+        diagnostic = None
+        error_code = "formulator_invalid_fact"
     provider = BlabladorProvider(_settings("blablador"))
     payloads = []
     clock = _Clock()
-
     async def post(payload):
         payloads.append(payload)
         clock.advance(1)
-        response = good if len(payloads) == 2 and corrected else bad
-        return {"choices": [{"message": {"content": response.model_dump_json()}}]}
-
+        value = good.model_dump(mode="json") if len(payloads) == 2 and corrected else bad
+        return {"choices": [{"message": {"content": json.dumps(value)}}]}
     monkeypatch.setattr(provider, "_post", post)
     budget = LLMRequestBudget(45, clock)
     async def run():
         return await app.state.service._call_formulator(
             provider.formulate_answer, evidence=evidence, budget=budget, interaction=QueryInteraction(),
         )
-
     if corrected:
-        assert asyncio.run(run()).answer == good.sentences[0].text
+        assert asyncio.run(run()).answer == validate_formulation(good, evidence).answer
     else:
         with pytest.raises(FormulatorError) as captured:
             asyncio.run(run())
+        assert captured.value.code == error_code
         assert captured.value.diagnostic_code == diagnostic
     assert len(payloads) == 2
-    assert payloads[0]["messages"][0]["content"] == FORMULATOR_SYSTEM_PROMPT
-    assert payloads[1]["messages"][0]["content"] == (
-        FORMULATOR_SYSTEM_PROMPT + "\n" + formulator_retry_instruction(diagnostic)
-    )
+    assert payloads[0]["messages"][0]["content"] == current_prompt
+    expected = current_prompt + ("\n" + formulator_retry_instruction(diagnostic, answer_plan=True) if diagnostic else "")
+    assert payloads[1]["messages"][0]["content"] == expected
     assert payloads[0]["messages"][1] == payloads[1]["messages"][1]
     assert all(len(p["messages"]) == 2 for p in payloads)
     assert budget.consumed_seconds == 2
-    assert bad.sentences[0].text not in caplog.text
+    assert "99999999" not in caplog.text
 
 
 @pytest.mark.parametrize("elapsed", [44, 45])

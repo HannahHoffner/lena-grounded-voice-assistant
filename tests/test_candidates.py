@@ -9,7 +9,7 @@ from zoneinfo import ZoneInfo
 import pytest
 from pydantic import ValidationError
 
-from app.candidate_contract import CandidateDecision, CandidateRole, ReasonCode, RuleCode, SelectionStatus
+from app.candidate_contract import CandidateDecision, CandidateRole, MissingFact, ReasonCode, RuleCode, SelectionStatus
 from app.candidates import CandidateSelector, build_selection_context
 from app.curation import load_curation_catalog, project_runtime_offers
 from app.interpreter import AcuteRiskStatus, Need, QueryInterpretation, RequestedService
@@ -235,6 +235,28 @@ def test_drug_specific_offers_require_explicit_drug_use_and_alias_does_not_infer
         query="Schoppi Beratung",
     )
     assert ids(day_offer) == ["11"]
+
+
+def test_named_contact_resolves_team_but_does_not_establish_personal_eligibility() -> None:
+    value = interpretation(Need.GENERAL_HELP, services=[RequestedService.CONTACT])
+    ambiguous = decide(value, query="Ich suche Kübel.")
+    assert ids(ambiguous) == []
+    assert {c.offer_id for c in ambiguous.conditional_candidates} == {"19.1", "19.2", "19.3"}
+    assert MissingFact.DISTRICT in ambiguous.missing_information
+    assert MissingFact.AGE in ambiguous.missing_information
+    narrowed = decide(interpretation(Need.GENERAL_HELP, services=[RequestedService.CONTACT], district="Grünau"),
+                      query="Kübel in Grünau")
+    assert ids(narrowed) == []
+    assert [c.offer_id for c in narrowed.conditional_candidates] == ["19.2"]
+    assert MissingFact.AGE in narrowed.missing_information
+    ineligible = decide(interpretation(Need.GENERAL_HELP, services=[RequestedService.CONTACT], age=40),
+                        query="Kübel")
+    assert ids(ineligible) == [] and ineligible.conditional_candidates == []
+    unrelated = decide(value, query="Ich brauche einen Kontakt.")
+    assert not {"19.1", "19.2", "19.3"}.intersection(ids(unrelated))
+    unsupported = decide(interpretation(Need.GENERAL_HELP, services=[RequestedService.CONTACT, RequestedService.OVERNIGHT_STAY]),
+                         query="Kübel")
+    assert ids(unsupported) == [] and unsupported.conditional_candidates == []
 
 
 def test_mobile_alias_never_guesses_team_but_gruenau_narrows_for_explicit_youth_need() -> None:

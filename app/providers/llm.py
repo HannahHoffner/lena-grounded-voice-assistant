@@ -14,16 +14,15 @@ from pydantic import ValidationError
 from ..candidate_contract import CandidateDecision
 from ..config import Settings
 from ..formulation import (
-    FORMULATOR_SYSTEM_PROMPT,
     MAX_FORMULATOR_RESPONSE_CHARS,
     AnswerType,
     FormulatorError,
     FormulatorEvidence,
-    FormulatorResponse,
     GroundingDiagnosticCode,
     formulator_retry_instruction,
 )
 from ..grounding import validate_formulation
+from ..answer_plan import FormulatorPlan, formulator_plan_prompt, planner_evidence_payload
 from ..interpreter import (
     INTERPRETER_CONTRACT_VERSION,
     INTERPRETER_PROMPT_VERSION,
@@ -366,13 +365,13 @@ class BlabladorProvider:
         Raises:
             FormulatorError: Mit redigiertem stufenspezifischem Fehlercode.
         """
-        context = json.dumps(evidence.model_dump(mode="json"), ensure_ascii=False, separators=(",", ":"))
+        context = json.dumps(planner_evidence_payload(evidence), ensure_ascii=False, separators=(",", ":"))
         if len(context) > self.max_context_chars:
             raise FormulatorError("formulator_contract_violation")
         # Only trusted closed feedback is added, never the rejected model response.
-        system_prompt = FORMULATOR_SYSTEM_PROMPT
+        system_prompt = formulator_plan_prompt()
         if retry_diagnostic is not None:
-            system_prompt += "\n" + formulator_retry_instruction(retry_diagnostic)
+            system_prompt += "\n" + formulator_retry_instruction(retry_diagnostic, answer_plan=True)
         payload = {
             "model": self.formulator_model,
             "temperature": 0,
@@ -405,7 +404,7 @@ class BlabladorProvider:
         if not isinstance(raw, dict):
             raise FormulatorError("formulator_schema_error")
         try:
-            parsed = FormulatorResponse.model_validate(raw)
+            parsed = FormulatorPlan.model_validate(raw)
         except ValidationError as exc:
             raise FormulatorError("formulator_schema_error") from exc
         try:

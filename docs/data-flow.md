@@ -45,7 +45,7 @@ sequenceDiagram
     opt geerdete Formulierung verfügbar
         S->>S: Evidence-Vertrag 4 aus finalen Angeboten
         S->>L: Evidence + bindende Policies
-        L-->>S: Formulatorvertrag 5 + Card-IDs
+        L-->>S: Antwortplanvertrag 6 + Card-IDs
         S->>S: Fakten, Rollen, Sprache und Karten atomar validieren
     end
     S-->>A: QueryResponse oder Template-Fallback
@@ -143,7 +143,7 @@ validiert. Eine einzelne fremde ID verwirft die gesamte Antwort. Danach setzt
 die Anwendung Mandatory-Kandidaten vor die gewählte Menge und stellt die
 kuratierte stabile Reihenfolge wieder her. Erst daraus entsteht ein
 `FormulatorEvidence`-Paket mit Evidence-Version 4 und Formulatorpromptversion
-22 (Stand Version 0.2.0; maßgeblich sind die Konstanten in `app/formulation.py`
+24 (Stand 26.10.2026; maßgeblich sind die Konstanten in `app/formulation.py`
 und `/api/health`). Es enthält
 pro finalem Angebot Rolle, Mandatory-Status und ausschließlich freigegebene
 Fakten mit opaken Referenzen. Evidence 4 ergänzt leistungsgebundene
@@ -161,40 +161,18 @@ Tag oder einer Uhrzeit bevorzugt er Kandidaten, deren strukturierter
 `schedule_match_status` bereits deterministisch `matched` ist; er darf keine
 Zeitpassung selbst ergänzen.
 
-Die Modellantwort folgt Formulatorvertrag 5 (ein bis drei Textblöcke, zusammen
-höchstens 600 Zeichen). Der Prompt fordert bei normalen angebotsbezogenen
-Antworten kurze natürliche Sätze. Das
-wichtigste Angebot steht zuerst, ist aber nicht mehr an ein festes
-`Nutze ...`-Muster gebunden. Mehrere finale, nützliche Alternativen können in
-Evidence-Reihenfolge mit je einem eigenen belegten Satz genannt werden. Bei
-explizitem Zeitbezug soll eine final ausgewählte Option mit passendem Zeitfakt
-nicht zugunsten ausschließlich allgemeiner Information entfallen. Der eng
-begrenzte Prompt-Injection-Pfad bleibt als sichere Ausnahme einsätzig und fest
-formuliert. Alle Sätze enthalten Claimtyp sowie Fakten- oder Policyreferenzen;
-die Antwort enthält höchstens vier Card-IDs. Das Backend baut den sichtbaren
-Text erst nach vollständiger Vertrags-, Sprach-, Rollen-, Fakten- und
-Kartenprüfung zusammen. Seit Groundingvalidator 4 hängt die Inhaltsprüfung nicht
-mehr vom vom Modell deklarierten Claimtyp ab: Leistungs-, Erhalts-, Besitz- und
-(DE/EN) Identitätsaussagen dürfen keine offenen Inhaltswörter ohne Beleg im
-selben Angebot enthalten (`app/grounding_content.py`, Diagnose
-`content_not_covered`). Das ist eine begrenzte regelbasierte Prüfung, keine
-allgemeine semantische Wahrheitsgarantie. Sichtbare Modell- und Fallbacktexte verweisen dabei
-nicht auf „Karten“ oder andere technische Ergebniscontainer. Eine nötige
-Orientierung wird sprachabhängig als „Mehr Infos stehen unten“ ausgedrückt; die
-eigentliche Kartenansicht und fachliche Angaben zur Kartenzahlung sind davon
-nicht betroffen.
-Belegt sein muss der Inhalt, nicht die Vollständigkeit der Modellzitate. Die
-Prüfung verwendet alle bereitgestellten Fakten desselben ausgewählten Angebots;
-Fakten anderer Angebote oder der übrigen Wissensbasis ersetzen keinen Beleg.
-Führende Nullen in Ganzzahl-IDs werden nur bei eindeutiger Paketzuordnung
-normalisiert; unbekannte/mehrdeutige IDs, Dezimalumdeutungen und fremde
-Faktreferenzen bleiben unzulässig. Deklarierte und verfügbare Fakt-IDs werden
-intern getrennt erfasst, ohne verfügbare Fakten als Modellzitate auszugeben.
-Eine ungültige oder angebotsfremde Referenz und ein ungeerdeter
-operativer Fakt verwerfen weiterhin die gesamte Antwort. Verbindliche Karten und die finale Reihenfolge werden
-deterministisch aus dem Evidence-Paket wiederhergestellt und können durch
-`card_ids` weder entfernt noch umsortiert
-werden.
+Seit 25.10.2026 verwendet der produktive Formulator **Vertrag 6, Prompt 24,
+Evidence 4 und Validator 6**. Er liefert keinen sichtbaren Freitext, sondern
+einen geschlossenen Plan aus Fakten-, Kontakt-, Unbekanntheits- und Grenzakten.
+`app/answer_plan.py` prüft die Bindungen und erzeugt die Ausgabe aus belegten
+Quellwerten und festen Texten (`app/answer_act_texts.py`). Bedingungen werden
+serverseitig mitgeführt, Karten und ihre Reihenfolge wiederhergestellt.
+Der Renderer hält 600 Zeichen ein, indem er nur vollständige Fakten mit
+allen Bedingungen übernimmt; passt keine solche Aussage, bleibt ein Kontaktakt.
+Es gibt keinen zusätzlichen LLM und keinen produktiven Legacy-Umschalter.
+Die aktuelle Frage steuert nur die Relevanz, liefert keine Angebotsfakten.
+Details, Einschränkungen und neue Live-Ergebnisse:
+[Kontrollierte Antwortakte](controlled-answer-acts.md).
 
 Bei einem Groundingfehler kann der gemeinsame Formulatorpfad innerhalb des
 Restbudgets genau einmal erneut aufgerufen werden. Nur der geschlossene

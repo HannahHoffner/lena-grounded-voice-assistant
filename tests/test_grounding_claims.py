@@ -13,7 +13,7 @@ import pytest
 
 from app.candidate_contract import CandidateRole
 from app.formulation import (
-    FORMULATOR_CONTRACT_VERSION,
+    LEGACY_FORMULATOR_CONTRACT_VERSION as FORMULATOR_CONTRACT_VERSION,
     AnswerType,
     ClaimType,
     FactType,

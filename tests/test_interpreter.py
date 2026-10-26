@@ -620,8 +620,8 @@ def test_prompt_names_every_contract_field_including_nested_explicit_facts() -> 
     assert "input_language" in INTERPRETER_SYSTEM_PROMPT
 
 
-def test_prompt_version_11_defines_risk_scope_need_and_sleeping_bag_semantics() -> None:
-    assert INTERPRETER_PROMPT_VERSION == "11"
+def test_current_prompt_defines_risk_scope_need_and_sleeping_bag_semantics() -> None:
+    assert INTERPRETER_PROMPT_VERSION == "12"
     assert "Toilet means an explicitly requested toilet/WC" in INTERPRETER_SYSTEM_PROMPT
     assert 'explicit_service_requests=["shower"]' in INTERPRETER_SYSTEM_PROMPT
     assert "primarily a concrete or possible immediate danger statement" in INTERPRETER_SYSTEM_PROMPT
@@ -746,6 +746,41 @@ def test_curated_alias_inventory_is_id_free_and_preserves_ambiguity() -> None:
     assert aliases["Südpol"].may_refer_to_multiple_services is True
     assert aliases["Rücke"].alias_kind == "offer"
     assert "ordinary adjective 'mobile'" in INTERPRETER_SYSTEM_PROMPT
+    assert 'need=general_help and explicit_service_requests=[]' in INTERPRETER_SYSTEM_PROMPT
+    assert "mere word occurrence never overrides context" in INTERPRETER_SYSTEM_PROMPT
+    assert "organization_district or organization_need" in INTERPRETER_SYSTEM_PROMPT
+
+
+@pytest.mark.parametrize("query", ["Kübel", "Ich suche Kübel.", "Where is Kübel?", "Szukam Kübel", "Caut Kübel", "Ищу Kübel"])
+def test_closed_named_lookup_repairs_scope_without_inventing_facts(query) -> None:
+    from app.interpreter import InterpreterAliasHint, resolve_named_lookup
+    hint = InterpreterAliasHint(alias="Kübel", alias_kind="organization", may_refer_to_multiple_services=True)
+    value = QueryInterpretation.model_validate(_result(Need.UNKNOWN, scope=ScopeStatus.OUT_OF_SCOPE))
+    resolved = resolve_named_lookup(query, value, [hint])
+    assert resolved.scope_status == ScopeStatus.IN_SCOPE
+    assert resolved.need == Need.GENERAL_HELP
+    assert resolved.explicit_service_requests == []
+    assert resolved.explicit_facts == value.explicit_facts
+    assert value.scope_status == ScopeStatus.OUT_OF_SCOPE
+
+
+@pytest.mark.parametrize("query", ["Ich möchte einen Kübel kaufen.", "Ich suche Kübel für den Garten.",
+    "Купить Kübel", "Ich suche Kübel. Ich werde jetzt angegriffen.", "Ich suche Unbekannt."])
+def test_named_lookup_never_drops_unrelated_or_danger_context(query) -> None:
+    from app.interpreter import InterpreterAliasHint, resolve_named_lookup
+    hint = InterpreterAliasHint(alias="Kübel", alias_kind="organization", may_refer_to_multiple_services=True)
+    value = QueryInterpretation.model_validate(_result(Need.UNKNOWN, scope=ScopeStatus.OUT_OF_SCOPE))
+    assert resolve_named_lookup(query, value, [hint]) is value
+
+
+@pytest.mark.parametrize("risk", ["detected", "uncertain"])
+def test_named_lookup_cannot_override_safety(risk) -> None:
+    from app.interpreter import InterpreterAliasHint, resolve_named_lookup
+    hint = InterpreterAliasHint(alias="Kübel", alias_kind="organization", may_refer_to_multiple_services=True)
+    raw = _result(Need.UNKNOWN, scope=ScopeStatus.OUT_OF_SCOPE)
+    raw["acute_risk_status"] = risk
+    value = QueryInterpretation.model_validate(raw)
+    assert resolve_named_lookup("Ich suche Kübel.", value, [hint]) is value
 
 
 def test_contract_separates_broad_need_from_explicit_service() -> None:

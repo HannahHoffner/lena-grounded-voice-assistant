@@ -54,6 +54,10 @@ def test_recorded_response_is_supported_without_rewriting_model_citations(app):
 
 def test_provider_exposes_internal_reference_assessment(app, monkeypatch):
     evidence, response = _recorded_response(app)
+    from app.answer_plan import AnswerAct, FormulatorPlan
+    response = FormulatorPlan(contract_version="6", language=evidence.requested_language,
+        sentences=[AnswerAct(act="facts", offer_id="7",
+            fact_ids=[_fact(evidence, FactType.SERVICE, contains="5,00").fact_id])], card_ids=["7"])
     provider = BlabladorProvider(_settings("blablador"))
 
     async def post(payload):
@@ -63,6 +67,7 @@ def test_provider_exposes_internal_reference_assessment(app, monkeypatch):
     result = asyncio.run(provider.formulate_answer(evidence=evidence))
     assert result.card_ids == ["7"]
     assert result.reference_assessment["scope"] == "selected_offer_evidence"
+    assert result.reference_assessment["mode"] == "controlled_answer_plan"
 
 
 @pytest.mark.parametrize("bad", ["999", "7.0", "vkkj_07"])
