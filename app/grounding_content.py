@@ -238,15 +238,19 @@ def _schedule_word(word: str, language: Language) -> bool:
     return word in WEEKDAY_ABBREVIATIONS[language] or word in labels or _inflection_of(word, labels)
 
 
-def unsupported_content_words(text: str, facts: Sequence[Fact], language: Language) -> tuple[str, ...]:
+def unsupported_content_words(
+    text: str, facts: Sequence[Fact], language: Language, *, require_coverage: bool = False,
+) -> tuple[str, ...]:
     """Liefert offene Inhaltswörter einer Leistungsaussage ohne Beleg.
 
-    Gibt für Sätze, die keine Leistungs- oder Identitätsaussage bilden, ein
-    leeres Tupel zurück. Ein leeres Ergebnis ist keine Wahrheitsaussage: es
+    Historisch werden nur Leistungs-/Identitätsaussagen geprüft. Vertrag 7
+    setzt require_coverage auch für andere Formulierungen, damit ein anderes
+    Verb oder Claimlabel keine unbelegten Inhalte freigibt.
+    Ein leeres Ergebnis ist keine Wahrheitsaussage: es
     bedeutet nur, dass jedes Inhaltswort belegt ist oder einer anderen,
     unabhängig ausgeführten Prüfung unterliegt.
     """
-    if not asserts_provision(text, language):
+    if not require_coverage and not asserts_provision(text, language):
         return ()
     closed = (
         CLOSED_CLASS_WORDS[language] | PROVISION_PREDICATES[language] | DIRECTIVE_VERBS[language]

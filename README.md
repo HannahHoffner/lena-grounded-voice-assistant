@@ -11,17 +11,26 @@ Wissensquelle. Die Verarbeitung ist in vier Schichten getrennt:
 |---|---|---|
 | Datenbasis | `kb_loader`, `curation`, `*_releases`, `official_offer_source` | hashgebundene, manuell freigegebene Bestände |
 | Fachregeln | `candidates`, `candidate_context`, `dialogue_flow`, `result_time`, `result_ordering` | deterministische Kandidatenbegrenzung, Dialoge, Zeit- und Ortsregeln nach Interpretation und vor Auswahl/Formulator |
-| LLM-Stufen | `providers/llm`, `llm_stages`, `formulation` | Interpretation, kontrollierte Auswahl und Antwortplanung aus einem Evidence-Paket; Budget, Retry, Template-Rückfall |
-| Prüfung/Renderer | `grounding`, `answer_plan`, `answer_act_texts` | atomare Plan-/Referenzprüfung und Text aus gebundenen Fakten/Akten; ohne Zugriff auf Provider, Wissensbasis oder Fachregeln |
+| LLM-Stufen | `providers/llm`, `llm_stages`, `formulation`, `formulator_prose` | Interpretation, kontrollierte Auswahl und freie, fragebezogene Formulierung aus einem Evidence-Paket; Budget, Retry, Template-Rückfall |
+| Faktenprüfung | `grounding`, `grounding_*` | atomare Prüfung des Modelltexts und seiner Referenzen; ohne Zugriff auf Provider, Wissensbasis oder Fachregeln |
 
 `app/service.py` orchestriert diese Schichten; `tests/test_architecture_boundaries.py`
-sichert die Importgrenzen. Der produktive Formulator liefert einen
-**geschlossenen Antwortplan**; der Server prüft Referenzen und setzt Quellwerte
-mit festen Antwortakten ein. Freie Modellprosa wird nicht ausgegeben. Das ist
-Pakettreue, keine allgemeine semantische Wahrheitsgarantie: Interpretation,
-Auswahl, Quellaktualität und sprachliche Eignung können weiterhin fehlerhaft sein
-(siehe [Systemgrenzen](#systemgrenzen)). Die frühere lexikalische
-Claimprüfung bleibt als historisches Forschungsartefakt erhalten.
+sichert die Importgrenzen. Der produktive Formulator liefert **selbst formulierte
+Sätze mit Faktenreferenzen** (Vertrag 7, Prompt 25). Nach atomarer Prüfung wird
+der Modelltext als `provider: "blablador"` ausgegeben, ohne Satzschablonen.
+Bei Fehlern greift der bestehende Template-Fallback. Der Prompt verlangt ein
+bis drei kurze Sätze in einfacher Sprache. Die endliche Faktenprüfung ist keine
+allgemeine semantische Wahrheitsgarantie (siehe [Systemgrenzen](#systemgrenzen)).
+Planvertrag 6 und sein Renderer bleiben nur für historische Vergleiche erhalten.
+
+Der historisch erhaltene Faktenrenderer verwendet feste vollständige Satzvorlagen statt Feldlabels
+und Semikolonlisten; zusammengehörige Werte werden gemeinsam genannt. Äußere
+Markdown-Quellmarker erscheinen nicht als Listenformat in der Antwort.
+Zugangsvorbehalte und Hinweise bleiben gebunden. Komplexe Quelltexte werden
+nicht frei umgeschrieben; zertifizierte Leichte Sprache oder unabhängig geprüfte
+Fremdsprachen werden damit nicht behauptet. Die Wiederherstellung der Modellprosa
+ist ein neuer Arbeitsstand gegenüber der Live-Messung auf 2462e7d und benötigt
+vor der finalen manuellen Erhebung eine gemeinsame Commit-/Evidenzzuordnung.
 
 Die normale Bedarfsauswahl benötigt einen konfigurierten LLM-Interpreter. Ohne
 ihn startet die Anwendung, liefert bei normalen Anfragen aber nur den
@@ -209,7 +218,14 @@ Netzwerkzugriffe. Ein bewusst dokumentierter `strict xfail`
 (`tests/test_formulation.py`, „minor injuries“) markiert eine bekannte
 Überablehnung und zählt nicht als bestanden. Live-Provider-Läufe sind getrennt
 freizugeben ([Live-Provider-Evaluation](docs/live-provider-evaluation.md)).
-Aktueller Prüfstand vom 26.10.2026: nativ und im netzlosen Container jeweils
+Historischer Rendererprüfstand nach fb773e9, 26.10.2026: nativ und im netzlosen
+Container jeweils **1506 bestanden, 1 bekannter strikter XFAIL, 1 bekannte
+TestClient-Warnung**; JavaScript jeweils **19/19**. Sauberer Docker-Neubau,
+Runtime-Health, Loopback-Port und persistente Session nach Neustart und
+Containerwechsel geprüft. Keine neuen Live-Provider-/Sprach-/Browsermessungen.
+[Nachweis und Grenzen](IMPLEMENTATION_REPORT.md#13-vollständige-antwortsätze-nach-fb773e9).
+
+Voriger Prüfstand vom 26.10.2026 vor der Rendereränderung: nativ und im netzlosen Container jeweils
 **1476 Python-Tests bestanden, 1 bekannter strikter XFAIL**, je **19/19 JS**;
 bekannte Starlette-TestClient-DeprecationWarning bleibt sichtbar. Sauberer
 Docker-Neubau, HTTP-Runtime, Blablador und Sessionerhalt nach Neustart und
@@ -236,17 +252,15 @@ Offline-Werkzeugtests: nativ 1355 bestanden, ein bekannter XFAIL; JS 19/19.
 
 - Forschungsprototyp für isolierten lokalen Betrieb: keine Authentifizierung,
   kein TLS, keine Rate-Limits, ein Prozess; nicht für öffentlichen Betrieb.
-- Seit 25.10.2026 liefert der Formulator einen geschlossenen Antwortplan
-  (Vertrag 6, Prompt 24, Validator 6). Das Backend setzt ausgewählte Fakten
-  und feste Antwortakte ein; freie Modellprosa wird nicht ausgegeben. Die
-  frühere Wortprüfung bleibt ausschließlich für historische Replays erhalten.
-  Das verhindert frei erfundene Leistungsformulierungen, garantiert aber weder
-  richtige Bedarfserkennung noch passende Auswahl oder aktuelle Quelldaten.
-  Der Renderer hält 600 Zeichen durch vollständige Faktengruppen samt
-  Pflichtbedingungen ein; passt keine Gruppe, bleibt ein kurzer Kontaktauftrag. Fremdsprachige
-  Rohfelder können in der Quellsprache verbleiben. Die festen Texte sind noch
-  nicht unabhängig sprachlich geprüft. Interpreter-`explicit_facts` werden
-  weiterhin nicht gegen Quellspannen geprüft.
+- Seit der Überarbeitung vom 26.10.2026 formuliert das LLM wieder sichtbaren
+  Text (Vertrag 7, Prompt 25, Validator 7). Referenzen, Zahlen, Zeiten,
+  Angebotsbindung, Rollen und verbotene Zusatzbehauptungen werden geprüft;
+  eine neue Verbform darf die Inhaltswortprüfung nicht umgehen. Die Prüfung
+  ist endlich und kann sowohl unbelegte Paraphrasen übersehen als auch richtige
+  Formulierungen ablehnen. Ein Retry und danach atomarer Template-Fallback
+  bleiben bestehen; maximal 600 Zeichen, keine automatische Kürzung von Fakten.
+  Sprachliche Eignung und Bedarfspassung benötigen manuelle Evaluation.
+  Interpreter-`explicit_facts` werden weiterhin nicht gegen Quellspannen geprüft.
   Aufbau und neue Prüfbelege: [Kontrollierte Antwortakte](docs/controlled-answer-acts.md).
 - Modellantworten sind nicht deterministisch wiederholbar; Modellaliase des
   Anbieters können sich ändern.
@@ -278,7 +292,7 @@ Offline-Werkzeugtests: nativ 1355 bestanden, ein bekannter XFAIL; JS 19/19.
 | `app/interpreter.py` | versionierter Interpretervertrag, Prompt und minimale Alias-Hinweise |
 | `app/candidate_contract.py`, `app/candidates.py` | strikter Auswahlvertrag und deterministische Kandidatenbegrenzung |
 | `app/llm_selection.py` | kompakter Selectorvertrag, Prompt, Bypass, ID-Validierung und deterministischer Fallback |
-| `app/formulation.py`, `app/grounding.py`, `app/answer_plan.py`, `app/answer_act_texts.py` | Evidence, Prompt, strikter Planvertrag und Renderer; gebundene Fakten/Akte, Bedingungen, Länge und Karten |
+| `app/formulation.py`, `app/grounding.py`, `app/answer_plan.py`, `app/answer_act_texts.py` | Evidence und Faktenprüfung; Planvertrag/Renderer nur noch historisch, produktiver Textvertrag in `app/formulator_prose.py` |
 | `app/grounding_claims.py`, `app/grounding_constraints.py`, `app/grounding_content.py`, `app/grounding_references.py` | historische Freitext-/Claimprüfung und zugehörige Forschungsreplays; kein produktives freies Ausgabeformat |
 | `app/llm_budget.py` | kumulatives monotones Zeitbudget der drei externen LLM-Stufen |
 | `app/dialogue.py`, `app/dialogue_flow.py` | versionierter Dialogzustand, lokalisierte Rückfragen und begrenzte Auflösung |

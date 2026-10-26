@@ -1,5 +1,69 @@
 # Tests und Qualitätssicherung
 
+### Abschließende Prüfung dieses Textvertrags
+
+- Python vollständig nativ: **1521 bestanden, 1 bekannter strikter XFAIL,
+  1 bekannte TestClient-DeprecationWarning**, 413.21 s.
+- Python vollständig im neu gebauten netzlosen Container: **1521 bestanden,
+  1 XFAIL, 1 Warning**, 267,96 s; JavaScript nativ und im Container **19/19**.
+- Sauberer Docker-Neubau mit `--pull --no-cache`; Runtime startet,
+  Healthcheck healthy, Loopback-Port/read-only geprüft, persistentes Volume
+  nach Neustart und Containerwechsel erhalten. Runtime ohne Secrets geprüft.
+- Zwei echte synthetische Blablador-Anfragen mit Modelltext; keine neue
+  vollständige Live-Evaluation, kein Browser-/STT-/TTS-Test in diesem Auftrag.
+- Früherer vollständiger Lauf hatte genau einen Fehler durch die alte
+  Validatorversions-Erwartung im Manifesttest. Nach Migration auf 7 gezielt
+  und anschließend vollständig erneut geprüft; kein fachlicher Test entfernt.
+- Code-/Test-Hashes des endgültigen Arbeitsstands stimmen mit dem sauberen
+  Docker-Export überein. Dokumentationsnachträge entstanden nach dem Export.
+
+Belege extern: `native-final.xml`, `native-final.log`, `docker-build-final.log`,
+`docker-tests-final.log`, `javascript.log`, `runtime-smoke.json`,
+`live-prose.json`, `verification.json` und `formulator-restoration.diff` unter
+`%LOCALAPPDATA%/LENA/verification/2026-10-26-model-prose`.
+Keine uneingeschränkte Wahrheits-, Evaluations- oder Veröffentlichungsaussage.
+
+## Aktueller Textvertrag 7, 26.10.2026
+
+`tests/test_formulator_prose.py` prüft echte Provider-/Servicegrenzen mit
+kontrollierten Transportantworten: unveränderte Ausgabe belegter Modelltexte,
+atomarer Fallback bei erfundenen Leistungen, Telefonnummern und Aufnahmezusagen,
+striktes Schema und Ablehnung historischer Protokolle im produktiven Provider.
+`test_formulation` und alle `test_grounding_*` zusammen mit dem neuen Modul:
+388 bestanden, 1 bekannter strikter XFAIL, 1 bekannte DeprecationWarning.
+Der XFAIL zu „minor injuries“ bleibt explizit eine bekannte historische Grenze.
+
+Zwei synthetische echte Anwendungsläufe zu Beratung und Hunger lieferten
+Modelltext mit `provider: blablador`; Hunger benötigte einen Retry. Kein neuer
+vollständiger Live-Evaluationslauf. Die folgenden Rendererprüfungen beziehen
+sich auf den vorausgehenden Stand und belegen nicht die neue Laufzeitarchitektur.
+Nachweise: `%LOCALAPPDATA%/LENA/verification/2026-10-26-model-prose`.
+
+## Neuer Satzrenderer nach fb773e9, 26.10.2026
+
+Vollständige Suiten erneut ausgeführt: **1506 bestanden, 1 bekannter strikter
+XFAIL, 1 bekannte TestClient-DeprecationWarning**, nativ (399,77 s) und im
+netzlosen neu gebauten Container (238,64 s). JavaScript jeweils **19/19**;
+JS-Syntaxprüfungen erfolgreich. Gezielte Renderer-/Plan-/Architekturprüfung:
+132 bestanden. Keine vorhandenen Tests abgeschwächt oder entfernt.
+
+`tests/test_answer_sentences.py` prüft den Screenshotfall mit echten
+Bootstrap-Quellwerten, vollständige Satzvorlagen in fünf Sprachen, alle
+darstellbaren Faktentypen, unveränderte Evidence und Referenzen, Negationen,
+Zahlen, mehrdeutige Vergleichszeichen, mehrere Angebote und den HTTP-Pfad mit
+gebündelten Daten und kontrolliertem Provider. Das ist kein echter LLM-Lauf.
+Vorhandene Planregressionen sichern lange Fakten samt Bedingungen, atomare
+Ablehnung späterer Fehler, 600-Zeichen-Grenze und lange Rückfallakte ab.
+
+Sauberer Docker-Testbuild mit `--pull --no-cache` aus Export ohne lokale
+Secrets/Runtime, Testlauf mit `--network none`, Runtime aus derselben
+Buildkette. Healthcheck, read-only, Loopback-Port, Start ohne Zugang und
+Sessionerhalt nach Neustart/Containerwechsel geprüft. Installed Renderer
+ebenfalls geprüft; keine neuen Live-Provider-, Browser-, STT- oder Hörtests.
+Nachweise: [Implementation Report 13](../IMPLEMENTATION_REPORT.md#13-vollständige-antwortsätze-nach-fb773e9).
+Alle folgenden Nachweise gehören zu früheren Ständen; neue endgültige
+Commit-/Live-Zuordnung und menschliche Evaluation bleiben offen.
+
 ## Technisch geprüfter Stand vom 26.10.2026
 
 Die folgende technische Testübersicht übernimmt vorhandene Nachweise der

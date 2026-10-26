@@ -162,8 +162,8 @@ def test_versions_prompt_and_health_are_observable(app) -> None:
     assert FORMULATOR_CONTRACT_VERSION == "5"
     assert FORMULATOR_PROMPT_VERSION == "22"
     assert health["evidence_contract_version"] == "4"
-    assert health["formulator_contract_version"] == "6"
-    assert health["formulator_prompt_version"] == "24"
+    assert health["formulator_contract_version"] == "7"
+    assert health["formulator_prompt_version"] == "25"
     assert health["llm_request_budget_seconds"] == 45.0
     for rule in (
         "Use only EVIDENCE facts",
@@ -844,9 +844,8 @@ def test_provider_requires_pure_json_and_exact_language(app, monkeypatch: pytest
     with pytest.raises(FormulatorError, match="formulator_invalid_json"):
         asyncio.run(provider.formulate_answer(evidence=evidence))
 
-    from app.answer_plan import AnswerAct, FormulatorPlan
-    response = FormulatorPlan(contract_version="6", language=Language.EN,
-        sentences=[AnswerAct(act="contact", offer_id=evidence.selected_offers[0].offer_id)])
+    from test_formulator_prose import current
+    response = current(_response(evidence, text="Ask Scharni.", language=Language.EN))
 
     async def wrong_language(_: dict) -> dict:
         return {"choices": [{"message": {"content": response.model_dump_json()}}]}
@@ -884,10 +883,8 @@ def test_provider_maps_parser_and_contract_failures_to_stable_codes(
 def test_provider_rejects_a_schema_valid_but_unknown_fact_reference(app, monkeypatch: pytest.MonkeyPatch) -> None:
     provider = BlabladorProvider(_settings("blablador"))
     evidence = _evidence(app)
-    from app.answer_plan import AnswerAct, FormulatorPlan
-    response = FormulatorPlan(contract_version="6", language=evidence.requested_language,
-        sentences=[AnswerAct(act="facts", offer_id=evidence.selected_offers[0].offer_id,
-            fact_ids=["f_0000000000000000"])])
+    from test_formulator_prose import current
+    response = current(_response(evidence, text="Frage bei Scharni nach."))
     response.sentences[0].fact_ids = ["f_0000000000000000"]
 
     async def model_response(_: dict) -> dict:
@@ -1032,31 +1029,29 @@ def test_known_limitation_non_target_minor_should_not_trigger_target_check(app) 
 def test_real_provider_retry_gets_only_closed_feedback_and_revalidates(
     app, monkeypatch, caplog, failure, corrected,
 ) -> None:
-    """Current plan protocol: reject bad access, injected phone prose and raw codes."""
-    from app.answer_plan import AnswerAct, FormulatorPlan
-    from app.answer_plan import formulator_plan_prompt
-    current_prompt = formulator_plan_prompt()
-    referral = failure != "target"
+    """Current prose protocol: reject unsupported target, phone and referral role."""
+    from test_formulator_prose import current
+    from app.formulator_prose import formulator_response_prompt
+    current_prompt = formulator_response_prompt()
+    referral = failure == "phone"
     evidence = _evidence(app, language=Language.EN, offer_ids=("21",) if referral else ("8",),
                          answer_type=AnswerType.GROUNDED_REFERRAL if referral else AnswerType.GROUNDED_RESULT,
                          roles={"21": CandidateRole.REFERRAL_CONTACT} if referral else None)
     offer = evidence.selected_offers[0]
-    good = FormulatorPlan(contract_version="6", language=Language.EN,
-        sentences=[AnswerAct(act="contact", offer_id=offer.offer_id)])
+    good = current(_response(evidence, text=f"Ask {offer.display_name}."))
     bad = good.model_dump(mode="json")
     if failure == "target":
-        bad["sentences"][0].update(act="unknown", reason="access")
+        bad["sentences"][0]["text"] = "Scharni offers accommodation for men."
         diagnostic = GroundingDiagnosticCode.TARGET_CLAIM_CONTRADICTED
         error_code = "formulator_ungrounded_claim"
     elif failure == "phone":
         bad["sentences"][0]["text"] = "Call 99999999."
-        diagnostic = None
-        error_code = "formulator_schema_error"
+        diagnostic = GroundingDiagnosticCode.NUMBER_NOT_CITED
+        error_code = "formulator_ungrounded_claim"
     else:
-        fact = _fact(evidence, FactType.CAPABILITY)
-        bad["sentences"][0].update(act="facts", fact_ids=[fact.fact_id])
-        diagnostic = None
-        error_code = "formulator_invalid_fact"
+        bad["sentences"][0]["claim_type"] = "referral"
+        diagnostic = GroundingDiagnosticCode.REFERRAL_ROLE_MISMATCH
+        error_code = "formulator_ungrounded_claim"
     provider = BlabladorProvider(_settings("blablador"))
     payloads = []
     clock = _Clock()
@@ -1080,7 +1075,7 @@ def test_real_provider_retry_gets_only_closed_feedback_and_revalidates(
         assert captured.value.diagnostic_code == diagnostic
     assert len(payloads) == 2
     assert payloads[0]["messages"][0]["content"] == current_prompt
-    expected = current_prompt + ("\n" + formulator_retry_instruction(diagnostic, answer_plan=True) if diagnostic else "")
+    expected = current_prompt + ("\n" + formulator_retry_instruction(diagnostic) if diagnostic else "")
     assert payloads[1]["messages"][0]["content"] == expected
     assert payloads[0]["messages"][1] == payloads[1]["messages"][1]
     assert all(len(p["messages"]) == 2 for p in payloads)

@@ -717,13 +717,15 @@ def test_water_question_reaches_provider_and_validated_model_answer_is_used(
         captured.update(evidence)
         offer = evidence["selected_offers"][0]
         facts = {fact["fact_type"]: fact for fact in offer["facts"]}
-        from app.answer_plan import AnswerAct, FormulatorPlan
-        response = FormulatorPlan(
-            contract_version="6",
+        from app.formulation import FormulatedSentence
+        from app.formulator_prose import GroundedFormulatorResponse
+        response = GroundedFormulatorResponse(
+            contract_version="7",
             language=Language.DE,
             sentences=[
-                AnswerAct(
-                    act="facts", offer_id=offer["offer_id"],
+                FormulatedSentence(
+                    text=f"Für {offer['display_name']} ist der aktuelle Betriebsstatus unbekannt.",
+                    claim_type="fact", offer_id=offer["offer_id"],
                     fact_ids=[facts["service"]["fact_id"], facts["operation_status"]["fact_id"]],
                 ),
             ],
@@ -738,7 +740,7 @@ def test_water_question_reaches_provider_and_validated_model_answer_is_used(
 
     assert captured["current_query"] == question
     assert response.provider == "blablador"
-    assert "aktueller Betriebsstatus unbekannt" in response.answer
+    assert response.answer == f"Für {captured['selected_offers'][0]['display_name']} ist der aktuelle Betriebsstatus unbekannt."
     assert response.interaction.formulator_fallback_used is False
     assert response.card_ids == [captured["selected_offers"][0]["offer_id"]]
 

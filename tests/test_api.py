@@ -207,9 +207,9 @@ def _fact(evidence, fact_type: FactType):
 
 def _formulator_json(evidence, *, text: str, card_ids=None, inject_text=False) -> str:
     offer = evidence.selected_offers[0]
-    act = {"act": "contact", "offer_id": offer.offer_id, "fact_ids": [], "reason": None, "policy_ids": []}
-    if inject_text:
-        act["text"] = text  # Current protocol must reject arbitrary phone/prose fields.
+    act = {"text": text, "claim_type": "action", "offer_id": offer.offer_id,
+           "fact_ids": [next(f.fact_id for f in offer.facts if f.fact_type == FactType.DISPLAY_NAME)],
+           "policy_ids": []}
     return json.dumps({"contract_version": FORMULATOR_CONTRACT_VERSION,
         "language": evidence.requested_language.value, "sentences": [act],
         "card_ids": card_ids if card_ids is not None else [offer.offer_id]})
@@ -646,11 +646,11 @@ def test_provider_rejects_unsupported_numbers(monkeypatch: pytest.MonkeyPatch) -
     evidence = _evidence_for(app, offer)
 
     async def response(_: dict) -> dict:
-        content = _formulator_json(evidence, text="Call 99999999.", inject_text=True)
+        content = _formulator_json(evidence, text="Call 99999999.")
         return {"choices": [{"message": {"content": content}}]}
 
     monkeypatch.setattr(provider, "_post", response)
-    with pytest.raises(FormulatorError, match="formulator_schema_error"):
+    with pytest.raises(FormulatorError, match="formulator_ungrounded_claim"):
         import asyncio
         asyncio.run(provider.formulate_answer(evidence=evidence))
 
@@ -715,7 +715,8 @@ def test_provider_accepts_no_card_ids_for_unsuitable_context(monkeypatch: pytest
             "contract_version": FORMULATOR_CONTRACT_VERSION,
             "language": "de",
             "sentences": [{
-                "act": "boundary",
+                "text": "In den freigegebenen Daten finde ich kein passendes Angebot.",
+                "claim_type": "no_result",
                 "offer_id": None,
                 "fact_ids": [],
                 "policy_ids": [no_result_policy.policy_id.value],
@@ -1009,8 +1010,8 @@ def test_answer_prompt_uses_informal_language_and_forbids_visible_ids(monkeypatc
 
     system_prompt = captured["payload"]["messages"][0]["content"]
     user_prompt = json.loads(captured["payload"]["messages"][1]["content"])
-    from app.answer_plan import formulator_plan_prompt
-    assert system_prompt == formulator_plan_prompt()
+    from app.formulator_prose import formulator_response_prompt
+    assert system_prompt == formulator_response_prompt()
     assert "simple informal language" in system_prompt
     assert "expose internal IDs" in system_prompt
     assert user_prompt["current_query"] == "Ich hab Hunger"

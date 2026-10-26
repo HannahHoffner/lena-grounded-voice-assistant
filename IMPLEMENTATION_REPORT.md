@@ -1,5 +1,68 @@
 # Umsetzung des LENA-Audits
 
+### Abschließende Prüfung dieses Textvertrags
+
+- Python vollständig nativ: **1521 bestanden, 1 bekannter strikter XFAIL,
+  1 bekannte TestClient-DeprecationWarning**, 413.21 s.
+- Python vollständig im neu gebauten netzlosen Container: **1521 bestanden,
+  1 XFAIL, 1 Warning**, 267,96 s; JavaScript nativ und im Container **19/19**.
+- Sauberer Docker-Neubau mit `--pull --no-cache`; Runtime startet,
+  Healthcheck healthy, Loopback-Port/read-only geprüft, persistentes Volume
+  nach Neustart und Containerwechsel erhalten. Runtime ohne Secrets geprüft.
+- Zwei echte synthetische Blablador-Anfragen mit Modelltext; keine neue
+  vollständige Live-Evaluation, kein Browser-/STT-/TTS-Test in diesem Auftrag.
+- Früherer vollständiger Lauf hatte genau einen Fehler durch die alte
+  Validatorversions-Erwartung im Manifesttest. Nach Migration auf 7 gezielt
+  und anschließend vollständig erneut geprüft; kein fachlicher Test entfernt.
+- Code-/Test-Hashes des endgültigen Arbeitsstands stimmen mit dem sauberen
+  Docker-Export überein. Dokumentationsnachträge entstanden nach dem Export.
+
+Belege extern: `native-final.xml`, `native-final.log`, `docker-build-final.log`,
+`docker-tests-final.log`, `javascript.log`, `runtime-smoke.json`,
+`live-prose.json`, `verification.json` und `formulator-restoration.diff` unter
+`%LOCALAPPDATA%/LENA/verification/2026-10-26-model-prose`.
+Keine uneingeschränkte Wahrheits-, Evaluations- oder Veröffentlichungsaussage.
+
+## Aktueller Arbeitsstand: Modellprosa statt Planrenderer, 26.10.2026
+
+Dieser Nachtrag ersetzt die nachfolgend dokumentierte Rendererarchitektur als
+produktiven Pfad. Vertrag 7 / Prompt 25 / Validator 7: Das LLM formuliert selbst
+kurze fragebezogene Sätze mit Faktenreferenzen. `app/formulator_prose.py` stellt
+den strikten Parser und sein JSON-Schema bereit; `app/providers/llm.py` akzeptiert
+keine Planakte mehr. `app/grounding.py` prüft die Texte atomar und gibt akzeptierte
+Modellprosa unverändert bis auf Leerzeichennormalisierung zurück. Offene
+Inhaltswörter werden in Vertrag 7 unabhängig vom Leistungsverb geprüft.
+
+Kein neuer Judge, keine Änderung an Fachregeln, Daten, Dialogrouting, Budget,
+Notfallpflicht oder Providerkonfiguration. Historische Verträge 5/6 und ihre
+Prüfungen bleiben erhalten. Der vorhandene Template-Fallback greift bei
+Fehlern oder erschöpftem Budget. Testfixtures des produktiven Providers sind
+auf Vertrag 7 migriert; Inhaltsverstöße werden nicht durch Schemafehler verdeckt.
+
+Gezielte Prüfung: 388 bestanden, 1 bekannter strikter XFAIL, 1 bekannte
+TestClient-DeprecationWarning. Zwei zusätzliche echte synthetische Anfragen
+(Beratung/Hunger) liefen durch den Anwendungspfad und endeten beide mit
+`provider: blablador`; beim Hungerfall war ein Formulator-Retry erforderlich.
+Das ist keine vierstufige Evaluation. Technische Nachweise liegen außerhalb
+des Repositorys unter `%LOCALAPPDATA%/LENA/verification/2026-10-26-model-prose`.
+Vollständige Suiten und Containerprüfung werden dort separat protokolliert.
+
+Grenzen: Endliche lexikalische/relationale Prüfung, keine allgemeine
+Wahrheitsgarantie, mögliche Fehlalarme bei Paraphrasen und Fremdsprachen.
+Einfache Sprache und Relevanz sind Promptziele und menschlich zu prüfen.
+Die bisherigen finalen Live-Messungen und manuellen Baselines gelten nicht
+automatisch für diesen neuen Arbeitsstand. Neuer gemeinsamer Freeze und
+anschließende Evaluation bleiben nötig. Kein Commit, Tag oder Push.
+
+## Historische Implementierungsstände
+
+> **Neue Rendereränderung nach fb773e9, 26.10.2026:** Vollständige Sätze aus
+> festen fünfsprachigen Vorlagen ersetzen die Feldlabel-/Semikolon-Darstellung
+> kontrollierter Faktenakte. Evidenz und Fachregeln bleiben gebunden.
+> Vorherige Live-Messungen belegen diesen neuen Arbeitsstand nicht; abschließende
+> Commit-/Live-Zuordnung und menschliche Sprachprüfung bleiben offen.
+> Details und neue technische Prüfung werden in Abschnitt 13 festgehalten.
+
 > **Aktuelle vollständige Live-Messung, 26.10.2026, Abschnitt 12:** Commit
 > `2462e7d`, 83 Anfragen/122 Provideraufrufe. Selector/Formulator besteht beide
 > Gates, Interpreter nur Vertragsgate; E2E/Stabilität bleiben wegen erholter
@@ -843,3 +906,76 @@ hashgleich zum Manifest. Erst nach allen vier Messungen wird diese
 Ergebnisdokumentation fortgeschrieben; dadurch sind jetzt Dokumentationsdateien
 uncommittiert, Anwendung/Tests/Daten bleiben identisch zu 2462e7d. Kein Commit,
 Tag oder Push durch diesen Auftrag; Thesis nicht geändert.
+
+
+## 13. Vollständige Antwortsätze nach fb773e9
+
+26.10.2026, uncommittierter Arbeitsstand auf Basis
+`fb773e9e468ab18958ba5886fabae94066dfbd03`. Ursache des Screenshotbefunds:
+`_fact_line` verband Feldlabels und rohe Quellwerte mit Semikolons;
+Bootstrap-Leistungen enthielten bereits `> Kaffee, Tee, Wasser` und
+`> belegte Brötchen`. Diese Darstellung war keine freie LLM-Halluzination.
+
+**Umsetzung:** `app/answer_sentences.py` (Renderer 1) erzeugt feste vollständige
+Sätze in DE/EN/PL/RO/RU, fasst Angaben desselben Typs zusammen und entfernt nur
+eindeutige äußere Markdown-Zitat-/Listenmarker. Führende Zahlen, Alters-/Datums-
+und Vergleichsangaben bleiben erhalten. Kompakte Nicht-Zusagen sind ebenfalls
+vollständige Sätze. Freie Quellhinweise werden in Hinweissätzen zitiert, nicht
+inhaltlich umgeschrieben. `answer_plan._render_facts` nutzt diese Darstellung;
+die Rendererkennung ist im Referenzassessment sichtbar.
+
+Evidence/Quelldaten bleiben unverändert. Pflichtbedingungen, Zugehörigkeit zu
+Angeboten, Primärreihenfolge, ganze Faktengruppen, atomare Ablehnung ungültiger
+Pläne und 600-Zeichen-Grenze bleiben bestehen. Keine freie Modellprosa oder
+zusätzliche LLM-Prüfstufe. Vertrags-/Prompt-/Validatorversionen 6/24/6,
+Fachregeln, Providerkonfiguration, Abhängigkeiten und Dockerdatei unverändert.
+
+**Prüfungen des abschließenden Quellstands:**
+
+| Prüfung | Ergebnis |
+|---|---|
+| Gezielte Satz-/Plan-/Architekturregression | 132 bestanden |
+| Vollständige Python-Suite nativ | 1506 bestanden, 1 bekannter strikter XFAIL, 1 bekannte TestClient-DeprecationWarning; 399,77 s |
+| Vollständige Python-Suite im netzlosen Container | 1506 bestanden, derselbe XFAIL und Warnung; 238,64 s |
+| JavaScript nativ / Container | jeweils 19/19 bestanden; beide JS-Syntaxprüfungen erfolgreich |
+| Packaging / Abhängigkeiten / Compileall | durch vollständige Suite und Containerkommando geprüft; pip check ohne Konflikte |
+| Docker | sauberer Export ohne lokale Secrets/Runtime; `--pull --no-cache --target test`; Runtime aus derselben Buildkette |
+| Runtime | Healthcheck healthy, read-only, Loopback-Port, kontrollierter Hilfepfad ohne Zugangsdaten, Sessionerhalt nach Neustart und Containerwechsel |
+| Installierter Renderer | Screenshot-Quellwerte als vollständige Sätze, kein `Angebot: > …` |
+
+`tests/test_answer_sentences.py` enthält 30 neue Regressionen einschließlich
+HTTP-Pfad mit realen Bootstrap-Daten und kontrolliertem Provider; kein echter
+LLM-Erfolg wird daraus abgeleitet. Der Architekturtest umfasst das neue Modul.
+Keine vorhandenen Tests abgeschwächt oder entfernt. Native JS-Laufzeit:
+Node 22.20.0, extern abgelegt und gegen offizielle SHA-256-Datei geprüft;
+keine Repositoryabhängigkeit ergänzt.
+
+Belege: `C:/Users/User/AppData/Local/LENA/verification/2026-10-26-simple-sentences/`,
+maßgeblich `source-verified/`, `source-manifest-verified.json`,
+`native-pytest-verified.xml`, `native-pytest-verified.log`, `native-js.log`,
+`docker-build-verified.log`, `docker-tests-verified.log`,
+`docker-runtime-build.log`, `runtime-smoke.json` und `verification.json`.
+Unterbrochene Entwicklungsprüfungen und frühere Exporte dort sind keine
+vollständigen Abschlussläufe. Der PowerShell-Wrapper des Testbuilds meldete
+Exit 1 bei umgeleitetem Docker-stderr; das Buildlog endet erfolgreich mit
+Imageexport. Das exportierte Image wurde separat auf den abschließenden
+Rendererquellhash geprüft und die vollständige Containerprüfung beendet mit
+Exit 0. Runtimebuild und Runtimeprüfung ebenfalls Exit 0.
+
+Testimage: `sha256:1e5b8e71199c1beda8a45e5b45b21f83e11ca25d3749fca33e58f841ea0f2612`.
+Runtime: `sha256:73fff2dc6e33aaf04c59f10b94f8dbbdf372a0769fa5bf26995c9a42570c572b`.
+Die technischen Prüfungen liefen auf demselben App-/Testquellstand; spätere
+Ergebnisdokumentation ändert keine Anwendungskomponente.
+
+**Grenzen und weiterer Abschluss:** Keine neue reale LLM-, STT-, TTS-, Browser-
+oder Hörprüfung und keine neue vollständige Live-Evaluation. Satzvorlagen sind
+keine zertifizierte Leichte Sprache; freie Quelltexte können komplex sein,
+Pflichtbedingungen Platz beanspruchen und Details zugunsten ganzer Faktengruppen
+entfallen. Fremdsprachige Vorlagen benötigen menschliches Review; freie deutsche
+Quellwerte werden nicht automatisch übersetzt. Der neue Renderer kann wegen
+anderer Textlängen die Auswahl innerhalb des 600-Zeichen-Budgets beeinflussen.
+Alte Live-Ergebnisse gelten nicht als Nachweis dieses neuen Renderers.
+Vor manueller Evaluation endgültigen Codecommit festlegen, Baseline und
+technische Messung daran binden, Browser/Sprachfunktionen separat prüfen und
+auf genau diesem Stand manuell erheben. Keine Thesis-LaTeX-Änderung und kein
+Commit, Tag oder Push. Keine uneingeschränkte Abgabe-/Veröffentlichungsfreigabe.

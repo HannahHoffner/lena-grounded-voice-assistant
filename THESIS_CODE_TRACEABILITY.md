@@ -1,5 +1,35 @@
 # Thesis–Code-Traceability
 
+## Aktuelle Korrektur: freier Formulatorvertrag 7
+
+Die folgenden Renderer-Nachträge sind historisch. Für R-04/R-08/R-20/R-21
+gilt nun wieder: Das LLM schreibt sichtbare, fragebezogene Sätze; der Server
+prüft deren Inhalt atomar statt erfolgreiche Antworten per Satzvorlage zu
+erzeugen. Belege: `app/formulator_prose.py`, `app/providers/llm.py.formulate_answer`,
+`app/grounding.py.validate_formulation`, `tests/test_formulator_prose.py`
+(unveränderte Textübernahme und vollständiger Template-Rückfall bei Verstoß).
+`tests/test_formulation.py` prüft weiterhin Retry, Budget und fachliche Grenzen;
+`tests/test_grounding_*.py` bleiben aktiv. An den übrigen Anforderungen und
+den 13 Fachregeln wurde keine Fachlogik geändert. Vorherige Messzahlen sind
+keine Evaluation von Vertrag 7; die endliche Prüfung ist kein Wahrheitsbeweis.
+
+## Renderer-Fortschreibung nach fb773e9, 26.10.2026
+
+R-04/R-08/R-20/R-21: Faktenakte werden jetzt mit festen vollständigen
+Satzvorlagen statt Feldlabels und Semikolonlisten dargestellt. Gleichartige
+Fakten werden zusammengefasst; nur äußere Markdown-Quellmarker werden entfernt.
+Unstrukturierte Bedingungen werden unverändert in einen vollständigen
+Hinweissatz eingesetzt. Evidence, Referenzprüfung, Pflichtbedingungen,
+600-Zeichen-Grenze und atomarer Rückfall bleiben bestehen. Belege:
+`app/answer_sentences.py`, `app/answer_plan.py._render_facts`,
+`tests/test_answer_sentences.py` einschließlich HTTP-Pfad mit Bootstrap-Daten;
+Architekturgrenze in `tests/test_architecture_boundaries.py` ergänzt.
+Rendererkennung 1 im Referenzassessment; Formulatorvertrag 6/Prompt 24 und
+Validator 6 unverändert. Kein unabhängiges Sprachreview und keine zertifizierte
+Leichte Sprache. Die nachfolgenden Live-Ergebnisse gelten für frühere Stände,
+nicht als Live-Nachweis dieses neuen Renderers. Die 42 Anforderungen und
+13 Fachregeln werden nicht geändert. Neue finale Commit-/Messzuordnung offen.
+
 Audit vom 23.10.2026. Implementierung: `code`, Commit `597e1f0216c72eedd01b7b9e6d49be67ca8150f9`. Systembeschreibung: aktueller Arbeitsbaum von `../thesis/` und dessen `thesis.pdf` vom 22.10.2026, nicht allein der ältere Thesis-Git-HEAD. Die aktiven Includes wurden von `thesis.tex` aus verfolgt; `Chapters/nichtverwendet` und Template-Beispielkapitel sind keine aktuellen Systemaussagen.
 
 **Historische Fortschreibung 24.10.2026 (Messungen vom 23.10.):** Damaliger Bezug war der separat gesicherte Prüfsnapshot `70ed1dfd32230726cd111669bd761f27b705bc08` des uncommittierten Arbeitsbaums, nicht allein `bd2c65f` und nicht mehr `597e1f0`. Statusangaben beschreiben das Verhältnis *Thesis-Aussage ↔ Implementierung/Evidenz*; historische Zahlen sind ausdrücklich standgebunden. Alle 42 Anforderungen und 13 Fachregeln bleiben im Register; die vollständigen zugeordneten Suiten liefen nativ und im neuen Container (je 1343 bestanden, 1 bekannter XFAIL; 19 JS-Tests). Dies bedeutet **nicht**, dass alle Anforderungen vollständig erfüllt sind: neue Gegenproben und Live-Gates belegen Grenzen. Nur die Interpreter-Gates sind bestanden. Die Thesis wurde nicht geändert; notwendige Anpassungen stehen in [THESIS_UPDATE_NOTES.md](THESIS_UPDATE_NOTES.md), unabhängige Belege und Befunde N-01 bis N-05 in [IMPLEMENTATION_REPORT.md, Abschnitt 8](IMPLEMENTATION_REPORT.md#8-unabhängige-nachprüfung-und-live-e2e-am-23102026).

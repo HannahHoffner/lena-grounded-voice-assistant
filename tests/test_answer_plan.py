@@ -8,7 +8,7 @@ from pydantic import ValidationError
 
 from app.answer_plan import AnswerAct, FormulatorPlan, formulator_plan_prompt
 from app.formulation import (
-    AnswerType, BindingPolicy, EvidenceFact, FactType, FORMULATOR_CONTRACT_VERSION,
+    AnswerType, BindingPolicy, EvidenceFact, FactType, PLAN_FORMULATOR_CONTRACT_VERSION as FORMULATOR_CONTRACT_VERSION,
     FormulatorError, FormulatorEvidence,
 )
 from app.grounding import validate_formulation
@@ -118,28 +118,32 @@ def test_language_cards_and_primary_result_are_enforced():
         validate_formulation(response, evidence)
 
 
-def test_runtime_provider_parses_plan_and_returns_only_source_bound_text(monkeypatch):
+def test_historical_plan_schema_is_preserved_but_runtime_rejects_it(monkeypatch):
     evidence = packet("unknown_fee")
     provider = BlabladorProvider(_settings("blablador"))
     response = plan(evidence, "unknown", reason="fee")
-    async def post(payload):
-        prompt = payload["messages"][0]["content"]
-        assert prompt == formulator_plan_prompt()
+    from app.answer_plan import planner_evidence_payload
+    def check_historical_schema():
+        prompt = formulator_plan_prompt()
         schema = json.loads(prompt.split("Response JSON Schema:\n", 1)[1])
         assert schema["additionalProperties"] is False
         assert schema["$defs"]["AnswerAct"]["properties"]["act"]["enum"] == ["facts", "contact", "unknown", "boundary"]
         assert schema["$defs"]["AnswerAct"]["properties"]["policy_ids"]["maxItems"] == 2
         assert "All offer-bound acts MUST have policy_ids=[]" in prompt
-        payload_evidence = json.loads(payload["messages"][1]["content"])
+        payload_evidence = planner_evidence_payload(evidence)
         offered = payload_evidence["selected_offers"][0]
         assert offered["display_name"] == evidence.selected_offers[0].display_name
         assert all(f["fact_type"] not in {"display_name", "alias", "capability", "offer_type", "place_type"}
                    for f in offered["facts"])
         source = {f.fact_id: f.model_dump(mode="json") for f in evidence.selected_offers[0].facts}
         assert all(source[f["fact_id"]] == f for f in offered["facts"])
+    check_historical_schema()
+    async def post(payload):
         return {"choices": [{"message": {"content": response.model_dump_json()}}]}
     monkeypatch.setattr(provider, "_post", post)
-    result = asyncio.run(provider.formulate_answer(evidence=evidence))
+    with pytest.raises(FormulatorError, match="formulator_schema_error"):
+        asyncio.run(provider.formulate_answer(evidence=evidence))
+    result = validate_formulation(response, evidence)
     assert "Kosten" in result.answer
     assert "Stadtpunkt" in result.answer
 

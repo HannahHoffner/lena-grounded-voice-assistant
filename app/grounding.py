@@ -40,7 +40,7 @@ from .models import Language
 from .grounding_references import resolve_offer_evidence
 
 
-GROUNDING_VALIDATOR_VERSION = "6"
+GROUNDING_VALIDATOR_VERSION = "7"
 
 URL_RE = re.compile(r"https?://[^\s<>]+", re.IGNORECASE)
 EMAIL_RE = re.compile(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.IGNORECASE)
@@ -409,6 +409,7 @@ def _validate_sentence(
     allowed_policies: set[BindingPolicy],
     pools: dict[str, list[EvidenceFact]],
     visible_offer_texts: dict[str, str],
+    *, require_content_coverage: bool = False,
 ) -> str:
     text = " ".join(sentence.text.split())
     if not text or HTML_OR_MARKDOWN_RE.search(text):
@@ -564,7 +565,7 @@ def _validate_sentence(
 
     _validate_operational_tokens(text, pool)
     if sentence.offer_id is not None and unsupported_content_words(
-        semantic_text, pool_values, evidence.requested_language,
+        semantic_text, pool_values, evidence.requested_language, require_coverage=require_content_coverage,
     ):
         # Claimtypunabhängig (Audit F-01): Eine Leistungs-, Erhalts-, Besitz-
         # oder Identitätsaussage darf keine unbelegten offenen Inhaltswörter
@@ -577,10 +578,10 @@ def validate_formulation(
     response: FormulatorResponse | FormulatorPlan,
     evidence: FormulatorEvidence,
 ) -> ValidatedFormulation:
-    """Validiert atomar; Vertrag 6 rendert ausschließlich gebundene Akte.
+    """Validate model prose atomically; preserve accepted model wording.
 
-    FormulatorResponse (5) bleibt nur für historische Forschungsgegenproben.
-    Der produktive Provider akzeptiert ausschließlich FormulatorPlan (6).
+    Current prose uses contract 7. Contract 5 and rendered plan 6 remain
+    explicit historical protocols, not alternative runtime modes.
     """
     if isinstance(response, FormulatorPlan):
         answer, cards, assessment = render_answer_plan(response, evidence)
@@ -605,7 +606,8 @@ def validate_formulation(
         for offer_id in pools
     }
     texts = [
-        _validate_sentence(sentence, evidence, offers_by_id, facts_by_id, allowed_policies, pools, visible_offer_texts)
+        _validate_sentence(sentence, evidence, offers_by_id, facts_by_id, allowed_policies, pools, visible_offer_texts,
+                           require_content_coverage=response.contract_version == "7")
         for sentence in response.sentences
     ]
     declared_pools = {
@@ -627,6 +629,9 @@ def validate_formulation(
     if len({_canonical(text) for text in texts}) != len(texts):
         observations.append("repeated_block")
     reference_assessment["presentation_observations"] = observations
+    if response.contract_version == "7":
+        reference_assessment["mode"] = "grounded_model_prose"
+        reference_assessment["formulator_contract_version"] = response.contract_version
 
     if evidence.need in {Need.TOILET, Need.DRINKING_WATER} and evidence.selected_offers:
         primary = evidence.selected_offers[0]

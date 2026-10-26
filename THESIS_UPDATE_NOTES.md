@@ -1,5 +1,43 @@
 # Notwendige Thesis-Anpassungen nach der Audit-Umsetzung
 
+## Aktuelle notwendige Korrektur: Modellprosa wiederhergestellt
+
+**Technisch belegt:** In `Chapters/5Solutionneu.tex` beim Formulator und der
+Faktenprüfung (bisher Zeilen 502–503) das aktuelle Protokoll als Evidence 4,
+Formulator 7, Prompt 25, Validator 7 ausweisen. Die Beschreibung einer selbst
+formulierten LLM-Antwort mit Referenzen trifft wieder zu. Der Prompt verlangt
+ein bis drei kurze Sätze in einfacher Sprache und Duzform. Akzeptierter Text
+wird nicht durch Renderertexte ersetzt. Belege: `app/formulator_prose.py`,
+`app/providers/llm.py`, `app/grounding.py`, `tests/test_formulator_prose.py`.
+Nachfolgende Empfehlungen zur produktiven Plan-/Rendererarchitektur sind
+historisch und dürfen nicht mehr als Beschreibung des finalen Systems dienen.
+
+**Manuell zu prüfen:** Bedarfspassung, Verständlichkeit, Duzform und Kürze;
+zwei erfolgreiche Live-Anfragen sind keine vollständige Evaluation. Ergebnisse
+des früheren Planvertrags dürfen nicht als Messung dieses Freitextvertrags
+übernommen werden. Code, Daten, Konfiguration und Messstand neu zuordnen.
+
+**Systemgrenzen:** Endliche lexikalische und relationale Grounding-Prüfung,
+mögliche falsche Ablehnung korrekter Paraphrasen sowie unerkannte Behauptungen;
+kein allgemeiner Beweis von Faktentreue. Historischer strikter XFAIL bleibt offen.
+Keine Änderung an der Thesis selbst in diesem Auftrag.
+
+## Rendereränderung nach fb773e9, 26.10.2026
+
+Technisch implementiert: Der geschlossene Formulatorplan bleibt unverändert;
+der Server verbindet Fakten mit festen vollständigen Satzvorlagen statt
+Feldlabels und Semikolonlisten (`app/answer_sentences.py`, Renderer 1,
+`app/answer_plan.py._render_facts`). Äußere Markdown-Marker werden nur für die
+Ausgabe normalisiert. Negationen, Zahlen und Pflichtbedingungen bleiben erhalten;
+Hinweise werden nicht frei paraphrasiert. Regression einschließlich Screenshot-
+Quellwerten und HTTP-Pfad: `tests/test_answer_sentences.py`.
+In der Systembeschreibung (insbesondere `Chapters/5Solutionneu.tex`,
+Formulator/Renderer, sowie R-04/R-08/R-20/R-21) entsprechend beschreiben.
+Noch manuell zu prüfen: Verständlichkeit, Natürlichkeit und fachliche Nützlichkeit
+je Sprache. Keine geprüfte Leichte Sprache oder vollständige Lokalisierung freier
+Quellprosa behaupten. Vorige Live-Messungen nicht auf den neuen Renderer
+übertragen; endgültigen Commit und anschließende Messungen neu zuordnen.
+
 Fortschreibung nach vollständiger Live-Messung am Commit 2462e7d, 26.10.2026. Aktuelle neue Messergebnisse stehen in Abschnitt I, technische Blockerkorrekturen in H; Abschnitte A–G bleiben datierte Änderungshinweise und Messhistorie. Ausgangsstand dieses Dokuments: 24.10.2026, unabhängige Messungen vom 23.10.2026. Bezug: Umsetzung der Audit-Befunde im Repository `code/`
 (Ausgangscommit `597e1f0`, Teilversuch `bd2c65f`, Details in
 [IMPLEMENTATION_REPORT.md](IMPLEMENTATION_REPORT.md)). **Die Thesis wurde nicht

@@ -1,5 +1,32 @@
 # Kontrollierte Antwortakte – Stand 26.10.2026
 
+## Aktueller produktiver Textvertrag 7 (ersetzt den folgenden Planpfad)
+
+Der Formulator formuliert den sichtbaren Text wieder selbst. `formulator_prose.py`
+definiert den strikten Textvertrag 7 und hängt sein tatsächliches JSON-Schema an
+Prompt 25 an. Der Prompt verlangt einfache Duzform, ein bis drei kurze Sätze,
+konkrete Fragebeantwortung und ausschließlich Fakten des ausgewählten Evidence-
+Pakets. Zahlen, Bedingungen und Angebotszuordnung dürfen nicht verändert werden.
+Interne Capability-Codes werden dem Formulator nicht als Ausgabetext angeboten.
+
+`providers/llm.py` akzeptiert produktiv ausschließlich diesen Textvertrag.
+`grounding.validate_formulation` prüft Modelltext atomar gegen die Fakten desselben
+Angebots. Vertrag 7 aktiviert die Inhaltswortabdeckung auch unabhängig von
+erkannten Leistungsprädikaten und Claimlabels. Diese endliche lexikalische und
+relationale Prüfung ist keine vollständige semantische Entailment-Prüfung.
+Gültiger Modelltext wird nur in seinen Leerzeichen normalisiert und mit
+`provider: "blablador"` ausgegeben. Bei Parser-, Grounding-, Provider- oder
+Budgetfehlern bleibt der bestehende Retry-/Templatepfad aktiv. Keine Änderung
+an strukturierten Rückfragen, Safety-/Zielgruppendialogen oder Notfallrouting.
+
+Regressionen: `tests/test_formulator_prose.py`, `tests/test_formulation.py`,
+`tests/test_grounding_*.py`. Die folgenden Planbeschreibungen und Messungen
+beziehen sich ausschließlich auf den historischen Vertrag 6; sein Renderer
+ist kein erfolgreicher produktiver Antwortpfad mehr und auch nicht der
+Template-Fallback. Dieser verwendet weiterhin `providers/template.py`.
+
+## Historischer Planvertrag 6
+
 Der bestehende Ablauf bleibt: Interpreter → Fachregeln/Kandidaten → Selector →
 Formulator → Prüfung/Renderer. Es gibt keinen zusätzlichen LLM-Prüfer. Geändert
 ist die Verantwortung des Formulators: Er wählt aus freigegebenen Fakten und
@@ -19,7 +46,7 @@ bleiben interne Metadaten. Der Validator prüft weiterhin gegen das Originalpake
 
 | Akt | Zulässige Information | Sichtbare Ausgabe |
 |---|---|---|
-| `facts` | Angebot und bis zu sechs Faktenkennungen desselben Angebots | Quellwerte mit festen Labels; notwendige Bedingungen werden ergänzt |
+| `facts` | Angebot und bis zu sechs Faktenkennungen desselben Angebots | Vollständige Sätze aus festen Vorlagen und Quellwerten; notwendige Bedingungen werden ergänzt |
 | `contact` | Angebot | Feste Bitte, dort nachzufragen |
 | `unknown` | Angebot und Grund `fee`, `hours`, `access`, `availability`, `detail` | Begrenzte Nicht-Zusage, keine erfundene Leistung und keine globale Abwesenheitsbehauptung |
 | `boundary` | Passende geschlossene Policy | Vorhandener lokalisierter Systemgrenzentext |
@@ -29,6 +56,15 @@ Gegenbelege zu Unbekanntheitsgründen, primäres Infrastrukturangebot und Länge
 Bei Leistungen/Beschreibungen/Kosten werden die vorhandenen Zugangs-, Alters-,
 Zielgruppen-, Leistungszeit- und Hinweisfakten mitgeführt. Reine Zeitangaben
 führen Leistungszeitbedingungen mit, behaupten aber keine persönliche Eignung.
+`app/answer_sentences.py` (Renderer 1) formuliert Fakten in vollständigen Sätzen
+in DE/EN/PL/RO/RU und fasst Angaben desselben Typs zusammen. Äußere Markdown-
+Zitat-/Listenmarker werden für die Ausgabe entfernt; Zahlen, Negationen,
+Bedingungen und Faktenreferenzen bleiben erhalten. Mehrdeutige führende
+Vergleichszeichen vor Zahlen bleiben stehen. Unstrukturierte Hinweise werden
+in einem festen vollständigen Hinweissatz zitiert, nicht semantisch umgeschrieben.
+Quellwerte und Evidence werden nicht verändert. Die Vorlagen sind keine
+zertifizierte Leichte Sprache; unabhängiges Sprachreview bleibt offen.
+
 Interne Capability-/Typcodes werden nicht als Prosa ausgegeben. Name, Kontakte,
 Zahlen und Quelltext bleiben an das Angebot gebunden. Pflichtkarten und die
 deterministische Reihenfolge werden wiederhergestellt. Vor der Darstellung

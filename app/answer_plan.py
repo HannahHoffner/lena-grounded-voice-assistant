@@ -13,10 +13,11 @@ from typing import Literal
 from pydantic import Field, model_validator
 
 from .answer_act_texts import act_text, enum_text, source_text
+from .answer_sentences import ANSWER_RENDERER_VERSION, display_value, fact_sentences
 from .application_texts import application_text
 from .formulation import (
-    AnswerType, BindingPolicy, FactId, FactType, FORMULATOR_CONTRACT_VERSION,
-    FORMULATOR_SYSTEM_PROMPT, FormulatorError, FormulatorEvidence, GroundingDiagnosticCode, OfferId, StrictModel,
+    AnswerType, BindingPolicy, FactId, FactType, PLAN_FORMULATOR_CONTRACT_VERSION as FORMULATOR_CONTRACT_VERSION,
+    PLAN_FORMULATOR_SYSTEM_PROMPT as FORMULATOR_SYSTEM_PROMPT, FormulatorError, FormulatorEvidence, GroundingDiagnosticCode, OfferId, StrictModel,
 )
 from .models import Language
 
@@ -108,7 +109,7 @@ def _unknown(offer, reason: str, language: Language) -> str:
     return act_text("unknown_" + reason, language, name=offer.display_name)
 
 
-def _fact_line(fact, language: Language) -> str:
+def _fact_value(fact, language: Language) -> str:
     if fact.fact_type in _INTERNAL_TYPES:
         raise FormulatorError("formulator_invalid_fact")
     value = source_text(fact.fact_type.value, fact.value, language)
@@ -125,7 +126,9 @@ def _fact_line(fact, language: Language) -> str:
         if not number.isdigit():
             raise FormulatorError("formulator_invalid_fact")
         value = number + " m"
-    return f"{act_text(fact.fact_type.value, language)}: {value}"
+    if not display_value(value):
+        raise FormulatorError("formulator_invalid_fact")
+    return value
 
 
 def _render_facts(offer, act: AnswerAct, language: Language) -> tuple[str, list[str]]:
@@ -142,10 +145,11 @@ def _render_facts(offer, act: AnswerAct, language: Language) -> tuple[str, list[
         # An exact opening/stop time does not assert personal eligibility.
         # Keep service-specific windows alongside it, without unrelated prose.
         facts.extend(f for f in offer.facts if f.fact_type == FactType.SERVICE_CONDITION and f.fact_id not in act.fact_ids)
-    lines = list(dict.fromkeys(_fact_line(fact, language) for fact in facts))
-    lead = (act_text("referral", language, name=offer.display_name) + " "
-            if offer.candidate_role == "referral_contact" else offer.display_name + ": ")
-    return lead + "; ".join(lines) + ".", [fact.fact_id for fact in facts]
+    text = fact_sentences(offer.display_name,
+                          [(fact.fact_type.value, _fact_value(fact, language)) for fact in facts], language)
+    if offer.candidate_role == "referral_contact":
+        text = act_text("referral", language, name=offer.display_name) + " " + text
+    return text, [fact.fact_id for fact in facts]
 
 
 def _fit_facts(offer, act: AnswerAct, language: Language, budget: int, compact: str) -> tuple[str, list[str]]:
@@ -233,6 +237,7 @@ def render_answer_plan(plan: FormulatorPlan, evidence: FormulatorEvidence) -> tu
     cards = [o.offer_id for o in evidence.selected_offers if o.mandatory or o.offer_id in used]
     assessment = {
         "scope": "selected_offer_evidence", "mode": "controlled_answer_plan",
+        "renderer_version": ANSWER_RENDERER_VERSION,
         "declared_fact_ids": {k: list(dict.fromkeys(v)) for k, v in declared.items()},
         "emitted_fact_ids": {k: list(dict.fromkeys(v)) for k, v in emitted.items()},
         "available_fact_ids": {k: [f.fact_id for f in o.facts] for k, o in offers.items()},
