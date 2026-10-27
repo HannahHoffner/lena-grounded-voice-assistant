@@ -39,15 +39,20 @@ from .grounding_constraints import (
 from .models import Language
 from .grounding_references import resolve_offer_evidence
 from .policy_facts import EMERGENCY_NUMBER
+from .grounding_values import EURO_RE, euro_values, mask_known_phones, phone_number
+from .grounding_surface import (
+    evidenced_venue, german_boundary, has_foreign_prose, mask_evidenced_places,
+    mask_status_uncertainty, normalized_policy_text, operating_restriction_present,
+)
+from .grounding_schedules import fact_schedule_matches
 
 
-GROUNDING_VALIDATOR_VERSION = "8"
+GROUNDING_VALIDATOR_VERSION = "9"
 
 URL_RE = re.compile(r"https?://[^\s<>]+", re.IGNORECASE)
 EMAIL_RE = re.compile(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.IGNORECASE)
 TIME_RE = re.compile(r"\b\d{1,2}:\d{2}\b")
 NUMBER_RE = re.compile(r"\d+")
-MONEY_RE = re.compile(r"\b\d+(?:[,.]\d{1,2})?\s*\u20ac")
 ADDRESS_RE = re.compile(
     r"\b[\wÄÖÜäöüß.-]+(?:straße|str\.?|street|road|allee|weg|platz)\s+\d+[a-z]?\b",
     re.IGNORECASE,
@@ -261,6 +266,9 @@ def _strip_evidence_literals(
 
 def _validate_language(text: str, evidence: FormulatorEvidence) -> None:
     prose = _strip_evidence_literals(text, evidence)
+    prose = mask_evidenced_places(prose, [fact.value for offer in evidence.selected_offers for fact in offer.facts])
+    if has_foreign_prose(prose, evidence.requested_language):
+        raise FormulatorError("formulator_invalid_language")
     if evidence.requested_language == Language.RU:
         if len(CYRILLIC_RE.findall(prose)) < 2:
             raise FormulatorError("formulator_invalid_language")
@@ -276,10 +284,12 @@ def _validate_language(text: str, evidence: FormulatorEvidence) -> None:
 
 def _validate_policy_answer(text: str, evidence: FormulatorEvidence) -> None:
     """Bindet angebotsfreie Modellantworten an eng begrenzte Policy-Inhalte."""
-    folded = text.casefold()
+    folded = normalized_policy_text(text)
     if evidence.answer_type == AnswerType.OUT_OF_SCOPE:
         anchors = DOMAIN_BOUNDARY_ANCHORS[evidence.requested_language]
-        if not any(anchor in folded for anchor in anchors):
+        if not any(anchor in folded for anchor in anchors) and not (
+            evidence.requested_language == Language.DE and german_boundary(text)
+        ):
             raise _ungrounded(GroundingDiagnosticCode.DOMAIN_BOUNDARY_MISSING)
     elif evidence.answer_type == AnswerType.NO_VERIFIED_RESULT:
         if not any(anchor in folded for anchor in NO_RESULT_ANCHORS[evidence.requested_language]):
@@ -301,19 +311,25 @@ def _validate_operational_tokens(text: str, facts: list[EvidenceFact], *, medica
     for time_value in TIME_RE.findall(text):
         if time_value not in TIME_RE.findall(cited):
             raise _ungrounded(GroundingDiagnosticCode.TIME_NOT_CITED)
-    cited_numbers = set(NUMBER_RE.findall(cited))
+    if not euro_values(text).issubset(euro_values(cited)):
+        raise _ungrounded(GroundingDiagnosticCode.PRICE_NOT_CITED)
+    # Phone labels are prose/conditions, not part of the contact's digit value.
+    phone_text = URL_RE.sub(" ", EMAIL_RE.sub(" ", text))
+    number_text, invalid_phone = mask_known_phones(
+        phone_text, [fact.value for fact in facts if fact.fact_type == FactType.PHONE],
+    )
+    cited_numbers = set(NUMBER_RE.findall(EURO_RE.sub(" ", cited)))
     if medical_policy:
         cited_numbers.add(EMERGENCY_NUMBER)
-    if any(number not in cited_numbers for number in NUMBER_RE.findall(text)):
+    if any(number not in cited_numbers for number in NUMBER_RE.findall(EURO_RE.sub(" ", number_text))):
         raise _ungrounded(GroundingDiagnosticCode.NUMBER_NOT_CITED)
-    for phone in (fact.value for fact in facts if fact.fact_type == FactType.PHONE):
-        groups = NUMBER_RE.findall(phone)
-        text_groups = NUMBER_RE.findall(text)
-        if groups and all(group in text_groups for group in groups) and phone not in text:
-            raise _ungrounded(GroundingDiagnosticCode.PHONE_NOT_EXACT)
-    cited_money = MONEY_RE.findall(cited)
-    if any(value not in cited_money for value in MONEY_RE.findall(text)):
-        raise _ungrounded(GroundingDiagnosticCode.PRICE_NOT_CITED)
+    if invalid_phone:
+        raise _ungrounded(GroundingDiagnosticCode.PHONE_NOT_EXACT)
+    for fact in facts:
+        if fact.fact_type == FactType.PHONE and "nur zu Einsatzzeiten" in fact.value:
+            digits = re.sub(r"\D", "", phone_number(fact.value))
+            if digits in re.sub(r"\D", "", text) and not operating_restriction_present(text):
+                raise _ungrounded(GroundingDiagnosticCode.SERVICE_CONDITION_MISSING)
     mentioned_days = {
         day_index
         for day_index, names in WEEKDAYS.items()
@@ -475,7 +491,7 @@ def _validate_sentence(
             (kind, value) for kind, value in scoped_values
             if not any(has_negation(value, lang) for lang in {language, Language.DE, Language.EN})
         ]
-        service_support, service_concepts = assess_service_claim(service_text, service_values, language)
+        _, service_concepts = assess_service_claim(service_text, service_values, language)
         negative_values = [
             (kind, value) for kind, value in scoped_values
             if any(has_negation(value, lang) for lang in {language, Language.DE, Language.EN})
@@ -486,10 +502,9 @@ def _validate_sentence(
         ):
             raise _ungrounded(GroundingDiagnosticCode.SERVICE_FACT_MISSING)
         if (sentence.claim_type == ClaimType.FACT and TIME_RE.search(text)
-                and service_support is ClaimSupport.NOT_CHECKED and not operational_support):
-            # A clock token elsewhere in this offer does not establish its
-            # relation to the stated day or location. Previously some of these
-            # mismatches were caught only by the one-sentence presentation rule.
+                and not fact_schedule_matches(text, pool_values, language)):
+            # Check actual clock/day/place relations, regardless of whether a
+            # closed vocabulary happens to recognize the surrounding service.
             raise _ungrounded(GroundingDiagnosticCode.TIME_NOT_CITED)
         # Lexical UNDECIDABLE is observational only after the ablation decision.
         all_values = [(fact.fact_type.value, fact.value) for fact in offer.facts]
@@ -517,7 +532,7 @@ def _validate_sentence(
         if claims_suitability(semantic_text, language):
             raise _ungrounded(GroundingDiagnosticCode.SUITABILITY_CLAIM_UNSUPPORTED)
         if claims_current_availability(
-            semantic_text, language,
+            mask_status_uncertainty(semantic_text, language), language,
             known_unknown_values=[fact.value for fact in pool if fact.fact_type == FactType.NOTE],
         ):
             raise _ungrounded(GroundingDiagnosticCode.CURRENT_AVAILABILITY_UNSUPPORTED)
@@ -552,6 +567,8 @@ def _validate_sentence(
                 if _contains_exact_literal(named_text, fact.value, ignore_case=True)
             ]
             if mentioned and candidate.offer_id != sentence.offer_id:
+                if all(evidenced_venue(text, fact.value, pool_values) for fact in mentioned):
+                    continue
                 raise FormulatorError("formulator_invalid_fact")
             if mentioned and not {fact.fact_id for fact in mentioned}.intersection(
                 {cited.fact_id for cited in pool}

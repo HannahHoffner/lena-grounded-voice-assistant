@@ -8,7 +8,6 @@ grammar remains outside their coverage; it is never proof of truth.
 from __future__ import annotations
 
 import re
-import unicodedata
 from collections.abc import Sequence
 
 from .grounding_claims import (
@@ -16,13 +15,7 @@ from .grounding_claims import (
     detect_service_concepts,
 )
 from .models import Language
-
-
-def normalize_name_typography(text: str) -> str:
-    """Normalize spacing/hyphen glyphs, never letters or word boundaries."""
-    return " ".join(unicodedata.normalize("NFC", text).translate(
-        str.maketrans({char: "-" for char in "\u2010\u2011\ufe63\uff0d"})
-    ).split())
+from .grounding_values import normalize_name_typography, EURO_RE, euro_amount, mask_known_phones
 
 
 _FEE_WORDS = {
@@ -123,7 +116,7 @@ def supported_operational_statement(text: str, facts: Sequence[Fact], language: 
     )
 
 
-_PRICE = re.compile(r"\b\d+(?:[,.]\d{1,2})?\s*€")
+_PRICE = EURO_RE
 _PRICE_CLAUSE = re.compile(r"\b(?:und|and|oraz|si|i)\b|[;.!?]")
 _LAUNDRY = {
     Language.DE: r"\bwasche", Language.EN: r"\blaundr",
@@ -165,9 +158,9 @@ def price_services_match(text: str, facts: Sequence[Fact], language: Language) -
         after = text[price.end():prices[index + 1].start() if index + 1 < len(prices) else len(text)]
         clause = _PRICE_CLAUSE.split(transliterated(before))[-1] + " " + _PRICE_CLAUSE.split(transliterated(after))[0]
         stated = concepts(clause, (language,))
-        amount = " ".join(price.group().split())
+        amount = euro_amount(price.group())
         matching = [(kind, value) for kind, value in facts
-                    if amount in {" ".join(m.group().split()) for m in _PRICE.finditer(value)}]
+                    if amount in {euro_amount(m.group()) for m in _PRICE.finditer(value)}]
         if not matching:
             return False
         if stated and not any(
@@ -195,6 +188,14 @@ _AGE_PATTERNS = {
                   (r"\bstarshe (\d+)\b", "gt"), (r"\bdo (\d+) let", "lt")),
 }
 
+_AGE_RANGES = {
+    Language.DE: r"\b(?:alter\s*|von\s+|zwischen\s+)(\d+)\s*(?:-|bis|und)\s*(\d+)(?:\s+jah\w*)?\b",
+    Language.EN: r"\b(?:aged?|ages?|between)\s+(\d+)\s*(?:-|to|and)\s*(\d+)\b",
+    Language.PL: r"\bod\s+(\d+)\s+do\s+(\d+)\s+lat\b",
+    Language.RO: r"\bintre\s+(\d+)\s*(?:-|si)\s*(\d+)\s+ani\b",
+    Language.RU: r"\bot\s+(\d+)\s+do\s+(\d+)\s+let\b",
+}
+
 
 def contradicts_age_bound(text: str, facts: Sequence[Fact], language: Language) -> bool:
     """Detect a stated age range that includes people outside curated bounds."""
@@ -205,7 +206,15 @@ def contradicts_age_bound(text: str, facts: Sequence[Fact], language: Language) 
     lower, upper = bounds.get("minimum_age", 0), bounds.get("maximum_age", 150)
     stated_lower: int | None = None
     stated_upper: int | None = None
-    normalized = transliterated(text)
+    # A contact instruction such as 'unter 0341 ...' is not an age bound.
+    without_phones, _ = mask_known_phones(text, [value for kind, value in facts if kind == "phone"])
+    normalized = transliterated(without_phones)
+    for match in re.finditer(_AGE_RANGES[language], normalized):
+        a, b = int(match[1]), int(match[2])
+        if not lower <= a <= b <= upper:
+            return True
+        stated_lower, stated_upper = a, b
+    normalized = re.sub(_AGE_RANGES[language], " ", normalized)
     for pattern, relation in _AGE_PATTERNS.get(language, ()):
         for match in re.finditer(pattern, normalized):
             if normalized[match.end(1):].startswith(":"):
@@ -312,12 +321,15 @@ def service_text_without_cited_qualifiers(text: str, facts: Sequence[Fact], lang
     conservatively unmasked. This projection is internal, not output text.
     """
     normalized = service_text_without_cited_audience(text, facts, language)
-    qualifier = {Language.PL: "bez barier", Language.RO: "fara bariere"}.get(language)
+    qualifier = {Language.PL: "bez barier", Language.RO: "fara bariere", Language.RU: "bez barerov"}.get(language)
     if qualifier and any(
         kind == "facility" and transliterated(value).strip() == qualifier
         for kind, value in facts
     ):
         normalized = re.sub(rf"\b{qualifier}\b(?=\s*(?:[,;.!?]|$))", " ", normalized)
+    if language == Language.RO and ("target_group", "people_experiencing_homelessness") in facts:
+        if ("eligible_gender", "female") in facts or ("target_group", "women") in facts:
+            normalized = re.sub(r"\b(femei(?: adulte)?) fara adapost(?=\s*(?:[,;.!?]|$))", r"\1", normalized)
     return normalized
 
 
@@ -334,8 +346,10 @@ def stated_weekdays(text: str, language: Language) -> set[int]:
     # Preserve the earlier full-name stem recognition (montags, Mondays, ...).
     # Word boundaries belong only to short forms such as Mo/So, not inflections.
     found = {day for label, day in labels.items() if label in normalized}
-    if language == Language.DE:
-        abbreviations = {label: day for day, label in enumerate(("mo", "di", "mi", "do", "fr", "sa", "so"))}
+    if language in {Language.DE, Language.EN}:
+        short_names = (("mo", "di", "mi", "do", "fr", "sa", "so") if language == Language.DE
+                       else ("mon", "tue", "wed", "thu", "fri", "sat", "sun"))
+        abbreviations = {label: day for day, label in enumerate(short_names)}
         found.update(day for label, day in abbreviations.items() if re.search(rf"\b{label}\b", normalized))
         labels.update(abbreviations)
     tokens = "|".join(sorted(labels, key=len, reverse=True))

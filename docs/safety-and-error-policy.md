@@ -120,7 +120,7 @@ Kontaktzusatz wird vor der Session-/TTS-Persistenz angehängt; der bedingte
 `safety.technical_hilfebus` ist für historische Reproduktion erhalten.
 
 Unabhängig davon bindet Evidence 5 für reguläre medizinische Antworten den
-zentralen Notruffakt als `medical_emergency`. Prompt 26 verlangt einen
+zentralen Notruffakt als `medical_emergency`. Prompt 27 verlangt einen
 zusätzlichen Hinweis nur bei sehr starken Beschwerden/Gefahr. Das ist eine
 Formulatoranweisung nach erfolgreicher Safetyentscheidung; sie ersetzt und
 ändert weder den Preflight noch den Akutgefahrpfad.

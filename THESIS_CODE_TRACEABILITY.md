@@ -1,5 +1,18 @@
 # Thesis–Code-Traceability
 
+## Validator-Korrekturpaket auf 5f9ddd8, 27.10.2026
+
+Aktueller uncommittierter Korrekturstand: Prompt 27, Validator 9, Textvertrag 7,
+Evidence 5, Copy 10. R-20/R-21 bleiben begrenzt abgesichert. Gleichwertige
+Nummern-/Betragsdarstellung, belegte Ortsnamen, Altersintervalle, eingegrenzte
+Negationen und Statusunsicherheit werden präziser geprüft; Tages-/Zeitbindung,
+Preis-/Leistungsbindung, E-Mail-/Namens-/Faktbindung und Zusagegrenzen bleiben.
+Safety/Akutgefahr sowie alle 42 R-/13 FR-Verträge bleiben erhalten.
+Belege: `tests/test_grounding_corrections.py`,
+`tests/test_grounding_correction_controls.py`, bestehende Grounding-Negativtests;
+Bericht 15. Offline-Replay der unveränderten Blindtexte, keine neue Livemessung.
+Die folgenden Messungen behalten ihre ursprüngliche Identität.
+
 ## Fachentscheidungen nach Validator-Ablation, 27.10.2026
 
 Diese Fortschreibung beschreibt den Arbeitsstand auf `02a3612`; die folgenden

@@ -1,5 +1,13 @@
 # Fachentscheidungen nach dem Validator-Ablationstest, 27.10.2026
 
+Nachfolgendes technisches Korrekturpaket auf `5f9ddd8`: Prompt 27 / Validator 9
+präzisieren Format-, Sprach-, Alters-, Negations-, Zeit- und Policyprüfungen;
+Textvertrag/Evidence/Copy und Fachentscheidungen bleiben erhalten. Das
+NOT_CHECKED-Zeitgate wird durch beleggebundene Fensterprüfung ersetzt.
+[Bericht 15](../IMPLEMENTATION_REPORT.md#15-validator-korrekturpaket-auf-5f9ddd8)
+trennt die neue Offline-Wiederprüfung von der ursprünglichen Live-Messung.
+Die folgenden Versionen und Zahlen beschreiben die vorausgehende Ablationsentscheidung.
+
 Die manuelle Bewertung von 127 Formulatortexten auf `02a3612` ergab für
 Erstversuche ohne unklare Bewertungen eine Fehlerquote von 4,9 % (5/103),
 keine beobachtete Formulator-Erfindung und 86 unnötige Ablehnungen unter 98

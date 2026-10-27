@@ -1,6 +1,37 @@
-# Manueller Release-Review – LENA, Stand 26.10.2026
+# Manueller Release-Review – LENA
 
-**Aktueller Status: Commit 2462e7d versioniert, vierstufige Messung abgeschlossen; menschlicher Release-Review und manuelle Evaluation ausstehend.**
+## Aktuelle Fortschreibung, 27.10.2026
+
+Basiscommit `5f9ddd8`, neuer Korrekturarbeitsstand mit Prompt 27/Validator 9.
+Bericht 15 trennt die abgeschlossene menschliche Blindbewertung des vorigen
+Live-Laufs von der Offline-Wiederprüfung dieser Texte. Die nachfolgenden
+Vierstufenresultate gehören weiterhin zum historischen Commit 2462e7d.
+
+- [x] 134 Blindtexte durch die Nutzerin bewertet; 15 davon U, nicht automatisch aufgelöst.
+- [x] 30 R-Ablehnungen aufgeklärt; 23 zusätzliche Freigaben im Offline-Replay,
+  sieben weiterhin begründet gesperrt; kritischer Sprachwechsel nun erkannt.
+- [x] Gezielte Korrektur- und echte Negativtests bestanden; keine Abschaltung
+  der E-Mail-/Namens-/Referenz-/Primärvertragsprüfungen.
+- [x] Vollständige aktuelle native-/Container-/Runtimebelege: je 1637 Python
+  bestanden plus bekannter XFAIL, je 19 JS; No-Cache-Build, Health/ohne Schlüssel/
+  Neustart/Containerersatz bestanden (Bericht 15.5).
+- [ ] Offene Sprachfälle unabhängig prüfen; Hilfsübersetzungen sind keine Sprachfreigabe.
+- [ ] Zielrechner-Bedienprüfung für Antwort/Kachel/Karte/Vorlesen und ggf.
+  Spracheingabe festhalten; bisherige automatisierte Nachweise ersetzen sie nicht.
+- [ ] Aktuellen Abgabe-Commit und externe Belege gemeinsam zuordnen; Thesis-
+  Anpassungen aus Abschnitt K der THESIS_UPDATE_NOTES erst im gesonderten
+  Thesisauftrag übernehmen. Kein neuer Commit durch Codex autorisiert.
+
+Zwei FU-Kommentare betreffen Handlungsorientierung bzw. explizite Abgrenzung
+einer Manipulationsfrage und bleiben sichtbar. Hilfebus bei Akutgefahr bleibt
+unverändert ohne Zusatz; keine neue Fachentscheidung vorweggenommen. Eine neue
+vollständige Vierstufen-Live-Evaluation ist nicht freigegeben. Ob sie für die
+Abgabe erhoben oder ihr Ausbleiben als Grenze dokumentiert wird, bleibt eine
+gesonderte Entscheidung. Technische Tests garantieren keine allgemeine Wahrheit.
+
+## Historischer Reviewstand 26.10.2026
+
+**Damals: Commit 2462e7d versioniert, vierstufige Messung abgeschlossen; menschlicher Release-Review und manuelle Evaluation ausstehend.**
 Keine uneingeschränkte Abgabe- oder Veröffentlichungsempfehlung. Diese Liste
 ist ein Reviewinstrument; offene Punkte sind keine bereits erteilten Freigaben.
 In diesem Dokumentationsauftrag wurden keine neuen Tests, Builds, Liveaufrufe,

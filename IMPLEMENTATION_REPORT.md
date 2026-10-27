@@ -1,5 +1,14 @@
 # Umsetzung des LENA-Audits
 
+## Aktueller Korrekturstand auf 5f9ddd8, 27.10.2026
+
+Validator 9 / Prompt 27 (Textvertrag 7, Evidence 5, Copy 10). Das gezielte
+Korrekturpaket nach der zweiten menschlichen Blindbewertung steht in Abschnitt
+15. Die dortige Wiederprüfung ist ein Offline-Replay, keine neue Live-Erhebung.
+Frühere Messungen und die nachfolgenden historischen Abschlussnachweise behalten
+ihre ursprünglichen Versionen. Vollständige native-/Container-/Runtimeprüfung
+dieses Pakets ist bestanden; die fachlichen Grenzen stehen in Abschnitt 15.5.
+
 ### Historische Abschlussprüfung: Textvertrag vor der Ablation, 26.10.2026
 
 - Python vollständig nativ: **1521 bestanden, 1 bekannter strikter XFAIL,
@@ -1189,3 +1198,159 @@ Neustart wieder; temporäre Prüfcontainer und Prüfvolume wurden entfernt.
 `review-first-coding` und `code-documentation` angewendet; README, bestehende
 Vertrags-/Safety-/Testdokumentation und Traceability werden fortgeschrieben,
 Thesisanpassungen ausschließlich in THESIS_UPDATE_NOTES dokumentiert.
+
+## 15. Validator-Korrekturpaket auf 5f9ddd8
+
+### 15.1 Anlass, Umfang und Versionen
+
+Nach dem Commit 5f9ddd8 bewertete die Nutzerin das zweite Blindpaket vollständig:
+134 Texte (113 Erstversuche, 21 angezeigte Retrys), davon 116 R, 2 FU, 1 FK,
+15 U. Eindeutig bewertete Ersttexte: 98 R/2 FU bei n=100; Validator 8 verwarf
+30 der 98 R-Texte. Die 30 gespeicherten Erstdiagnosen wurden vor der Umsetzung
+offline reproduziert. Bericht und Roh-Replay liegen unverändert im externen
+Ablationsordner. Diese Nutzerbewertungen werden durch Codex nicht umkodiert.
+
+Autorisiert ist ein begrenztes Korrekturpaket mit weiter bestehenden
+Schutzprüfungen. Neu: **Validator 9 / Prompt 27**; **Textvertrag 7, Evidence 5,
+Application Copy 10, Daten-/Kurationsstände unverändert**. Nur die aktuelle
+Promptanweisung zu Telefonlabels wurde geändert; der historische Prompt 22
+bleibt unverändert. Keine neue Konfiguration/Abhängigkeit. Keine Änderung an
+Safety/Preflight/Akutgefahr, Kandidaten, Kuration, Rohdaten oder Thesis.
+
+### 15.2 Konkrete Korrekturen und Schutzgrenzen
+
+- `grounding_values.py`: bestehende Typografienormalisierung kohäsiv verschoben
+  und aus `grounding_constraints.py` kompatibel reexportiert. Vollständige
+  Telefonnummern nach Ziffernfolge prüfen; Personenlabels sind keine Nummer.
+  Keine Ergänzung/Änderung von Länderkennung, Durchwahl oder Ziffern. Hausnummer
+  plus Postleitzahl wird nicht als Telefonnummer zusammengezogen. Einsatzzeit-
+  beschränkung des Hilfebusses bleibt erforderlich, jetzt lokalisiert formulierbar;
+  „außerhalb/nicht während“ ist kein erfüllter Betriebszeitvorbehalt.
+- Eurobeträge mit `Decimal` vergleichen (5 = 5,0 = 5,00), weiterhin an die
+  Leistung binden; andere/negative Beträge und Preisvertauschungen bleiben
+  unzulässig. Geldzahlen werden erst nach dieser Werteprüfung aus der allgemeinen
+  Zahlprüfung ausgenommen; damit wird die Dezimaldarstellung nicht zum Fehler.
+- `grounding_schedules.py`: das verbliebene FACT+Zeit+NOT_CHECKED-Wortgate entfällt.
+  Stattdessen jedes erkannte Uhrzeitfenster mit lokalen Tagen und belegten
+  Ortsangaben gegen Fakten desselben Angebots prüfen; Postadresszeiten in NOTE
+  zählen als Beleg. Umgekehrte Zeiten, fremde Tage/Fenster und erkennbare unbelegte
+  Standorte bleiben negativ. Bestehende leistungsgebundene Bedingungen bleiben
+  zusätzlich aktiv. Keine vollständige Erkennung beliebiger Zeit-/Ortsprosa.
+- `grounding_surface.py`: belegte Straßenteile aus Terminnotizen für die
+  Sprachprüfung maskieren; klare Fremdsprachenprosa gesondert erkennen. Der
+  beobachtete deutsche Satz im englischen Retry wird abgelehnt. Nur ein belegter
+  Ort mit Ortspräposition darf den Namen eines anderen ausgewählten Angebots
+  enthalten (z. B. UVO-Termin in Oase); keine fremden Fakten/Telefonnummern oder
+  geänderten Referenzen werden dadurch verfügbar.
+- Altersgrenzen: bekannte Kontakte vor der Erkennung ausblenden; „unter 0341“
+  ist kein Alterslimit. Vollständige Altersbereiche in fünf Sprachen gegen
+  Minimum/Maximum prüfen. Keine Änderung persönlicher Zugangsregeln.
+- Negation: russische belegte Barrierefreiheit und eng begrenzte rumänische
+  Zielgruppenform „femei … fără adăpost“ bei typisierter passender Zielgruppe
+  von Leistungsnegation trennen. Echte Negation, fehlender Beleg und koordinierte
+  negative Fortsetzungen bleiben Gegenproben.
+- Policyanker: Apostrophe normalisieren und enge gleichwertige deutsche
+  Ablehnungsform erkennen. Nur eine vollständige eingegrenzte parenthetische
+  Status-Ungewissheit aus der Echtzeitprüfung nehmen; eine aktuelle positive
+  Zusage außerhalb dieser Statusphrase bleibt unzulässig.
+
+Die neue Nummern-/Betragsnormalisierung verändert keinen sichtbaren Modelltext.
+Kopierbare E-Mail-Zeichen, Eigennamen, Fakt-IDs, Angebots-/Kartenbindung und
+Primärreihenfolge werden nicht automatisch repariert oder abgeschaltet.
+
+### 15.3 Tests und bewusste Erwartungsänderungen
+
+Neue Regressionen in `tests/test_grounding_corrections.py` und
+`tests/test_grounding_correction_controls.py` prüfen gültige Varianten zusammen
+mit veränderten Ziffern/Durchwahlen, Preisen/Leistungszuordnungen, Altersausweitung,
+Tages-/Zeitvertauschungen, fremden Orten/Kontakten, echten Leistungsnegationen,
+aktuellen Zusagen und Sprachmischung. Der produktive Vertrag 7 wird verwendet.
+
+Bestehende Teständerungen, vollständig begründet:
+
+| Test | Absichtliche Änderung |
+|---|---|
+| `test_formulation.test_curated_phone_name_and_price_format_must_remain_exact` → `test_phone_and_price_formatting_preserves_values_while_names_stay_exact` | Gleiche Nummer mit Leerraum statt Bindestrich sowie 5.00 statt 5,00 sind jetzt positive Varianten. Echte geänderte Durchwahl und 5.01 sind negative Gegenproben; beide bisherigen Namens-Negativfälle bleiben erhalten. |
+| `test_formulation.test_referral_and_full_phone_contract_across_languages` → `test_referral_phone_value_and_operating_condition_across_languages` | Darstellungsbindestrich wird akzeptiert. Fehlender Hilfebus-Betriebszeitvorbehalt bleibt negativ (`service_condition_missing` statt `phone_not_exact`); gekürzte/falsche Nummer weiterhin negativ. |
+| `test_formulation.test_versions_prompt_and_health_are_observable` | Erwartete aktuelle Promptversion 27. Historischer Prompt-/Vertragstest bleibt unverändert auf 22/5. |
+| `test_formulator_prose.test_current_prompt_separates_phone_digits_from_translatable_restrictions` | Neue Prüfung der produktiven Telefonanweisung; historische Promptgrenzen bleiben unverändert geprüft. |
+| `test_live_evaluation.test_manifest_is_reproducible_and_contains_no_secret` | Nur Versionsmetadatum 9; Szenarien, Erwartungen, Gates und Providerbudget unverändert. |
+
+Insgesamt 52 zusätzliche parametrisierte Testfälle gegenüber 5f9ddd8. Kein
+fachlicher Negativtest wurde gelöscht oder übersprungen. Anfangs fehlerhafte
+neue Testfixtures (zu viele Policy-IDs, fehlender Adult-Beleg) wurden berichtigt;
+historische Promptprüfung erhielt wieder ausdrücklich ihre historische Erwartung.
+Gezielter vollständiger Groundinglauf: **209 bestanden**, bekannte TestClient-
+Warnung; `targeted-complete.log`. Vollständige Abschlussläufe unten separat.
+
+### 15.4 Offline-Replay der menschlich bewerteten Texte
+
+Extern: `%LOCALAPPDATA%/LENA/verification/2026-10-27-validator-corrections/`.
+Originale `results.jsonl`, `schluessel.json`, `bewertung_ausgefüllt.csv` bleiben
+per SHA-256 unverändert. 134 gespeicherte JSON-Antworten mit ihren damaligen
+Evidencepaketen gegen den produktiven Validator geprüft; Netzwerkzugriffe
+gesperrt, keine Provideraufrufe. Prompt 27 wurde dabei nicht neu generiert.
+
+| Eindeutig bewertete Ersttexte | Validator 8 im Live-Lauf | Validator 9 im Replay |
+|---|---:|---:|
+| R akzeptiert | 68 | 91 |
+| R verworfen | 30 | 7 |
+| FU akzeptiert | 1 | 2 |
+| FU verworfen | 1 | 0 |
+
+Von den 30 untersuchten R-Ersttexten werden **23 zusätzlich akzeptiert**.
+Die sieben weiterhin verworfenen R-Texte enthalten vier E-Mail-Zeichenabweichungen,
+einmal „Rücken“ statt „Rücke“, eine falsche interne Fakt-ID und einen
+Primärreihenfolgeverstoß. Zwei E-Mail-Abweichungen waren vorher hinter dem
+Altersfehler verborgen. Kein zuvor akzeptierter R-Text wird neu verworfen.
+Der von der Nutzerin als FK bewertete Sprachwechsel im EN-Retry wird jetzt
+abgelehnt. Die 15 U werden nicht automatisch aufgelöst.
+
+Beide FU-Texte werden akzeptiert. Die Kommentare verlangen eine ausdrückliche
+Abgrenzung zur Manipulationsfrage bzw. den Hinweis, direkt zur Bahnhofsmission
+gehen zu können. Das ist kein Beleg einer erfundenen Nummer oder Leistung und
+auch kein Grund, diese menschlichen FU nachträglich in R umzubenennen.
+Relevanz, Handlungsorientierung und Sprachqualität bleiben eigene Prüfaspekte.
+
+Diese Auswertung nutzt dieselben Fälle zur Diagnose und Korrektur: **kein
+unabhängiger Generalisierungsnachweis** und keine neue Fehler-/Templatequote
+der laufenden Anwendung. Ein geänderter Validator würde andere Retrys auslösen;
+deren Texte wurden nicht neu erhoben. Die Beobachtung 2/100 beanstandete
+Ersttexte gehört weiterhin zur menschlichen Bewertung des Prompt-26-Laufs.
+
+### 15.5 Technische Prüfung und Abgabegrenzen
+
+Belege extern unter `2026-10-27-validator-corrections/`:
+
+| Prüfung am endgültigen Stand | Ergebnis / Beleg |
+|---|---|
+| Vollständige Python-Suite nativ, CPython 3.14/Windows | **1637 bestanden, 1 bekannter strikter XFAIL, 1 bekannte TestClient-Warnung**, 347,70 s; `native.xml`, `native.log` |
+| Vollständige Python-Suite netzlos, CPython 3.12/Linux-AMD64 | **1637 bestanden, 1 bekannter XFAIL, 1 bekannte Warnung**, 265,33 s; `docker-tests.log` |
+| Frontend | Je **19/19** nativ und im Container; `javascript.log`, `docker-tests.log` |
+| Sauberer Neubau | `docker build --pull --no-cache --target test` aus `source-reviewed/`, erfolgreich, 103,16 s. Ubuntu-Snapshotserver wieder erreichbar; Dockerfile/Locks unverändert. `docker-build.log`, `docker-verification.json` |
+| Weitere Checks | compileall, pip check und beide JS-Syntaxprüfungen im Container bestanden; native compileall bestanden |
+| Runtime aus derselben Buildkette | Health **healthy**, Start ohne Zugangsdaten, read-only/Loopback, Hilfebuskontakt/-kachel und Sitzungserhalt nach **Neustart und Containerersatz** bestanden; keine Provideraufrufe; `runtime-smoke.json` |
+| Identität | Testimage `sha256:8cde0f600ae9764f2b3757cfd28dcbeead310df63f464b5558586a1ef15bc400`; Runtime `sha256:23cca52395aa275e5e1da3af2ae1032db2359b65db2b0e5326cef290fc60182a`. `source-manifest-reviewed.json`, `verification.json` binden Code/Tests und installierte Module; spätere Änderungen nur Markdown. |
+
+Ein vorheriger kompletter Lauf bestand mit 1636 Tests, danach fiel im Replay
+eine zusätzliche konservative Ablehnung bei englischer Antwort und deutschen
+Quell-Wochentagen auf. Quellen-Sprachfallback und eigene positive/negative
+Regression ergänzt; danach **beide vollständigen Suiten und No-Cache-Build
+erneut** am oben genannten endgültigen Export. Frühere Zwischenbelege unter
+`first-pass/` werden nicht als Abschlussstand ausgegeben. Der historische
+strikte XFAIL „minor injuries“ bleibt ausdrücklich eine bekannte Überablehnung.
+
+Selbstreview mit review-first-coding und code-documentation: neue Helfer sind
+im produktiven Validator aufgerufen und im installierten Wheel enthalten;
+keine zweite Validierungsarchitektur. Keine Daten-/Kurations-/Release-/Snapshot-
+Änderung, keine Konfigurations-/Abhängigkeitsänderung, keine Secrets im
+Reviewexport. README, bestehende Vertrags-/Test-/Safetydokumentation,
+Traceability, Thesisnotizen und Release-Review fortgeschrieben. Temporäre
+Runtime-Prüfcontainer und Prüfvolume entfernt. `git diff --check` bestanden.
+
+Keine Behauptung, dass alle wirklichen Falschaussagen erkannt werden:
+datengetreue Fehler und bewusst ungeprüfte offene Leistungsaussagen bleiben
+Grenzen. Abgaberelevante Nachweise sind von unabhängiger Sprach-/Bedienprüfung,
+den 15 U und den bestehenden organisatorischen Daten-/Betriebsgrenzen getrennt.
+Akutgefahr unverändert; Hilfebus dort weiterhin ohne neue Fachentscheidung.
+Keine neue Vierstufen-Live-Evaluation, kein Commit, Tag oder Push.

@@ -4,7 +4,7 @@
 
 Der Formulator formuliert den sichtbaren Text wieder selbst. `formulator_prose.py`
 definiert den strikten Textvertrag 7 und hängt sein tatsächliches JSON-Schema an
-Prompt 26 an; Evidencevertrag 5, Validator 8. Der Prompt verlangt einfache Duzform, ein bis drei kurze Sätze,
+Prompt 27 an; Evidencevertrag 5, Validator 9. Der Prompt verlangt einfache Duzform, ein bis drei kurze Sätze,
 konkrete Fragebeantwortung und ausschließlich Fakten des ausgewählten Evidence-
 Pakets. Zahlen, Bedingungen und Angebotszuordnung dürfen nicht verändert werden.
 Interne Capability-Codes werden dem Formulator nicht als Ausgabetext angeboten.
@@ -19,6 +19,13 @@ Literal-, Referenz-, Namens-, Zielgruppen-, Alters-, Zeit-/Preiszuordnungs-,
 Entgelt-, Aufnahme-, Eignungs- und Echtzeitprüfungen bleiben aktiv, ebenso
 explizite Leistungsnegationen. Diese endliche Prüfung ist keine vollständige
 semantische Entailment-Prüfung und erkennt keine datengetreuen Fehler.
+Validator 9 ersetzt auch das NOT_CHECKED-Zeitgate durch Prüfung der tatsächlich
+belegten Uhrzeitfenster mit lokalem Tages-/Ortsbezug. Telefonlabels sind nicht
+Teil der Ziffernfolge; Betriebsbedingungen bleiben erforderlich und dürfen
+lokalisiert werden. Eurobeträge werden numerisch verglichen und weiterhin an
+die Leistung gebunden. Belegte Straßen in Notizen sind keine Fremdsprachenprosa,
+und ein quellbelegter Behandlungsort darf im Satz eines Kooperationsangebots
+stehen. Interne Referenzen und kopierbare E-Mail-Zeichen bleiben unverändert.
 Gültiger Modelltext wird nur in seinen Leerzeichen normalisiert und mit
 `provider: "blablador"` ausgegeben. Bei Parser-, Grounding-, Provider- oder
 Budgetfehlern bleibt der bestehende Retry-/Templatepfad aktiv. Keine Änderung
@@ -31,7 +38,7 @@ ist kein erfolgreicher produktiver Antwortpfad mehr und auch nicht der
 Template-Fallback. Dieser verwendet weiterhin `providers/template.py`.
 
 Für medizinische Antworten wird `medical_emergency` aus `policy_facts.py`
-gebunden bereitgestellt. Prompt 26 verlangt den zusätzlichen Notruf nur bei
+gebunden bereitgestellt. Prompt 27 verlangt den zusätzlichen Notruf nur bei
 sehr starken Beschwerden oder Gefahr; der Akutgefahrpfad bleibt unverändert.
 `max_answer_chars` reserviert bei Ausschlussantworten Platz für den
 deterministischen Hilfebuszusatz. Keine Telefonnummern öffentlicher Toiletten

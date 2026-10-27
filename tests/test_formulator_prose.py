@@ -19,6 +19,13 @@ def current(response):
     return GroundedFormulatorResponse.model_validate(raw)
 
 
+def test_current_prompt_separates_phone_digits_from_translatable_restrictions():
+    prompt = formulator_response_prompt()
+    assert "person labels are optional" in prompt
+    assert "operating-hours restrictions must be retained in requested_language" in prompt
+    assert "including phone labels and restrictions in parentheses" not in prompt
+
+
 @pytest.mark.parametrize("text", [
     "Bei Übernachtungshaus für wohnungslose Frauen gibt es Übernachtung für Frauen.",
     "Übernachtungshaus für wohnungslose Frauen bietet einen Schlafplatz und Grundversorgung mit Essen, Kleidung und Hygiene.",

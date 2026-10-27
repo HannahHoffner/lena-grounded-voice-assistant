@@ -247,3 +247,28 @@ keine Ergänzung. Die Streetwork-Namen sind durch die Quellen geklärt.
 Ein neuer Commit bedarf einer gesonderten Anweisung. Der erneute Ablationslauf
 ist keine freigegebene vollständige Vierstufen-Live-Evaluation und kein
 Korrektheitsnachweis ohne die neue menschliche Bewertung.
+
+## K. Validator-Korrekturpaket auf 5f9ddd8, 27.10.2026
+
+Keine Thesisänderung. Der bereits vorliegende 120er-Live-Lauf bleibt Prompt 26 /
+Validator 8 zugeordnet; die folgenden Zahlen sind ein **Offline-Replay** seiner
+gespeicherten Modelltexte gegen Validator 9, keine neue Anwendungsmessung.
+
+| Fundstelle | Neue korrekte Aussage | Code-/Testbeleg |
+|---|---|---|
+| `Chapters/5Solutionneu.tex:488–508`, R-20/R-21 | Prompt 27, Validator 9, Textvertrag 7/Evidence 5. Telefonziffern unabhängig von Personenlabels; Betriebsbedingung bleibt erforderlich. Eurobeträge numerisch und leistungsgebunden. Belegte Orte von Sprache, Kontaktzahlen von Alter, Zielgruppen-/Ausstattungsqualifier von Leistungsnegation getrennt. Das NOT_CHECKED-Zeitgate ist durch begrenzte Uhrzeit-/Tages-/Ortsprüfung ersetzt. Keine vollständige Entailment-/Falschheitsprüfung. | `app/grounding.py`, drei neue Groundinghelfer, `grounding_constraints.py`; neue Korrektur-/Gegenprobentests, Bericht 15 |
+| `Chapters/6Resultsneu.tex`, formative manuelle Evaluation | Zweites Blindpaket: 134 Texte = 113 Ersttexte + 21 angezeigte Retrys; Nutzerin bewertete 116 R, 2 FU, 1 FK, 15 U. Ersttexte ohne U: 98 R/2 FU bei n=100; 30 von 98 R wurden von Validator 8 verworfen. Ein kritischer Sprachwechsel trat in einem akzeptierten EN-Retry auf. Labels FU betreffen hier auch Handlungsorientierung/Anfrageabgrenzung, daher nicht alle als erfundene Angebotsfakten zählen. | unveränderte `bewertung_ausgefüllt.csv`, Schlüsseldatei und gespeicherte Versuche im externen Ablationsordner; Bericht 15 |
+| Gleicher Abschnitt, diagnostische Weiterentwicklung/Diskussion | Validator 9 akzeptiert im Offline-Replay 23 der 30 R-Ersttexte zusätzlich; sieben bleiben wegen echter Namens-/E-Mail-/ID-/Primärvertragsabweichungen gesperrt. Zwei E-Mail-Abweichungen lagen hinter der ursprünglichen Altersdiagnose. Kein zuvor akzeptierter R-Text wird neu verworfen; der FK-Sprachwechsel wird erkannt. Die beiden FU-Texte werden akzeptiert; menschliche Bewertung wird nicht umgeschrieben. | externes `2026-10-27-validator-corrections/replay.json`, Originalhashschutz; gezielte echte Negativfälle in `test_grounding_correction_controls.py` |
+| Diskussion/Validität und Abgabestand | Auf denselben Beispielen entwickelt und geprüft; Verbesserung ist Diagnose/Regression, kein unabhängiger Generalisierungsnachweis. Kein neuer Templateanteil aus Replay ableiten, da Retrys und Prompt 27 nicht neu ausgeführt wurden. 15 U, unabhängiges Sprachreview und sichtbare Bedienprüfung bleiben von technischen Tests getrennt. Datengetreue Fehler und ungeprüfte offene Leistungsaussagen bleiben Grenzen. | Bericht 15; dokumentierte Charakterisierungstests; Release-Review-Checkliste |
+
+Hilfebus bei Akutgefahr bleibt fachlich unentschieden und technisch unverändert.
+Bestehende Live-/Baseline-Messungen werden nicht auf Validator 9 umetikettiert.
+
+Technische Reproduktion (`Chapters/AppendixLenaDesign.tex:14–70`,
+`Chapters/6Resultsneu.tex:69–89`): am endgültigen Korrekturexport je **1637
+bestandene Python-Tests + 1 bekannter strikter XFAIL**, je **19 JS** nativ und
+im netzlosen Container. Erfolgreicher No-Cache-Neubau, Runtime-Health, Start
+ohne Zugangsdaten und Sitzungserhalt nach Neustart/Containerersatz. Belege:
+Bericht 15.5; `native.xml`, `docker-tests.log`, `docker-verification.json`,
+`runtime-smoke.json`, `source-manifest-reviewed.json` und `verification.json`
+im externen Korrekturordner. Diese Tests sind kein neuer Live-Qualitätsanteil.

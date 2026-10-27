@@ -16,12 +16,21 @@ Wissensquelle. Die Verarbeitung ist in vier Schichten getrennt:
 
 `app/service.py` orchestriert diese Schichten; `tests/test_architecture_boundaries.py`
 sichert die Importgrenzen. Der produktive Formulator liefert **selbst formulierte
-Sätze mit Faktenreferenzen** (Vertrag 7, Prompt 26, Evidence 5). Nach atomarer Prüfung wird
+Sätze mit Faktenreferenzen** (Vertrag 7, Prompt 27, Evidence 5, Validator 9). Nach atomarer Prüfung wird
 der Modelltext als `provider: "blablador"` ausgegeben, ohne Satzschablonen.
 Bei Fehlern greift der bestehende Template-Fallback. Der Prompt verlangt ein
 bis drei kurze Sätze in einfacher Sprache. Die endliche Faktenprüfung ist keine
 allgemeine semantische Wahrheitsgarantie (siehe [Systemgrenzen](#systemgrenzen)).
 Planvertrag 6 und sein Renderer bleiben nur für historische Vergleiche erhalten.
+
+Die Validator-Korrektur auf `5f9ddd8` unterscheidet gleichwertige Telefon-/
+Betragsdarstellung von veränderten Werten, prüft Zeitfenster ohne das frühere
+NOT_CHECKED-Wortgate und trennt belegte Orte/Zielgruppen von Sprach- und
+Negationsfehlern. Im Offline-Replay passieren 23 von 30 zuvor verworfenen,
+menschlich als richtig bewerteten Ersttexten zusätzlich; tatsächliche E-Mail-,
+Namens-, Referenz- und Reihenfolgeabweichungen bleiben gesperrt. Dies ist keine
+neue Live-Erhebung und keine allgemeine Korrektheitsgarantie.
+[Korrekturen und Grenzen](IMPLEMENTATION_REPORT.md#15-validator-korrekturpaket-auf-5f9ddd8).
 
 Der historisch erhaltene Faktenrenderer verwendet feste vollständige Satzvorlagen statt Feldlabels
 und Semikolonlisten; zusammengehörige Werte werden gemeinsam genannt. Äußere
@@ -218,6 +227,11 @@ Netzwerkzugriffe. Ein bewusst dokumentierter `strict xfail`
 (`tests/test_formulation.py`, „minor injuries“) markiert eine bekannte
 Überablehnung und zählt nicht als bestanden. Live-Provider-Läufe sind getrennt
 freizugeben ([Live-Provider-Evaluation](docs/live-provider-evaluation.md)).
+Aktueller Korrekturstand auf `5f9ddd8` (Prompt 27/Validator 9): nativ und im
+frisch ohne Cache gebauten netzlosen Testcontainer je **1637 bestanden,
+1 bekannter XFAIL**, Frontend je **19/19**. Runtime-Health, Start ohne
+Zugangsdaten und Persistenz nach Neustart/Containerersatz bestanden.
+[Aktuelle Belege](IMPLEMENTATION_REPORT.md#155-technische-prüfung-und-abgabegrenzen).
 Neuer Ablationsarbeitsstand auf `02a3612`, 27.10.2026: nativ und im netzlosen
 Testcontainer jeweils **1585 bestanden, 1 bekannter XFAIL**, JavaScript jeweils
 **19/19**. Runtime-Health, Start ohne Zugangsdaten und Sitzungserhalt über
@@ -260,7 +274,7 @@ Offline-Werkzeugtests: nativ 1355 bestanden, ein bekannter XFAIL; JS 19/19.
 - Forschungsprototyp für isolierten lokalen Betrieb: keine Authentifizierung,
   kein TLS, keine Rate-Limits, ein Prozess; nicht für öffentlichen Betrieb.
 - Seit der Überarbeitung vom 26.10.2026 formuliert das LLM wieder sichtbaren
-  Text (Vertrag 7, Prompt 26, Validator 8). Referenzen, Zahlen, Zeiten,
+  Text (Vertrag 7, Prompt 27, Validator 9). Referenzen, Zahlen, Zeiten,
   Angebotsbindung, Rollen und verbotene Zusatzbehauptungen werden geprüft;
   die lexikalische Inhaltswortabdeckung und unentscheidbare Leistungsabgleiche
   verwerfen seit der Fachentscheidung vom 27.10.2026 keine Antworten mehr.

@@ -1,5 +1,27 @@
 # Tests und Qualitätssicherung
 
+## Validator-Korrekturpaket auf 5f9ddd8, 27.10.2026
+
+Prompt 27 / Validator 9, Textvertrag 7/Evidence 5/Copy 10 unverändert.
+Neue Tests `test_grounding_corrections.py` und
+`test_grounding_correction_controls.py` prüfen gleichwertige Werte/Orte/
+Policyformulierungen und echte geänderte Ziffern, Beträge, Tage, Altersgrenzen,
+Negationen, Zusagen, Fremdsprachenprosa und fremde Angebotsfakten. Bestehende
+Negativfälle bleiben erhalten; nur Telefon-/Betragsformat- und Versionsverträge
+wurden bewusst angepasst (Bericht 15.3). Gezielter Lauf: 209 bestanden.
+
+Offline-Replay aller 134 menschlich bewerteten Texte: 23/30 zuvor verworfene
+R-Ersttexte zusätzlich akzeptiert, sieben weiterhin abgelehnt; FK-Sprachwechsel
+jetzt abgelehnt. Zwei FU akzeptiert, 15 U nicht umbewertet. Keine neue Live-
+Fehler-/Templatequote. Vollständig nativ und im netzlosen Testcontainer je
+**1637 bestanden, 1 bekannter XFAIL, 1 bekannte TestClient-Warnung**; je
+**19/19 JS**. Sauberer No-Cache-Build, Paket-/Syntaxchecks und Runtime-Health,
+Start ohne Schlüssel sowie Persistenz nach Neustart/Containerersatz bestanden.
+Der finale Quellen-Sprachfallback erhielt eine eigene Regression; nach dieser
+letzten Änderung wurden beide vollständigen Suiten und der No-Cache-Build
+erneut ausgeführt. [Bericht 15.5](../IMPLEMENTATION_REPORT.md#155-technische-prüfung-und-abgabegrenzen)
+bindet die aktuellen Belege; frühere Nachweise unten sind historisch.
+
 ## Fachentscheidungen nach Ablation, 27.10.2026
 
 Arbeitsstand auf `02a3612`, Textvertrag 7/Prompt 26, Evidence 5, Validator 8,

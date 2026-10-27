@@ -34,7 +34,7 @@ PLAN_FORMULATOR_CONTRACT_VERSION = "6"
 FORMULATOR_CONTRACT_VERSION = "7"
 LEGACY_FORMULATOR_PROMPT_VERSION = "22"
 PLAN_FORMULATOR_PROMPT_VERSION = "24"
-FORMULATOR_PROMPT_VERSION = "26"
+FORMULATOR_PROMPT_VERSION = "27"
 MAX_FORMULATOR_RESPONSE_CHARS = 3_000
 FactId = Annotated[str, StringConstraints(pattern=r"^f_[0-9a-f]{16}$")]
 OfferId = Annotated[
@@ -99,6 +99,9 @@ FORMULATOR_SYSTEM_PROMPT = LEGACY_FORMULATOR_SYSTEM_PROMPT.replace(
 ).replace(
     "A block may contain several short sentences about the SAME offer.",
     "Each block is one short sentence about the SAME offer; use one to three sentences in total.",
+).replace(
+    "including phone labels and restrictions in parentheses",
+    "preserving every phone digit and extension; person labels are optional, but operating-hours restrictions must be retained in requested_language",
 ) + """
 
 QUESTION-FOCUSED WRITING
@@ -223,7 +226,7 @@ class EvidenceOffer(StrictModel):
 
 class FormulatorEvidence(StrictModel):
     evidence_version: Literal[EVIDENCE_CONTRACT_VERSION] = EVIDENCE_CONTRACT_VERSION
-    prompt_version: Literal["22", "23", "24", "25", "26"] = FORMULATOR_PROMPT_VERSION
+    prompt_version: Literal["22", "23", "24", "25", "26", "27"] = FORMULATOR_PROMPT_VERSION
     max_answer_chars: int = Field(default=600, ge=1, le=600)
     requested_language: Language
     answer_type: AnswerType

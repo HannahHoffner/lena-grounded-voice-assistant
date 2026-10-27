@@ -163,7 +163,7 @@ def test_versions_prompt_and_health_are_observable(app) -> None:
     assert FORMULATOR_PROMPT_VERSION == "22"
     assert health["evidence_contract_version"] == "5"
     assert health["formulator_contract_version"] == "7"
-    assert health["formulator_prompt_version"] == "26"
+    assert health["formulator_prompt_version"] == "27"
     assert health["llm_request_budget_seconds"] == 45.0
     for rule in (
         "Use only EVIDENCE facts",
@@ -370,7 +370,7 @@ def test_operational_facts_must_be_cited_and_exact(app) -> None:
     assert "Georg-Schumann-Str. 268" in validate_formulation(response, evidence).answer
 
 
-def test_curated_phone_name_and_price_format_must_remain_exact(app) -> None:
+def test_phone_and_price_formatting_preserves_values_while_names_stay_exact(app) -> None:
     scharni = _evidence(app)
     name = _fact(scharni, FactType.DISPLAY_NAME)
     phone = _fact(scharni, FactType.PHONE)
@@ -379,6 +379,8 @@ def test_curated_phone_name_and_price_format_must_remain_exact(app) -> None:
         text="Ruf Übernachtungshaus für wohnungslose Frauen unter 0341 420920 0 an.",
         fact_ids=[name.fact_id, phone.fact_id],
     )
+    assert validate_formulation(changed_phone, scharni).answer == changed_phone.sentences[0].text
+    changed_phone.sentences[0].text = "Ruf Übernachtungshaus für wohnungslose Frauen unter 0341 420920 1 an."
     with pytest.raises(FormulatorError, match="formulator_ungrounded_claim"):
         validate_formulation(changed_phone, scharni)
 
@@ -403,6 +405,9 @@ def test_curated_phone_name_and_price_format_must_remain_exact(app) -> None:
         claim_type=ClaimType.SERVICE,
         fact_ids=[_fact(ruecke, FactType.DISPLAY_NAME).fact_id, price.fact_id],
     )
+    # A decimal point is an equivalent amount, not an invented price.
+    assert validate_formulation(changed_price, ruecke).answer == changed_price.sentences[0].text
+    changed_price.sentences[0].text = "R\u00fccke kostet 5.01 \u20ac."
     with pytest.raises(FormulatorError, match="formulator_ungrounded_claim") as price_error:
         validate_formulation(changed_price, ruecke)
     assert price_error.value.diagnostic_code in {
@@ -968,7 +973,7 @@ def test_localized_description_establishes_the_target_group(app, language, text)
      (Language.PL, "Skontaktuj się z"), (Language.RO, "Contactează"),
      (Language.RU, "Свяжись с")],
 )
-def test_referral_and_full_phone_contract_across_languages(app, language, prefix) -> None:
+def test_referral_phone_value_and_operating_condition_across_languages(app, language, prefix) -> None:
     evidence = _evidence(app, offer_ids=("21",), language=language,
                          answer_type=AnswerType.GROUNDED_REFERRAL,
                          roles={"21": CandidateRole.REFERRAL_CONTACT})
@@ -987,11 +992,20 @@ def test_referral_and_full_phone_contract_across_languages(app, language, prefix
         response.sentences[0].fact_ids = [name.fact_id, phone.fact_id]
         response.sentences[0].text = f"{prefix} {name.value}: {phone.value}."
         assert validate_formulation(response, evidence).answer == response.sentences[0].text
-        for changed in [phone.value.split(" (")[0], phone.value.replace(" ", "-", 1)]:
+        response.sentences[0].text = f"{prefix} {name.value}: {phone.value.replace(' ', '-', 1)}."
+        assert validate_formulation(response, evidence).answer
+        if "Einsatzzeiten" in phone.value:
+            response.sentences[0].text = f"{prefix} {name.value}: {phone.value.split(' (')[0]}."
+            with pytest.raises(FormulatorError) as captured:
+                validate_formulation(response, evidence)
+            assert captured.value.diagnostic_code == GroundingDiagnosticCode.SERVICE_CONDITION_MISSING
+        for changed in [phone.value.replace("33661087", "3366108"), "99999999999"]:
             response.sentences[0].text = f"{prefix} {name.value}: {changed}."
             with pytest.raises(FormulatorError) as captured:
                 validate_formulation(response, evidence)
-            assert captured.value.diagnostic_code == GroundingDiagnosticCode.PHONE_NOT_EXACT
+            assert captured.value.diagnostic_code in {
+                GroundingDiagnosticCode.PHONE_NOT_EXACT, GroundingDiagnosticCode.NUMBER_NOT_CITED,
+            }
         response.sentences[0].text = f"{prefix} {name.value}: 99999999999."
         with pytest.raises(FormulatorError):
             validate_formulation(response, evidence)
