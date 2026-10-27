@@ -178,6 +178,30 @@ Docker-Lock verwenden `edge-tts 7.3.1`; der frühere Client 7.2.8 wurde vom
 externen Dienst mit HTTP 403 abgewiesen. Edge bleibt optional und dienstabhängig.
 Der Audioerfolg vom 25.10. ist kein neuer Hör-/TTS-Nachweis für den 26.10.
 
+**Lokales Audio-Profil, auch für Firefox:** Bei vorhandenem Blablador-Zugang
+in der Git-ignorierten `.env.local` ausdrücklich setzen:
+
+```dotenv
+SPEECH_TRANSCRIPTION_PROVIDER=blablador
+SPEECH_SYNTHESIS_PROVIDER=edge
+```
+
+Danach den nativen Server neu starten und die Browserseite neu laden.
+`/api/speech/config` muss beide Serverfunktionen als `true` melden. Für die
+Eingabe Mikrofon freigeben, zum Aufnehmen auf den Mikrofonknopf drücken und
+zum Abschließen erneut drücken; anschließend das Transkript prüfen und
+absenden. Zum Vorlesen den Vorleseknopf verwenden. Server-STT übermittelt
+die normalisierte Aufnahme an Blablador, Edge-TTS den Vorlesetext an Microsoft.
+Im Container dasselbe Profil mit der externen `--env-file` übergeben;
+lokale Checkout-Dateien werden nicht ins Image übernommen.
+
+Am 27.10.2026 wurden auf `209edfa` mit diesem lokalen Profil und
+`edge-tts 7.3.1` synthetische Ogg/Opus-Aufnahmen in allen fünf Sprachen über die echten
+HTTP-Endpunkte transkribiert und sessiongebundene Antworttexte als dekodierbare
+MP3 ausgegeben. Anschließend bestätigte die Nutzerin funktionierende Ein- und
+Ausgabe in Firefox. Eine unabhängige sprachliche oder akustische
+Qualitätsprüfung aller fünf Sprachen wird damit nicht behauptet.
+
 Das tatsächlich geprüfte Blablador-Messprofil setzt zusätzlich 4096 Tokens und
 15/30/30 Sekunden Stufenlimits bei 45 Sekunden Gesamtbudget. Die Minimalwerte
 oben aktivieren den Zugang; ohne Overrides gelten 1200 Tokens im Code bzw.

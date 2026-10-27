@@ -272,3 +272,14 @@ ohne Zugangsdaten und Sitzungserhalt nach Neustart/Containerersatz. Belege:
 Bericht 15.5; `native.xml`, `docker-tests.log`, `docker-verification.json`,
 `runtime-smoke.json`, `source-manifest-reviewed.json` und `verification.json`
 im externen Korrekturordner. Diese Tests sind kein neuer Live-Qualitätsanteil.
+
+## L. Audio-Konfiguration und aktueller technischer Nachweis, 27.10.2026
+
+Keine Thesisänderung. Ausgangsstand dieses lokalen Audio-Checks ist `209edfa`;
+Anwendungscode und Prompt-/Validatorverträge wurden dabei nicht verändert.
+
+| Fundstelle | Neue korrekte Aussage | Code-/Testbeleg |
+|---|---|---|
+| `Chapters/AppendixLenaDesign.tex:14–70`, Betriebs-/Installationsbeschreibung | Audio ist optional und standardmäßig deaktiviert. Das geprüfte lokale Profil verwendet explizit Blablador-STT und Edge-TTS; Serverneustart und Browser-Neuladen sind erforderlich. Lokale Profile gehören nicht ins Git-Archiv, Zugangsdaten nicht in die Thesis. | `app/config.py`, `.env.example`, README „Lokales Audio-Profil“; effektive HTTP-Speech-Konfiguration im Audio-Prüfordner |
+| `Chapters/6Resultsneu.tex:69–89`, technische Evaluation | Am 27.10. wurden je fünf echte HTTP-STT-/TTS-Durchläufe mit synthetischen Daten erfolgreich geprüft: Ogg/Opus in DE/EN/PL/RO/RU transkribiert, sessiongebundene Policytexte als dekodierbares MP3 erzeugt. Native Umgebung CPython 3.14, Edge-Client 7.3.1 nach Angleichung an bestehenden Repository-Pin. 38 gezielte Python- und 19 Frontendtests bestanden. | Bericht 16; externes `2026-10-27-audio-activation/live-audio-results.json`, Prüfskript und Testlogs |
+| Diskussion, Sprach-/Bedienqualität | Fünf festgelegte synthetische Sätze sind ein technischer Smoke-Test, kein Nachweis allgemeiner Erkennungsqualität. Anschließend bestätigte die Nutzerin funktionierende Ein-/Ausgabe in Firefox („jetzt funktioniert es“, 27.10.2026). Das bestätigt die Bedienfunktion, keine unabhängige Aussprache-/Verständlichkeitsbewertung aller fünf Sprachen. Externe Dienste bleiben erforderlich; STT empfängt Audio, Microsoft-TTS Vorlesetext. | Bericht 16; ursprünglicher technischer Prüfbericht mit damals ausstehendem manuellem Check bleibt erhalten; nachfolgendes `user-confirmation.json` dokumentiert die Bestätigung; README und bestehende Datenschutz-/Betriebsgrenzen |

@@ -1354,3 +1354,45 @@ Grenzen. Abgaberelevante Nachweise sind von unabhängiger Sprach-/Bedienprüfung
 den 15 U und den bestehenden organisatorischen Daten-/Betriebsgrenzen getrennt.
 Akutgefahr unverändert; Hilfebus dort weiterhin ohne neue Fachentscheidung.
 Keine neue Vierstufen-Live-Evaluation, kein Commit, Tag oder Push.
+
+## 16. Lokales Audio-Profil und Dienstprüfung, 27.10.2026
+
+Ausgangsstand: Nutzerinnen-Commit `209edfa` (Validator-Korrekturpaket), sauberer
+Arbeitsbaum vor dieser Konfigurations-/Dokumentationsänderung. Beim manuellen
+Check in Firefox unter `http://127.0.0.1:8002` waren Mikrofon und Vorlesen nicht
+nutzbar. Der laufende Server meldete beide Audiofunktionen als deaktiviert;
+die lokalen Einstellungen enthielten keine Audio-Profile. Ohne Browsererkennung
+steht dann auch keine Spracheingabe zur Verfügung.
+
+Mit ausdrücklichem Auftrag wurden ausschließlich in der Git-ignorierten
+`.env.local` `SPEECH_TRANSCRIPTION_PROVIDER=blablador` und
+`SPEECH_SYNTHESIS_PROVIDER=edge` ergänzt. Sonstige Werte blieben erhalten.
+Zusätzlich war in der tatsächlich laufenden nativen CPython-3.14-Umgebung noch
+`edge-tts 7.2.8` installiert: der echte Syntheseversuch scheiterte mit HTTP 403.
+Dieses lokale Paket wurde an die bereits in beiden Constraints und im
+Runtime-Lock festgelegte Version **7.3.1** angeglichen. Keine neue Abhängigkeit
+und keine Änderung von Pins, Anwendungscode, Daten, Safety oder Validator.
+Prompt 27 / Validator 9 / Evidence 5 / Textvertrag 7 bleiben unverändert.
+
+Die native Instanz wurde mit denselben Optionen (`--host 127.0.0.1 --port 8002`)
+neu gestartet; `/api/speech/config` meldet nun beide Funktionen als `true`.
+Belege außerhalb des Repositorys:
+`%LOCALAPPDATA%/LENA/verification/2026-10-27-audio-activation/`.
+
+| Prüfung | Ergebnis / Grenze |
+|---|---|
+| `app.service_check --synthesize` | LLM-/STT-Modellinventar erreichbar; Edge erzeugt Audio nach Paketangleichung. |
+| Echte HTTP-STT-Anfragen, DE/EN/PL/RO/RU | Je eine synthetische Ogg/Opus-Aufnahme („Ich brauche medizinische Hilfe“ bzw. Übersetzung), HTTP 200; alle fünf Transkripte stimmen mit den vorgegebenen synthetischen Sätzen überein. Keine Schätzung allgemeiner Erkennungsqualität. |
+| Echte HTTP-TTS-Anfragen, DE/EN/PL/RO/RU | Je ein sessiongebundener Policytext, HTTP 200, `audio/mpeg`, MP3-Dekodierung erfolgreich (7,656–10,392 s). Sessions durch deterministischen Safety-Preflight erzeugt; keine LLM-Auswertung, Safetytexte unverändert. |
+| Bestehende Regression | 25 Audio-/Konfigurationstests und 13 ausgewählte Speech-/TTS-API-Tests bestanden; 19/19 Frontendtests bestanden. Keine Tests geändert. Bekannte TestClient-Warnung. |
+| Lokale Paketintegrität | `python -m pip check`: keine defekten Anforderungen. |
+| Manueller Nachweis | Nutzerin bestätigte anschließend am 27.10.2026 zur Ein-/Ausgabe in Firefox: „jetzt funktioniert es“. Funktionstest damit bestätigt; keine unabhängige Hör-/Sprachqualitätsbewertung aller fünf Sprachen. Externes `user-confirmation.json` ergänzt den unveränderten technischen Prüfbericht. |
+
+`live_audio_check.py` und `live-audio-results.json` enthalten ausschließlich
+synthetische Inhalte und secretfreie Versions-/Ergebnisangaben. Im externen
+Prüfskript musste nach den fünf erfolgreichen HTTP-Durchläufen der zusätzliche
+synchrone Servicecheck in einen Thread verlagert werden (verschachteltes
+`asyncio.run` im Prüfskript); kein Anwendungsfehler. Der Servicecheck wurde
+separat erfolgreich ausgeführt; die fünf Durchläufe wurden deshalb nicht erneut
+generiert. Keine vollständige Vierstufen-Live-Evaluation und keine neue
+inhaltliche Antwortbewertung. Kein Commit, Tag, Push oder Thesis-Eingriff.
