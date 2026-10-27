@@ -75,7 +75,7 @@ def test_legacy_and_changed_release_sessions_cannot_reuse_stale_offer_text(tmp_p
         last_activity_at=datetime.now(UTC),
         turns=[
             ChatTurn(
-                question="Scharni",
+                question="Übernachtungshaus für wohnungslose Frauen",
                 answer="Alte Adresse und Sozialamt-Angebote 1 bis 4",
             )
         ],

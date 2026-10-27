@@ -133,7 +133,8 @@ def assert_technical_hilfebus_stop(body: dict[str, object], app, language: Langu
     assert offer is not None, "Testfixtur ohne Hilfebus-Kontakt in der Wissensbasis"
     phone = ", ".join(offer.phone_numbers) or "—"
     times = "; ".join(offer.opening_hours_raw or offer.standzeiten_raw) or "—"
-    expected_answer = safety_text(language, SafetyTextKind.TECHNICAL_HILFEBUS, phone=phone, times=times)
+    from app.hilfebus import contact_hint
+    expected_answer = safety_text(language, SafetyTextKind.TECHNICAL) + " " + contact_hint(offer, language)
     assert body["answer"] == expected_answer
     assert body["answer_type"] == "technical_fallback"
     assert [card["id"] for card in body["cards"]] == [offer.id]
@@ -230,7 +231,7 @@ def test_catalogue_uncertain_and_nonacute_control_paths_cover_five_languages(tmp
             body = post(nonacute_client, query, language).json()
             assert body["answer_type"] == "out_of_scope"
             assert body["clarification"] is None
-            assert body["cards"] == [] and body["map_data"] is None
+            assert [card["id"] for card in body["cards"]] == ["21"] and body["map_data"] is None
             assert "112" not in body["answer"]
 
 
@@ -313,7 +314,7 @@ def test_safety_dialog_no_resumes_structured_need_without_risk_fact(tmp_path: Pa
 
     assert body["answer_type"] == "clarification"
     assert body["clarification"]["type"] == "sleep_target_group"
-    assert [card["id"] for card in body["cards"]] == ["7"]
+    assert [card["id"] for card in body["cards"]] == ["7", "21"]
     assert provider.interpreter_calls == 1
 
 

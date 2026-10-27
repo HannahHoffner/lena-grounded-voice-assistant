@@ -16,7 +16,7 @@ Wissensquelle. Die Verarbeitung ist in vier Schichten getrennt:
 
 `app/service.py` orchestriert diese Schichten; `tests/test_architecture_boundaries.py`
 sichert die Importgrenzen. Der produktive Formulator liefert **selbst formulierte
-Sätze mit Faktenreferenzen** (Vertrag 7, Prompt 25). Nach atomarer Prüfung wird
+Sätze mit Faktenreferenzen** (Vertrag 7, Prompt 26, Evidence 5). Nach atomarer Prüfung wird
 der Modelltext als `provider: "blablador"` ausgegeben, ohne Satzschablonen.
 Bei Fehlern greift der bestehende Template-Fallback. Der Prompt verlangt ein
 bis drei kurze Sätze in einfacher Sprache. Die endliche Faktenprüfung ist keine
@@ -218,6 +218,13 @@ Netzwerkzugriffe. Ein bewusst dokumentierter `strict xfail`
 (`tests/test_formulation.py`, „minor injuries“) markiert eine bekannte
 Überablehnung und zählt nicht als bestanden. Live-Provider-Läufe sind getrennt
 freizugeben ([Live-Provider-Evaluation](docs/live-provider-evaluation.md)).
+Neuer Ablationsarbeitsstand auf `02a3612`, 27.10.2026: nativ und im netzlosen
+Testcontainer jeweils **1585 bestanden, 1 bekannter XFAIL**, JavaScript jeweils
+**19/19**. Runtime-Health, Start ohne Zugangsdaten und Sitzungserhalt über
+Neustart/Containerersatz bestanden. Der Containerbuild verwendet vorhandene
+Basis-Layer; drei No-Cache-Neubauten scheiterten vor Anwendungscode am
+Ubuntu-Snapshotserver mit HTTP 502/503 und bleiben als Abnahme offen.
+[Belege und Messgrenzen](IMPLEMENTATION_REPORT.md#144-technische-abschlussprüfung-und-offene-punkte).
 Historischer Rendererprüfstand nach fb773e9, 26.10.2026: nativ und im netzlosen
 Container jeweils **1506 bestanden, 1 bekannter strikter XFAIL, 1 bekannte
 TestClient-Warnung**; JavaScript jeweils **19/19**. Sauberer Docker-Neubau,
@@ -253,11 +260,12 @@ Offline-Werkzeugtests: nativ 1355 bestanden, ein bekannter XFAIL; JS 19/19.
 - Forschungsprototyp für isolierten lokalen Betrieb: keine Authentifizierung,
   kein TLS, keine Rate-Limits, ein Prozess; nicht für öffentlichen Betrieb.
 - Seit der Überarbeitung vom 26.10.2026 formuliert das LLM wieder sichtbaren
-  Text (Vertrag 7, Prompt 25, Validator 7). Referenzen, Zahlen, Zeiten,
+  Text (Vertrag 7, Prompt 26, Validator 8). Referenzen, Zahlen, Zeiten,
   Angebotsbindung, Rollen und verbotene Zusatzbehauptungen werden geprüft;
-  eine neue Verbform darf die Inhaltswortprüfung nicht umgehen. Die Prüfung
-  ist endlich und kann sowohl unbelegte Paraphrasen übersehen als auch richtige
-  Formulierungen ablehnen. Ein Retry und danach atomarer Template-Fallback
+  die lexikalische Inhaltswortabdeckung und unentscheidbare Leistungsabgleiche
+  verwerfen seit der Fachentscheidung vom 27.10.2026 keine Antworten mehr.
+  R-20/R-21 sind damit nur begrenzt technisch abgesichert. Datengetreue Fehler
+  erkennt der Validator grundsätzlich nicht. Ein Retry und danach atomarer Template-Fallback
   bleiben bestehen; maximal 600 Zeichen, keine automatische Kürzung von Fakten.
   Sprachliche Eignung und Bedarfspassung benötigen manuelle Evaluation.
   Interpreter-`explicit_facts` werden weiterhin nicht gegen Quellspannen geprüft.

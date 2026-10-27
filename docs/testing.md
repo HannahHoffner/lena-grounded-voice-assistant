@@ -1,6 +1,41 @@
 # Tests und Qualitätssicherung
 
-### Abschließende Prüfung dieses Textvertrags
+## Fachentscheidungen nach Ablation, 27.10.2026
+
+Arbeitsstand auf `02a3612`, Textvertrag 7/Prompt 26, Evidence 5, Validator 8,
+Application Copy 10. Vollständig nativ: **1585 bestanden, 1 bekannter strikter
+XFAIL, 1 bekannte TestClient-DeprecationWarning**, 423,50 s; JavaScript **19/19**.
+Health/Start ohne Zugangsdaten und Sessionpersistenz über einen echten nativen
+HTTP-Prozessneustart geprüft. Nach freigegebenem Docker-Desktop-Neustart läuft
+die Engine wieder. Drei saubere Docker-Neubauten mit `--pull --no-cache`
+scheitern vor Anwendungscode am Ubuntu-Snapshotserver mit HTTP 502/503.
+Dockerfile und Paketstände wurden nicht geändert. Der separate Build mit
+vorhandenen Basis-Layern ersetzt diesen noch offenen Neubau nicht.
+In diesem separaten Testimage netzlos: **1585 bestanden, 1 bekannter XFAIL,
+1 bekannte Warning**, 254,74 s; JavaScript **19/19**, compileall/pip check und
+JavaScript-Syntaxprüfungen bestanden. App-/Testdateien entsprechen per SHA-256
+dem nativ geprüften Export. Runtime aus derselben Buildkette: Health healthy,
+Start ohne Schlüssel, read-only/Loopback und Sitzungserhalt nach Neustart sowie
+Containerersatz bestanden. Belege: `docker-completion-cached.json`,
+`docker-tests-cached.log`, `runtime-smoke-cached.json` im externen
+Prüfverzeichnis `2026-10-27-validator-implementation`; Details in Bericht 14.4.
+
+Die beiden lexikalischen Ablehnungsregeln sind bewusst abgeschaltet.
+Charakterisierungstests dokumentieren jetzt ungeprüfte Leistungsaussagen;
+die vollständige Liste steht in [Bericht 14.2](../IMPLEMENTATION_REPORT.md#142-umformulierte-tests-der-bewusst-abgeschalteten-regeln).
+Literal-, Bindungs-, Zielgruppen-, Zusage-, Echtzeit-, Leistungszeit-/Preis-,
+Entgelt- und Policy-Negativtests bleiben aktiv. Neue fünfsprachige
+Regressionsfälle stehen in `tests/test_validator_ablation_decisions.py` und
+`tests/test_candidates.py`. Übersetzungen wurden ohne Änderung ihrer Textfelder
+oder menschlichen Reviewmetadaten technisch neu gebunden.
+
+Unveränderte externe `run.py`/`queries.json`: 120/120 neue Anfragen,
+App-Quellen vorher/nachher identisch. Templatequote aller Anfragen 83/120 →
+21/120. Das ist keine neue Korrektheitsmessung; das blinde Paket mit 134
+Modelltexten wartet auf menschliche Bewertung. Nachweise extern unter
+`2026-10-27-validator-implementation/` und `2026-10-27-validator-ablation/`.
+
+### Historische abschließende Prüfung des Textvertrags vom 26.10.2026
 
 - Python vollständig nativ: **1521 bestanden, 1 bekannter strikter XFAIL,
   1 bekannte TestClient-DeprecationWarning**, 413.21 s.

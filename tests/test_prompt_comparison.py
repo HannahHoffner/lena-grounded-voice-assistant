@@ -95,14 +95,14 @@ def test_real_adapter_receives_identical_evidence_but_different_prompt(monkeypat
     assert payloads[0]["model"] == payloads[1]["model"]
 
 
-def test_grounding_rejection_keeps_raw_draft_separate(monkeypatch, settings):
+def test_characterizes_unchecked_service_preserves_raw_draft(monkeypatch, settings):
     async def post(self, payload):
         return response("Nordpunkt bietet Wundversorgung an.")
     monkeypatch.setattr(BlabladorProvider, "_post", post)
     row = asyncio.run(compare_one(settings, CANDIDATE_PROMPT, comparison_cases()[0], "candidate", 1))
-    assert row["gate_status"] == "rejected"
+    assert row["gate_status"] == "accepted"
     assert "Wundversorgung" in row["raw_content"]
-    assert row["diagnostic_code"]
+    assert not row.get("diagnostic_code")  # Lexical service support no longer gates.
 
 
 def test_invalid_json_is_not_counted_as_semantic_gate_rejection(monkeypatch, settings):

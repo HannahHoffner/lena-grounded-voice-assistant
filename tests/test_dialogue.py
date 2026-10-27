@@ -85,7 +85,7 @@ def test_e_mobile_contact_request_preserves_alias_across_district_answer(tmp_pat
     assert opened["clarification"]["type"] == "organization_district"
     resolved = client.post("/api/query", json={"query": "Ich bin in Grünau.", "language": "de",
                                              "session_id": opened["session_id"]}).json()
-    assert [card["id"] for card in resolved["cards"]] == ["19.2"]
+    assert [card["id"] for card in resolved["cards"]] == ["19.2", "21"]
     assert resolved["clarification"] is None
     assert provider.calls[1]["dialog_context"].alias == "Kübel"
     assert provider.calls[1]["dialog_context"].originating_services == services
@@ -96,7 +96,7 @@ def test_e_mobile_contact_request_preserves_alias_across_district_answer(tmp_pat
 def test_unrelated_noun_sense_does_not_force_an_organization_result(tmp_path, query) -> None:
     client, _ = client_with(tmp_path, [interpretation(Need.UNKNOWN, scope=ScopeStatus.OUT_OF_SCOPE)])
     result = client.post("/api/query", json={"query": query, "language": "de"}).json()
-    assert result["cards"] == []
+    assert [card["id"] for card in result["cards"]] == ["21"]
     assert result["clarification"] is None
     assert result["status"] == "no_results"
 
@@ -105,7 +105,7 @@ def test_named_contact_preserves_a_single_curated_contact_service(tmp_path) -> N
     client, _ = client_with(tmp_path, [interpretation(Need.GENERAL_HELP, services=[RequestedService.CONTACT])])
     result = client.post("/api/query", json={"query": "Ich suche Schoppi."}).json()
     assert result["clarification"] is None
-    assert [card["id"] for card in result["cards"]] == ["11"]
+    assert [card["id"] for card in result["cards"]] == ["11", "21"]
 
 
 def client_with(tmp_path, responses: list[QueryInterpretation]) -> tuple[TestClient, DialogueProvider]:
@@ -131,7 +131,7 @@ def open_sleep(client: TestClient) -> dict[str, object]:
     response = client.post("/api/query", json={"query": "Ich brauche einen Schlafplatz.", "language": "de"})
     assert response.status_code == 200
     body = response.json()
-    assert [card["id"] for card in body["cards"]] == ["7"]
+    assert [card["id"] for card in body["cards"]] == ["7", "21"]
     assert body["clarification"]["type"] == "sleep_target_group"
     assert {choice["value"] for choice in body["clarification"]["choices"]} == {
         "under_18",
@@ -163,7 +163,7 @@ def test_explicit_shower_returns_only_verified_showers_without_need_question(tmp
     assert body["clarification"] is None
     assert body["cards"]
     by_id = client.app.state.kb.by_id()
-    assert all(card["id"] in by_id and "shower" in by_id[card["id"]].capabilities for card in body["cards"])
+    assert all(card["id"] in by_id and "shower" in by_id[card["id"]].capabilities for card in body["cards"] if card["id"] != "21")
     assert not any(marker.startswith("toilet:") for marker in body["map_marker_ids"])
 
 
@@ -174,7 +174,7 @@ def test_female_sleep_choice_finishes_without_inventing_age(tmp_path, language):
     body = send_choices(client, opened, ["female"], language=language).json()
     assert body["clarification"] is None
     assert body["answer_type"] == "grounded_referral"
-    assert {card["id"] for card in body["cards"]} == {"7", "8"}
+    assert {card["id"] for card in body["cards"]} == {"7", "8", "21"}
     from app.dialogue import dialogue_text
     from app.models import Language
     assert dialogue_text(Language(language), "answers", "scharni_conditional") in body["answer"]
@@ -186,7 +186,7 @@ def test_conditional_sleep_contact_does_not_override_named_organization(tmp_path
     client, _ = client_with(tmp_path, [interpretation(Need.SLEEP, facts={"gender": "female"})])
     body = client.post("/api/query", json={"query": "Ich suche einen Schlafplatz bei Schoppi."}).json()
     assert body["clarification"] is None
-    assert [card["id"] for card in body["cards"]] == ["6"]
+    assert [card["id"] for card in body["cards"]] == ["6", "21"]
 
 
 def test_general_sleep_opens_ruecke_and_multifact_choices(tmp_path) -> None:
@@ -208,7 +208,7 @@ def test_sleep_button_female_preserves_unknown_age_and_finishes_conditionally(tm
     assert body["clarification"] is None
     assert body["answer_type"] == "grounded_referral"
     assert body["question"] == "Ich bin eine Frau"
-    assert {card["id"] for card in body["cards"]} == {"7", "8"}
+    assert {card["id"] for card in body["cards"]} == {"7", "8", "21"}
     assert "female" not in body["question"].casefold()
     assert len(provider.calls) == 1
 
@@ -226,7 +226,7 @@ def test_female_without_age_finishes_with_conditional_scharni(tmp_path) -> None:
 
     assert body["clarification"] is None
     assert body["answer_type"] == "grounded_referral"
-    assert {card["id"] for card in body["cards"]} == {"7", "8"}
+    assert {card["id"] for card in body["cards"]} == {"7", "8", "21"}
     assert body["map_data"] is not None
     assert {item["id"] for item in body["map_data"]["destinations"]} == {"7", "8"}
 
@@ -240,7 +240,7 @@ def test_initial_explicit_female_fact_skips_redundant_target_group_question(tmp_
 
     assert body["clarification"] is None
     assert body["answer_type"] == "grounded_referral"
-    assert {card["id"] for card in body["cards"]} == {"7", "8"}
+    assert {card["id"] for card in body["cards"]} == {"7", "8", "21"}
 
 
 @pytest.mark.parametrize(
@@ -323,11 +323,11 @@ def test_schoppi_dialog_resolves_sleep_and_day_support_without_drug_inference(tm
     sleep_open = client.post("/api/query", json={"query": "Wo ist Schoppi?", "language": "de"}).json()
     assert sleep_open["clarification"]["type"] == "organization_need"
     sleep = send_choices(client, sleep_open, ["sleep"]).json()
-    assert [card["id"] for card in sleep["cards"]] == ["6"]
+    assert [card["id"] for card in sleep["cards"]] == ["6", "21"]
 
     day_open = client.post("/api/query", json={"query": "Wo ist A1?", "language": "de"}).json()
     day = send_choices(client, day_open, ["day_support"]).json()
-    assert [card["id"] for card in day["cards"]] == ["11"]
+    assert [card["id"] for card in day["cards"]] == ["11", "21"]
 
 
 def test_schoppi_with_explicit_sleep_need_skips_redundant_need_question(tmp_path) -> None:
@@ -337,7 +337,7 @@ def test_schoppi_with_explicit_sleep_need_skips_redundant_need_question(tmp_path
         json={"query": "Ich möchte bei Schoppi schlafen.", "language": "de"},
     ).json()
 
-    assert [card["id"] for card in body["cards"]] == ["6"]
+    assert [card["id"] for card in body["cards"]] == ["6", "21"]
     assert body["clarification"] is None
 
 
@@ -401,7 +401,7 @@ def test_age_group_correction_resolves_real_organization_dialog(tmp_path) -> Non
 
     assert response.status_code == 200
     assert response.json()["clarification"] is None
-    assert [card["id"] for card in response.json()["cards"]] == ["19.2"]
+    assert [card["id"] for card in response.json()["cards"]] == ["19.2", "21"]
 
 
 def test_general_help_choice_and_unresolved_answer_falls_back_to_curated_hilfebus(tmp_path) -> None:
@@ -422,8 +422,8 @@ def test_general_help_choice_and_unresolved_answer_falls_back_to_curated_hilfebu
     ).json()
     assert [card["id"] for card in fallback["cards"]] == ["21"]
     assert "Hilfebus" in fallback["answer"]
-    assert "täglich 18:00" in fallback["answer"]
-    assert "23:00" in fallback["answer"]
+    assert "18–23 Uhr" in fallback["answer"]
+    assert "0152 33661087" in fallback["answer"]
     assert fallback["cards"][0]["address"] is None
     assert fallback["map_data"] is None
 
@@ -491,7 +491,7 @@ def test_topic_change_safety_scope_and_interpreter_failure_close_or_preserve_cor
 
     scope_open = open_sleep(client)
     scope = client.post("/api/query", json={"query": "Wie ist das Wetter?", "session_id": scope_open["session_id"]}).json()
-    assert scope["cards"] == [] and scope["clarification"] is None
+    assert [card["id"] for card in scope["cards"]] == ["21"] and scope["clarification"] is None
 
 
 def test_dialog_id_choice_and_replay_validation_is_redacted(tmp_path) -> None:
@@ -569,7 +569,7 @@ def test_dialog_copy_has_five_languages_and_explicit_review_status_in_health(tmp
     client, _ = client_with(tmp_path, [])
     for language in ("de", "en", "pl", "ro", "ru"):
         copy = client.get(f"/api/dialogue/copy?language={language}").json()
-        assert copy["copy_version"] == "9"
+        assert copy["copy_version"] == "10"
         assert copy["prompts"]["general_need"]
     summary = client.get("/api/health").json()["application_texts"]
     assert summary["languages"]["de"]["review_pending"] > 0

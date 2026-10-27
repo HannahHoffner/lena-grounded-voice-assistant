@@ -97,7 +97,8 @@ Dieser Text ist kein Sackgassentext: Ist in der
 Wissensbasis ein Hilfebus-Kontakt hinterlegt (`priority_rules` enthält
 `general_help_referral_first`, siehe `_general_help_contact()` in
 `app/service.py`), enthält der Text zusätzlich dessen Telefonnummer und
-Einsatzzeiten (`safety.technical_hilfebus`) sowie eine zugehörige
+Einsatzzeiten (Copy 10: deterministischer `fallback.hilfebus_hint` nach
+`safety.technical`) sowie eine zugehörige
 Angebotskarte ohne Kartenmarker -- ausschließlich aus bereits geladenen,
 deterministischen Wissensbasisdaten, ohne jeden weiteren Providerkontakt. Der
 bedingte 112-Hinweis bleibt dabei unverändert Teil des Texts (weiterhin genau
@@ -109,6 +110,20 @@ es beim bisherigen reinen 112-Text (`safety.technical`) ohne Karte oder
 Marker. Der Sofortstopp bei erkannter oder unsicherer Akutgefahr
 (`acute_risk`/`acute_risk_clarification`) ist von dieser Änderung nicht
 betroffen und bleibt weiterhin ohne Karten, Karten-IDs oder Marker.
+
+Seit der Fachentscheidung vom 27.10.2026 enthält die Hilfebus-Kontaktprosa
+ausschließlich die Einsatznummer mit dem aus `daily_18_23` abgeleiteten
+Zeitfenster. Mitarbeitertelefon und Bürostandort sind kein technischer
+Hilfekontakt. Die Mitarbeitertelefonnummer bleibt auf der Kachel. Der
+Kontaktzusatz wird vor der Session-/TTS-Persistenz angehängt; der bedingte
+112-Hinweis bleibt erhalten. Der frühere Textschlüssel
+`safety.technical_hilfebus` ist für historische Reproduktion erhalten.
+
+Unabhängig davon bindet Evidence 5 für reguläre medizinische Antworten den
+zentralen Notruffakt als `medical_emergency`. Prompt 26 verlangt einen
+zusätzlichen Hinweis nur bei sehr starken Beschwerden/Gefahr. Das ist eine
+Formulatoranweisung nach erfolgreicher Safetyentscheidung; sie ersetzt und
+ändert weder den Preflight noch den Akutgefahrpfad.
 
 ## API, Frontend, TTS und Datenminimierung
 

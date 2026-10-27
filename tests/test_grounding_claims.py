@@ -108,7 +108,7 @@ def test_a_fact_cited_in_another_sentence_supports_the_same_offer(app) -> None:
     description = _fact(evidence, FactType.DESCRIPTION)
     response = _answer(
         evidence,
-        ("Nutze Scharni für erwachsene Frauen.", ClaimType.ACTION, "8", [name.fact_id]),
+        ("Nutze Übernachtungshaus für wohnungslose Frauen für erwachsene Frauen.", ClaimType.ACTION, "8", [name.fact_id]),
         ("Das Angebot ist so beschrieben.", ClaimType.FACT, "8", [description.fact_id]),
     )
     assert "Frauen" in description.value and "volljährige" in description.value
@@ -117,7 +117,7 @@ def test_a_fact_cited_in_another_sentence_supports_the_same_offer(app) -> None:
     # Derselbe Satz ohne jeden belegenden Wert im Angebot bleibt unentscheidbar.
     alone = _answer(
         evidence,
-        ("Nutze Scharni für erwachsene Frauen.", ClaimType.ACTION, "8", [name.fact_id]),
+        ("Nutze Übernachtungshaus für wohnungslose Frauen für erwachsene Frauen.", ClaimType.ACTION, "8", [name.fact_id]),
     )
     assert validate_formulation(alone, evidence).sentence_count == 1
     evidence.selected_offers[0].facts = [name]
@@ -132,7 +132,7 @@ def test_another_offers_fact_never_substitutes(app) -> None:
     evidence.selected_offers[0].facts = [own_name]
     response = _answer(
         evidence,
-        ("Nutze Scharni für Frauen.", ClaimType.ACTION, "8", [own_name.fact_id]),
+        ("Nutze Übernachtungshaus für wohnungslose Frauen für Frauen.", ClaimType.ACTION, "8", [own_name.fact_id]),
         ("Dazu gibt es diese Beschreibung.", ClaimType.FACT, "10", [other_description.fact_id]),
     )
     assert _diagnostic(response, evidence) == GroundingDiagnosticCode.TARGET_FACT_MISSING
@@ -140,7 +140,7 @@ def test_another_offers_fact_never_substitutes(app) -> None:
     # Eine angebotsfremde Referenz im selben Satz bleibt ein Referenzfehler.
     cross = _answer(
         evidence,
-        ("Nutze Scharni für Frauen.", ClaimType.ACTION, "8", [own_name.fact_id, other_description.fact_id]),
+        ("Nutze Übernachtungshaus für wohnungslose Frauen für Frauen.", ClaimType.ACTION, "8", [own_name.fact_id, other_description.fact_id]),
     )
     with pytest.raises(FormulatorError, match="formulator_invalid_fact"):
         validate_formulation(cross, evidence)
@@ -153,7 +153,7 @@ def test_presence_of_an_eligible_fact_type_is_still_not_enough(app) -> None:
     minimum_age = _fact(evidence, FactType.MINIMUM_AGE)
     response = _answer(
         evidence,
-        ("Nutze Scharni für Minderjährige.", ClaimType.ACTION, "8", [name.fact_id, minimum_age.fact_id]),
+        ("Nutze Übernachtungshaus für wohnungslose Frauen für Minderjährige.", ClaimType.ACTION, "8", [name.fact_id, minimum_age.fact_id]),
     )
     assert _diagnostic(response, evidence) == GroundingDiagnosticCode.TARGET_CLAIM_CONTRADICTED
 
@@ -161,11 +161,11 @@ def test_presence_of_an_eligible_fact_type_is_still_not_enough(app) -> None:
 @pytest.mark.parametrize(
     ("language", "text"),
     [
-        (Language.DE, "Nutze Scharni für Männer."),
-        (Language.EN, "Use Scharni for men."),
-        (Language.PL, "Skorzystaj z Scharni dla mężczyzn."),
-        (Language.RO, "Folosește Scharni pentru bărbați."),
-        (Language.RU, "Используй Scharni для мужчин."),
+        (Language.DE, "Nutze Übernachtungshaus für wohnungslose Frauen für Männer."),
+        (Language.EN, "Use Übernachtungshaus für wohnungslose Frauen for men."),
+        (Language.PL, "Skorzystaj z Übernachtungshaus für wohnungslose Frauen dla mężczyzn."),
+        (Language.RO, "Folosește Übernachtungshaus für wohnungslose Frauen pentru bărbați."),
+        (Language.RU, "Используй Übernachtungshaus für wohnungslose Frauen для мужчин."),
     ],
 )
 def test_changed_gender_is_contradicted_in_every_language(app, language, text) -> None:
@@ -360,7 +360,8 @@ def test_cited_proper_names_do_not_create_target_or_service_claims() -> None:
         "Umfeldnahe Versorgung von Menschen ohne festen Wohnsitz", Language.DE
     ) == set()
     assert detect_target_concepts("Bei UVO kann man sich melden.", Language.DE) == set()
-    assert detect_target_concepts("Scharni ist für Männer.", Language.DE) == {"male"}
+    # This helper sees raw text; the validator masks the exact proper name first.
+    assert detect_target_concepts("Übernachtungshaus für wohnungslose Frauen ist für Männer.", Language.DE) == {"female", "male"}
     assert detect_service_concepts("Der Hilfebus gibt warmes Essen aus.", Language.DE) == {"food"}
 
 

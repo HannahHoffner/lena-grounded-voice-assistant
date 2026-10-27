@@ -1,11 +1,11 @@
 {
   "schema_version": "2",
-  "copy_version": "9",
+  "copy_version": "10",
   "languages": {
     "de": {
       "source_language": "de",
       "target_language": "de",
-      "version": "9",
+      "version": "10",
       "linguistic_review_status": "review_pending",
       "source_origin": "author_formulated",
       "reviewed_by_role": null,
@@ -70,7 +70,7 @@
         "dialogue.prompts.general_need": "Welche Hilfe brauchst du?",
         "dialogue.prompts.acute_risk_confirmation": "Bist du oder ist jemand anderes gerade in unmittelbarer Gefahr?",
         "dialogue.answers.sleep_intro": "Rücke ist ein erster Kontaktpunkt. Eine freie Aufnahme kann ich nicht versprechen.",
-        "dialogue.answers.scharni_conditional": "Scharni ist ein Angebot für volljährige Frauen. Ohne dein Alter kann ich die Eignung nicht sicher bestätigen.",
+        "dialogue.answers.scharni_conditional": "Übernachtungshaus für wohnungslose Frauen ist ein Angebot für volljährige Frauen. Ohne dein Alter kann ich die Eignung nicht sicher bestätigen.",
         "dialogue.answers.dialog_error": "Ich konnte deine Antwort nicht sicher verstehen. Du kannst erneut antworten oder eine Auswahl nutzen.",
         "dialogue.answers.invalid_dialog": "Diese Auswahl ist nicht mehr gültig. Bitte stelle deine Frage erneut.",
         "dialogue.answers.district_contact_conditional": "Dieses Team passt zu deinem genannten Ort. Ob es fachlich zuständig ist, muss noch geklärt werden.",
@@ -95,7 +95,7 @@
         "fallback.clarify": "Welche Hilfe brauchst du: Essen, einen Schlafplatz, medizinische Hilfe oder Beratung?",
         "fallback.clarify_organization": "{alias} bezeichnet mehrere Angebote. Welche konkrete Hilfe brauchst du oder welchen Stadtteil meinst du?",
         "fallback.clarify_hilfebus": "Welche Hilfe brauchst du: Essen, einen Schlafplatz, medizinische Hilfe oder Beratung? Wenn du sehr unsicher bist, kannst du auch den Hilfebus zu den Einsatzzeiten anrufen.",
-        "fallback.no_results": "Ich habe dazu kein passendes Angebot gefunden. Versuche eine kurze Frage zu Essen, Schlafen, Medizin oder Beratung.",
+        "fallback.no_results": "Ich konnte kein passendes Angebot finden.",
         "fallback.technical_error": "Ich konnte deine Frage technisch nicht sicher verarbeiten. Bitte versuche es noch einmal.",
         "safety.detected": "Wenn du oder jemand anderes gerade in unmittelbarer Gefahr ist, ruf jetzt {emergency_number}. Der Notruf ist kostenlos.",
         "safety.uncertain": "Wenn du nicht sicher bist und gerade Gefahr bestehen könnte, ruf jetzt {emergency_number}. Der Notruf ist kostenlos.",
@@ -117,13 +117,15 @@
         "fallback.water_unavailable": "Ich habe gerade keinen verifizierten Ort für Trinkwasser. Ich nenne dir deshalb keinen ungeprüften Ort.",
         "ui.voiceStartRecording": "Drücke das Mikrofon, um zu sprechen. Du kannst auch schreiben.",
         "ui.voiceRecording": "Ich nehme auf. Drücke das Mikrofon erneut, wenn du fertig bist.",
-        "ui.voiceServiceError": "Die Spracherkennung ist gerade nicht erreichbar. Versuche es erneut oder schreibe deine Frage."
+        "ui.voiceServiceError": "Die Spracherkennung ist gerade nicht erreichbar. Versuche es erneut oder schreibe deine Frage.",
+        "fallback.hilfebus_hint": "Du kannst dich immer zu den Einsatzzeiten beim Hilfebus melden ({times} Uhr) unter {phone}.",
+        "fallback.hilfebus_sunday": "Hilfebus: Suppenausgabe am Sonntag, {stand}, {times} Uhr."
       }
     },
     "en": {
       "source_language": "de",
       "target_language": "en",
-      "version": "9",
+      "version": "10",
       "linguistic_review_status": "machine",
       "source_origin": "machine_drafted",
       "reviewed_by_role": null,
@@ -188,7 +190,7 @@
         "dialogue.prompts.general_need": "What help do you need?",
         "dialogue.prompts.acute_risk_confirmation": "Are you or is someone else in immediate danger right now?",
         "dialogue.answers.sleep_intro": "Rücke is a first point of contact. I cannot promise a free place.",
-        "dialogue.answers.scharni_conditional": "Scharni is a service for adult women. Without your age, I cannot confirm suitability safely.",
+        "dialogue.answers.scharni_conditional": "Übernachtungshaus für wohnungslose Frauen is a service for adult women. Without your age, I cannot confirm suitability safely.",
         "dialogue.answers.dialog_error": "I could not understand your answer safely. You can answer again or use a choice.",
         "dialogue.answers.invalid_dialog": "This choice is no longer valid. Please ask your question again.",
         "dialogue.answers.district_contact_conditional": "This team matches the place you named. Its responsibility still needs to be confirmed.",
@@ -213,7 +215,7 @@
         "fallback.clarify": "What kind of help do you need: food, a place to sleep, medical help, or advice?",
         "fallback.clarify_organization": "{alias} refers to several services. What kind of help do you need, or which district do you mean?",
         "fallback.clarify_hilfebus": "What kind of help do you need: food, a place to sleep, medical help, or advice? If you are very unsure, you can also call Hilfebus during its service times.",
-        "fallback.no_results": "I could not find a matching service. Try a short question about food, sleep, medical help, or advice.",
+        "fallback.no_results": "I could not find a matching offer.",
         "fallback.technical_error": "I could not process your question safely because of a technical error. Please try again.",
         "safety.detected": "If you or someone else is in immediate danger, call {emergency_number} now. The emergency call is free.",
         "safety.uncertain": "If you are not sure and there could be immediate danger, call {emergency_number} now. The emergency call is free.",
@@ -235,13 +237,15 @@
         "fallback.water_unavailable": "I do not currently have a verified place for drinking water. I will not give you an unverified place.",
         "ui.voiceStartRecording": "Press the microphone to speak. You can also type.",
         "ui.voiceRecording": "Recording. Press the microphone again when you have finished.",
-        "ui.voiceServiceError": "Speech recognition is currently unavailable. Try again or type your question."
+        "ui.voiceServiceError": "Speech recognition is currently unavailable. Try again or type your question.",
+        "fallback.hilfebus_hint": "You can always contact Hilfebus during its operating hours ({times}) at {phone}.",
+        "fallback.hilfebus_sunday": "Hilfebus: soup distribution on Sunday, {stand}, {times}."
       }
     },
     "pl": {
       "source_language": "de",
       "target_language": "pl",
-      "version": "9",
+      "version": "10",
       "linguistic_review_status": "machine",
       "source_origin": "machine_drafted",
       "reviewed_by_role": null,
@@ -306,7 +310,7 @@
         "dialogue.prompts.general_need": "Jakiej pomocy potrzebujesz?",
         "dialogue.prompts.acute_risk_confirmation": "Czy ty lub ktoś inny jest teraz w bezpośrednim niebezpieczeństwie?",
         "dialogue.answers.sleep_intro": "Rücke jest pierwszym punktem kontaktu. Nie mogę obiecać wolnego miejsca.",
-        "dialogue.answers.scharni_conditional": "Scharni jest ofertą dla pełnoletnich kobiet. Bez wieku nie mogę bezpiecznie potwierdzić dopasowania.",
+        "dialogue.answers.scharni_conditional": "Übernachtungshaus für wohnungslose Frauen jest ofertą dla pełnoletnich kobiet. Bez wieku nie mogę bezpiecznie potwierdzić dopasowania.",
         "dialogue.answers.dialog_error": "Nie udało mi się pewnie zrozumieć odpowiedzi. Odpowiedz ponownie lub wybierz opcję.",
         "dialogue.answers.invalid_dialog": "Ten wybór nie jest już ważny. Zadaj pytanie ponownie.",
         "dialogue.answers.district_contact_conditional": "Ten zespół pasuje do podanego miejsca. Zakres odpowiedzialności trzeba jeszcze potwierdzić.",
@@ -331,7 +335,7 @@
         "fallback.clarify": "Jakiej pomocy potrzebujesz: jedzenia, noclegu, pomocy medycznej czy porady?",
         "fallback.clarify_organization": "{alias} oznacza kilka usług. Jakiej konkretnie pomocy potrzebujesz lub o którą dzielnicę chodzi?",
         "fallback.clarify_hilfebus": "Jakiej pomocy potrzebujesz: jedzenia, noclegu, pomocy medycznej czy porady? Jeśli nie wiesz, czego potrzebujesz, możesz też zadzwonić do Hilfebus w czasie dyżuru.",
-        "fallback.no_results": "Nie znalazłam pasującej oferty. Spróbuj krótkiego pytania o jedzenie, nocleg, pomoc medyczną lub poradę.",
+        "fallback.no_results": "Nie udało mi się znaleźć pasującej oferty.",
         "fallback.technical_error": "Z powodu błędu technicznego nie mogłam bezpiecznie przetworzyć pytania. Spróbuj ponownie.",
         "safety.detected": "Jeśli ty lub ktoś inny jest teraz w bezpośrednim niebezpieczeństwie, zadzwoń pod numer {emergency_number}. Połączenie alarmowe jest bezpłatne.",
         "safety.uncertain": "Jeśli nie masz pewności i może istnieć bezpośrednie zagrożenie, zadzwoń pod numer {emergency_number}. Połączenie alarmowe jest bezpłatne.",
@@ -353,13 +357,15 @@
         "fallback.water_unavailable": "Nie mam teraz zweryfikowanego miejsca z wodą pitną. Dlatego nie podam niesprawdzonego miejsca.",
         "ui.voiceStartRecording": "Naciśnij mikrofon, aby mówić. Możesz też pisać.",
         "ui.voiceRecording": "Nagrywam. Naciśnij mikrofon ponownie, gdy skończysz.",
-        "ui.voiceServiceError": "Rozpoznawanie mowy jest teraz niedostępne. Spróbuj ponownie lub wpisz pytanie."
+        "ui.voiceServiceError": "Rozpoznawanie mowy jest teraz niedostępne. Spróbuj ponownie lub wpisz pytanie.",
+        "fallback.hilfebus_hint": "Możesz zawsze skontaktować się z Hilfebus w godzinach działania ({times}) pod numerem {phone}.",
+        "fallback.hilfebus_sunday": "Hilfebus: wydawanie zupy w niedzielę, {stand}, {times}."
       }
     },
     "ro": {
       "source_language": "de",
       "target_language": "ro",
-      "version": "9",
+      "version": "10",
       "linguistic_review_status": "machine",
       "source_origin": "machine_drafted",
       "reviewed_by_role": null,
@@ -424,7 +430,7 @@
         "dialogue.prompts.general_need": "De ce ajutor ai nevoie?",
         "dialogue.prompts.acute_risk_confirmation": "Tu sau altcineva sunteți acum în pericol imediat?",
         "dialogue.answers.sleep_intro": "Rücke este un prim punct de contact. Nu pot promite un loc liber.",
-        "dialogue.answers.scharni_conditional": "Scharni este un serviciu pentru femei adulte. Fără vârstă nu pot confirma sigur potrivirea.",
+        "dialogue.answers.scharni_conditional": "Übernachtungshaus für wohnungslose Frauen este un serviciu pentru femei adulte. Fără vârstă nu pot confirma sigur potrivirea.",
         "dialogue.answers.dialog_error": "Nu am putut înțelege sigur răspunsul. Poți răspunde din nou sau poți alege o opțiune.",
         "dialogue.answers.invalid_dialog": "Această alegere nu mai este valabilă. Te rog să întrebi din nou.",
         "dialogue.answers.district_contact_conditional": "Această echipă corespunde locului menționat. Responsabilitatea trebuie încă verificată.",
@@ -449,7 +455,7 @@
         "fallback.clarify": "De ce ajutor ai nevoie: mâncare, un loc de dormit, ajutor medical sau consiliere?",
         "fallback.clarify_organization": "{alias} se referă la mai multe servicii. De ce ajutor ai nevoie sau la ce cartier te referi?",
         "fallback.clarify_hilfebus": "De ce ajutor ai nevoie: mâncare, un loc de dormit, ajutor medical sau consiliere? Dacă nu ești sigur, poți suna și la Hilfebus în timpul programului.",
-        "fallback.no_results": "Nu am găsit un serviciu potrivit. Încearcă o întrebare scurtă despre mâncare, dormit, ajutor medical sau consiliere.",
+        "fallback.no_results": "Nu am găsit o ofertă potrivită.",
         "fallback.technical_error": "Nu am putut procesa întrebarea în siguranță din cauza unei erori tehnice. Încearcă din nou.",
         "safety.detected": "Dacă tu sau altcineva sunteți acum în pericol imediat, sună la {emergency_number}. Apelul de urgență este gratuit.",
         "safety.uncertain": "Dacă nu ești sigur și ar putea exista un pericol imediat, sună la {emergency_number}. Apelul de urgență este gratuit.",
@@ -471,13 +477,15 @@
         "fallback.water_unavailable": "Nu am acum un loc verificat pentru apă potabilă. De aceea nu îți indic un loc neverificat.",
         "ui.voiceStartRecording": "Apasă microfonul ca să vorbești. Poți și să scrii.",
         "ui.voiceRecording": "Înregistrez. Apasă din nou microfonul când ai terminat.",
-        "ui.voiceServiceError": "Recunoașterea vocală nu este disponibilă acum. Încearcă din nou sau scrie întrebarea."
+        "ui.voiceServiceError": "Recunoașterea vocală nu este disponibilă acum. Încearcă din nou sau scrie întrebarea.",
+        "fallback.hilfebus_hint": "Poți contacta oricând Hilfebus în timpul programului ({times}) la {phone}.",
+        "fallback.hilfebus_sunday": "Hilfebus: distribuire de supă duminică, {stand}, {times}."
       }
     },
     "ru": {
       "source_language": "de",
       "target_language": "ru",
-      "version": "9",
+      "version": "10",
       "linguistic_review_status": "machine",
       "source_origin": "machine_drafted",
       "reviewed_by_role": null,
@@ -542,7 +550,7 @@
         "dialogue.prompts.general_need": "Какая помощь вам нужна?",
         "dialogue.prompts.acute_risk_confirmation": "Ты или кто-то другой сейчас в непосредственной опасности?",
         "dialogue.answers.sleep_intro": "Rücke — первый контактный пункт. Я не могу обещать свободное место.",
-        "dialogue.answers.scharni_conditional": "Scharni помогает совершеннолетним женщинам. Без возраста я не могу надежно подтвердить, что предложение подходит.",
+        "dialogue.answers.scharni_conditional": "Übernachtungshaus für wohnungslose Frauen помогает совершеннолетним женщинам. Без возраста я не могу надежно подтвердить, что предложение подходит.",
         "dialogue.answers.dialog_error": "Я не смогла надежно понять ответ. Ответьте еще раз или выберите вариант.",
         "dialogue.answers.invalid_dialog": "Этот выбор больше не действует. Пожалуйста, задайте вопрос снова.",
         "dialogue.answers.district_contact_conditional": "Эта команда соответствует указанному месту. Ее ответственность еще нужно подтвердить.",
@@ -567,7 +575,7 @@
         "fallback.clarify": "Какая помощь вам нужна: еда, ночлег, медицинская помощь или консультация?",
         "fallback.clarify_organization": "{alias} обозначает несколько услуг. Какая именно помощь нужна или какой район имеется в виду?",
         "fallback.clarify_hilfebus": "Какая помощь вам нужна: еда, ночлег, медицинская помощь или консультация? Если вы не уверены, можно также позвонить в Hilfebus во время работы.",
-        "fallback.no_results": "Я не нашла подходящего предложения. Задай короткий вопрос о еде, ночлеге, медицинской помощи или консультации.",
+        "fallback.no_results": "Мне не удалось найти подходящее предложение.",
         "fallback.technical_error": "Из-за технической ошибки я не смогла безопасно обработать вопрос. Попробуй ещё раз.",
         "safety.detected": "Если ты или кто-то другой сейчас в непосредственной опасности, позвони по номеру {emergency_number}. Экстренный вызов бесплатный.",
         "safety.uncertain": "Если ты не уверен и может быть непосредственная опасность, позвони по номеру {emergency_number}. Экстренный вызов бесплатный.",
@@ -589,7 +597,9 @@
         "fallback.water_unavailable": "Сейчас у меня нет проверенного места с питьевой водой. Поэтому я не назову непроверенное место.",
         "ui.voiceStartRecording": "Нажми на микрофон, чтобы говорить. Также можно написать.",
         "ui.voiceRecording": "Идёт запись. Нажми на микрофон ещё раз, когда закончишь.",
-        "ui.voiceServiceError": "Распознавание речи сейчас недоступно. Попробуй ещё раз или напиши свой вопрос."
+        "ui.voiceServiceError": "Распознавание речи сейчас недоступно. Попробуй ещё раз или напиши свой вопрос.",
+        "fallback.hilfebus_hint": "Ты всегда можешь связаться с Hilfebus в часы работы ({times}) по номеру {phone}.",
+        "fallback.hilfebus_sunday": "Hilfebus: раздача супа в воскресенье, {stand}, {times}."
       }
     }
   }

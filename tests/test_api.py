@@ -336,7 +336,7 @@ def test_template_query_returns_isolated_cards() -> None:
     assert body["status"] == "ok"
     assert body["provider"] == "template"
     assert body["cards"]
-    assert {card["id"] for card in body["cards"]} == {"10", "24", "25"}
+    assert {card["id"] for card in body["cards"]} == {"10", "24", "25", "21"}
 
 
 def test_overnight_verb_query_is_not_rejected_as_out_of_scope() -> None:
@@ -362,7 +362,7 @@ def test_self_description_and_out_of_scope_are_deterministic() -> None:
     assert self_response["cards"] == []
     assert self_response["answer"].startswith("I am LENA")
     assert outside["status"] == "no_results"
-    assert outside["cards"] == []
+    assert [card["id"] for card in outside["cards"]] == ["21"]
 
 
 def test_vague_help_request_asks_for_a_category() -> None:
@@ -372,10 +372,11 @@ def test_vague_help_request_asks_for_a_category() -> None:
     assert body["status"] == "no_results"
     assert body["session_id"]
     assert body["question"] == "I need help"
-    assert body["cards"] == []
+    assert [card["id"] for card in body["cards"]] == ["21"]
     assert body["clarification"]["type"] == "general_need"
     assert body["map_data"] is None
-    assert body["answer"] == "What help do you need?"
+    from app.hilfebus import contact_hint
+    assert body["answer"] == "What help do you need? " + contact_hint(client.app.state.kb.by_id()["21"], Language.EN)
 
 
 def test_session_follow_up_keeps_chat_history() -> None:
@@ -779,7 +780,7 @@ def test_interpreter_then_candidate_selector_formulates_from_curated_records() -
     assert captured["answer_count"] <= 4
     assert captured["question"] == "A detailed but indirect Leipzig support question"
     evidence = captured["evidence"]
-    assert evidence.evidence_version == "4"
+    assert evidence.evidence_version == "5"
     assert evidence.prompt_version == FORMULATOR_PROMPT_VERSION
     assert all(item.candidate_role in {"direct_service", "referral_contact"} for item in evidence.selected_offers)
     assert [item.offer_id for item in evidence.selected_offers] == captured["answer_ids"]
@@ -982,7 +983,7 @@ def test_structured_dialog_follow_up_excludes_natural_language_session_turns() -
     assert hilfebus["name"] == "Hilfebus"
     assert hilfebus["phone_numbers"] == curated_hilfebus.phone_numbers
     assert hilfebus["phone_numbers"]
-    assert hilfebus["opening_hours_raw"] == curated_hilfebus.opening_hours_raw
+    assert hilfebus["opening_hours_raw"] == [v for v in curated_hilfebus.opening_hours_raw if "Hauptbahnhof" not in v]
     assert hilfebus["address"] is None
     assert not any(marker_id.startswith("21:") for marker_id in second["map_marker_ids"])
     assert captured["interpreter_history"] == []
@@ -1044,7 +1045,7 @@ def test_candidate_selector_limits_general_sleep_to_referral_contacts() -> None:
     ).json()
 
     assert body["provider"] == "template"
-    assert [card["id"] for card in body["cards"]] == ["7"]
+    assert [card["id"] for card in body["cards"]] == ["7", "21"]
     assert body["clarification"]["type"] == "sleep_target_group"
     assert "ids" not in captured
 
@@ -1136,7 +1137,7 @@ def test_explicit_womens_sleep_selects_only_verified_scharni_offer() -> None:
     ).json()
 
     ids = [card["id"] for card in body["cards"]]
-    assert ids == ["8"]
+    assert ids == ["8", "21"]
     assert body["map_marker_ids"] == ["8"]
     assert body["map_data"]["destinations"][0]["address"] == "Georg-Schumann-Str. 268, 04159 Leipzig"
 
@@ -1257,6 +1258,6 @@ def test_english_cards_are_loaded_from_stored_translations() -> None:
     card_text = json.dumps(body["cards"], ensure_ascii=False)
 
     assert body["status"] == "ok"
-    assert "Scharni" in card_text
+    assert "Übernachtungshaus für wohnungslose Frauen" in card_text
     assert "Scharnhorststr. 27, 04275 Leipzig" not in card_text
     assert "Georg-Schumann-Str. 268, 04159 Leipzig" in card_text

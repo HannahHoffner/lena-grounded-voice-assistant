@@ -540,8 +540,8 @@ def test_template_api_limits_cards_but_maps_every_seasonally_eligible_fountain(t
         json={"query": "Wo ist der nächste Trinkwasserbrunnen?", "language": "de"},
     ).json()
     assert body["status"] == "ok"
-    assert len(body["cards"]) == 3
-    assert all(card["record_type"] == "drinking_fountain" for card in body["cards"])
+    assert len(body["cards"]) == 4
+    assert all(card["record_type"] == "drinking_fountain" for card in body["cards"] if card["id"] != "21")
     assert len(body["map_marker_ids"]) == 21
     assert len(body["map_data"]["destinations"]) == 21
     assert all(item["record_type"] == "drinking_fountain" for item in body["map_data"]["destinations"])
@@ -549,6 +549,7 @@ def test_template_api_limits_cards_but_maps_every_seasonally_eligible_fountain(t
         "drinking_fountain:katharinenstrasse",
         "drinking_fountain:em-brunnen",
         "drinking_fountain:kurt-masur-platz",
+        "21",
     ]
     assert "jetzt geöffnet" not in body["answer"].casefold()
     assert "funktioniert gerade" not in body["answer"].casefold()
@@ -568,7 +569,7 @@ def test_generic_water_request_excludes_hilfebus_outside_sunday_stand_time(tmp_p
         service.query(QueryRequest(query="Ich habe Durst.", language=Language.DE))
     )
 
-    assert "21" not in response.card_ids
+    assert "21" in response.card_ids  # Supplementary contact, not a water result.
     assert "21" not in response.spoken_result_ids
     assert not any(marker_id.startswith("21:") for marker_id in response.map_marker_ids)
     assert "Hilfebus" not in response.answer
@@ -589,14 +590,14 @@ def test_generic_water_request_uses_hilfebus_during_sunday_stand_time(tmp_path: 
     )
 
     assert response.card_ids[0] == "21"
-    assert response.cards[0].address is None
+    assert "Westseite" in response.cards[0].address
     assert response.map_marker_ids[0] == "21:hbf-west"
     assert response.map_data is not None
     stand = response.map_data.destinations[0]
     assert "Westseite" in stand.address
     assert "20:00" in " ".join(stand.opening_hours)
     assert stand.address in stand.spoken_text
-    assert kb.by_id()["21"].address not in stand.spoken_text
+    assert "Demmering" not in stand.spoken_text
 
 
 @pytest.mark.parametrize(
@@ -742,7 +743,7 @@ def test_water_question_reaches_provider_and_validated_model_answer_is_used(
     assert response.provider == "blablador"
     assert response.answer == f"Für {captured['selected_offers'][0]['display_name']} ist der aktuelle Betriebsstatus unbekannt."
     assert response.interaction.formulator_fallback_used is False
-    assert response.card_ids == [captured["selected_offers"][0]["offer_id"]]
+    assert response.card_ids == [captured["selected_offers"][0]["offer_id"], "21"]
 
 
 def test_interpreter_error_fails_closed_and_formulator_failure_uses_only_template_results(tmp_path: Path) -> None:
@@ -781,7 +782,7 @@ def test_interpreter_error_fails_closed_and_formulator_failure_uses_only_templat
     service.blablador = InvalidFormulator()
     fallback = asyncio.run(service.query(QueryRequest(query="Trinkbrunnen", language=Language.DE)))
     assert fallback.provider == "template"
-    assert len(fallback.cards) == 3 and len(fallback.map_marker_ids) == 21
+    assert len(fallback.cards) == 4 and len(fallback.map_marker_ids) == 21
     assert fallback.interaction.formulator_error_code == "formulator_ungrounded_claim"
     assert fallback.interaction.selector_used is False
 

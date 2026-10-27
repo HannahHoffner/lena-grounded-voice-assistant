@@ -1,19 +1,24 @@
-# Kontrollierte Antwortakte – Stand 26.10.2026
+# Kontrollierte Antwortakte – Stand 27.10.2026
 
 ## Aktueller produktiver Textvertrag 7 (ersetzt den folgenden Planpfad)
 
 Der Formulator formuliert den sichtbaren Text wieder selbst. `formulator_prose.py`
 definiert den strikten Textvertrag 7 und hängt sein tatsächliches JSON-Schema an
-Prompt 25 an. Der Prompt verlangt einfache Duzform, ein bis drei kurze Sätze,
+Prompt 26 an; Evidencevertrag 5, Validator 8. Der Prompt verlangt einfache Duzform, ein bis drei kurze Sätze,
 konkrete Fragebeantwortung und ausschließlich Fakten des ausgewählten Evidence-
 Pakets. Zahlen, Bedingungen und Angebotszuordnung dürfen nicht verändert werden.
 Interne Capability-Codes werden dem Formulator nicht als Ausgabetext angeboten.
 
 `providers/llm.py` akzeptiert produktiv ausschließlich diesen Textvertrag.
 `grounding.validate_formulation` prüft Modelltext atomar gegen die Fakten desselben
-Angebots. Vertrag 7 aktiviert die Inhaltswortabdeckung auch unabhängig von
-erkannten Leistungsprädikaten und Claimlabels. Diese endliche lexikalische und
-relationale Prüfung ist keine vollständige semantische Entailment-Prüfung.
+Angebots. Seit der Fachentscheidung nach dem Ablationstest verwirft die
+claimtypunabhängige Inhaltswortabdeckung keine Antworten mehr; ebenso wenig
+lexikalisches NOT_CHECKED/UNDECIDABLE der Leistungsprüfung. Das historische
+Diagnosemodul bleibt für Reproduktion und Charakterisierung erhalten.
+Literal-, Referenz-, Namens-, Zielgruppen-, Alters-, Zeit-/Preiszuordnungs-,
+Entgelt-, Aufnahme-, Eignungs- und Echtzeitprüfungen bleiben aktiv, ebenso
+explizite Leistungsnegationen. Diese endliche Prüfung ist keine vollständige
+semantische Entailment-Prüfung und erkennt keine datengetreuen Fehler.
 Gültiger Modelltext wird nur in seinen Leerzeichen normalisiert und mit
 `provider: "blablador"` ausgegeben. Bei Parser-, Grounding-, Provider- oder
 Budgetfehlern bleibt der bestehende Retry-/Templatepfad aktiv. Keine Änderung
@@ -24,6 +29,25 @@ Regressionen: `tests/test_formulator_prose.py`, `tests/test_formulation.py`,
 beziehen sich ausschließlich auf den historischen Vertrag 6; sein Renderer
 ist kein erfolgreicher produktiver Antwortpfad mehr und auch nicht der
 Template-Fallback. Dieser verwendet weiterhin `providers/template.py`.
+
+Für medizinische Antworten wird `medical_emergency` aus `policy_facts.py`
+gebunden bereitgestellt. Prompt 26 verlangt den zusätzlichen Notruf nur bei
+sehr starken Beschwerden oder Gefahr; der Akutgefahrpfad bleibt unverändert.
+`max_answer_chars` reserviert bei Ausschlussantworten Platz für den
+deterministischen Hilfebuszusatz. Keine Telefonnummern öffentlicher Toiletten
+in Evidence/Prosa, Prüfstatus der Brunnen nur intern. Quellangaben wie „nach
+Bedarf“ sind keine Zusage; Postadresse als Leistung erklären.
+
+`hilfebus.py` ergänzt vor der Session-/TTS-Persistenz den lokalisierten
+Kontaktsatz bei allgemeiner/ungelöster Hilfe, keinem Treffer, Fachfremdheit und
+technischem Rückfall, sofern Hilfebus nicht bereits im Text steht. Telefon und
+Zeiten stammen aus der Runtime-Kuration. Jede Antwort mit Kacheln erhält eine
+Hilfebuskachel; sie ist kein zusätzlicher fachlicher Treffer. Nur bei einem
+tatsächlichen Sonntagsstand-Ergebnis werden Ort und Marker gezeigt. Die
+Büroanschrift fehlt in allen Hilfebusprojektionen; Team Konsum/Wohnen behalten
+ihre Büroanschrift. Mitarbeitertelefon nur auf der Kachel, Einsatztelefon in
+Evidence, Kontaktprosa und Hilfebus-Vorlesetext. Copy 10 ist sprachlich nicht
+menschlich freigegeben. Der neue Kurationshash verwirft alte Sessions.
 
 ## Historischer Planvertrag 6
 

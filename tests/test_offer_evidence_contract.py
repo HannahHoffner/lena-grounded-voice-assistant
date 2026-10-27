@@ -123,7 +123,7 @@ def test_explicit_wrong_or_cross_offer_fact_ids_are_still_invalid(app):
 def test_missing_citation_uses_same_offer_evidence_not_other_offer(app):
     evidence = _evidence(app, offer_ids=("8", "10"))
     name = _fact(evidence, FactType.DISPLAY_NAME, offer_id="8")
-    response = _answer(evidence, ("Nutze Scharni für Frauen.", ClaimType.ACTION, "8", [name.fact_id]))
+    response = _answer(evidence, ("Nutze Übernachtungshaus für wohnungslose Frauen für Frauen.", ClaimType.ACTION, "8", [name.fact_id]))
     assert validate_formulation(response, evidence).card_ids == ["8"]
     evidence.selected_offers[0].facts = [name]
     with pytest.raises(FormulatorError):

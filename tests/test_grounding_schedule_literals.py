@@ -60,7 +60,7 @@ def _recorded_uvo_response(app):
     schedule = _fact(evidence, FactType.OPENING_TIME, contains="Среда: 18:30")
     assert schedule.value == "> Среда: 18:30 ч. Hauptbahnhof"
     assert [name.fact_id, service.fact_id, phone.fact_id, schedule.fact_id] == [
-        "f_ea576ccbd1ef35d7", "f_13f84ab56bb2f063", "f_37fc64201ad9f94c", "f_4c19e137fb8f2499",
+        "f_3c375bba8f90ee50", "f_39b7466779599217", "f_decb29c0b4edd22b", "f_6a1b76068df07b1b",
     ]
     response = _answer(evidence,
         ("Воспользуйся “UVO” для выездной медицинской помощи.", ClaimType.ACTION,

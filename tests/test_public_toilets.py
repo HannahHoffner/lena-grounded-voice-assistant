@@ -570,11 +570,11 @@ def test_toilet_api_is_multilingual_deterministic_and_selector_free(
     body = client.post("/api/query", json={"query": query, "language": language}).json()
     assert body["status"] == "ok"
     assert len(body["spoken_result_ids"]) == 3
-    assert body["card_ids"] == body["spoken_result_ids"]
+    assert body["card_ids"] == body["spoken_result_ids"] + ["21"]
     assert len(body["map_marker_ids"]) == 20
-    assert all(card["record_type"] == "public_toilet" for card in body["cards"])
-    assert all(card["operator_name"] for card in body["cards"])
-    assert {card["source_attribution"] for card in body["cards"]} == {"Stadt Leipzig"}
+    assert all(card["record_type"] == "public_toilet" for card in body["cards"] if card["id"] != "21")
+    assert all(card["operator_name"] for card in body["cards"] if card["id"] != "21")
+    assert {card["source_attribution"] for card in body["cards"] if card["id"] != "21"} == {"Stadt Leipzig"}
     assert body["cards"][0]["fee_raw"] in body["answer"]
     assert all(item["record_type"] == "public_toilet" for item in body["map_data"]["destinations"])
     assert body["map_marker_ids"] == [item["id"] for item in body["map_data"]["destinations"]]
@@ -818,7 +818,7 @@ def test_toilet_path_uses_interpreter_and_formulator_but_never_llm_selector(tmp_
     assert response.provider == "blablador"
     assert response.interaction.selector_used is False
     assert response.interaction.selector_bypass_reason == "deterministic_infrastructure"
-    assert len(response.cards) == 3
+    assert len(response.cards) == 4
 
 
 @pytest.mark.parametrize("language", list(Language))
@@ -869,7 +869,8 @@ def test_invalid_interpreter_output_fails_closed_before_toilet_results(
     times = "; ".join(offer.opening_hours_raw or offer.standzeiten_raw) or "—"
     assert body["status"] == "error"
     assert body["provider"] == "template"
-    assert body["answer"] == safety_text(language, SafetyTextKind.TECHNICAL_HILFEBUS, phone=phone, times=times)
+    from app.hilfebus import contact_hint
+    assert body["answer"] == safety_text(language, SafetyTextKind.TECHNICAL) + " " + contact_hint(offer, language)
     assert [card["id"] for card in body["cards"]] == [offer.id]
     assert body["card_ids"] == [offer.id]
     assert calls == {"interpreter": 1, "selector": 0, "formulator": 0}
@@ -886,6 +887,6 @@ def test_missing_verified_toilets_never_falls_back_to_social_offers(tmp_path: Pa
         _toilet_service(settings, kb).query(QueryRequest(query="Wo ist eine Toilette?", language=Language.DE))
     )
     assert response.status == "no_results"
-    assert response.cards == []
+    assert [card.id for card in response.cards] == ["21"]
     assert response.map_data is None
     assert "verifizierten Toiletteninformationen" in response.answer

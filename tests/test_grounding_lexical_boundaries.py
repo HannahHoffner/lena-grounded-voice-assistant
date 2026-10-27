@@ -24,13 +24,13 @@ def test_evidenced_german_food_compounds_pass_real_validator(app, food):
 
 
 @pytest.mark.parametrize("food", ["Imbiss", "Mittagessen", "Imbiss‑Mittagessen"])
-def test_food_compound_needs_its_own_offer_service_evidence(app, food):
+def test_characterizes_unchecked_food_compound_without_service_evidence(app, food):
     evidence = _evidence(app, offer_ids=("9",), need=Need.FOOD)
     name = _fact(evidence, FactType.DISPLAY_NAME)
     evidence.selected_offers[0].facts = [name]
     response = _answer(evidence, (f"{name.value}: {food}.", ClaimType.ACTION, "9", [name.fact_id]))
-    with pytest.raises(FormulatorError):
-        validate_formulation(response, evidence)
+    # Validator 8 deliberately does not enforce lexical service coverage.
+    assert validate_formulation(response, evidence).answer == response.sentences[0].text
 
 
 def _packet(app, language, offer_id, name, need, values):

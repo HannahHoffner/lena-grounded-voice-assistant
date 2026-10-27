@@ -50,6 +50,10 @@ def _requested_capabilities(interpretation: QueryInterpretation, need: Need) -> 
         if item != RequestedService.YOUTH_SUPPORT
     }
     if explicit:
+        # Wound care is a medical need; an exact capability label is not
+        # required. The ordinary eligibility gates below still apply (FR-04).
+        if RequestedService.WOUND_CARE.value in explicit:
+            explicit.update({RequestedService.MEDICAL_CARE.value, "medical_access"})
         return explicit
     return {
         Need.FOOD: {RequestedService.FOOD.value},
@@ -144,6 +148,8 @@ class CandidateSelector:
             direct_match = bool(requested.intersection(offer.capabilities)) and (
                 need.value in offer.needs
                 or (need == Need.GENERAL_HELP and bool(interpretation.explicit_service_requests))
+                or (need == Need.MEDICAL and RequestedService.WOUND_CARE in explicit_services
+                    and "medical_care" in offer.capabilities)
             )
             if (
                 need == Need.GENERAL_HELP
@@ -349,6 +355,8 @@ class CandidateSelector:
                 or ReasonCode.CURATED_PRIORITY in item.reason_codes
                 or ReasonCode.MINOR_SLEEP_PRIORITY in item.reason_codes
                 or ReasonCode.MINOR_CRISIS_PRIORITY in item.reason_codes
+                or (offer.place_type == "help_bus" and need == Need.FOOD
+                    and facts.requested_day == RequestedDay.SUNDAY)
             )
             unique_alias_match = bool(context.alias and len(selected) == 1)
             (mandatory if binding_priority or unique_alias_match else selectable).append(item)

@@ -1,4 +1,10 @@
-"""Claimtypunabhängige Inhaltsprüfung für Leistungs- und Identitätsaussagen.
+"""Historical lexical diagnostic; not an acceptance gate since validator 8.
+
+Retained for characterization and reproducibility of the 02a3612 ablation.
+The runtime deliberately does not call this module.
+
+
+Claimtypunabhängige Inhaltsprüfung für Leistungs- und Identitätsaussagen.
 
 Audit-Befund F-01 (23.10.2026): ``Scharni bietet eine Fahrradreparatur an.``
 wurde mit einer gültigen Namensreferenz akzeptiert, sobald das Modell den Satz

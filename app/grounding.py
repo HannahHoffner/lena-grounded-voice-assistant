@@ -17,7 +17,6 @@ from .formulation import (
     FormulatorResponse,
     GroundingDiagnosticCode,
 )
-from .grounding_content import unsupported_content_words
 from .grounding_claims import (
     ClaimSupport,
     CONCEPT_CAPABILITIES,
@@ -29,6 +28,7 @@ from .grounding_claims import (
     claims_suitability,
     condition_capability,
     detect_service_concepts,
+    supported_service_concepts,
 )
 from .interpreter import Need
 from .grounding_constraints import (
@@ -38,9 +38,10 @@ from .grounding_constraints import (
 )
 from .models import Language
 from .grounding_references import resolve_offer_evidence
+from .policy_facts import EMERGENCY_NUMBER
 
 
-GROUNDING_VALIDATOR_VERSION = "7"
+GROUNDING_VALIDATOR_VERSION = "8"
 
 URL_RE = re.compile(r"https?://[^\s<>]+", re.IGNORECASE)
 EMAIL_RE = re.compile(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.IGNORECASE)
@@ -172,11 +173,12 @@ SUPPORTED_DOMAIN_STEMS = {
 }
 NO_RESULT_ANCHORS = {
     Language.DE: ("kein passendes angebot", "nichts passendes"),
-    Language.EN: ("no matching offer", "nothing suitable"),
-    Language.PL: ("brak pasuj\u0105cej oferty", "nie ma pasuj\u0105cej oferty", "nie znalaz\u0142am", "nie znalaz\u0142em",
+    Language.EN: ("no matching offer", "nothing suitable", "could not find a matching", "couldn't find a matching"),
+    Language.PL: ("nie udało mi się znaleźć pasującej oferty", "brak pasuj\u0105cej oferty", "nie ma pasuj\u0105cej oferty", "nie znalaz\u0142am", "nie znalaz\u0142em",
                   "nie znaleziono pasuj\u0105cej oferty", "w bazie lena nie ma dost\u0119pnych ofert"),
     Language.RO: ("nicio ofert\u0103 potrivit\u0103", "nu am g\u0103sit o ofert\u0103 potrivit\u0103"),
     Language.RU: (
+        "не удалось найти подходящ", "не нашла подходящ", "не нашёл подходящ", "не нашел подходящ",
         "\u043d\u0435\u0442 \u043f\u043e\u0434\u0445\u043e\u0434\u044f\u0449\u0435\u0433\u043e \u043f\u0440\u0435\u0434\u043b\u043e\u0436\u0435\u043d\u0438\u044f",
         "\u043d\u0435 \u043d\u0430\u0448\u043b\u043e\u0441\u044c \u043f\u043e\u0434\u0445\u043e\u0434\u044f\u0449\u0435\u0433\u043e",
     ),
@@ -284,7 +286,7 @@ def _validate_policy_answer(text: str, evidence: FormulatorEvidence) -> None:
             raise _ungrounded(GroundingDiagnosticCode.NO_RESULT_BOUNDARY_MISSING)
 
 
-def _validate_operational_tokens(text: str, facts: list[EvidenceFact]) -> None:
+def _validate_operational_tokens(text: str, facts: list[EvidenceFact], *, medical_policy: bool = False) -> None:
     cited = "\n".join(fact.value for fact in facts)
     cited_folded = cited.casefold()
     for url in URL_RE.findall(text):
@@ -300,6 +302,8 @@ def _validate_operational_tokens(text: str, facts: list[EvidenceFact]) -> None:
         if time_value not in TIME_RE.findall(cited):
             raise _ungrounded(GroundingDiagnosticCode.TIME_NOT_CITED)
     cited_numbers = set(NUMBER_RE.findall(cited))
+    if medical_policy:
+        cited_numbers.add(EMERGENCY_NUMBER)
     if any(number not in cited_numbers for number in NUMBER_RE.findall(text)):
         raise _ungrounded(GroundingDiagnosticCode.NUMBER_NOT_CITED)
     for phone in (fact.value for fact in facts if fact.fact_type == FactType.PHONE):
@@ -409,7 +413,6 @@ def _validate_sentence(
     allowed_policies: set[BindingPolicy],
     pools: dict[str, list[EvidenceFact]],
     visible_offer_texts: dict[str, str],
-    *, require_content_coverage: bool = False,
 ) -> str:
     text = " ".join(sentence.text.split())
     if not text or HTML_OR_MARKDOWN_RE.search(text):
@@ -473,14 +476,22 @@ def _validate_sentence(
             if not any(has_negation(value, lang) for lang in {language, Language.DE, Language.EN})
         ]
         service_support, service_concepts = assess_service_claim(service_text, service_values, language)
+        negative_values = [
+            (kind, value) for kind, value in scoped_values
+            if any(has_negation(value, lang) for lang in {language, Language.DE, Language.EN})
+        ]
+        if not exact_negative_fact and service_concepts & (
+            supported_service_concepts(negative_values, language)
+            - supported_service_concepts(service_values, language)
+        ):
+            raise _ungrounded(GroundingDiagnosticCode.SERVICE_FACT_MISSING)
         if (sentence.claim_type == ClaimType.FACT and TIME_RE.search(text)
                 and service_support is ClaimSupport.NOT_CHECKED and not operational_support):
             # A clock token elsewhere in this offer does not establish its
             # relation to the stated day or location. Previously some of these
             # mismatches were caught only by the one-sentence presentation rule.
             raise _ungrounded(GroundingDiagnosticCode.TIME_NOT_CITED)
-        if service_support in {ClaimSupport.UNDECIDABLE, ClaimSupport.CONTRADICTED} and not exact_negative_fact:
-            raise _ungrounded(GroundingDiagnosticCode.SERVICE_FACT_MISSING)
+        # Lexical UNDECIDABLE is observational only after the ablation decision.
         all_values = [(fact.fact_type.value, fact.value) for fact in offer.facts]
         target_support, _ = assess_target_claim(
             semantic_text, pool_values, language, restrictions=all_values,
@@ -493,18 +504,6 @@ def _validate_sentence(
             raise _ungrounded(GroundingDiagnosticCode.TARGET_CLAIM_CONTRADICTED)
         if target_support is ClaimSupport.UNDECIDABLE:
             raise _ungrounded(GroundingDiagnosticCode.TARGET_FACT_MISSING)
-        if sentence.claim_type == ClaimType.SERVICE and (
-            service_support is ClaimSupport.NOT_CHECKED
-            and target_support is not ClaimSupport.SUPPORTED
-            and not operational_support
-            and not any(
-                fact.fact_type in {FactType.SERVICE, FactType.CAPABILITY, FactType.DESCRIPTION}
-                and _canonical(fact.value).rstrip(".!?") in _canonical(semantic_text)
-                for fact in pool
-            )
-        ):
-            _validate_operational_tokens(text, pool)
-            raise _ungrounded(GroundingDiagnosticCode.SERVICE_FACT_MISSING)
         # Positive concept occurrence does not support a negated claim. Exact
         # cited negative facts may be quoted; arbitrary negative paraphrases
         # remain undecidable instead of being mistaken for positive evidence.
@@ -563,14 +562,7 @@ def _validate_sentence(
             ):
                 raise _ungrounded(GroundingDiagnosticCode.PROPER_NAME_NOT_EXACT)
 
-    _validate_operational_tokens(text, pool)
-    if sentence.offer_id is not None and unsupported_content_words(
-        semantic_text, pool_values, evidence.requested_language, require_coverage=require_content_coverage,
-    ):
-        # Claimtypunabhängig (Audit F-01): Eine Leistungs-, Erhalts-, Besitz-
-        # oder Identitätsaussage darf keine unbelegten offenen Inhaltswörter
-        # tragen, auch wenn das Modell sie als action oder fact deklariert.
-        raise _ungrounded(GroundingDiagnosticCode.CONTENT_NOT_COVERED)
+    _validate_operational_tokens(text, pool, medical_policy=BindingPolicy.MEDICAL_EMERGENCY in allowed_policies)
     return text
 
 
@@ -606,8 +598,7 @@ def validate_formulation(
         for offer_id in pools
     }
     texts = [
-        _validate_sentence(sentence, evidence, offers_by_id, facts_by_id, allowed_policies, pools, visible_offer_texts,
-                           require_content_coverage=response.contract_version == "7")
+        _validate_sentence(sentence, evidence, offers_by_id, facts_by_id, allowed_policies, pools, visible_offer_texts)
         for sentence in response.sentences
     ]
     declared_pools = {
@@ -616,7 +607,7 @@ def validate_formulation(
     }
     _validate_cited_names(response, texts, declared_pools)
     answer = " ".join(texts)
-    if len(answer) > 600:
+    if len(answer) > evidence.max_answer_chars:
         raise FormulatorError("formulator_contract_violation")
     _validate_language(answer, evidence)
     _validate_policy_answer(answer, evidence)

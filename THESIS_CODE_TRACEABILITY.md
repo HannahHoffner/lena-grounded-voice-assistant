@@ -1,5 +1,26 @@
 # Thesis–Code-Traceability
 
+## Fachentscheidungen nach Validator-Ablation, 27.10.2026
+
+Diese Fortschreibung beschreibt den Arbeitsstand auf `02a3612`; die folgenden
+älteren Abschnitte sind datierte historische Belege. Alle 42 Anforderungen
+R-01–R-42 und 13 Regeln FR-01–FR-13 bleiben als Regression-Contract erhalten.
+
+| Vertrag | Aktueller Stand und Belege |
+|---|---|
+| R-20/R-21 | Nur begrenzt abgesichert. Validator 8 verwirft weder offene Inhaltswörter noch lexikalische NOT_CHECKED-/UNDECIDABLE-Leistungsaussagen. Literal-, Eigennamen-, Angebots-/Fakt-/Karten-, Vertrags-/Sprach-, Zielgruppen-/Alters-, Zusage-/Echtzeit-, Leistungszeit-/Preis-/Entgelt- und Grenzprüfungen bleiben aktiv. `tests/test_grounding_*` und explizite Charakterisierungen dokumentieren Reichweite und Grenzen; datengetreue Fehler sind nicht erkennbar. |
+| R-04/R-08/R-19/R-23 | Produktiv Textvertrag 7/Prompt 26, Evidence 5 mit Zeichenbudget/medizinischer Policy; akzeptierte Modellprosa bleibt erhalten, Retry und atomarer Rückfall unverändert. `tests/test_formulator_prose.py`, `tests/test_formulation.py`. |
+| R-12/R-25/R-26/FR-09 | Deterministischer Hilfebuszusatz in beschlossenen Grenz-/Hilfefällen, vor Persistenz/TTS, innerhalb 600 Zeichen. Ergänzende Hilfebuskachel bei Kartenantworten, kein zusätzlicher Bedarfstreffer. Ort/Marker nur im zulässigen Sonntagsstandpfad; Büroanschrift in Hilfebusprojektionen entfernt. `app/hilfebus.py`, `app/service.py`, `tests/test_validator_ablation_decisions.py`. Akutgefahr ohne Ergänzung. |
+| R-16/R-17/FR-03/FR-08 | Neue Anzeigenamen nur aus Kuration; Aliasse erhalten, generische SZL-Namen mehrdeutig als Organisationsalias, Teams quellbelegt. Übersetzungsfelder nach Tokenprüfung technisch neu gebunden, Reviewstatus unverändert; Fingerprintwechsel invalidiert Sessions. `social_offers.json`, beide Übersetzungskataloge, Alias-/Kurations-/Sessiontests. |
+| R-27/FR-04/FR-11 | Wundversorgung umfasst medical_care/medical_access; persönliche Voraussetzungen unverändert. `tests/test_candidates.py` und fünfsprachige HTTP-Wundtests. Keine Aufnahme-/Eignungszusage aus medizinischer Capability. |
+| R-22/R-34/R-35 | Zentrale medizinische 112-Policy und Promptanweisung, kein Eingriff in Preflight/Akutgefahr. Ausschlussanker für einfache fünfsprachige Formulierung ohne Wissensbasisbezug. Akutgefahr-, Policy- und übrige Grounding-Negativtests bleiben Regressionen. |
+
+Ausgangsevidenz: 4,9 % Fehler ohne Validator, keine beobachtete
+Formulator-Erfindung, 86/98 richtige Antworten unnötig verworfen. Alle
+bisherigen Messungen dieses Ablationsvergleichs gehören zu `02a3612`.
+Neue technische Ergebnisse und Grenzen stehen in Bericht 14; notwendige
+Thesisformulierungen ausschließlich in [THESIS_UPDATE_NOTES.md](THESIS_UPDATE_NOTES.md#j-fachentscheidungen-aus-der-validator-ablation-27102026).
+
 ## Aktuelle Korrektur: freier Formulatorvertrag 7
 
 Die folgenden Renderer-Nachträge sind historisch. Für R-04/R-08/R-20/R-21

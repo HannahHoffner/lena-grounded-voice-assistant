@@ -27,13 +27,13 @@ def test_age_relation_not_just_number_occurrence(app, language, wrong, right):
     ids = [_fact(evidence, kind).fact_id for kind in (
         FactType.DISPLAY_NAME, FactType.MINIMUM_AGE, FactType.ELIGIBLE_GENDER,
     )]
-    response = _answer(evidence, (f"Scharni {wrong}.", ClaimType.ACTION, "8", ids))
+    response = _answer(evidence, (f"Übernachtungshaus für wohnungslose Frauen {wrong}.", ClaimType.ACTION, "8", ids))
     assert _diagnostic(response, evidence) == GroundingDiagnosticCode.TARGET_CLAIM_CONTRADICTED
-    response.sentences[0].text = f"Scharni {right}."
+    response.sentences[0].text = f"Übernachtungshaus für wohnungslose Frauen {right}."
     assert validate_formulation(response, evidence).sentence_count == 1
     # An omitted restrictive citation must not conceal the contradiction.
     response.sentences[0].fact_ids.remove(_fact(evidence, FactType.MINIMUM_AGE).fact_id)
-    response.sentences[0].text = f"Scharni {wrong}."
+    response.sentences[0].text = f"Übernachtungshaus für wohnungslose Frauen {wrong}."
     assert _diagnostic(response, evidence) == GroundingDiagnosticCode.TARGET_CLAIM_CONTRADICTED
 
 
@@ -108,11 +108,11 @@ def test_unknown_status_itself_is_not_a_current_service_promise():
 
 
 @pytest.mark.parametrize("language,text,positive", [
-    (Language.DE, "Scharni bietet keine Schlafplätze.", "Scharni bietet Schlafplätze."),
-    (Language.EN, "Scharni does not offer sleeping accommodation.", "Scharni offers sleeping accommodation."),
-    (Language.PL, "Scharni nie oferuje noclegu.", "Scharni oferuje nocleg."),
-    (Language.RO, "Scharni nu oferă cazare.", "Scharni oferă cazare."),
-    (Language.RU, "Scharni не предлагает ночлег.", "Scharni предлагает ночлег."),
+    (Language.DE, "Übernachtungshaus für wohnungslose Frauen bietet keine Schlafplätze.", "Übernachtungshaus für wohnungslose Frauen bietet Schlafplätze."),
+    (Language.EN, "Übernachtungshaus für wohnungslose Frauen does not offer sleeping accommodation.", "Übernachtungshaus für wohnungslose Frauen offers sleeping accommodation."),
+    (Language.PL, "Übernachtungshaus für wohnungslose Frauen nie oferuje noclegu.", "Übernachtungshaus für wohnungslose Frauen oferuje nocleg."),
+    (Language.RO, "Übernachtungshaus für wohnungslose Frauen nu oferă cazare.", "Übernachtungshaus für wohnungslose Frauen oferă cazare."),
+    (Language.RU, "Übernachtungshaus für wohnungslose Frauen не предлагает ночлег.", "Übernachtungshaus für wohnungslose Frauen предлагает ночлег."),
 ])
 def test_negative_service_claim_does_not_match_positive_evidence(app, language, text, positive):
     evidence = _evidence(app, language=language)
@@ -129,15 +129,15 @@ def test_unknown_service_is_not_supported(app):
     assert assess_service_claim("sells bicycles", [("service", "sleep")], Language.EN)[0] is ClaimSupport.NOT_CHECKED
     evidence = _evidence(app, language=Language.EN)
     ids = [_fact(evidence, kind).fact_id for kind in (FactType.DISPLAY_NAME, FactType.DESCRIPTION)]
-    response = _answer(evidence, ("Scharni sells bicycles.", ClaimType.SERVICE, "8", ids))
-    assert _diagnostic(response, evidence) == GroundingDiagnosticCode.SERVICE_FACT_MISSING
+    response = _answer(evidence, ("Übernachtungshaus für wohnungslose Frauen sells bicycles.", ClaimType.SERVICE, "8", ids))
+    assert validate_formulation(response, evidence).answer  # lexical support no longer gates
 
 
 def test_bed_promise_needs_no_assurance_word(app):
     evidence = _evidence(app, language=Language.EN)
     ids = [_fact(evidence, FactType.DISPLAY_NAME).fact_id,
            _fact(evidence, FactType.CAPABILITY, contains="overnight").fact_id]
-    response = _answer(evidence, ("At Scharni you will get a bed.", ClaimType.SERVICE, "8", ids))
+    response = _answer(evidence, ("At Übernachtungshaus für wohnungslose Frauen you will get a bed.", ClaimType.SERVICE, "8", ids))
     assert _diagnostic(response, evidence) == GroundingDiagnosticCode.ADMISSION_CLAIM_UNSUPPORTED
 
 
@@ -149,7 +149,7 @@ def test_negative_source_does_not_support_positive_claim_but_can_be_quoted(app):
                             value="No sleeping accommodation is offered")
     offer.facts = [name, negative]
     response = _answer(evidence,
-                       ("Use Scharni.", ClaimType.ACTION, "8", [name.fact_id]),
+                       ("Use Übernachtungshaus für wohnungslose Frauen.", ClaimType.ACTION, "8", [name.fact_id]),
                        ("Sleeping accommodation is offered.", ClaimType.SERVICE, "8", [negative.fact_id]))
     assert _diagnostic(response, evidence) == GroundingDiagnosticCode.SERVICE_FACT_MISSING
     response.sentences[1].text = negative.value + "."
@@ -174,7 +174,7 @@ def test_a_cited_unknown_status_note_is_still_renderable(app):
     evidence.selected_offers[0].facts.append(note)
     ids = [note.fact_id, _fact(evidence, FactType.CAPABILITY, contains="overnight").fact_id]
     response = _answer(evidence,
-                       ("Use Scharni.", ClaimType.ACTION, "8", [name.fact_id]),
+                       ("Use Übernachtungshaus für wohnungslose Frauen.", ClaimType.ACTION, "8", [name.fact_id]),
                        (note.value + ".", ClaimType.FACT, "8", ids))
     assert validate_formulation(response, evidence).sentence_count == 2
     response.sentences[1].text = "Sleeping accommodation is available now, but other details are unknown."
@@ -192,8 +192,8 @@ def test_recorded_romanian_counselling_response_passes_real_provider_validation(
     )
     name = _fact(evidence, FactType.DISPLAY_NAME)
     service = _fact(evidence, FactType.SERVICE, contains="Consiliere socială")
-    assert name.fact_id == "f_abe67692e2acf7bf"
-    assert service.fact_id == "f_4b7b1e78895ebd88"
+    assert name.fact_id == "f_d71f6620338f3195"
+    assert service.fact_id == "f_19b2332859b89320"
     recorded = _answer(evidence,
         ("Contactează „CABL”.", ClaimType.REFERRAL, "24", [name.fact_id]),
         ("Oferă consiliere socială pentru persoane fără acces regulat la sistemul de sănătate.",
@@ -251,9 +251,9 @@ def test_audience_without_service_is_not_evidence_of_that_service(app):
                            value="Counselling for people without food")
     evidence.selected_offers[0].facts = [name, service]
     response = _answer(evidence, ("CABL offers food.", ClaimType.SERVICE, "24", [name.fact_id, service.fact_id]))
-    assert _diagnostic(response, evidence) == GroundingDiagnosticCode.SERVICE_FACT_MISSING
+    assert validate_formulation(response, evidence).answer  # lexical UNDECIDABLE
     response.sentences[0].text = "CABL offers counselling for people without food but does not offer counselling."
     assert _diagnostic(response, evidence) == GroundingDiagnosticCode.SERVICE_FACT_MISSING
     service.value = "Counselling for people without food and sleeping accommodation"
     response.sentences[0].text = "CABL offers sleeping accommodation."
-    assert _diagnostic(response, evidence) == GroundingDiagnosticCode.SERVICE_FACT_MISSING
+    assert validate_formulation(response, evidence).answer  # lexical UNDECIDABLE

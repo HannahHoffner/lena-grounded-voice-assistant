@@ -259,7 +259,8 @@ def test_llm_failure_uses_conditional_safety_fallback_without_inventing_detected
     phone = ", ".join(offer.phone_numbers) or "—"
     times = "; ".join(offer.opening_hours_raw or offer.standzeiten_raw) or "—"
     assert body["provider"] == "template"
-    assert body["answer"] == safety_text(Language.EN, SafetyTextKind.TECHNICAL_HILFEBUS, phone=phone, times=times)
+    from app.hilfebus import contact_hint
+    assert body["answer"] == safety_text(Language.EN, SafetyTextKind.TECHNICAL) + " " + contact_hint(offer, Language.EN)
     assert body["answer"].count("112") == 1
     assert body["answer_type"] == "technical_fallback"
     assert [card["id"] for card in body["cards"]] == [offer.id]

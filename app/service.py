@@ -10,6 +10,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from .application_texts import application_text
+from .hilfebus import append_contact, operational_phone, present_card, prose_limit, sunday_food_hint
 from .candidate_contract import CandidateDecision, CandidateRole, ReasonCode, SelectionStatus
 from .candidates import CandidateSelector, build_selection_context
 from .config import Settings
@@ -202,6 +203,9 @@ def _template_for_offers(
     decision: CandidateDecision,
     offers: list[OfferRecord],
 ) -> str:
+    bus = next((offer for offer in offers if offer.place_type == "help_bus"), None)
+    if bus and decision.need == Need.FOOD:
+        return f"{_template_found(language, offers)} {sunday_food_hint(bus, language)}"
     priority_id = next(
         (
             item.offer_id
@@ -354,9 +358,7 @@ class QueryService:
         offer = _general_help_contact(self.kb.offers)
         cards: list[OfferCard] = []
         if offer:
-            phone = ", ".join(offer.phone_numbers) or "—"
-            times = _general_help_contact_times(offer)
-            answer = safety_text(language, SafetyTextKind.TECHNICAL_HILFEBUS, phone=phone, times=times)
+            answer = safety_text(language, SafetyTextKind.TECHNICAL)
             cards = [_card(offer, language, self.translation_catalog, self.translation_policy)]
         else:
             answer = safety_text(language, SafetyTextKind.TECHNICAL)
@@ -467,6 +469,18 @@ class QueryService:
         if next_dialog:
             response.clarification = clarification_block(next_dialog, payload.language)
         kb_by_id = self.kb.by_id()
+        contact = _general_help_contact(self.kb.offers)
+        if contact:
+            # Output-only addition: does not change candidates, model selection,
+            # safety routing or infrastructure ranking. Persist the final text.
+            stand = next((item for item in response.map_data.destinations
+                          if item.id == f"{contact.id}:hbf-west"), None) if response.map_data else None
+            contact_card = present_card(
+                _card(contact, payload.language, self.translation_catalog, self.translation_policy),
+                contact, payload.language, stand=stand,
+            )
+            append_contact(response, contact, contact_card,
+                           answer_type=interaction.answer_type or response.answer_type, route=interaction.route)
         selected_offers = [kb_by_id[card.id] for card in response.cards if card.id in kb_by_id]
         map_data = response.map_data or build_map_data(selected_offers, language=payload.language, origin=self.hbf_origin)
         if map_data:
@@ -491,10 +505,13 @@ class QueryService:
                     # inherits unchanged from the offer get localized here.
                     destination.services = card.services
                     destination.notes = card.notes
+                    if offer.place_type == "help_bus":
+                        destination.phone_numbers = [operational_phone(offer)]
                     destination.spoken_text = offer_spoken_text(
                         offer.model_copy(update={
                             "display_name": destination.label,
                             "address": destination.address,
+                            "phone_numbers": destination.phone_numbers,
                         }), payload.language,
                         short_description=destination.description or "",
                         services=destination.services,
@@ -1241,6 +1258,7 @@ class QueryService:
                 mandatory_ids=mandatory_ids,
                 translation_catalog=self.translation_catalog,
                 translation_policy=self.translation_policy,
+                max_answer_chars=prose_limit(_general_help_contact(self.kb.offers), language, answer_type.value),
             ),
             provider_failed=provider_failed,
         )
@@ -1512,20 +1530,9 @@ class QueryService:
         offer = _general_help_contact(self.kb.offers)
         if not offer:
             return QueryResponse(answer=_fallback_text(language, "no_results"), language=language, provider="template", status="no_results")
-        phone = ", ".join(offer.phone_numbers) or "—"
-        times = _general_help_contact_times(offer)
-        answer = dialogue_text(language, "answers", "hilfebus", phone=phone, times=times)
-        return await self._formulate_or_fallback(
-            query=query,
-            language=language,
-            need=Need.GENERAL_HELP,
-            answer_type=AnswerType.AMBIGUOUS_HELP_FALLBACK,
-            offers=[offer],
-            roles={offer.id: CandidateRole.REFERRAL_CONTACT},
-            mandatory_ids={offer.id},
-            fallback_answer=answer,
-            status="ok",
-            interaction=interaction,
-            budget=budget,
-            provider_failed=provider_failed,
+        interaction.answer_type = AnswerType.AMBIGUOUS_HELP_FALLBACK.value
+        return QueryResponse(
+            answer=_fallback_text(language, "clarify"),
+            cards=[_card(offer, language, self.translation_catalog, self.translation_policy)],
+            language=language, provider="template", status="ok",
         )

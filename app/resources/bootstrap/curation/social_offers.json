@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "catalog_version": "prototype-2026-08-25-leipziger-oase-display-name",
+  "catalog_version": "prototype-2026-10-27-validator-ablation",
   "approved_source_release_id": "legacy-3b72f95a88f9",
   "approved_source_hash": "3b72f95a88f98c57778f50beaa4c66af61b58493fe995feb1deb6f7756d7bf9c",
   "approved_official_source_hash": "3974f094d32f503db9bd1d2d516c8d9cdfd1e776233f16561d47c799270a3c86",
@@ -362,12 +362,13 @@
       "target_groups": ["adults", "women", "people_experiencing_homelessness"],
       "minimum_age": 18,
       "eligible_genders": ["female"],
-      "display_name": "Scharni",
+      "display_name": "Übernachtungshaus für wohnungslose Frauen",
       "search_phrases": [
         "Scharnhorst",
         "Übernachtungshaus für wohnungslose Frauen",
         "Schlafen",
-        "Übernachten"
+        "Übernachten",
+        "Scharni"
       ],
       "needs": [
         "sleep"
@@ -375,7 +376,8 @@
       "curation_decision_ids": [
         "prototype_core",
         "prototype_special_names",
-        "scharni_verified_runtime_override"
+        "scharni_verified_runtime_override",
+        "validator_ablation_8"
       ],
       "source_reference_ids": [
         "wfs_legacy_release",
@@ -432,11 +434,20 @@
         "day_stay"
       ],
       "curation_decision_ids": [
-        "prototype_core"
+        "prototype_core",
+        "validator_ablation_9"
       ],
       "source_reference_ids": [
         "wfs_legacy_release",
         "methodology_chapter"
+      ]
+    ,
+      "display_name": "Tagestreff Insel"
+    ,
+      "search_phrases": [
+        "SZL Suchtzentrum",
+        "Suchtzentrum",
+        "Insel"
       ]
     },
     {
@@ -445,7 +456,7 @@
       "organization_id": "diakonie_leipzig",
       "location_id": "leipziger_oase_nuernberger_strasse",
       "offer_type": "day_center",
-      "display_name": "Leipziger Oase",
+      "display_name": "Tagestreff Oase",
       "place_type": "day_center",
       "capabilities": ["food", "hygiene", "counselling", "postal", "shower", "laundry", "medical_care", "day_stay"],
       "target_groups": ["adults", "people_experiencing_homelessness"],
@@ -458,11 +469,17 @@
       ],
       "curation_decision_ids": [
         "prototype_core",
-        "leipziger_oase_source_display_name"
+        "leipziger_oase_source_display_name",
+        "validator_ablation_10"
       ],
       "source_reference_ids": [
         "wfs_legacy_release",
         "methodology_chapter"
+      ]
+    ,
+      "search_phrases": [
+        "Leipziger Oase",
+        "Oase"
       ]
     },
     {
@@ -523,11 +540,19 @@
         "drinking_water"
       ],
       "curation_decision_ids": [
-        "prototype_core"
+        "prototype_core",
+        "validator_ablation_12"
       ],
       "source_reference_ids": [
         "wfs_legacy_release",
         "methodology_chapter"
+      ]
+    ,
+      "display_name": "Safe-Straßensozialarbeit für Erwachsene - Team Konsum"
+    ,
+      "search_phrases": [
+        "SZL Suchtzentrum",
+        "Team Konsum"
       ]
     },
     {
@@ -545,11 +570,19 @@
         "advice"
       ],
       "curation_decision_ids": [
-        "prototype_core"
+        "prototype_core",
+        "validator_ablation_13"
       ],
       "source_reference_ids": [
         "wfs_legacy_release",
         "methodology_chapter"
+      ]
+    ,
+      "display_name": "Safe-Straßensozialarbeit für Erwachsene - Team Wohnen"
+    ,
+      "search_phrases": [
+        "SZL Suchtzentrum",
+        "Team Wohnen"
       ]
     },
     {
@@ -928,7 +961,8 @@
         "advice"
       ],
       "curation_decision_ids": [
-        "prototype_core"
+        "prototype_core",
+        "validator_ablation_21"
       ],
       "source_reference_ids": [
         "wfs_legacy_release",
@@ -938,7 +972,11 @@
         "notes": [
           "Instagramkanal: #safeleipzig",
           "Rufe während der Einsatzzeiten (täglich 18:00–23:00 Uhr) direkt beim Hilfebus an."
-        ]
+        ],
+        "address": null,
+        "header_address": null,
+        "district": null,
+        "geometry": null
       }
     },
     {
@@ -1106,6 +1144,14 @@
     {
       "alias": "suedpol",
       "organization_id": "jugendhaus_suedpol"
+    },
+    {
+      "alias": "SZL Suchtzentrum",
+      "organization_id": "szl_suchtzentrum"
+    },
+    {
+      "alias": "Suchtzentrum",
+      "organization_id": "szl_suchtzentrum"
     }
   ],
   "offer_aliases": [
@@ -1140,6 +1186,38 @@
     {
       "alias": "Helenenstraße",
       "service_offer_id": "23"
+    },
+    {
+      "alias": "Insel",
+      "service_offer_id": "9"
+    },
+    {
+      "alias": "Oase",
+      "service_offer_id": "10"
+    },
+    {
+      "alias": "Team Konsum",
+      "service_offer_id": "12"
+    },
+    {
+      "alias": "Team Wohnen",
+      "service_offer_id": "13"
+    },
+    {
+      "alias": "Tagestreff Insel",
+      "service_offer_id": "9"
+    },
+    {
+      "alias": "Tagestreff Oase",
+      "service_offer_id": "10"
+    },
+    {
+      "alias": "Safe-Straßensozialarbeit für Erwachsene - Team Konsum",
+      "service_offer_id": "12"
+    },
+    {
+      "alias": "Safe-Straßensozialarbeit für Erwachsene - Team Wohnen",
+      "service_offer_id": "13"
     }
   ],
   "source_references": [
@@ -1497,6 +1575,108 @@
       "recorded_by_role": "Forscherin und Entwicklerin von LENA",
       "evidence_reference": "TiMMi-ToHelp-Tourplan, bereitgestellt am 20.08.2026",
       "reviewed_at": "2026-08-20"
+    },
+    {
+      "id": "validator_ablation_8",
+      "decision_type": "override",
+      "affected_source_ids": [
+        "8"
+      ],
+      "reason": "Fachentscheidung der Nutzerin, 27.10.2026, Validator-Ablationstest",
+      "source_reference_ids": [
+        "wfs_legacy_release"
+      ],
+      "review_status": "reviewed_for_prototype",
+      "reviewed_by_role": "author",
+      "reviewed_at": "2026-10-27",
+      "evidence_type": "user_domain_decision",
+      "recorded_by_role": "implementation_agent",
+      "evidence_reference": "Anzeigename aus Quelle; frühere Namen/Aliasse erhalten: Übernachtungshaus für wohnungslose Frauen"
+    },
+    {
+      "id": "validator_ablation_9",
+      "decision_type": "override",
+      "affected_source_ids": [
+        "9"
+      ],
+      "reason": "Fachentscheidung der Nutzerin, 27.10.2026, Validator-Ablationstest",
+      "source_reference_ids": [
+        "wfs_legacy_release"
+      ],
+      "review_status": "reviewed_for_prototype",
+      "reviewed_by_role": "author",
+      "reviewed_at": "2026-10-27",
+      "evidence_type": "user_domain_decision",
+      "recorded_by_role": "implementation_agent",
+      "evidence_reference": "Anzeigename aus Quelle; frühere Namen/Aliasse erhalten: Tagestreff Insel"
+    },
+    {
+      "id": "validator_ablation_10",
+      "decision_type": "override",
+      "affected_source_ids": [
+        "10"
+      ],
+      "reason": "Fachentscheidung der Nutzerin, 27.10.2026, Validator-Ablationstest",
+      "source_reference_ids": [
+        "wfs_legacy_release"
+      ],
+      "review_status": "reviewed_for_prototype",
+      "reviewed_by_role": "author",
+      "reviewed_at": "2026-10-27",
+      "evidence_type": "user_domain_decision",
+      "recorded_by_role": "implementation_agent",
+      "evidence_reference": "Anzeigename aus Quelle; frühere Namen/Aliasse erhalten: Tagestreff Oase"
+    },
+    {
+      "id": "validator_ablation_12",
+      "decision_type": "override",
+      "affected_source_ids": [
+        "12"
+      ],
+      "reason": "Fachentscheidung der Nutzerin, 27.10.2026, Validator-Ablationstest",
+      "source_reference_ids": [
+        "wfs_legacy_release"
+      ],
+      "review_status": "reviewed_for_prototype",
+      "reviewed_by_role": "author",
+      "reviewed_at": "2026-10-27",
+      "evidence_type": "user_domain_decision",
+      "recorded_by_role": "implementation_agent",
+      "evidence_reference": "Anzeigename aus Quelle; frühere Namen/Aliasse erhalten: Safe-Straßensozialarbeit für Erwachsene - Team Konsum"
+    },
+    {
+      "id": "validator_ablation_13",
+      "decision_type": "override",
+      "affected_source_ids": [
+        "13"
+      ],
+      "reason": "Fachentscheidung der Nutzerin, 27.10.2026, Validator-Ablationstest",
+      "source_reference_ids": [
+        "wfs_legacy_release"
+      ],
+      "review_status": "reviewed_for_prototype",
+      "reviewed_by_role": "author",
+      "reviewed_at": "2026-10-27",
+      "evidence_type": "user_domain_decision",
+      "recorded_by_role": "implementation_agent",
+      "evidence_reference": "Anzeigename aus Quelle; frühere Namen/Aliasse erhalten: Safe-Straßensozialarbeit für Erwachsene - Team Wohnen"
+    },
+    {
+      "id": "validator_ablation_21",
+      "decision_type": "override",
+      "affected_source_ids": [
+        "21"
+      ],
+      "reason": "Fachentscheidung der Nutzerin, 27.10.2026, Validator-Ablationstest",
+      "source_reference_ids": [
+        "wfs_legacy_release"
+      ],
+      "review_status": "reviewed_for_prototype",
+      "reviewed_by_role": "author",
+      "reviewed_at": "2026-10-27",
+      "evidence_type": "user_domain_decision",
+      "recorded_by_role": "implementation_agent",
+      "evidence_reference": "Mobiler Hilfebus: Büroanschrift/Geometrie nicht als Hilfeort projizieren; Telefonrollen und Sonntagsstand bleiben belegt."
     }
   ]
 }

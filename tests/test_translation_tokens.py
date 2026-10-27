@@ -38,20 +38,20 @@ def _replace(fields: TranslationFields, old: str, new: str) -> TranslationFields
 
 def test_mask_and_restore_protects_all_required_token_classes(tmp_path) -> None:
     short = (
-        "Rücke und Scharni nennen Mobile, Kübel und Helene. "
+        "Rücke und Übernachtungshaus für wohnungslose Frauen nennen Mobile, Kübel und Helene. "
         "Kontakt: 0341 123456, team@example.org, https://example.org/hilfe."
     )
     services = [
         "Die Nutzung kostet 0,50 Euro oder 2,00 € (heute 12:30).",
         "Treff am 03.08.2026 in der Georg-Schumann-Str. 268, 04159 Leipzig.",
-        "Rücke-Rücke\nScharni.",
+        "Rücke-Rücke\nÜbernachtungshaus für wohnungslose Frauen.",
     ]
     offer = _offer(tmp_path, short_description=short, services=services)
     offer = offer.model_copy(
         update={
             "display_name": "Helene",
             "organization_aliases": ["Rücke", "Mobile", "Kübel"],
-            "offer_aliases": ["Scharni"],
+            "offer_aliases": ["Übernachtungshaus für wohnungslose Frauen"],
             "address": "Georg-Schumann-Str. 268, 04159 Leipzig",
             "phone_numbers": ["0341 123456"],
             "emails": ["team@example.org"],
@@ -70,7 +70,7 @@ def test_mask_and_restore_protects_all_required_token_classes(tmp_path) -> None:
         "team@example.org",
         "https://example.org/hilfe",
         "Rücke",
-        "Scharni",
+        "Übernachtungshaus für wohnungslose Frauen",
         "Mobile",
         "Kübel",
         "Helene",

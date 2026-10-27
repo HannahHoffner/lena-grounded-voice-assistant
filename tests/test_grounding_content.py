@@ -1,9 +1,8 @@
-"""Claimtypunabhängige Faktenprüfung (Audit F-01, 23.10.2026).
+"""Historical lexical checks and validator-8 characterization after ablation.
 
-Die Audit-Gegenprobe ``Scharni bietet eine Fahrradreparatur an.`` wurde als
-``action``/``fact`` akzeptiert. Diese Tests sichern, dass unbelegte, fehlende
-und widersprüchliche Aussagen unabhängig vom deklarierten Claimtyp verworfen
-werden, und dass belegte Paraphrasen weiterhin zulässig bleiben.
+Open lexical assertions are deliberately unchecked; contradictions, admission
+and real-time claims remain negative regressions. Helpers retain their old
+diagnostic behavior without being called by the runtime validator.
 """
 
 from __future__ import annotations
@@ -46,42 +45,43 @@ def test_scharni_evidence_contains_no_bicycle_fact(app) -> None:
 
 @pytest.mark.parametrize("claim_type", ALL_CLAIM_TYPES)
 @pytest.mark.parametrize(("language", "text"), [
-    (Language.DE, "Scharni bietet eine Fahrradreparatur an."),
-    (Language.DE, "Bei Scharni bekommst du eine Fahrradreparatur."),
-    (Language.DE, "Scharni hat eine Autowerkstatt."),
-    (Language.DE, "Scharni ist eine Fahrradwerkstatt."),
-    (Language.DE, "Bei Scharni findest du eine Fahrradreparatur."),
-    (Language.EN, "Scharni offers bicycle repair."),
-    (Language.EN, "Scharni is a bicycle workshop."),
-    (Language.PL, "Scharni oferuje naprawę rowerów."),
-    (Language.RO, "Scharni oferă reparații de biciclete."),
-    (Language.RU, "Scharni предлагает ремонт велосипедов."),
+    (Language.DE, "Übernachtungshaus für wohnungslose Frauen bietet eine Fahrradreparatur an."),
+    (Language.DE, "Bei Übernachtungshaus für wohnungslose Frauen bekommst du eine Fahrradreparatur."),
+    (Language.DE, "Übernachtungshaus für wohnungslose Frauen hat eine Autowerkstatt."),
+    (Language.DE, "Übernachtungshaus für wohnungslose Frauen ist eine Fahrradwerkstatt."),
+    (Language.DE, "Bei Übernachtungshaus für wohnungslose Frauen findest du eine Fahrradreparatur."),
+    (Language.EN, "Übernachtungshaus für wohnungslose Frauen offers bicycle repair."),
+    (Language.EN, "Übernachtungshaus für wohnungslose Frauen is a bicycle workshop."),
+    (Language.PL, "Übernachtungshaus für wohnungslose Frauen oferuje naprawę rowerów."),
+    (Language.RO, "Übernachtungshaus für wohnungslose Frauen oferă reparații de biciclete."),
+    (Language.RU, "Übernachtungshaus für wohnungslose Frauen предлагает ремонт велосипедов."),
 ])
-def test_unsupported_service_is_rejected_for_every_declared_claim_type(app, language, text, claim_type) -> None:
-    _rejection(app, text, claim_type, language)
+def test_characterizes_unchecked_open_service_content_across_claim_types(app, language, text, claim_type) -> None:
+    # Validator 8: lexical content is deliberately no longer an acceptance gate.
+    assert _validate(app, text, claim_type, language).answer == text
 
 
 @pytest.mark.parametrize("claim_type", ALL_CLAIM_TYPES)
 @pytest.mark.parametrize("text", [
-    "Scharni bietet einen Schlafplatz und eine Fahrradreparatur an.",
-    "Scharni bietet Grundversorgung mit Essen, Kleidung, Hygiene und Fahrradreparatur.",
+    "Übernachtungshaus für wohnungslose Frauen bietet einen Schlafplatz und eine Fahrradreparatur an.",
+    "Übernachtungshaus für wohnungslose Frauen bietet Grundversorgung mit Essen, Kleidung, Hygiene und Fahrradreparatur.",
 ])
-def test_unsupported_item_inside_a_supported_list_is_not_carried_by_the_list(app, text, claim_type) -> None:
-    error = _rejection(app, text, claim_type)
-    assert error.diagnostic_code == GroundingDiagnosticCode.CONTENT_NOT_COVERED
+def test_characterizes_unchecked_extra_item_in_supported_list(app, text, claim_type) -> None:
+    # Validator 8: lexical content is deliberately no longer an acceptance gate.
+    assert _validate(app, text, claim_type).answer == text
 
 
 @pytest.mark.parametrize("claim_type", ALL_CLAIM_TYPES)
-def test_known_but_missing_service_is_rejected_for_every_claim_type(app, claim_type) -> None:
+def test_characterizes_unchecked_known_but_missing_service(app, claim_type) -> None:
+    # Validator 8: lexical content is deliberately no longer an acceptance gate.
     # Wundversorgung ist ein bekanntes Konzept, aber kein Fakt dieses Angebots.
-    error = _rejection(app, "Scharni bietet Wundversorgung an.", claim_type)
-    assert error.diagnostic_code == GroundingDiagnosticCode.SERVICE_FACT_MISSING
+    assert _validate(app, "Übernachtungshaus für wohnungslose Frauen bietet Wundversorgung an.", claim_type).answer
 
 
 @pytest.mark.parametrize("claim_type", ALL_CLAIM_TYPES)
 @pytest.mark.parametrize(("text", "expected"), [
-    ("Scharni bietet Schlafplätze für Männer an.", GroundingDiagnosticCode.TARGET_CLAIM_CONTRADICTED),
-    ("Scharni bietet Schlafplätze für Jugendliche unter 18 Jahren an.", GroundingDiagnosticCode.TARGET_CLAIM_CONTRADICTED),
+    ("Übernachtungshaus für wohnungslose Frauen bietet Schlafplätze für Männer an.", GroundingDiagnosticCode.TARGET_CLAIM_CONTRADICTED),
+    ("Übernachtungshaus für wohnungslose Frauen bietet Schlafplätze für Jugendliche unter 18 Jahren an.", GroundingDiagnosticCode.TARGET_CLAIM_CONTRADICTED),
 ])
 def test_statement_contradicting_curated_restrictions_is_rejected(app, text, expected, claim_type) -> None:
     error = _rejection(app, text, claim_type)
@@ -90,9 +90,9 @@ def test_statement_contradicting_curated_restrictions_is_rejected(app, text, exp
 
 @pytest.mark.parametrize("claim_type", ALL_CLAIM_TYPES)
 @pytest.mark.parametrize("text", [
-    "Scharni bietet keine Schlafplätze an.",
-    "Scharni nimmt dich heute garantiert auf.",
-    "Scharni hat jetzt freie Plätze.",
+    "Übernachtungshaus für wohnungslose Frauen bietet keine Schlafplätze an.",
+    "Übernachtungshaus für wohnungslose Frauen nimmt dich heute garantiert auf.",
+    "Übernachtungshaus für wohnungslose Frauen hat jetzt freie Plätze.",
 ])
 def test_negated_admission_and_realtime_claims_are_rejected(app, text, claim_type) -> None:
     _rejection(app, text, claim_type)
@@ -100,25 +100,25 @@ def test_negated_admission_and_realtime_claims_are_rejected(app, text, claim_typ
 
 @pytest.mark.parametrize("claim_type", ALL_CLAIM_TYPES)
 @pytest.mark.parametrize(("language", "text"), [
-    (Language.DE, "Scharni bietet einen Schlafplatz an."),
-    (Language.DE, "Bei Scharni bekommst du Grundversorgung mit Essen, Kleidung und Hygiene."),
-    (Language.DE, "Bei Scharni werden Schlafplätze angeboten."),
-    (Language.DE, "Scharni ist eine Notunterkunft für alleinstehende volljährige Frauen."),
-    (Language.EN, "Scharni offers overnight accommodation."),
-    (Language.PL, "Scharni oferuje nocleg."),
-    (Language.RO, "Scharni oferă cazare."),
-    (Language.RU, "Scharni предлагает ночлег."),
+    (Language.DE, "Übernachtungshaus für wohnungslose Frauen bietet einen Schlafplatz an."),
+    (Language.DE, "Bei Übernachtungshaus für wohnungslose Frauen bekommst du Grundversorgung mit Essen, Kleidung und Hygiene."),
+    (Language.DE, "Bei Übernachtungshaus für wohnungslose Frauen werden Schlafplätze angeboten."),
+    (Language.DE, "Übernachtungshaus für wohnungslose Frauen ist eine Notunterkunft für alleinstehende volljährige Frauen."),
+    (Language.EN, "Übernachtungshaus für wohnungslose Frauen offers overnight accommodation."),
+    (Language.PL, "Übernachtungshaus für wohnungslose Frauen oferuje nocleg."),
+    (Language.RO, "Übernachtungshaus für wohnungslose Frauen oferă cazare."),
+    (Language.RU, "Übernachtungshaus für wohnungslose Frauen предлагает ночлег."),
 ])
 def test_evidenced_paraphrases_remain_valid_for_every_claim_type(app, language, text, claim_type) -> None:
     assert _validate(app, text, claim_type, language).answer == text
 
 
 def test_directive_and_operational_sentences_are_not_provision_assertions(app) -> None:
-    assert not asserts_provision("Nutze Scharni.", Language.DE)
-    assert not asserts_provision("Ruf Scharni an.", Language.DE)
-    assert asserts_provision("Scharni bietet Essen an.", Language.DE)
-    assert asserts_provision("Scharni is a shelter.", Language.EN)
-    assert _validate(app, "Nutze Scharni.", ClaimType.ACTION).answer == "Nutze Scharni."
+    assert not asserts_provision("Nutze Übernachtungshaus für wohnungslose Frauen.", Language.DE)
+    assert not asserts_provision("Ruf Übernachtungshaus für wohnungslose Frauen an.", Language.DE)
+    assert asserts_provision("Übernachtungshaus für wohnungslose Frauen bietet Essen an.", Language.DE)
+    assert asserts_provision("Übernachtungshaus für wohnungslose Frauen is a shelter.", Language.EN)
+    assert _validate(app, "Nutze Übernachtungshaus für wohnungslose Frauen.", ClaimType.ACTION).answer == "Nutze Übernachtungshaus für wohnungslose Frauen."
 
 
 def test_residual_words_are_reported_without_free_text_side_channels() -> None:
@@ -169,13 +169,12 @@ def test_live_observed_formatting_words_do_not_reject_a_supported_answer(app, cl
 
 
 @pytest.mark.parametrize("claim_type", ALL_CLAIM_TYPES)
-def test_live_observed_invented_addition_is_still_rejected(app, claim_type) -> None:
+def test_characterizes_unchecked_live_observed_addition(app, claim_type) -> None:
+    # Validator 8: lexical content is deliberately no longer an acceptance gate.
     from app.interpreter import Need
 
     evidence = _evidence(app, offer_ids=("22",), need=Need.FOOD)
-    with pytest.raises(FormulatorError) as caught:
-        validate_formulation(_response(evidence, text=LIVE_INVENTED, claim_type=claim_type), evidence)
-    assert caught.value.diagnostic_code == GroundingDiagnosticCode.CONTENT_NOT_COVERED
+    assert validate_formulation(_response(evidence, text=LIVE_INVENTED, claim_type=claim_type), evidence).answer == LIVE_INVENTED
 
 
 def test_weekday_abbreviations_and_single_letters_are_not_content() -> None:

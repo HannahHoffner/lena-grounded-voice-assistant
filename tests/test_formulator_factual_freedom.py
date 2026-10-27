@@ -17,33 +17,32 @@ from test_formulation import app, _evidence, _fact, _response
 def test_multiple_grounded_sentences_in_one_block_and_false_counterexample(app):
     evidence = _evidence(app)
     address = _fact(evidence, FactType.ADDRESS)
-    response = _response(evidence, text=f"Nutze Scharni. Adresse: {address.value}.")
+    response = _response(evidence, text=f"Nutze Übernachtungshaus für wohnungslose Frauen. Adresse: {address.value}.")
     result = validate_formulation(response, evidence)
     assert result.answer == response.sentences[0].text
     assert "multiple_sentences_in_block" in result.reference_assessment["presentation_observations"]
-    response.sentences[0].text = "Nutze Scharni. Adresse: Fantasiestraße 99999."
+    response.sentences[0].text = "Nutze Übernachtungshaus für wohnungslose Frauen. Adresse: Fantasiestraße 99999."
     with pytest.raises(FormulatorError):
         validate_formulation(response, evidence)
 
 
-def test_longer_grounded_block_is_allowed_but_extra_unsupported_claim_is_not(app):
+def test_characterizes_unchecked_extra_service_in_a_longer_grounded_block(app):
     evidence = _evidence(app)
     address = _fact(evidence, FactType.ADDRESS).value
     phone = _fact(evidence, FactType.PHONE).value
     hours = _fact(evidence, FactType.OPENING_TIME).value
-    text = ("Nutze Scharni. Scharni bietet einen Schlafplatz und Grundversorgung mit Essen, Kleidung und Hygiene. "
+    text = ("Nutze Übernachtungshaus für wohnungslose Frauen. Übernachtungshaus für wohnungslose Frauen bietet einen Schlafplatz und Grundversorgung mit Essen, Kleidung und Hygiene. "
             f"Adresse: {address}. Telefon: {phone}. Öffnungszeiten: {hours}.")
     assert 220 < len(text) < 550
     response = _response(evidence, text=text)
     assert validate_formulation(response, evidence).answer == text
-    response.sentences[0].text += " Scharni bietet Wundversorgung an."
-    with pytest.raises(FormulatorError):
-        validate_formulation(response, evidence)
+    response.sentences[0].text += " Übernachtungshaus für wohnungslose Frauen bietet Wundversorgung an."
+    assert validate_formulation(response, evidence).answer == response.sentences[0].text  # Deliberately unchecked lexical support.
 
 
 def test_multiple_blocks_share_the_600_character_total_budget(app):
     evidence = _evidence(app)
-    response = _response(evidence, text="Nutze Scharni. " * 30)
+    response = _response(evidence, text="Nutze Übernachtungshaus für wohnungslose Frauen. " * 10)
     response.sentences.append(response.sentences[0].model_copy())
     with pytest.raises(FormulatorError, match="formulator_contract_violation"):
         validate_formulation(response, evidence)
@@ -52,7 +51,7 @@ def test_multiple_blocks_share_the_600_character_total_budget(app):
 def test_grounded_fact_can_answer_first_without_forced_action(app):
     evidence = _evidence(app)
     address = _fact(evidence, FactType.ADDRESS)
-    response = _response(evidence, text=f"Scharni: {address.value}", claim_type=ClaimType.FACT)
+    response = _response(evidence, text=f"Übernachtungshaus für wohnungslose Frauen: {address.value}", claim_type=ClaimType.FACT)
     assert validate_formulation(response, evidence).answer == response.sentences[0].text
 
 

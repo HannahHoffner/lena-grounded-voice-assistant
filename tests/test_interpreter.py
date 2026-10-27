@@ -738,7 +738,7 @@ def test_curated_alias_inventory_is_id_free_and_preserves_ambiguity() -> None:
     app = create_app(_settings("template"))
     aliases = {item.alias: item for item in app.state.service.interpreter_aliases}
 
-    for name in ("Rücke", "Scharni", "Scharnhorst", "A1", "Schoppi", "Mobile", "Kübel", "Südpol", "Helene"):
+    for name in ("Rücke", "Übernachtungshaus für wohnungslose Frauen", "Scharnhorst", "A1", "Schoppi", "Mobile", "Kübel", "Südpol", "Helene"):
         assert name in aliases
     assert aliases["Schoppi"].alias_kind == "organization"
     assert aliases["Schoppi"].may_refer_to_multiple_services is True
@@ -877,7 +877,7 @@ def test_out_of_scope_interpretation_uses_fixed_domain_boundary() -> None:
             json={"query": query, "language": "de"},
         ).json()
         assert response["provider"] == "template"
-        assert response["cards"] == []
+        assert [card["id"] for card in response["cards"]] == ["21"]
 
 
 def test_schoppi_alias_uses_need_without_guessing_when_ambiguous() -> None:
@@ -916,7 +916,7 @@ def test_schoppi_alias_uses_need_without_guessing_when_ambiguous() -> None:
         "/api/query",
         json={"query": "Ich möchte zu Schoppi schlafen.", "language": "de"},
     ).json()
-    assert [card["id"] for card in sleeping["cards"]] == ["6"]
+    assert [card["id"] for card in sleeping["cards"]] == ["6", "21"]
     assert sleeping["status"] == "ok"
 
 
@@ -946,7 +946,7 @@ def test_kuebel_alias_never_guesses_a_team_but_gruenau_can_narrow_it() -> None:
 
     assert ambiguous["cards"] == []
     assert ambiguous["status"] == "no_results"
-    assert [card["id"] for card in narrowed["cards"]] == ["19.2"]
+    assert [card["id"] for card in narrowed["cards"]] == ["19.2", "21"]
 
 
 def test_generic_lowercase_mobile_help_is_not_treated_as_organization_alias() -> None:

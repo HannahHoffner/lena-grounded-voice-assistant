@@ -148,9 +148,9 @@ def test_leipziger_oase_is_offer_name_without_renaming_diakonie(curated_kb) -> N
     runtime_streetwork = curated_kb.by_id()["14"]
     source_oase = load_knowledge_base(SOURCE_PATH).by_id()["10"]
 
-    assert configured["10"].display_name == "Leipziger Oase"
+    assert configured["10"].display_name == "Tagestreff Oase"
     assert organizations["diakonie_leipzig"].display_name == "Diakonie Leipzig"
-    assert runtime_oase.name == runtime_oase.display_name == "Leipziger Oase"
+    assert runtime_oase.name == runtime_oase.display_name == "Tagestreff Oase"
     assert runtime_streetwork.name == runtime_streetwork.display_name == "Diakonie Leipzig"
     assert source_oase.name == "Diakonisches Werk Innere Mission Leipzig e. V. Leipziger Oase"
     assert source_oase.display_name is None
@@ -161,24 +161,24 @@ def test_leipziger_oase_is_offer_name_without_renaming_diakonie(curated_kb) -> N
         (hint.alias, hint.alias_kind): hint
         for hint in interpreter_alias_hints(curated_kb.offers, curated_kb.organization_aliases)
     }
-    assert hints[("Leipziger Oase", "offer")].may_refer_to_multiple_services is False
+    assert hints[("Tagestreff Oase", "offer")].may_refer_to_multiple_services is False
     context = build_selection_context(
-        query="Wo ist die Leipziger Oase?",
+        query="Wo ist die Tagestreff Oase?",
         interpretation=_interpretation(Need.GENERAL_HELP, in_scope=True),
         offers=curated_kb.offers,
         organization_aliases=curated_kb.organization_aliases,
         ui_category=None,
     )
     assert context.alias is not None
-    assert context.alias.alias == "Leipziger Oase"
+    assert context.alias.alias == "Tagestreff Oase"
     assert context.alias.alias_kind == "offer"
     assert context.alias.offer_ids == ["10"]
 
     map_data = build_map_data([runtime_oase], language=Language.DE)
     assert map_data is not None
-    assert map_data.destinations[0].label == "Leipziger Oase"
+    assert map_data.destinations[0].label == "Tagestreff Oase"
     evidence = build_formulator_evidence(
-        query="Was gibt es in der Leipziger Oase?",
+        query="Was gibt es in der Tagestreff Oase?",
         language=Language.DE,
         answer_type=AnswerType.GROUNDED_RESULT,
         need=Need.GENERAL_HELP,
@@ -190,7 +190,7 @@ def test_leipziger_oase_is_offer_name_without_renaming_diakonie(curated_kb) -> N
         for fact in evidence.selected_offers[0].facts
         if fact.fact_type == FactType.DISPLAY_NAME
     ]
-    assert display_names == ["Leipziger Oase"]
+    assert display_names == ["Tagestreff Oase"]
 
 
 def test_organization_aliases_cover_all_related_offers(curated_kb) -> None:
@@ -271,7 +271,7 @@ def test_alternative_i_sleep_need_without_drug_fact_stays_conditional(tmp_path: 
         "/api/query", json={"query": query, "language": "de"}
     )
     assert response.status_code == 200
-    assert [card["id"] for card in response.json()["cards"]] == ["6"]
+    assert [card["id"] for card in response.json()["cards"]] == ["6", "21"]
     assert "Zugangsbedingungen" in response.json()["answer"]
     assert response.json()["status"] == "ok"
 
@@ -290,7 +290,7 @@ def test_alternative_i_day_need_without_drug_fact_stays_conditional(tmp_path: Pa
         "/api/query", json={"query": query, "language": "de"}
     )
     assert response.status_code == 200
-    assert [card["id"] for card in response.json()["cards"]] == ["11"]
+    assert [card["id"] for card in response.json()["cards"]] == ["11", "21"]
     assert response.json()["status"] == "ok"
 
 
@@ -328,7 +328,7 @@ def test_scharni_runtime_override_preserves_immutable_wfs_address(curated_kb) ->
     assert source.phone_numbers == ["0341 5852413"]
     assert source.raw_properties["adr"] == "Scharnhorststr. 27, 04275 Leipzig"
     assert runtime.address == "Georg-Schumann-Str. 268, 04159 Leipzig"
-    assert runtime.name == "Scharni"
+    assert runtime.name == "Übernachtungshaus für wohnungslose Frauen"
     assert runtime.phone_numbers == ["0341 420920-0"]
     assert runtime.emails == ["uebernachtungshaus@aww.info"]
     assert runtime.raw_properties == source.raw_properties
@@ -350,7 +350,7 @@ def test_scharni_runtime_override_preserves_immutable_wfs_address(curated_kb) ->
         TranslationRuntimePolicy.REVIEWED_OR_MACHINE,
     )
     assert localized.services == ["Sleeping place", "Basic provision of food, clothing and hygiene", "Social support"]
-    assert localized.name == "Scharni"
+    assert localized.name == "Übernachtungshaus für wohnungslose Frauen"
 
     map_data = build_map_data([runtime], language=Language.DE)
     assert map_data is not None
@@ -619,7 +619,7 @@ def test_changed_runtime_fingerprint_blocks_stale_history_before_router(
         runtime_kb_fingerprint="old-runtime-fingerprint",
         turns=[
             ChatTurn(
-                question="Scharni",
+                question="Übernachtungshaus für wohnungslose Frauen",
                 answer="Scharnhorststr. 27 und Sozialamt-ID 1",
             )
         ],

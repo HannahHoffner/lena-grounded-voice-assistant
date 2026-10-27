@@ -453,8 +453,9 @@ def test_domain_paths_reach_selector_only_after_deterministic_evidence() -> None
         ),
         query="Schoppi Wundversorgung",
     )
-    assert [item.offer_id for item in wound.mandatory_candidates] == ["11"]
-    assert bypass_outcome(wound, selector_available=True, interpreter_succeeded=True).selection_source == SelectionSource.MANDATORY_ONLY
+    assert not wound.mandatory_candidates
+    assert {item.offer_id for item in wound.selectable_candidates} == {"6", "11"}
+    assert bypass_outcome(wound, selector_available=True, interpreter_succeeded=True) is None
 
     ordinary_sleep = decision(interpretation(Need.SLEEP, age=30, gender="male"))
     assert "23" not in {item.offer_id for item in ordinary_sleep.candidates}
@@ -565,8 +566,8 @@ def test_service_passes_only_validated_food_selection_to_formulator() -> None:
     # Reihenfolge herstellt (siehe app/result_ordering.py).
     assert captured["formulator_ids"] == captured["expected_order"]
     assert not set(captured["formulator_ids"]).intersection(captured["conditional"])
-    assert captured["evidence"].evidence_version == "4"
-    assert [card["id"] for card in body["cards"]] == captured["expected_order"]
+    assert captured["evidence"].evidence_version == "5"
+    assert [card["id"] for card in body["cards"]] == captured["expected_order"] + ["21"]
 
 
 def test_safety_and_out_of_scope_stop_before_selector() -> None:
@@ -592,5 +593,5 @@ def test_safety_and_out_of_scope_stop_before_selector() -> None:
     client = TestClient(app)
     assert client.post("/api/query", json={"query": "Akute Gefahr"}).json()["cards"] == []
     provider.risk = False
-    assert client.post("/api/query", json={"query": "Wetter"}).json()["cards"] == []
+    assert [card["id"] for card in client.post("/api/query", json={"query": "Wetter"}).json()["cards"]] == ["21"]
     assert calls["selector"] == 0

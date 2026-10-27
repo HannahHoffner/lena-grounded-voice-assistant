@@ -110,8 +110,8 @@ def _recorded_cabl_response(app):
     address = _fact(evidence, FactType.ADDRESS)
     phone = _fact(evidence, FactType.PHONE)
     assert [name.fact_id, counselling.fact_id, voucher.fact_id, address.fact_id, phone.fact_id] == [
-        "f_abe67692e2acf7bf", "f_4b7b1e78895ebd88", "f_f1cdef575c862948",
-        "f_029ebb4769e4af84", "f_ca3a05181035f441",
+        "f_d71f6620338f3195", "f_19b2332859b89320", "f_2e5506d66dc3525a",
+        "f_4bdb53d5547001cb", "f_4e92534cc311bcd2",
     ]
     response = _answer(evidence,
         ("Contactează „CABL”.", ClaimType.REFERRAL, "24", [name.fact_id]),
@@ -155,10 +155,10 @@ def test_coordinated_romanian_counterexamples_are_rejected(app, mutation):
     evidence, response = _recorded_cabl_response(app)
     sentence = response.sentences[1]
     if mutation == "missing_citation":
-        sentence.fact_ids.remove("f_f1cdef575c862948")
+        sentence.fact_ids.remove("f_2e5506d66dc3525a")
         assert validate_formulation(response, evidence).sentence_count == 3
         evidence.selected_offers[0].facts = [f for f in evidence.selected_offers[0].facts
-                                            if f.fact_id != "f_f1cdef575c862948"]
+                                            if f.fact_id != "f_2e5506d66dc3525a"]
     elif mutation == "negated_service":
         sentence.text = "Nu " + sentence.text
     elif mutation == "additional_negation":

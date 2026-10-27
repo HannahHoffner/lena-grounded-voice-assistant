@@ -58,8 +58,8 @@ def test_bounded_unknown_answers_need_no_invented_fact_reference(language, famil
     assert "500" not in result.answer
 
 
-@pytest.mark.parametrize("text", ["Scharni repariert Fahrräder.", "Bei Scharni ist Fahrradreparatur möglich.",
-    "Scharni hilft bei der Steuererklärung.", "Scharni nimmt dich heute garantiert auf."])
+@pytest.mark.parametrize("text", ["Übernachtungshaus für wohnungslose Frauen repariert Fahrräder.", "Bei Übernachtungshaus für wohnungslose Frauen ist Fahrradreparatur möglich.",
+    "Übernachtungshaus für wohnungslose Frauen hilft bei der Steuererklärung.", "Übernachtungshaus für wohnungslose Frauen nimmt dich heute garantiert auf."])
 def test_arbitrary_paraphrases_cannot_enter_any_answer_act(text):
     evidence = packet()
     for act in ("facts", "contact", "unknown", "boundary"):

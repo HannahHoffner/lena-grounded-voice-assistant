@@ -158,12 +158,12 @@ def _interpretation(need: Need) -> QueryInterpretation:
 
 def test_versions_prompt_and_health_are_observable(app) -> None:
     health = TestClient(app).get("/api/health").json()
-    assert EVIDENCE_CONTRACT_VERSION == "4"
+    assert EVIDENCE_CONTRACT_VERSION == "5"
     assert FORMULATOR_CONTRACT_VERSION == "5"
     assert FORMULATOR_PROMPT_VERSION == "22"
-    assert health["evidence_contract_version"] == "4"
+    assert health["evidence_contract_version"] == "5"
     assert health["formulator_contract_version"] == "7"
-    assert health["formulator_prompt_version"] == "25"
+    assert health["formulator_prompt_version"] == "26"
     assert health["llm_request_budget_seconds"] == 45.0
     for rule in (
         "Use only EVIDENCE facts",
@@ -298,6 +298,7 @@ def test_evidence_is_a_positive_list_for_only_final_runtime_offers(app) -> None:
     evidence = _evidence(app, offer_ids=("7", "8"), mandatory_ids={"7"})
     payload = evidence.model_dump(mode="json")
     assert set(payload) == {
+        "max_answer_chars",
         "evidence_version",
         "prompt_version",
         "requested_language",
@@ -342,11 +343,11 @@ def test_all_runtime_offers_have_opaque_unique_facts_and_exclude_social_office(a
 @pytest.mark.parametrize(
     ("language", "text"),
     [
-        (Language.DE, "Geh zu Scharni."),
-        (Language.EN, "Go to Scharni."),
-        (Language.PL, "Idź do Scharni."),
-        (Language.RO, "Mergi la Scharni."),
-        (Language.RU, "Обратись в Scharni."),
+        (Language.DE, "Geh zu Übernachtungshaus für wohnungslose Frauen."),
+        (Language.EN, "Go to Übernachtungshaus für wohnungslose Frauen."),
+        (Language.PL, "Idź do Übernachtungshaus für wohnungslose Frauen."),
+        (Language.RO, "Mergi la Übernachtungshaus für wohnungslose Frauen."),
+        (Language.RU, "Обратись в Übernachtungshaus für wohnungslose Frauen."),
     ],
 )
 def test_grounded_short_answer_in_all_languages(app, language: Language, text: str) -> None:
@@ -375,7 +376,7 @@ def test_curated_phone_name_and_price_format_must_remain_exact(app) -> None:
     phone = _fact(scharni, FactType.PHONE)
     changed_phone = _response(
         scharni,
-        text="Ruf Scharni unter 0341 420920 0 an.",
+        text="Ruf Übernachtungshaus für wohnungslose Frauen unter 0341 420920 0 an.",
         fact_ids=[name.fact_id, phone.fact_id],
     )
     with pytest.raises(FormulatorError, match="formulator_ungrounded_claim"):
@@ -466,7 +467,7 @@ def test_offer_name_containing_menschen_is_not_treated_as_target_assertion(app) 
 def test_target_assertion_still_rejects_real_gender_and_age_claims(app) -> None:
     """Die Praezisierung darf echte Zielgruppenbehauptungen nicht durchlassen."""
     evidence = _evidence(app)
-    for text in ("Scharni ist für Männer.", "Scharni ist nur für Erwachsene."):
+    for text in ("Übernachtungshaus für wohnungslose Frauen ist für Männer.", "Übernachtungshaus für wohnungslose Frauen ist nur für Erwachsene."):
         if "Erwachsene" in text:
             # Under contract 3 adulthood is supported without a citation;
             # absence of evidence, not absence of a citation, is the negative case.
@@ -496,33 +497,37 @@ def test_impersonal_pronoun_man_does_not_trigger_target_assertion(app) -> None:
 @pytest.mark.parametrize(
     ("text", "code"),
     [
-        ("Geh zu Scharni in der Scharnhorststr. 27.", "formulator_ungrounded_claim"),
-        ("Ruf Scharni unter 0341 99999999 an.", "formulator_ungrounded_claim"),
-        ("Scharni ist jetzt geöffnet.", "formulator_ungrounded_claim"),
-        ("Scharni hat freie Plätze.", "formulator_ungrounded_claim"),
-        ("Scharni bietet Wundversorgung an.", "formulator_ungrounded_claim"),
-        ("Scharni ist für Männer.", "formulator_ungrounded_claim"),
-        ("Geh zu Scharni unter https://erfunden.example.", "formulator_ungrounded_claim"),
-        ("Geh zu Scharni um 23:59.", "formulator_ungrounded_claim"),
-        ("Geh zu Scharni, Angebot ID 8.", "formulator_contract_violation"),
-        ("<script>Geh zu Scharni.</script>", "formulator_contract_violation"),
-        ("**Geh zu Scharni.**", "formulator_contract_violation"),
+        ("Geh zu Übernachtungshaus für wohnungslose Frauen in der Scharnhorststr. 27.", "formulator_ungrounded_claim"),
+        ("Ruf Übernachtungshaus für wohnungslose Frauen unter 0341 99999999 an.", "formulator_ungrounded_claim"),
+        ("Übernachtungshaus für wohnungslose Frauen ist jetzt geöffnet.", "formulator_ungrounded_claim"),
+        ("Übernachtungshaus für wohnungslose Frauen hat freie Plätze.", "formulator_ungrounded_claim"),
+        ("Übernachtungshaus für wohnungslose Frauen bietet Wundversorgung an.", "formulator_ungrounded_claim"),
+        ("Übernachtungshaus für wohnungslose Frauen ist für Männer.", "formulator_ungrounded_claim"),
+        ("Geh zu Übernachtungshaus für wohnungslose Frauen unter https://erfunden.example.", "formulator_ungrounded_claim"),
+        ("Geh zu Übernachtungshaus für wohnungslose Frauen um 23:59.", "formulator_ungrounded_claim"),
+        ("Geh zu Übernachtungshaus für wohnungslose Frauen, Angebot ID 8.", "formulator_contract_violation"),
+        ("<script>Geh zu Übernachtungshaus für wohnungslose Frauen.</script>", "formulator_contract_violation"),
+        ("**Geh zu Übernachtungshaus für wohnungslose Frauen.**", "formulator_contract_violation"),
     ],
 )
 def test_ungrounded_and_contract_attacks_are_rejected(app, text: str, code: str) -> None:
     evidence = _evidence(app)
-    with pytest.raises(FormulatorError, match=code):
-        validate_formulation(_response(evidence, text=text), evidence)
+    if text == "Übernachtungshaus für wohnungslose Frauen bietet Wundversorgung an.":
+        # Characterization of deliberately unchecked lexical service support.
+        assert validate_formulation(_response(evidence, text=text), evidence).answer == text
+    else:
+        with pytest.raises(FormulatorError, match=code):
+            validate_formulation(_response(evidence, text=text), evidence)
 
 
 def test_unknown_or_cross_offer_fact_is_rejected_atomically(app) -> None:
     evidence = _evidence(app, offer_ids=("8", "10"))
     unknown = "f_0000000000000000"
     with pytest.raises(FormulatorError, match="formulator_invalid_fact"):
-        validate_formulation(_response(evidence, text="Geh zu Scharni.", fact_ids=[unknown]), evidence)
+        validate_formulation(_response(evidence, text="Geh zu Übernachtungshaus für wohnungslose Frauen.", fact_ids=[unknown]), evidence)
     other_name = _fact(evidence, FactType.DISPLAY_NAME, offer_id="10")
     with pytest.raises(FormulatorError, match="formulator_invalid_fact"):
-        validate_formulation(_response(evidence, text="Geh zu Scharni.", fact_ids=[other_name.fact_id]), evidence)
+        validate_formulation(_response(evidence, text="Geh zu Übernachtungshaus für wohnungslose Frauen.", fact_ids=[other_name.fact_id]), evidence)
 
 
 def test_referral_contact_cannot_be_claimed_as_direct_service(app) -> None:
@@ -558,7 +563,7 @@ def test_cards_are_limited_to_evidence_and_deterministic_order(app) -> None:
     evidence = _evidence(app, offer_ids=("8", "10"), mandatory_ids={"8"})
     response = _response(
         evidence,
-        text="Geh zu Scharni.",
+        text="Geh zu Übernachtungshaus für wohnungslose Frauen.",
         offer_id="8",
         card_ids=["10", "8"],
     )
@@ -731,10 +736,10 @@ def test_service_out_of_scope_formulator_gets_no_offer_data(app) -> None:
         BindingPolicy.NO_WORLD_KNOWLEDGE,
     }
     assert response.provider == "blablador"
-    assert response.cards == []
+    assert [card.id for card in response.cards] == ["21"]
 
 
-def test_hilfebus_formulation_uses_only_curated_referral_evidence(app) -> None:
+def test_hilfebus_contact_is_deterministic_without_formulator_call(app) -> None:
     service = app.state.service
     original = service.blablador
     captured = {}
@@ -766,14 +771,7 @@ def test_hilfebus_formulation_uses_only_curated_referral_evidence(app) -> None:
     finally:
         service.blablador = original
 
-    offer = captured["evidence"].selected_offers[0]
-    assert offer.offer_id == "21"
-    assert offer.candidate_role == CandidateRole.REFERRAL_CONTACT.value
-    assert any(fact.fact_type == FactType.PHONE for fact in offer.facts)
-    assert any(fact.fact_type in {FactType.STAND_TIME, FactType.OPENING_TIME} for fact in offer.facts)
-    assert {fact.fact_type for fact in offer.facts}.issubset(
-        {FactType.DISPLAY_NAME, FactType.PHONE, FactType.STAND_TIME, FactType.OPENING_TIME}
-    )
+    assert captured == {}  # The fixed hint is attached by QueryService.query.
     assert response.cards[0].id == "21"
 
 
@@ -809,21 +807,21 @@ def test_response_schema_rejects_extra_fields_and_more_than_three_sentences() ->
 def test_wrong_language_and_mixed_script_are_rejected(app) -> None:
     ru = _evidence(app, language=Language.RU)
     with pytest.raises(FormulatorError, match="formulator_invalid_language"):
-        validate_formulation(_response(ru, text="Go to Scharni."), ru)
+        validate_formulation(_response(ru, text="Go to Übernachtungshaus für wohnungslose Frauen."), ru)
     ro = _evidence(app, language=Language.RO)
     with pytest.raises(FormulatorError, match="formulator_invalid_language"):
-        validate_formulation(_response(ro, text="Mergi la Scharni сейчас."), ro)
+        validate_formulation(_response(ro, text="Mergi la Übernachtungshaus für wohnungslose Frauen сейчас."), ro)
 
 
 @pytest.mark.parametrize(
     ("language", "text"),
     [
-        (Language.PL, "Idź do Scharni, für Hilfe."),
-        (Language.RO, "Mergi la Scharni für Hilfe."),
-        (Language.DE, "Geh zu Scharni, proszę."),
-        (Language.DE, "Geh zu Scharni, mulțumesc."),
-        (Language.EN, "Go to Scharni für Hilfe."),
-        (Language.EN, "Go to Scharni, proszę."),
+        (Language.PL, "Idź do Übernachtungshaus für wohnungslose Frauen, für Hilfe."),
+        (Language.RO, "Mergi la Übernachtungshaus für wohnungslose Frauen für Hilfe."),
+        (Language.DE, "Geh zu Übernachtungshaus für wohnungslose Frauen, proszę."),
+        (Language.DE, "Geh zu Übernachtungshaus für wohnungslose Frauen, mulțumesc."),
+        (Language.EN, "Go to Übernachtungshaus für wohnungslose Frauen für Hilfe."),
+        (Language.EN, "Go to Übernachtungshaus für wohnungslose Frauen, proszę."),
     ],
 )
 def test_latin_script_language_mismatch_is_rejected(app, language: Language, text: str) -> None:
@@ -845,7 +843,7 @@ def test_provider_requires_pure_json_and_exact_language(app, monkeypatch: pytest
         asyncio.run(provider.formulate_answer(evidence=evidence))
 
     from test_formulator_prose import current
-    response = current(_response(evidence, text="Ask Scharni.", language=Language.EN))
+    response = current(_response(evidence, text="Ask Übernachtungshaus für wohnungslose Frauen.", language=Language.EN))
 
     async def wrong_language(_: dict) -> dict:
         return {"choices": [{"message": {"content": response.model_dump_json()}}]}
@@ -884,7 +882,7 @@ def test_provider_rejects_a_schema_valid_but_unknown_fact_reference(app, monkeyp
     provider = BlabladorProvider(_settings("blablador"))
     evidence = _evidence(app)
     from test_formulator_prose import current
-    response = current(_response(evidence, text="Frage bei Scharni nach."))
+    response = current(_response(evidence, text="Frage bei Übernachtungshaus für wohnungslose Frauen nach."))
     response.sentences[0].fact_ids = ["f_0000000000000000"]
 
     async def model_response(_: dict) -> dict:
@@ -935,11 +933,11 @@ def test_retry_instruction_rejects_free_text(untrusted) -> None:
 
 @pytest.mark.parametrize(
     ("language", "text"),
-    [(Language.DE, "Nutze Scharni für Frauen."),
-     (Language.EN, "Use Scharni for women."),
-     (Language.PL, "Skorzystaj z Scharni dla kobiet."),
-     (Language.RO, "Folosește Scharni pentru femei."),
-     (Language.RU, "Используй Scharni для женщин.")],
+    [(Language.DE, "Nutze Übernachtungshaus für wohnungslose Frauen für Frauen."),
+     (Language.EN, "Use Übernachtungshaus für wohnungslose Frauen for women."),
+     (Language.PL, "Skorzystaj z Übernachtungshaus für wohnungslose Frauen dla kobiet."),
+     (Language.RO, "Folosește Übernachtungshaus für wohnungslose Frauen pentru femei."),
+     (Language.RU, "Используй Übernachtungshaus für wohnungslose Frauen для женщин.")],
 )
 def test_localized_description_establishes_the_target_group(app, language, text) -> None:
     """Der Inhalt muss belegt sein, nicht die Position einer Fakt-ID.
@@ -981,9 +979,8 @@ def test_referral_and_full_phone_contract_across_languages(app, language, prefix
     # Kein fester erster Claimtyp; ein service-Block ohne inhaltlichen
     # Leistungs-/Zielgruppenbeleg oder belegten operativen Inhalt bleibt ungültig.
     response.sentences[0].claim_type = ClaimType.SERVICE
-    with pytest.raises(FormulatorError) as captured:
-        validate_formulation(response, evidence)
-    assert captured.value.diagnostic_code == GroundingDiagnosticCode.SERVICE_FACT_MISSING
+    # Characterization: NOT_CHECKED no longer rejects a contact sentence.
+    assert validate_formulation(response, evidence).answer == text
     response.sentences[0].claim_type = ClaimType.REFERRAL
     for phone in [f for f in evidence.selected_offers[0].facts if f.fact_type == FactType.PHONE]:
         assert " (" in phone.value  # Fixture covers both labels and operational restrictions.
@@ -1003,7 +1000,7 @@ def test_referral_and_full_phone_contract_across_languages(app, language, prefix
 def test_contradicted_gender_is_reported_separately_from_missing_evidence(app) -> None:
     """Ein Widerspruch ist etwas anderes als eine unentscheidbare Aussage."""
     evidence = _evidence(app, language=Language.EN)
-    response = _response(evidence, text="Use Scharni for men.", fact_ids=[
+    response = _response(evidence, text="Use Übernachtungshaus für wohnungslose Frauen for men.", fact_ids=[
         _fact(evidence, FactType.DISPLAY_NAME).fact_id,
         _fact(evidence, FactType.ELIGIBLE_GENDER, contains="female").fact_id,
     ])
@@ -1041,7 +1038,7 @@ def test_real_provider_retry_gets_only_closed_feedback_and_revalidates(
     good = current(_response(evidence, text=f"Ask {offer.display_name}."))
     bad = good.model_dump(mode="json")
     if failure == "target":
-        bad["sentences"][0]["text"] = "Scharni offers accommodation for men."
+        bad["sentences"][0]["text"] = "Übernachtungshaus für wohnungslose Frauen offers accommodation for men."
         diagnostic = GroundingDiagnosticCode.TARGET_CLAIM_CONTRADICTED
         error_code = "formulator_ungrounded_claim"
     elif failure == "phone":
@@ -1239,7 +1236,7 @@ def test_tts_rejects_an_older_answer_after_a_new_session_turn(app) -> None:
     [
         # Satzinitial mit vorausgehendem Satz: mehrdeutig, daher nicht entscheidend.
         ("Melde dich bei Rücke. Sie bieten Übernachtungen an.", False),
-        ("Geh zu Scharni. Ihr Angebot ist kostenlos.", False),
+        ("Geh zu Übernachtungshaus für wohnungslose Frauen. Ihr Angebot ist kostenlos.", False),
         # Ohne vorausgehenden Satz gibt es keinen Bezug: Höflichkeitsform.
         ("Sie erhalten dort Hilfe.", True),
         ("Ihr Team hilft dir.", True),

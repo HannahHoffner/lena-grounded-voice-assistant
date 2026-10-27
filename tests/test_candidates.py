@@ -90,6 +90,21 @@ def conditional_ids(decision: CandidateDecision) -> list[str]:
     return [item.offer_id for item in decision.conditional_candidates]
 
 
+@pytest.mark.parametrize("language,query", [
+    ("de", "Ich habe eine Wunde am Bein und brauche Versorgung"),
+    ("en", "I have a wound on my leg and need care"),
+    ("pl", "Mam ranę na nodze i potrzebuję pomocy"),
+    ("ro", "Am o rană la picior și am nevoie de îngrijire"),
+    ("ru", "У меня рана на ноге, мне нужна помощь"),
+])
+def test_wound_care_includes_medical_care_and_access_without_inferring_drug_use(language, query):
+    result = decide(interpretation(Need.MEDICAL, services=[RequestedService.WOUND_CARE], language=language), query=query)
+    assert result.selection_status == SelectionStatus.CANDIDATES_AVAILABLE
+    assert {"10", "24", "25"} <= set(ids(result))
+    assert "11" not in ids(result)  # FR-04: no inferred drug use for A1.
+    assert {"7", "23"} <= set(conditional_ids(result))
+
+
 def test_runtime_taxonomy_is_complete_strict_and_excludes_social_office_records() -> None:
     assert len(OFFERS) == 28
     assert not {"1", "2", "3", "4"}.intersection(offer.id for offer in OFFERS)
@@ -501,7 +516,7 @@ def test_medical_distinguishes_care_access_and_mobile_schedule() -> None:
     saturday = decide(interpretation(Need.MEDICAL, day="saturday"))
     assert "25" not in ids(saturday)
     wound = decide(interpretation(Need.MEDICAL, services=[RequestedService.WOUND_CARE], age=30, drug_use="yes"))
-    assert ids(wound) == ["11"]
+    assert set(ids(wound)) == {"5", "6", "10", "11", "15", "24", "25"}
 
 
 def test_alternative_three_requires_explicit_drug_use_and_proven_sleep_capability() -> None:

@@ -1,6 +1,6 @@
 # Umsetzung des LENA-Audits
 
-### Abschließende Prüfung dieses Textvertrags
+### Historische Abschlussprüfung: Textvertrag vor der Ablation, 26.10.2026
 
 - Python vollständig nativ: **1521 bestanden, 1 bekannter strikter XFAIL,
   1 bekannte TestClient-DeprecationWarning**, 413.21 s.
@@ -23,7 +23,14 @@ Belege extern: `native-final.xml`, `native-final.log`, `docker-build-final.log`,
 `%LOCALAPPDATA%/LENA/verification/2026-10-26-model-prose`.
 Keine uneingeschränkte Wahrheits-, Evaluations- oder Veröffentlichungsaussage.
 
-## Aktueller Arbeitsstand: Modellprosa statt Planrenderer, 26.10.2026
+## Aktueller Arbeitsstand: Fachentscheidungen nach Validator-Ablation, 27.10.2026
+
+Basis `02a3612`, kein neuer Commit. Prompt 26, Evidence 5, Validator 8,
+Application Copy 10. Umsetzung, Charakterisierungstests, neue Messung und
+Grenzen stehen in Abschnitt 14. Die folgenden früheren Zahlen sind
+historische, jeweils standgebundene Nachweise.
+
+## Historischer Arbeitsstand: Modellprosa statt Planrenderer, 26.10.2026
 
 Dieser Nachtrag ersetzt die nachfolgend dokumentierte Rendererarchitektur als
 produktiven Pfad. Vertrag 7 / Prompt 25 / Validator 7: Das LLM formuliert selbst
@@ -979,3 +986,206 @@ Vor manueller Evaluation endgültigen Codecommit festlegen, Baseline und
 technische Messung daran binden, Browser/Sprachfunktionen separat prüfen und
 auf genau diesem Stand manuell erheben. Keine Thesis-LaTeX-Änderung und kein
 Commit, Tag oder Push. Keine uneingeschränkte Abgabe-/Veröffentlichungsfreigabe.
+
+## 14. Fachentscheidungen nach Validator-Ablation, 27.10.2026
+
+### 14.1 Umfang und Versionen
+
+Umgesetzt auf `02a361265ac92a502f3e88dafc973d6302255308`, ohne Commit,
+Tag oder Push. Thesis, WFS-Rohdaten, Releases, Manifeste und Snapshots bleiben
+unverändert. Der Exec-Plan ist
+`docs/exec-plans/validator-ablation-implementation.md`.
+
+| Vertrag | Vorher → neuer Arbeitsstand |
+|---|---|
+| Formulatortext | 7 → 7; akzeptierte Modellprosa bleibt erhalten |
+| Formulatorprompt | 25 → 26 |
+| Evidence | 4 → 5; medizinische Binding Policy, Zeichenbudget, eingeschränkte Kontakt-/Metadatenprojektion |
+| Groundingvalidator | 7 → 8 |
+| Application Copy | 9 → 10; DE review_pending, EN/PL/RO/RU machine, keine menschliche Reviewfreigabe |
+| Kuration | prototype-2026-08-25-leipziger-oase-display-name → prototype-2026-10-27-validator-ablation |
+| Runtime-Fingerprint | 9471e705… → 287a3fd53f517dbbdcc1ebd6330b3280239d4e23739b6a89d3e1a2d8465e08dc; alte Sessions werden verworfen |
+
+`content_not_covered` und lexikalisches NOT_CHECKED/UNDECIDABLE der
+Leistungsprüfung führen nicht mehr zur Ablehnung. Das historische
+Diagnosemodul bleibt erhalten, wird aber vom Laufzeitvalidator nicht mehr
+aufgerufen. `service_fact_missing` bleibt bei expliziten Leistungsnegationen
+möglich. Literalprüfungen, Eigennamen, Angebots-/Fakt-/Kartenbindung,
+Vertrag/Sprache/interne IDs, Aufnahme/Eignung/Echtzeit/Kapazität,
+Zielgruppen-/Alterswidersprüche, Leistungszeit-/Preiszuordnung, Entgelt und
+Grenzanker bleiben aktiv. R-20/R-21 sind nur begrenzt abgesichert.
+
+Entscheidungsbeleg: manuell bewertete 127 Texte der Ausgangsmessung;
+Erstversuche ohne U n=103, Fehlerquote ohne Validator 4,9 %, keine beobachtete
+Formulator-Erfindung, 86/98 richtige Antworten unnötig verworfen. Ein mit der
+Evidence übereinstimmender Daten-/Auswahlfehler ist grundsätzlich nicht durch
+die Validierung erkennbar. Keine allgemeine Halluzinationsfreiheit ableiten.
+
+Wundversorgung umfasst `medical_care`/`medical_access`, auch entsprechende
+medizinische Capabilities von Einrichtungen mit anderem Hauptbedarf;
+persönliche Zugangsbedingungen bleiben bestehen. FR-04 gilt unverändert.
+Bei sehr starken Beschwerden/Gefahr fordert der Prompt zusätzlich die
+zentral in `policy_facts.py` gebundene Nummer 112; sonst nicht. Safety-Preflight,
+Akutgefahrtext und Akutgefahrdialog wurden nicht verändert.
+
+Die Hilfebuskontaktprosa wird in beschlossenen Hilfe-/Grenz-/Fehlerfällen
+deterministisch vor Session-/TTS-Persistenz ergänzt; bei bestehender
+Hilfebusnennung entfällt sie. Einsatznummer und daily_18_23 stammen aus der
+Kuration, nicht aus hart kodierten Textressourcen. Das Modellbudget reserviert
+Platz innerhalb von 600 Zeichen. Zusatzkachel in jeder Kartenantwort; sie ist
+kein zusätzlicher Bedarfstreffer. Ohne Ort, außer beim tatsächlichen
+Sonntagsstand; Sonntagsessen hält Hilfebus verbindlich in Auswahl und Prompt,
+der Templatefallback nennt die Standzeit ebenfalls. Büroanschrift/Geometrie
+sind nur beim Hilfebus aus der Runtimeprojektion entfernt. Mitarbeitertelefon
+nur auf seiner Kachel, Einsatztelefon in Evidence, Kontaktprosa und Vorlesen.
+
+Neue Namen ausschließlich im Kurationskatalog, jeweils mit eigener
+`curation_decisions`-Referenz und dem verlangten Entscheidungsgrund:
+Tagestreff Insel (9), Tagestreff Oase (10), Übernachtungshaus für wohnungslose
+Frauen (8), Safe-Straßensozialarbeit für Erwachsene - Team Konsum (12) und
+Team Wohnen (13). Teamnamen sind in der unveränderten Quelle eindeutig.
+Die Teams behalten Demmeringstr. 32. Alte und neue Aliasse bleiben suchbar;
+generisches SZL/Suchtzentrum bleibt als Organisationsalias mehrdeutig.
+Beide bestehenden Übersetzungskataloge wurden nach Prüfung aller geschützten
+Tokens technisch an die neue Identität gebunden; Textfelder und menschlicher
+Reviewstatus bleiben unverändert. Keine Integritätsprüfung abgeschaltet.
+
+Prompt/Projektion vermeiden Brunnenprüfstatus und Toilettentelefone im
+Modelltext; Toilettenkacheln behalten ihre Kontaktangaben. „Nach Bedarf“ wird
+nicht als Zusage angeboten; Postadresse soll als Leistung beschrieben werden.
+Ausschlussantworten/Policyanker sind fünfsprachig ohne Datenbankbegriff.
+Keine neue Konfiguration; `.env.example` benötigt keine Änderung.
+
+### 14.2 Umformulierte Tests der bewusst abgeschalteten Regeln
+
+Kein Gegenbeispiel wurde stillschweigend gelöscht. Folgende Tests bzw.
+Parameter sind jetzt Charakterisierungen einer **nicht automatisch geprüften**
+Aussageart, keine positiven Richtigkeitsbewertungen:
+
+| Bisheriger Test / aktuelle Charakterisierung | Begründung |
+|---|---|
+| `test_grounding_content.test_unsupported_service_is_rejected_for_every_declared_claim_type` → `test_characterizes_unchecked_open_service_content_across_claim_types` | Offene Fahrrad-/Werkstatt-/Identitätsaussagen in fünf Sprachen und drei Claimtypen: Wortabdeckung abgeschaltet. |
+| `test_grounding_content.test_unsupported_item_inside_a_supported_list_is_not_carried_by_the_list` → `test_characterizes_unchecked_extra_item_in_supported_list` | Zusätzliche offene Wörter innerhalb einer belegten Liste werden nicht mehr lexikalisch verworfen. |
+| `test_grounding_content.test_known_but_missing_service_is_rejected_for_every_claim_type` → `test_characterizes_unchecked_known_but_missing_service` | Bekanntes, aber fehlendes Leistungskonzept Wundversorgung: UNDECIDABLE ohne Ablehnung. |
+| `test_grounding_content.test_live_observed_invented_addition_is_still_rejected` → `test_characterizes_unchecked_live_observed_addition` | Historische Abendverpflegungs-Gegenprobe bleibt dokumentiert, Inhaltswortgate entfällt. |
+| `test_grounding_constraints.test_unknown_service_is_not_supported` | NOT_CHECKED bleibt diagnostisch unterscheidbar, verwirft „sells bicycles“ aber nicht mehr. |
+| `test_grounding_constraints.test_audience_without_service_is_not_evidence_of_that_service` | Unbelegte positive Essens-/Schlafleistung ist jetzt ungeprüft; die explizite Leistungsnegation im selben Test bleibt negativ. |
+| `test_grounding_lexical_boundaries.test_food_compound_needs_its_own_offer_service_evidence` → `test_characterizes_unchecked_food_compound_without_service_evidence` | Imbiss-/Mittagessen-Konzepte ohne Leistungswert nicht mehr lexikalisch ablehnen. |
+| `test_formulator_prose.test_factual_negative_cases_reject_the_whole_model_response` | Vier Fahrrad-/Wundparameter nun akzeptierte, ausdrücklich ungeprüfte Textübernahme; Garantie- und erfundener Telefonparameter bleiben negativ. |
+| `test_formulator_prose.test_service_returns_model_text_or_atomic_fallback` | Fahrradparameter bleibt Modelltext; Garantie-/Telefonfehler bleiben atomarer Templatefallback. |
+| `test_formulator_factual_freedom.test_longer_grounded_block_is_allowed_but_extra_unsupported_claim_is_not` → `test_characterizes_unchecked_extra_service_in_a_longer_grounded_block` | Zusätzliche lexikalische Wundversorgungsbehauptung in langem Text jetzt ungeprüft. |
+| `test_formulation.test_ungrounded_and_contract_attacks_are_rejected` | Nur der Wundversorgungsparameter wird Charakterisierung; alle anderen Angriffe bleiben Negativtests. |
+| `test_formulation.test_referral_and_full_phone_contract_across_languages` | Kontakttext mit Claimlabel SERVICE wird nicht wegen NOT_CHECKED verworfen; vollständige Telefonliteralprüfung bleibt unverändert negativ bei Kürzung/Veränderung. |
+| `test_prompt_comparison.test_grounding_rejection_keeps_raw_draft_separate` → `test_characterizes_unchecked_service_preserves_raw_draft` | Forschungsadapter zeigt dieselbe bewusst gelockerte Leistungsprüfung; Rohtext bleibt getrennt protokolliert. |
+
+Weitere Testmigrationen ändern keine Grounding-Negativregel: neue
+Namensliterale statt alter Anzeigenamen, zusätzliche Aliastests, Fakt-ID-Hashes
+wegen Evidence 5, Versions-/Positivlisten, längeres Namensliteral im
+600-Zeichen-Test sowie die ausdrücklich zusätzliche Hilfebuskachel in
+API-/Dialog-/Infrastrukturtests. Fachliche Treffer und Marker werden weiterhin
+separat geprüft; interne `ValidatedFormulation.card_ids` erhalten **keine**
+Zusatzkachel. Technische Safetyfallbacktests erwarten den unveränderten
+bedingten 112-Hinweis plus neuen Kontaktzusatz. Akutgefahr-Negativtests und
+leere Akutgefahrkarten bleiben unverändert. Neue eigenständige Regressionen:
+`tests/test_validator_ablation_decisions.py` und fünfsprachige Wundtests in
+`tests/test_candidates.py`.
+
+### 14.3 Erneute Ablation, ohne eigene Korrektheitsbewertung
+
+Externes Verzeichnis:
+`%LOCALAPPDATA%/LENA/verification/2026-10-27-validator-ablation/`.
+`run.py` und `queries.json` sind byteidentisch zur Ausgangsmessung; gleiche
+120 Anfragen, Seed, Parallelität 2, alias-fast in allen Stufen, 4096 Tokens,
+15/30/30 s, Budget 45 s. Kein neuer Commit erlaubt: Manifest nennt den
+Arbeitsstand auf 02a3612 und den App-Quellmanifesthash
+`fea371e76945a2e09f44379ce6dc057cf526f0867287789d0674a3b49aee07a2`.
+120/120 abgeschlossen, kein Abbruch, App-Quellen vor/nach Lauf identisch.
+Ein zusätzlicher lesender Observer speichert die tatsächlichen Kacheln und
+Marker; er verändert weder Anfrage noch Antwort noch das ursprüngliche Skript.
+
+| Technischer Zähler, gleiche 120 Anfragen | 02a3612 | neuer Arbeitsstand |
+|---|---:|---:|
+| Modelltext angezeigt | 37 | 99 |
+| Templates insgesamt | 83/120 (69,2 %) | 21/120 (17,5 %) |
+| Formulator aufgerufen, am Ende Template | 76 | 15 |
+| Ohne Formulator | 7 | 6 |
+| Geparste Erstversuche | 113 | 113 |
+| content_not_covered, Erstversuch / alle Versuche | 53 / 99 | 0 / 0 |
+| service_fact_missing, Erstversuch / alle Versuche | 20 / 33 | 3 / 6 (verbleibende Negationsprüfung) |
+
+Die frühere **72,8-%-Templatequote** stammt aus der manuell bewertbaren
+Teilmenge (75/103); sie ist mit 17,5 % aller 120 Fälle nicht direkt vergleichbar.
+Die frühere Diagnosezahl 19 service_fact_missing bezieht sich ebenfalls auf
+die bewertbare Teilmenge; die Rohdaten aller Erstversuche enthalten 20.
+Für einen sauberen technischen Vergleich werden oben in beiden Spalten
+dieselben 120 Anfragen verwendet. Neue Fehlerquote/False-Rejection-Rate bleiben
+bis zur menschlichen Bewertung offen.
+
+Weitere Erstversuchsdiagnosen neu: phone_not_exact 8, time_not_cited 5,
+domain_boundary_missing 4, formulator_invalid_language 4,
+target_claim_contradicted 3, email_not_cited 2, formulator_invalid_fact 2,
+formulator_contract_violation 1, proper_name_not_exact 1,
+price_service_mismatch 1, current_availability_unsupported 1. Ein Schemafehler
+vor der Inhaltsprüfung. Alle Diagnosen einschließlich Retrys stehen in
+`technical-summary.json`; sie sind keine Richtigkeitsurteile.
+
+Wundfälle q10-DE/EN/PL/RO/RU: jeweils grounded_result mit UVO und/oder
+Tagestreff Oase, kein no_verified_result. Hilfebuskachel 120/120; viermal
+Standort/Marker im zulässigen Sonntagsstandpfad, sonst ohne Ort. Einsatznummer
+und Kontaktzeit im festen Zusatz 15-mal, Hilfebus insgesamt in 24 Antworttexten
+genannt (bei bereits vorhandener Nennung kein Zusatz). Keine Antwort über 600
+Zeichen. Keine Demmeringstraße in Hilfebus-Evidence, Kachel, Marker oder
+deren Vorlesetext; keine Mitarbeiternummer in Hilfebus-Evidence. Sichtbare
+neue Namen: Oase 55-mal, Insel 23-mal, Frauenübernachtung 4-mal; Teams 12/13
+kommen in diesem Katalog nicht als Ergebnis vor und werden separat offline
+geprüft. Der unveränderte 120er-Katalog enthält nicht jeden neuen Grenzfall.
+
+Neues blindes Paket: `bewertung.csv`, `evidenz.md` mit **134 Items**
+(113 Erstversuche, 21 angezeigte Retrys); `anzeigepruefung.csv` ergänzt die 120
+tatsächlich angezeigten Antworten/Kacheln ohne Validator-/Providerurteil.
+`schluessel.json` bis zur Bewertung getrennt halten. Bewertungsfelder bleiben
+leer; keine Antwort wurde von Codex als „richtig“ bewertet. Die neue
+menschliche Fach-/Sprachbewertung steht aus.
+82 deutsche Hilfsübersetzungen für PL/RO/RU sind ausdrücklich als maschinell
+von Codex und nicht maßgeblich gekennzeichnet. `blindes-bewertungspaket.zip`
+enthält die Bewertungs-/Anzeigeunterlagen und eine Anleitung, ohne Schlüssel
+oder technische Validatorurteile. Leere Ratings und vollständige
+Hilfsübersetzungszuordnung wurden geprüft; Paketprüfsummen sind festgehalten.
+
+### 14.4 Technische Abschlussprüfung und offene Punkte
+
+Rohbelege: `%LOCALAPPDATA%/LENA/verification/2026-10-27-validator-implementation/`.
+
+| Prüfung | Tatsächliches Ergebnis / Beleg |
+|---|---|
+| Vollständige Python-Suite nativ | **1585 bestanden, 1 bekannter strikter XFAIL, 1 bekannte TestClient-DeprecationWarning**, 423,50 s; `native-complete.xml`, `native-complete.log` |
+| `node --test tests/frontend.test.cjs` | **19/19**, keine übersprungen; bestehende externe Node-22.20.0-Binary; `native-js.log` |
+| Native Runtime mit echtem HTTP | Health/Bootstrap, kontrollierter technischer Kontaktpfad ohne Zugangsdaten und Sitzungserhalt nach Prozessneustart bestanden; `native-runtime-smoke.json`, `native-runtime.log`. Kein Dockerersatz behauptet. |
+| Quelldaten-/Secret-/Übersetzungs-/Messidentität | `final-audit.json`: keine Rohdaten-/Release-/Manifest-/Snapshotänderung; alle bestehenden Übersetzungsfelder und Reviewmetadaten unverändert; App-Hash entspricht dem Ablationslauf; sechs Kurationsentscheidungen; kein Treffer konfigurierter Secretwerte im Repository. `git diff --check` bestanden. |
+| Sauberer Docker-Neubau `--pull --no-cache --target test` | **Weiter offen wegen externer Paketquelle**: Nach ausdrücklich freigegebenem Docker-Desktop-Neustart läuft die Engine wieder. Drei saubere Buildversuche scheitern vor Anwendungscode am festgelegten Ubuntu-Snapshotserver (HTTP 502/503); derselbe Fehler ist direkt vom Host reproduzierbar. `docker-build-attempt1.log`, `docker-build-attempt2.log`, `docker-build-complete.log` und zugehörige Prozessprotokolle. Dockerfile, Paketstände und Locks bleiben unverändert. |
+| Separater Dockerbuild mit vorhandenen Basis-Layern, vollständiger Testlauf `--network none` | **1585 bestanden, 1 bekannter strikter XFAIL, 1 bekannte Warning**, 254,74 s; JavaScript **19/19**, compileall, pip check und beide JavaScript-Syntaxprüfungen bestanden. `docker-build-cached.log`, `docker-tests-cached.log`, `docker-completion-cached.json`. Die 161 App-/Testdateien im Testimage stimmen per SHA-256 mit dem nativ geprüften Export und dem aktuellen Arbeitsstand überein (`container-source-check-lena-validator-ablation-test-cache.json`). Dies ersetzt keinen No-Cache-Neubau. |
+| Runtimeimage aus derselben separaten Buildkette | Health **healthy**, Start ohne Zugangsdaten mit kontrolliertem Kontaktpfad, read-only/Loopback und persistente Sitzung nach Docker-Neustart **und Containerersatz** bestanden. Hilfebuskachel ohne Adresse und Einsatznummer im Kontakttext geprüft. `runtime-smoke-cached.json`, `docker-runtime-build-cached.log`; Image `sha256:976dbfc4fc2ef7d06519c52279507c7748e8c334e30cd0ce9a7a90649a443726`. Keine Provideraufrufe. |
+
+Die Entwicklungszwischenläufe sichern die kleinen Schritte, sind aber keine
+Abschlussnachweise. Ein vollständiger Zwischenlauf hatte noch acht falsche
+Zusatzkarten-Erwartungen direkt im Validatorunit-Test; diese wurden auf die
+ursprüngliche Evidence-Kartenbindung zurückgestellt. Danach obige vollständige
+Suite ohne Fehler. Kein Grounding-Negativfall wurde zum Grünwerden gelöscht.
+Der historische XFAIL zu „minor injuries“ bleibt ausdrücklich eine Grenze.
+
+Selbstreview: neue Hilfebusverantwortung in einem kohäsiven Modul unter 400
+Zeilen, vorhandene Policy-/Text-/Zeit-/Karten-/Sessionstrukturen wiederverwendet,
+keine Abhängigkeit oder Konfiguration ergänzt. Bestehende große Module nur
+gezielt erweitert. Der lesende Ablationsobserver beeinflusst weder Auswahl
+noch Text. Dokumentationsnachträge ändern den gemessenen App-Hash nicht.
+
+Offene Fachentscheidung: Hilfebus bei Akutgefahr; bis dahin unverändert ohne
+Zusatz. Streetwork-Namen sind geklärt. Unabhängiges Sprachreview und neue
+Blindbewertung bleiben offen. Keine vollständige Vierstufen-Liveevaluation.
+Offene technische Abnahme: erfolgreicher No-Cache-Dockerneubau nach Erholung
+des externen Ubuntu-Snapshotservers; alle übrigen verlangten lokalen und
+Containerprüfungen sind abgeschlossen. Die Engine läuft nach dem freigegebenen
+Neustart wieder; temporäre Prüfcontainer und Prüfvolume wurden entfernt.
+`review-first-coding` und `code-documentation` angewendet; README, bestehende
+Vertrags-/Safety-/Testdokumentation und Traceability werden fortgeschrieben,
+Thesisanpassungen ausschließlich in THESIS_UPDATE_NOTES dokumentiert.

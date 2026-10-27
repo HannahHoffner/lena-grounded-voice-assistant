@@ -30,7 +30,7 @@ def prose_evidence_payload(evidence: FormulatorEvidence) -> dict:
     Original fact values and IDs remain unchanged.
     """
     payload = evidence.model_dump(mode="json")
-    hidden = {"capability", "offer_type", "place_type"}
+    hidden = {"capability", "offer_type", "place_type", "potable_water_status"}
     for offer in payload["selected_offers"]:
         offer["facts"] = [f for f in offer["facts"] if f["fact_type"] not in hidden]
     return payload

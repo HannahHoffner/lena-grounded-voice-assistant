@@ -213,7 +213,7 @@ def test_all_runtime_cards_preserve_names_and_operational_facts(tmp_path: Path) 
         oase_card = localize_offer_card(
             oase, language, catalog, TranslationRuntimePolicy.REVIEWED_OR_MACHINE
         )
-        assert oase_card.name == "Leipziger Oase"
+        assert oase_card.name == "Tagestreff Oase"
         if language != Language.DE:
             record = catalog.store.entries["10"].translations[language]
             assert record.linguistic_review_status == LinguisticReviewStatus.MACHINE
@@ -643,7 +643,7 @@ def test_result_copy_points_below_without_naming_cards_or_map() -> None:
             assert below_markers[language] in visible_text
             assert all(root not in visible_text for root in forbidden_roots[language])
 
-    german_fallback = application_text(Language.DE, "fallback.found", names="Rücke, Scharni")
+    german_fallback = application_text(Language.DE, "fallback.found", names="Rücke, Übernachtungshaus für wohnungslose Frauen")
     assert german_fallback.endswith("Mehr Infos stehen unten.")
     assert "Karte" not in german_fallback
 
@@ -683,6 +683,6 @@ def test_live_smoke_requires_explicit_opt_in(tmp_path: Path, monkeypatch) -> Non
 def test_stt_tts_contracts_cover_all_languages_and_emergency_number() -> None:
     assert set(LANGUAGE_HINTS) == set(EDGE_VOICES) == set(Language)
     for language in Language:
-        rendered = normalize_tts_text("Rücke, Scharni, Jugendstreetwork, Hilfebus, 12:30, 112", language)
+        rendered = normalize_tts_text("Rücke, Übernachtungshaus für wohnungslose Frauen, Jugendstreetwork, Hilfebus, 12:30, 112", language)
         assert "112" not in rendered
         assert "12:30" in rendered
