@@ -1,5 +1,58 @@
 # Manueller Release-Review – LENA
 
+## Letzte begrenzte Korrektur: Validator 10
+
+Auf Folgeauftrag Preis-/Alters- und polnische Erkennungsfehler gezielt korrigiert.
+Der unten dokumentierte Vierstufenlauf bleibt auf 482f1f9/Validator 9 gebunden.
+
+- [x] 28 neue positive/negative Gegenproben bestanden; alte Negativtests unverändert.
+- [x] Sechs letzte Ablehnungen offline wiederholt: zwei zusätzliche Annahmen,
+  vier unverändert gesperrt; keine frühere 134er-Entscheidung verändert.
+- [x] Endgültige native-/Container-Suiten je 1665 Python plus bekannter XFAIL,
+  je 19 JS; No-Cache-Build, Packaging und Runtime/Persistenz bestanden.
+- [ ] Native Instanz 8002 nach blockiertem automatischem Neustart durch Nutzerin
+  neu starten; Aktivierung des neuen Codes noch nicht als erfolgt behaupten.
+- [ ] Nutzerin committet den begrenzten Patch; danach neuen manuellen
+  Protokollentwurf an den tatsächlichen finalen Commit binden, Erhebung ausführen.
+
+Bericht 19/Thesisnotizen O trennen diesen Arbeitsstand von der Live-Referenz.
+
+## Abschlussstand 482f1f9, 27.10.2026
+
+Codeentwicklung auf Nutzerinnenanweisung beendet; keine Änderung an Anwendung,
+Tests, Daten, Prompts, Validator oder Live-Katalog. Nachfolgend nur Markdown.
+
+- [x] Sauberen Commit und alle Messinputs vorab per Quellarchiv/SHA gebunden.
+- [x] Vollständige Regression nativ/netzloser Container: je 1637 Python plus
+  bekannter XFAIL, je 19 JS; sauberer No-Cache-Build und Runtime/Persistenz.
+- [x] Alle vier Live-Stufen gesondert freigegeben und je einmal vollständig
+  ausgeführt: 83 Requests, 124 Provideraufrufe. Nur Interpreter-Gates bestanden;
+  negative Gates und ungeprüfte Kriterien bleiben sichtbar (Bericht 17).
+- [x] Überholtes Kachel-/Marker-Kriterium vor E2E-Auswertung dokumentiert;
+  keine nachträgliche Umwertung oder Anpassung des Runners.
+- [x] Anschließende Nutzerinnenentscheidung umgesetzt: überholten Maßstab
+  in aktueller abgeleiteter Auswertung nicht mehr anwenden; Rohreports bleiben.
+  E2E 0/Stabilität 1 verbleibende anwendbare Inhaltsbeanstandung. Sechs terminale
+  Formulatorablehnungen offline aufgeklärt; konkrete Validator-Fehlalarme
+  dokumentiert (Bericht 18), ohne Codeänderung oder neue Live-Aufrufe.
+- [x] Allgemeiner manueller Bediencheck laut Nutzerin durchgeführt;
+  Audio-Ein-/Ausgabe in Firefox anschließend ausdrücklich bestätigt.
+- [x] Implementierungsentscheidungen und aktuelle Thesis-Einbauhinweise
+  dokumentiert; Thesisdateien in diesem Auftrag nicht geändert.
+- [x] Neue Protokollversion der geplanten 16-Einheiten-Eigenbewertung vor der
+  Erhebung vorbereitet: Inputs/Skalen unverändert, neue Baseline sowie vorab
+  begründete Namens-/Hilfebuserwartungen. Noch keine Ausgaben/Urteile.
+- [ ] Geplante 16-Einheiten-Evaluation durchführen und kriterienspezifisch auswerten.
+- [ ] Ergebnisse/Entscheidungen aus THESIS_UPDATE_NOTES, insbesondere Abschnitt M,
+  im gesonderten Thesisauftrag übernehmen; Entwicklungs- und Abschlussbelege trennen.
+- [ ] Neue Dokumentation durch Nutzerin versionieren und Belege archivieren.
+
+Die 15 U der früheren Blindbewertung werden nicht automatisch umbewertet.
+PL/RO/RU-Sprachgestaltung bleibt ohne ausreichende Prüfkompetenz nicht beurteilbar.
+Hilfebus bei Akutgefahr unverändert ohne Ergänzung. Keine neue allgemeine
+Wahrheits-, Betriebs- oder akademische Freigabe. Die älteren Checklisten unten
+beschreiben ihre jeweiligen historischen Stände.
+
 ## Aktuelle Fortschreibung, 27.10.2026
 
 Basiscommit `5f9ddd8`, neuer Korrekturarbeitsstand mit Prompt 27/Validator 9.

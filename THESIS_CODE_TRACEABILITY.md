@@ -1,5 +1,38 @@
 # Thesis–Code-Traceability
 
+## Letzter begrenzter Arbeitsstand: Validator 10
+
+Folgeauftrag nach Diagnose: Eurobeträge aus Altersanalyse ausnehmen,
+polnische Betriebs-/Erhaltphrasen und Tagesformen präzisieren; eigentliche
+Schutzregeln erhalten. Prompt 27/Evidence 5/Textvertrag 7/Copy 10 unverändert.
+28 neue Gegenproben, bestehende Negativtests unverändert. Offline zwei der
+sechs zuletzt gesperrten Texte zusätzlich angenommen; 134 frühere Entscheidungen
+gegenüber Validator 9 unverändert. Noch uncommittiert, keine neue Vierstufen-
+Livemessung. [Bericht 19](IMPLEMENTATION_REPORT.md#19-begrenzte-korrektur-der-letzten-validator-fehlalarme),
+[Thesisnotizen O](THESIS_UPDATE_NOTES.md#o-letzte-begrenzte-validatorpräzisierung-version-10).
+Der nachfolgende Abschlusslauf auf 482f1f9 bleibt ausdrücklich Validator 9 zugeordnet.
+Validator-10-Abschluss: je 1665 Python plus bekannter XFAIL und je 19 JS nativ/
+Container, No-Cache-Build und Runtime/Persistenz bestanden; zehn manipulierte
+Kopien gespeicherter Live-Texte abgewiesen. Belege in Bericht 19.
+
+## Eingefrorener Abschlussstand 482f1f9, 27.10.2026
+
+Anwendung/Tests/Daten unverändert auf `482f1f9`: Interpreter 4/12, Selector 1/3,
+Formulator 7/27, Evidence 5, Validator 9, Copy 10. Vollständig erneut geprüft:
+je 1637 Python bestanden plus bekannter XFAIL, je 19 JS, No-Cache-Build und
+Runtime/Persistenz bestanden. Neue Vierstufenreihe: 83 Requests/124 Providercalls;
+nur Interpreter besteht beide Rohgates. Der überholte Markermaßstab gilt in der
+aktuellen Auswertung nicht mehr: E2E 0/Stabilität 1 verbleibende anwendbare
+Inhaltsbeanstandung, technische Fehlerfälle unverändert. Negative Rohgates und
+ungeprüfte Kriterien bleiben dokumentiert. [Bericht 18](IMPLEMENTATION_REPORT.md#18-aktueller-bewertungsmaßstab-und-formulator-diagnose)
+trennt Validator-Fehlalarme von tatsächlichen Formulator-Vertragsabweichungen.
+[Bericht 17](IMPLEMENTATION_REPORT.md#17-abschlussmessung-ohne-codeänderung-commit-482f1f9)
+und [Thesisnotizen M](THESIS_UPDATE_NOTES.md#m-eingefrorener-abschlussstand-482f1f9-und-neue-messung-27102026)
+binden die Nachweise. [Implementierungsentscheidungen](docs/final-implementation-decisions.md)
+erläutern insbesondere die begrenzte Absicherung R-20/R-21, Hilfebus R-12/FR-09,
+Wundversorgung, Kuration und Audio. Die geplante 16-Einheiten-Eigenbewertung
+steht aus. Alle folgenden Abschnitte sind historisch datierte Fortschreibungen.
+
 ## Validator-Korrekturpaket auf 5f9ddd8, 27.10.2026
 
 Aktueller uncommittierter Korrekturstand: Prompt 27, Validator 9, Textvertrag 7,

@@ -493,6 +493,14 @@ def _contains_phrase(haystack: str, phrases: Iterable[str]) -> bool:
     return any(phrase in haystack for phrase in phrases)
 
 
+def _contains_personal_receipt(haystack: str, language: Language) -> bool:
+    phrases = PERSONAL_RECEIPT_PATTERNS.get(language, ())
+    if language == Language.PL:
+        # "dają ci" must not match inside "rozdają ciepłe".
+        return any(re.search(rf"(?<!\w){re.escape(phrase)}(?!\w)", haystack) for phrase in phrases)
+    return _contains_phrase(haystack, phrases)
+
+
 def claims_admission(text: str, language: Language) -> bool:
     """Erkennt eine persönliche Aufnahme- oder Platzzusage.
 
@@ -507,7 +515,7 @@ def claims_admission(text: str, language: Language) -> bool:
     if _contains_stem(haystack, GUARANTEE_STEMS.get(language, ())):
         return True
     return (
-        _contains_phrase(haystack, PERSONAL_RECEIPT_PATTERNS.get(language, ()))
+        _contains_personal_receipt(haystack, language)
         and _contains_stem(haystack, PLACE_STEMS.get(language, ()))
     )
 
@@ -519,7 +527,7 @@ def claims_personal_receipt(text: str, language: Language) -> bool:
     Leistung an die fragende Person. Bei einer zeitlich gebundenen Leistung
     genügt dafür kein allgemeiner Leistungsfakt.
     """
-    return _contains_phrase(transliterated(text), PERSONAL_RECEIPT_PATTERNS.get(language, ()))
+    return _contains_personal_receipt(transliterated(text), language)
 
 
 def claims_suitability(text: str, language: Language) -> bool:

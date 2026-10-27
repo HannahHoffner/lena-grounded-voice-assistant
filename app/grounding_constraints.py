@@ -208,7 +208,8 @@ def contradicts_age_bound(text: str, facts: Sequence[Fact], language: Language) 
     stated_upper: int | None = None
     # A contact instruction such as 'unter 0341 ...' is not an age bound.
     without_phones, _ = mask_known_phones(text, [value for kind, value in facts if kind == "phone"])
-    normalized = transliterated(without_phones)
+    # Prices have their own value/service checks; "ab 5,00 €" is not age 5.
+    normalized = transliterated(EURO_RE.sub(" ", without_phones))
     for match in re.finditer(_AGE_RANGES[language], normalized):
         a, b = int(match[1]), int(match[2])
         if not lower <= a <= b <= upper:
@@ -343,6 +344,9 @@ def stated_weekdays(text: str, language: Language) -> set[int]:
     if any(transliterated(label) in normalized for label in daily):
         return set(range(7))
     labels = {transliterated(label): day for day, label in enumerate(WEEKDAY_NAMES[language])}
+    if language == Language.PL:
+        # Accusative forms used after "w" must also reject wrong weekdays.
+        labels.update({"srode": 2, "sobote": 5, "niedziele": 6})
     # Preserve the earlier full-name stem recognition (montags, Mondays, ...).
     # Word boundaries belong only to short forms such as Mo/So, not inflections.
     found = {day for label, day in labels.items() if label in normalized}

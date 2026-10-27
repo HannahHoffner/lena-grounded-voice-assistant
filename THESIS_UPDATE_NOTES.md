@@ -283,3 +283,74 @@ Anwendungscode und Prompt-/Validatorverträge wurden dabei nicht verändert.
 | `Chapters/AppendixLenaDesign.tex:14–70`, Betriebs-/Installationsbeschreibung | Audio ist optional und standardmäßig deaktiviert. Das geprüfte lokale Profil verwendet explizit Blablador-STT und Edge-TTS; Serverneustart und Browser-Neuladen sind erforderlich. Lokale Profile gehören nicht ins Git-Archiv, Zugangsdaten nicht in die Thesis. | `app/config.py`, `.env.example`, README „Lokales Audio-Profil“; effektive HTTP-Speech-Konfiguration im Audio-Prüfordner |
 | `Chapters/6Resultsneu.tex:69–89`, technische Evaluation | Am 27.10. wurden je fünf echte HTTP-STT-/TTS-Durchläufe mit synthetischen Daten erfolgreich geprüft: Ogg/Opus in DE/EN/PL/RO/RU transkribiert, sessiongebundene Policytexte als dekodierbares MP3 erzeugt. Native Umgebung CPython 3.14, Edge-Client 7.3.1 nach Angleichung an bestehenden Repository-Pin. 38 gezielte Python- und 19 Frontendtests bestanden. | Bericht 16; externes `2026-10-27-audio-activation/live-audio-results.json`, Prüfskript und Testlogs |
 | Diskussion, Sprach-/Bedienqualität | Fünf festgelegte synthetische Sätze sind ein technischer Smoke-Test, kein Nachweis allgemeiner Erkennungsqualität. Anschließend bestätigte die Nutzerin funktionierende Ein-/Ausgabe in Firefox („jetzt funktioniert es“, 27.10.2026). Das bestätigt die Bedienfunktion, keine unabhängige Aussprache-/Verständlichkeitsbewertung aller fünf Sprachen. Externe Dienste bleiben erforderlich; STT empfängt Audio, Microsoft-TTS Vorlesetext. | Bericht 16; ursprünglicher technischer Prüfbericht mit damals ausstehendem manuellem Check bleibt erhalten; nachfolgendes `user-confirmation.json` dokumentiert die Bestätigung; README und bestehende Datenschutz-/Betriebsgrenzen |
+
+## M. Eingefrorener Abschlussstand 482f1f9 und neue Messung, 27.10.2026
+
+**Aktuellster technischer Nachweis.** Die vorherigen Abschnitte beschreiben
+historische Entwicklungs- und Messstände. Keine Thesisdateien geändert.
+Codeentwicklung auf Nutzerinnenanweisung beendet. Commit
+`482f1f900f1ca58b8d8ea3787c4f3a8b9c1f8c22` blieb während aller Messungen sauber
+und unverändert; nachfolgend ausschließlich Markdown fortgeschrieben.
+
+| Fundstelle | Neue korrekte Aussage | Code-/Testbeleg |
+|---|---|---|
+| `Chapters/5Solutionneu.tex`, insbesondere Implementierung/Entwurfsentscheidungen; Anhang R-/FR-Matrix | Produktiv Interpreter 4/12, Selector 1/3, Formulator 7/27, Evidence 5, Grounding 9, Copy 10. Entscheidungen mit Anlass, Alternative, Umsetzung und Grenze beschreiben: Stufenrollen/deterministische Kandidaten; freie referenzierte Prosa; lexikalische Gates abladieren und konkrete Werte/Relationen beibehalten; Retry/Fallback; Wundversorgung; gebundene 112-Policy; deterministischer Hilfebus mit mobiler Ortsprojektion; kuratierte Namen/Aliasse; Prosa-Evidencefilter; explizite externe Audio-/Dienstprofile. | [Entscheidungsübersicht](docs/final-implementation-decisions.md), Berichte 14–17; [Traceability](THESIS_CODE_TRACEABILITY.md). Ablations- und Korrekturergebnisse als formative Gründe, nicht als allgemeine Wahrheitsgarantie. |
+| `Chapters/6Resultsneu.tex:69–89`, `Chapters/AppendixLenaDesign.tex:14–70` | Neue volle Regression auf 482f1f9: nativ und netzloser Docker-Test je 1637 bestanden, 1 bekannter XFAIL und 1 bekannte Warnung; je 19 JS. Erfolgreicher No-Cache-Neubau, Packaging/Syntax/Abhängigkeiten und Runtime-Health/ohne Schlüssel/Persistenz nach Neustart und Containerersatz. Keine Tests oder Anwendung geändert. | Bericht 17.2; `2026-10-27-final-application/native.xml`, `docker-tests.log`, `docker-verification.json`, `runtime-smoke.json`, `verification.json` |
+| `Chapters/6Resultsneu.tex:173–233`, Vierstufen-Liveevaluation | Einmalige neue Reihe auf 482f1f9: 83 Requests, 124 reale Provideraufrufe, separat ein Modellinventar-Preflight. Interpreter 15/15, 0 Fehler, beide Gates ja. Selector/Formulator 16/22, 6 terminale Formulatorfehler, beide Gates nein. E2E 34/50, 1 erholter Fehler, 3 Inhaltsbeanstandungen, beide Gates nein. Stabilität 18/37, 3 Fehlerfälle, 7 Inhaltsbeanstandungen, beide Gates nein; 5/6 Antworttypfolgen stabil, Minderjährigen-Schlafpfad schwankt. Keine Wiederholung auf günstigere Ergebnisse. | Bericht 17.3; unveränderte Primärreports unter `live/runtime/live-evaluations/`, `live/measurement-summary.json`, `live/case-review-input.json` |
+| Derselbe Ergebnisabschnitt und Diskussion der Messinstrumente | Neun Markerbeanstandungen stammen aus `marker_set_valid`: der bestehende Prüfer verlangt für jede Kachel einen Marker und kollidiert mit der beschlossenen Hilfebus-Kontaktkachel ohne Ort/Marker. Konflikt vor Sichtung der E2E-Ergebnisse protokolliert. Rohgates bleiben negativ; keine nachträglich bereinigte Passquote. Die vollständigen Karten-/Markersätze sind im Runnerreport nicht archiviert, deshalb bleibt die detaillierte Sichtprüfung eigene Erhebung. | `app/live_evaluation_checks.py:_evaluate_e2e`; `PREDECLARED_INSTRUMENT_LIMITS.md`, `instrument-review-timestamp.json`, [Bericht 17](IMPLEMENTATION_REPORT.md#17-abschlussmessung-ohne-codeänderung-commit-482f1f9) |
+| `Chapters/7Discussion.tex`, Validität/Safety/Begrenzung R-20/R-21 | Null automatisch katalogseitig kritische Safetyabweichungen bedeutet keine Garantie null falscher oder riskanter Aussagen. E2E 54/Stabilität 51 Metrikvorkommen ungeprüft; bekanntes Entwicklungskorpus, kein unabhängiger Holdout. Erholte Fehler, terminale Ablehnungen und fachliche Fehlerquote sind unterschiedliche Maße. Historische menschliche Quoten und Offline-Replay nicht auf neue Antworten übertragen; diese wurden noch nicht menschlich bewertet. | Primärsummaries, Bericht 17.3, dokumentierte Charakterisierungstests und Validatorgrenzen |
+| `Chapters/4Approachneu.tex:488–509`, `Chapters/6Resultsneu.tex:235–243`, Anhang manuelles Instrument | Die geplante kriterienspezifische Eigenbewertung mit 16 Prüfeinheiten steht weiterhin aus. Die formative Textblindbewertung ergänzt sie, ersetzt den Gesamtgegenstand mit Auswahl/Dialog/Kacheln/Markern/Risiko nicht vollständig. Bei Beibehaltung der Methode noch durchführen; sonst methodische Einschränkung ausdrücklich begründen und Ergebnisbehauptungen reduzieren. Keine Teilnehmerstudie oder unabhängige Fachprüfung vorgeben. | Neues, noch unbewertetes externes `manual-evaluation-prepared/`; alter Thesis-Katalog nur gelesen, nicht geändert |
+| Dasselbe manuelle Instrument, Versionsbindung und Erwartungen | Neuer vorbereiteter Katalog auf 482f1f9/aktuelle KB. Dieselben 16 Eingaben, Setups, Kriterien und Skalen; acht vorab begründete Erwartungsänderungen für neue Namen und Hilfebus in S-01/S-03/S-05/S-07/S-08. Instanz vor Beginn abgleichen. S-11/S-12 separat mit isolierten providerfreien Fehlerfixtures erzeugen. PL/RO/RU-Sprachgestaltung ohne ausreichende Kompetenz als nicht beurteilbar; kriterienspezifische Nenner, kein Gesamtscore. | `manual-evaluation-prepared/README.md`, `preparation-review.json`; Katalog-SHA `2d18bfd0bee27d779f56921cbc07b9f128a19b7cb39be257a31d22b49955b43d` |
+
+Für den Einbau in die Thesis die Ebenen ausdrücklich trennen:
+
+1. Historische formative Ablationen und ihre fachlich begründeten Änderungen.
+2. Eingefrorene aktuelle Implementierung samt Entscheidungen und Grenzen.
+3. Neue technische Regression/Vierstufenmessung mit negativen Gates.
+4. Tatsächlich noch zu erhebende manuelle Urteile über die 16 Prüfeinheiten.
+
+Ergebnisplatzhalter erst nach der jeweiligen Erhebung ersetzen. Die vorliegende
+Prüfung erteilt keine akademische, sprachliche oder öffentliche Betriebsfreigabe.
+Die bereits bestätigte Firefox-Audiofunktion ist ein separater Funktionsnachweis,
+keine nachträgliche Änderung des Textmessprofils. Alle Rohbelege und die früheren
+Messungen behalten ihre ursprüngliche Versionszuordnung.
+
+## N. Markermaßstab abgelöst und Formulatorablehnungen aufgeklärt
+
+27.10.2026, nach ausdrücklicher Nutzerinnenentscheidung. Keine Code- oder
+Thesisänderung. Abschnitt M enthält die ursprünglichen Runnerzähler;
+für die aktuelle fachliche Einordnung gilt folgende Fortschreibung.
+
+| Fundstelle | Neue korrekte Aussage | Beleg |
+|---|---|---|
+| `Chapters/6Resultsneu.tex`, Inhaltsabweichungen der aktuellen Vierstufenreihe; Diskussion des Instruments | Die überholte Gleichsetzung aller Kacheln mit räumlichen Markern wird nicht mehr als aktuelles Kriterium verwendet. Neun entsprechende Beanstandungen entfallen in der abgeleiteten Auswertung: E2E 0 verbleibende anwendbare Inhaltsbeanstandungen, Stabilität 1 (`expected_primary_result` beim technischen Rückfall). Technische Fehlerfälle bleiben 1/3. Der ursprüngliche Runner enthält 3/7; Rohberichte unverändert archiviert. Kein nachträgliches Bestehen der Gates oder fachliche Nullfehlerquote ableiten. Normale out_of_scope-Antworten dürfen die Hilfebus-Kontaktkachel haben; Akutgefahrverbote bleiben. | Bericht 18.1; externes `current-assessment.json`, reproduzierbares Ableitungsskript und SHA-Schutz. Verbleibende ungeprüfte Metrikvorkommen E2E/Stabilität 53/51. |
+| Derselbe Abschnitt, sechs terminale Formulatorablehnungen; R-20/R-21 | Ablehnung ist nicht gleich fachliche Falschaussage. Preis „ab 5,00 €“ löst fälschlich Alterswiderspruch aus; vorhandener polnischer Einsatzzeithinweis wird nicht erkannt. Weitere polnische Grenzen betreffen Teilstring-Erhaltzusage, Tagesflexion und Zuordnung zweier Leistungsfenster. Echte Vertragsabweichungen betreffen „Rücken“ statt „Rücke“ und zwei nicht bereitgestellte Policy-Referenzen. Ein weiterer polnischer Fall scheitert an der ausdrücklichen Bindung der Telefonbedingung. | Bericht 18.2; offline `formulator-diagnosis/diagnosis.json`, gleiche Evidence/KB, sechs reproduzierte Erstdiagnosen und gekennzeichnete Gegenproben. Keine neue menschliche Richtigkeitsbewertung und keine Provideraufrufe. |
+
+Die Codeentwicklung bleibt beendet. Diese Diagnose wird als verbleibende
+Validierungsgrenze beschrieben. Die geplante manuelle 16-Einheiten-Evaluation
+bleibt nötig, sofern die angekündigte Methode beibehalten wird; insbesondere
+dürfen technische Ablehnungen nicht pauschal als fachliche Fehler kodiert werden.
+
+## O. Letzte begrenzte Validatorpräzisierung, Version 10
+
+27.10.2026; Nutzerinnen-Folgeauftrag, Arbeitsstand auf `482f1f9`, noch
+uncommittiert. Keine Thesisänderung. M/N bleiben Belege für Validator 9.
+
+| Fundstelle | Neue korrekte Aussage | Beleg |
+|---|---|---|
+| Implementierung/Faktenprüfung, R-20/R-21 | Validator 10 maskiert Eurobeträge nur vor Altersanalyse, erkennt den beobachteten polnischen Einsatzzeithinweis, grenzt polnische Erhaltphrasen gegen Wortteiltreffer ab und erkennt abweichende polnische Tagesformen. Eigentliche Preis-/Alters-/Zeit-/Leistungs-/Zusage-/Referenzprüfungen bleiben aktiv. Prompt 27/Evidence 5/Copy 10 unverändert. | Bericht 19, neuer Exec-Plan, vier begrenzt geänderte Groundingmodule |
+| Technische Regression und Testspezifikation | 28 neue positive und echte negative Fälle, darunter alle sechs falschen Tage gegenüber Sonntag und unzulässige Übernahme der Telefonzeiten. Bestehende Negativtests unverändert, vorhandener Manifesttest erwartet Validator 10. | `tests/test_grounding_final_false_positives.py`, `tests/test_live_evaluation.py`; aktuelle Abschlussbelege in Bericht 19 |
+| Ergebnisse, Diagnose gegenüber Live-Erhebung | Zwei der sechs zuvor terminal abgelehnten gespeicherten Texte passieren im Offline-Replay; vier bleiben gesperrt. Die früheren 134 menschlich bewerteten Texte haben identische Entscheidungen wie unter Validator 9. Komponentenregression, keine neue Live-Erfolgsquote oder unabhängige Generalisierung. | externes `reviewed/six-cases-replay.json`, `reviewed/replay.json`; Originale und menschliche Labels unverändert |
+| Evaluationsgegenstand/Methodik und manuelles Instrument | 83er-Vierstufenreihe auf sauberem 482f1f9 bleibt Validator 9 zugeordnet. Letzter Arbeitsstand ist Validator 10, noch final zu committen. Bei manueller Erhebung neuen Commit binden; 16 Eingaben/Erwartungen/Kriterien unverändert. Technische Evidenzstände getrennt berichten. | Bericht 19; vorbereiteter Validator-10-Katalog mit ausstehender Commitbindung |
+
+Abschlussbelege für Validator 10: nativ und im netzlosen Container je **1665
+Python bestanden, ein bekannter XFAIL und eine bekannte Warnung**, je **19 JS**;
+erneuter erfolgreicher No-Cache-Neubau, Packaging/Syntax/Abhängigkeiten und
+Runtime-Health/Start ohne Zugang/Sessionpersistenz nach Neustart und Ersetzung.
+167 App-/Testdateien bzw. 111 installierte Appdateien per SHA an den endgültigen
+Export gebunden. Fundstellen: technische Regression/Anhang Reproduktion;
+Bericht 19 und externes `2026-10-27-validator-final-false-positives/reviewed/`.
+Zehn verfälschte Kopien echter gespeicherter Live-Texte zusätzlich abgewiesen;
+keine neue menschliche Fehlerquote. Die normale native Instanz wurde wegen
+automatischer Neustartablehnung nicht aktiviert; vor manueller Erhebung
+Server neu starten und tatsächlichen finalen Commit binden.

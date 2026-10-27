@@ -1,5 +1,51 @@
 # Tests und Qualitätssicherung
 
+## Letzte gezielte Präzisierung: Validator 10
+
+28 neue Fälle in `test_grounding_final_false_positives.py` prüfen Preis/Alter,
+polnische Betriebs-/Erhaltphrasen, Tagesflexion und tatsächliche Gegenbeispiele
+bis zum vollständigen Zwei-Satz-Antwortpfad. Alle 28 bestanden. Keine bestehenden
+Negativtests geändert; Manifesttest nur auf Version 10 angepasst. Offline-Replay:
+zwei der sechs letzten terminalen Texte zusätzlich angenommen, vier weiterhin
+gesperrt; alle 134 früheren Entscheidungen gegenüber Validator 9 unverändert.
+Vollständige Belege in [Bericht 19](../IMPLEMENTATION_REPORT.md#19-begrenzte-korrektur-der-letzten-validator-fehlalarme).
+Der folgende Live-Abschlussstand wird nicht auf Validator 10 umetikettiert.
+Am endgültigen Export nach der letzten Tagesgegenprobe: nativ und im netzlosen
+Container je **1665 Python bestanden, 1 bekannter XFAIL, 1 bekannte Warnung**,
+je **19 JS**; No-Cache-Neubau, Packaging/Syntax und Runtime/Health/ohne Zugang/
+Persistenz bestanden. Zehn verfälschte Kopien der tatsächlichen gespeicherten
+Live-Texte ebenfalls sämtlich abgewiesen. Abschließende Belege ausschließlich
+im externen Unterordner `2026-10-27-validator-final-false-positives/reviewed/`;
+der 1657er-Zwischenlauf im Elternordner ist historisch.
+
+## Abschlussmessung am eingefrorenen Commit 482f1f9
+
+27.10.2026, keine Änderung an Anwendung, Tests, Daten, Katalog oder Limits.
+Erneut vollständig: nativ und netzlos im Testcontainer je **1637 bestanden,
+1 bekannter XFAIL, 1 bekannte Warnung**; je **19 JS**. Sauberer
+`docker build --pull --no-cache --target test`, Packaging/Syntax/Abhängigkeiten
+und Runtime-Health/ohne Zugang/Sessionpersistenz nach Neustart und Ersetzung
+bestanden. Eindeutige Byteinventare für Windows-Checkout und LF-Git-Archiv.
+
+Die ausdrücklich freigegebene Vierstufenreihe wurde einmal mit **83 Requests
+und 124 Provideraufrufen** erhoben. Nur Interpreter besteht beide Gates.
+Selector/Formulator: sechs terminale Ablehnungen; E2E: ein erholter Fehler;
+Stabilität: drei Fehlerfälle und schwankender Minderjährigenpfad. Neun
+Markerbeanstandungen betreffen das alte Kriterium „jede Kachel hat einen
+Marker“, das mit der Hilfebus-Kontaktkachel kollidiert. Auf Nutzerinnenentscheidung
+wird es für die aktuelle Auswertung nicht mehr verwendet: E2E 0, Stabilität 1
+verbleibende anwendbare Inhaltsbeanstandung. Rohurteile bleiben archiviert;
+keine Gates nachträglich auf bestanden setzen oder fachliche Nullfehlerquote
+behaupten. [Bericht 18](../IMPLEMENTATION_REPORT.md#18-aktueller-bewertungsmaßstab-und-formulator-diagnose)
+erklärt außerdem die sechs Formulatorablehnungen einschließlich konkreter
+Validator-Fehlalarme bei Preis/Alter und polnischer Betriebsbedingung.
+
+Belege: [Bericht 17](../IMPLEMENTATION_REPORT.md#17-abschlussmessung-ohne-codeänderung-commit-482f1f9),
+extern `2026-10-27-final-application/`. Die geplante manuelle qualitative
+Eigenbewertung umfasst weiterhin 16 Einheiten; aktualisiertes, noch leeres
+Protokoll extern vorbereitet. Frühere Abschnitte und Messungen bleiben
+historische Nachweise mit ihrer ursprünglichen Versionsbindung.
+
 ## Validator-Korrekturpaket auf 5f9ddd8, 27.10.2026
 
 Prompt 27 / Validator 9, Textvertrag 7/Evidence 5/Copy 10 unverändert.

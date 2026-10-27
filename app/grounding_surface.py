@@ -58,7 +58,7 @@ def german_boundary(text: str) -> bool:
 _OPERATING_RESTRICTION = (
     r"\b(?:zu|wahrend) (?:den |der )?einsatzzeiten\b|\bnur zu einsatzzeiten\b|"
     r"\bduring (?:the |its )?(?:deployment|operating|service) (?:times|hours)\b|"
-    r"\bw (?:godzinach|czasie) (?:pracy|dyzuru|dzialania)\b|"
+    r"\bw (?:godzinach|czasie) (?:ich )?(?:pracy|dyzuru|dzia[łl]a(?:nia|n))\b|"
     r"\bin timpul (?:orelor de interventie|programului|orelor de functionare)\b|"
     r"\bv (?:ih )?chasy (?:ih )?raboty\b"
 )
@@ -66,7 +66,7 @@ _OPERATING_RESTRICTION = (
 
 def operating_restriction_present(text: str) -> bool:
     normalized = transliterated(text)
-    if re.search(r"\b(?:not during|outside|nicht wahrend|ausserhalb|poza godzinami|in afara|vne chasov)\b", normalized):
+    if re.search(r"\b(?:not during|outside|nicht wahrend|ausserhalb|poza godzinami|nie (?:tylko )?w (?:godzinach|czasie)|in afara|vne chasov)\b", normalized):
         return False
     return bool(re.search(_OPERATING_RESTRICTION, normalized))
 

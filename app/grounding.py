@@ -47,7 +47,7 @@ from .grounding_surface import (
 from .grounding_schedules import fact_schedule_matches
 
 
-GROUNDING_VALIDATOR_VERSION = "9"
+GROUNDING_VALIDATOR_VERSION = "10"
 
 URL_RE = re.compile(r"https?://[^\s<>]+", re.IGNORECASE)
 EMAIL_RE = re.compile(r"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b", re.IGNORECASE)

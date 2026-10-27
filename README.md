@@ -16,12 +16,33 @@ Wissensquelle. Die Verarbeitung ist in vier Schichten getrennt:
 
 `app/service.py` orchestriert diese Schichten; `tests/test_architecture_boundaries.py`
 sichert die Importgrenzen. Der produktive Formulator liefert **selbst formulierte
-Sätze mit Faktenreferenzen** (Vertrag 7, Prompt 27, Evidence 5, Validator 9). Nach atomarer Prüfung wird
+Sätze mit Faktenreferenzen** (Vertrag 7, Prompt 27, Evidence 5, Validator 10). Nach atomarer Prüfung wird
 der Modelltext als `provider: "blablador"` ausgegeben, ohne Satzschablonen.
 Bei Fehlern greift der bestehende Template-Fallback. Der Prompt verlangt ein
 bis drei kurze Sätze in einfacher Sprache. Die endliche Faktenprüfung ist keine
 allgemeine semantische Wahrheitsgarantie (siehe [Systemgrenzen](#systemgrenzen)).
 Planvertrag 6 und sein Renderer bleiben nur für historische Vergleiche erhalten.
+
+**Letzter begrenzter Arbeitsstand:** Validator 10 korrigiert die belegten
+Preis-/Alters- und polnischen Erkennungsfehler. 28 neue Gegenproben und
+Offline-Replay: zwei der sechs zuletzt gesperrten Texte zusätzlich angenommen,
+vier weiterhin gesperrt; die früheren 134 Entscheidungen unverändert.
+Keine neue Live-Fehlerquote. [Versionen und Prüfbelege](IMPLEMENTATION_REPORT.md#19-begrenzte-korrektur-der-letzten-validator-fehlalarme).
+Abschließend nativ und im netzlosen Container je 1665 Python bestanden plus
+bekannter XFAIL, je 19 JS; No-Cache-Build und Runtime/Persistenz bestanden.
+
+**Referenzmessung mit Validator 9, 27.10.2026:** Anwendung und Tests auf Commit `482f1f9`
+eingefroren. Neue vollständige Regression: nativ und im netzlosen Container je
+1637 Python bestanden plus bekannter XFAIL, je 19 JS; No-Cache-Build und
+Runtime/Persistenz bestanden. Vierstufen-Livemessung mit 83 Requests und 124
+Provideraufrufen abgeschlossen; nur die Interpreterstufe besteht beide Gates.
+Technische Beanstandungen bleiben sichtbar. Der überholte Kachel-/Markermaßstab
+wird in der aktuellen Auswertung nicht mehr angewendet: E2E hat damit 0,
+Stabilität 1 verbleibende anwendbare Inhaltsbeanstandung; Rohberichte bleiben
+erhalten ([Einordnung](IMPLEMENTATION_REPORT.md#18-aktueller-bewertungsmaßstab-und-formulator-diagnose)).
+Die geplante manuelle 16-Einheiten-Eigenbewertung steht noch aus.
+[Ergebnisse und Grenzen](IMPLEMENTATION_REPORT.md#17-abschlussmessung-ohne-codeänderung-commit-482f1f9),
+[Implementierungsentscheidungen](docs/final-implementation-decisions.md).
 
 Die Validator-Korrektur auf `5f9ddd8` unterscheidet gleichwertige Telefon-/
 Betragsdarstellung von veränderten Werten, prüft Zeitfenster ohne das frühere

@@ -4,7 +4,7 @@
 
 Der Formulator formuliert den sichtbaren Text wieder selbst. `formulator_prose.py`
 definiert den strikten Textvertrag 7 und hängt sein tatsächliches JSON-Schema an
-Prompt 27 an; Evidencevertrag 5, Validator 9. Der Prompt verlangt einfache Duzform, ein bis drei kurze Sätze,
+Prompt 27 an; Evidencevertrag 5, Validator 10. Der Prompt verlangt einfache Duzform, ein bis drei kurze Sätze,
 konkrete Fragebeantwortung und ausschließlich Fakten des ausgewählten Evidence-
 Pakets. Zahlen, Bedingungen und Angebotszuordnung dürfen nicht verändert werden.
 Interne Capability-Codes werden dem Formulator nicht als Ausgabetext angeboten.
@@ -26,6 +26,10 @@ lokalisiert werden. Eurobeträge werden numerisch verglichen und weiterhin an
 die Leistung gebunden. Belegte Straßen in Notizen sind keine Fremdsprachenprosa,
 und ein quellbelegter Behandlungsort darf im Satz eines Kooperationsangebots
 stehen. Interne Referenzen und kopierbare E-Mail-Zeichen bleiben unverändert.
+Validator 10 präzisiert zusätzlich Preis-/Alterskontext und polnische Betriebs-,
+Erhaltphrasen- und Tagesformen. Prompt und Evidence bleiben unverändert;
+Preiswerte, echte Alterswidersprüche und persönliche Zusagen behalten ihre
+eigenen Prüfungen (Bericht 19).
 Gültiger Modelltext wird nur in seinen Leerzeichen normalisiert und mit
 `provider: "blablador"` ausgegeben. Bei Parser-, Grounding-, Provider- oder
 Budgetfehlern bleibt der bestehende Retry-/Templatepfad aktiv. Keine Änderung
