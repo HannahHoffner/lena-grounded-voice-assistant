@@ -1,6 +1,6 @@
 {
   "schema_version": "3",
-  "generated_at": "2026-09-24T11:55:32.282505Z",
+  "generated_at": "2026-10-28T08:08:11.287223+00:00",
   "source_dataset_hash": "3b72f95a88f98c57778f50beaa4c66af61b58493fe995feb1deb6f7756d7bf9c",
   "languages": [
     "en",
@@ -1630,8 +1630,8 @@
             "services": [
               "> Information and counseling",
               "> Support and mediation on topics such as: consumption behavior, office and authority matters, difficulties with housing, housing and homelessness, work and employment, mental burdens, worries and fears",
-              "Stand time:",
-              "every Thursday 16:00 to 17:30 o'clock at the Lindenau market",
+              "Scheduled stop:",
+              "every Thursday 16:00 to 17:30 at Lindenauer Markt",
               "> Distribution of warm drinks and small snacks, conversation offer"
             ],
             "opening_hours_raw": [
@@ -1651,10 +1651,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:08:01.446184Z",
-          "translation_version": "e38b7012c9805806de676b9802cd84f59c8c04842303181f3bf35313a7f36441",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "ebc5f22d2fc6fd7cf60d14cba07da10c4b3a8f62808bfd4252e44b00bc02f35b",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -1667,8 +1667,8 @@
             "services": [
               "> Informacje i doradztwo",
               "> Wsparcie i pośrednictwo w tematach takich jak: zachowania konsumpcyjne, sprawy urzędowe i administracyjne, trudności z mieszkaniem, bezdomność i brak mieszkania, praca i zatrudnienie, obciążenia psychiczne, zmartwienia i lęki",
-              "Czas trwania:",
-              "każdy czwartek 16:00 do 17:30 godz. na rynku Lindenauer",
+              "Postój:",
+              "w każdy czwartek od 16:00 do 17:30 na Lindenauer Markt",
               "> Podawanie ciepłych napojów i małych przekąsek, oferta rozmowy"
             ],
             "opening_hours_raw": [
@@ -1688,10 +1688,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:08:17.948695Z",
-          "translation_version": "843ba3ea222ca34f49816c37bd998190c301596c48f010b4cfeca26a33611f36",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "8a0e8358894637e76463da9a5291f5e0cd79436666202c4060b6622a44070bbc",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -1704,8 +1704,8 @@
             "services": [
               "> Informații și consiliere",
               "> Sprijin și mediere în teme precum: comportament de consum, chestiuni cu autoritățile și instituțiile, dificultăți legate de locuință, locuință și lipsă de adăpost, muncă și ocupare, sarcini psihice, griji și temeri",
-              "Program:",
-              "în fiecare joi 16:00 până 17:30 ora pe piața Lindenauer",
+              "Oprire programată:",
+              "în fiecare joi, de la 16:00 la 17:30, la Lindenauer Markt",
               "> Distribuirea de băuturi calde și gustări mici, ofertă de discuție"
             ],
             "opening_hours_raw": [
@@ -1725,10 +1725,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:08:29.523274Z",
-          "translation_version": "4e32e1676c8d638cbb994eb0d02ec1557b50d114ddc397ef12a36c7497c55d9b",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "4fc9bbb473d37b2a7ba47c8d1ecceaa2fbc57065bb422ce3e0e00fa986f4d8c4",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -1741,8 +1741,8 @@
             "services": [
               "> Информация и консультация",
               "> Поддержка и посредничество по темам, таким как: потребительское поведение, вопросы с органами и ведомствами, трудности с жильём, жильё и бездомность, работа и занятость, психические нагрузки, тревоги и страхи",
-              "Время работы:",
-              "каждый четверг 16:00 до 17:30 часов на рынке Линденау",
+              "Время стоянки:",
+              "каждый четверг с 16:00 до 17:30 на Lindenauer Markt",
               "> Раздача тёплых напитков и небольших закусок, предложение беседы"
             ],
             "opening_hours_raw": [
@@ -1751,7 +1751,7 @@
             "notes": [
               "Instagram-канал: #safeleipzig",
               "Области деятельности:",
-              "Lindenau, Neulindenau, Altlindenau, Plagwitz, Kleinzschocher, Leutzsch und Grünau"
+              "Lindenau, Neulindenau, Altlindenau, Plagwitz, Kleinzschocher, Leutzsch и Grünau"
             ]
           },
           "linguistic_review_status": "machine",
@@ -1762,10 +1762,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:08:34.486298Z",
-          "translation_version": "5772d62f363171c536607ef56d826dbe6db9add3ea2569efe59469eee57d289c",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "2de00011f08ca1e015b53b6808d1cfd8e8d055ef57c769b3adf89f56ffc656df",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -1789,16 +1789,16 @@
               "psychological burdens, worries and anxieties, health problems",
               "> Referral to other contacts or institutions",
               "> Support with authority matters",
-              "Opening times:",
-              "> every Tuesday 17:00 to 18:00 o'clock at Schwanenteich (Goethestraße)",
-              "in cooperation with the Streetwork team of the Diakonie",
-              "> every Wednesday and Friday 10:00 - 16:00 o'clock Hauptbahnhof"
+              "Scheduled stops:",
+              "> every Tuesday 17:00 to 18:00 at Schwanenteich (Goethestraße)",
+              "in cooperation with the streetwork team of Diakonie",
+              "> every Wednesday and Friday 10:00 - 16:00 Hauptbahnhof"
             ],
             "opening_hours_raw": [
               "> Tuesday: 10:00 - 16:00 o'clock (office hours)"
             ],
             "notes": [
-              "Areas of operation: Leipzig north with focus on Zentrum Nord, Nordwest, Eutritzsch, Gohlis, Möckern, Mockau, Thekla, Lindenthal",
+              "Areas of outreach: northern Leipzig, focusing on Zentrum Nord, Nordwest, Eutritzsch, Gohlis, Möckern, Mockau, Thekla, Lindenthal",
               "Instagram channel: #safeleipzig"
             ]
           },
@@ -1810,10 +1810,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:08:39.973172Z",
-          "translation_version": "6b900ce53812d8ef62a16bc540358ba6cad1741dbf5aac6af981097514a29133",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "665d4b12b32fa06c936c087387e799c95c1ce37cb5f462418b636870af32a05d",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -1830,16 +1830,16 @@
               "obciążeń psychicznych, zmartwień i lęków, problemów zdrowotnych",
               "> Pośrednictwo w kontaktach z innymi osobami lub instytucjami",
               "> Wsparcie w sprawach urzędowych",
-              "Godziny otwarcia:",
-              "> każdy wtorek 17:00 do 18:00 godziny w Schwanenteich (Goethestraße)",
-              "we współpracy z zespołem Streetwork Diakonie",
-              "> każdy środę i piątek 10:00 - 16:00 godziny Dworzec Główny"
+              "Postoje:",
+              "> w każdy wtorek od 17:00 do 18:00 przy Schwanenteich (Goethestraße)",
+              "we współpracy z zespołem pracy ulicznej Diakonie",
+              "> w każdą środę i piątek 10:00 - 16:00 Hauptbahnhof"
             ],
             "opening_hours_raw": [
               "> Wtorek: 10:00 - 16:00 godziny (godziny biura)"
             ],
             "notes": [
-              "Obszary działania: północny Leipzig z naciskiem na Centrum Północne, Północny Zachód, Eutritzsch, Gohlis, Möckern, Mockau, Thekla, Lindenthal",
+              "Obszary działania: północ Leipzig, przede wszystkim Zentrum Nord, Nordwest, Eutritzsch, Gohlis, Möckern, Mockau, Thekla, Lindenthal",
               "Kanał Instagram: #safeleipzig"
             ]
           },
@@ -1851,10 +1851,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:08:49.457053Z",
-          "translation_version": "ba4bcd14bfa30fe81dc692c90bf9213f0420c18a1c6cf66e204b1ce6d9561dc8",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "f2d72ba4b195afc4d65b25a041ca23e06116f08ca066372d5bba69dcdc4aed48",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -1871,16 +1871,16 @@
               "Stresuri emoționale, griji și temeri, probleme de sănătate",
               "> Mediere către alte contacte sau instituții",
               "> Sprijin în chestiuni cu autoritățile",
-              "Program:",
-              "> în fiecare marți 17:00 până 18:00 ora la Schwanenteich (Goethestraße)",
-              "în cooperare cu echipa Streetwork a Diaconiei",
-              "> în fiecare miercuri și vineri 10:00 - 16:00 ora la Gara Centrală"
+              "Opriri programate:",
+              "> în fiecare marți, de la 17:00 la 18:00, la Schwanenteich (Goethestraße)",
+              "în cooperare cu echipa de lucru stradal a Diakonie",
+              "> în fiecare miercuri și vineri 10:00 - 16:00 Hauptbahnhof"
             ],
             "opening_hours_raw": [
               "> Marți: 10:00 - 16:00 ora (Program birou)"
             ],
             "notes": [
-              "Zone de intervenție: nordul Leipzigului cu accent pe Centrul Nord, Nordvest, Eutritzsch, Gohlis, Möckern, Mockau, Thekla, Lindenthal",
+              "Zone de intervenție: nordul Leipzig, în special Zentrum Nord, Nordwest, Eutritzsch, Gohlis, Möckern, Mockau, Thekla, Lindenthal",
               "Canal Instagram: #safeleipzig"
             ]
           },
@@ -1892,10 +1892,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:08:56.654915Z",
-          "translation_version": "e36fa41f136c9fbfc81cb614acffc0e3c7a6f5f457f21ba84f1b506a8b2d1d2c",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "b722d8bb0b2072c44cb65c706adf3b1cd736a9c467a566b4348a66524d5563f5",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -1912,16 +1912,16 @@
               "Эмоциональные нагрузки, тревоги и страхи, проблемы со здоровьем",
               "> Посредничество в установлении контактов с другими людьми или учреждениями",
               "> Поддержка в вопросах взаимодействия с органами власти",
-              "Время работы:",
-              "> каждый вторник 17:00 до 18:00 часов у Шванентайх (Гёте-штрассе)",
-              "в сотрудничестве с командой уличной работы Диаконии",
-              "> каждую среду и пятницу 10:00 - 16:00 часов главный вокзал"
+              "Время стоянок:",
+              "> каждый вторник с 17:00 до 18:00 у Schwanenteich (Goethestraße)",
+              "в сотрудничестве с командой уличной работы Diakonie",
+              "> каждую среду и пятницу 10:00 - 16:00 Hauptbahnhof"
             ],
             "opening_hours_raw": [
               "> вторник: 10:00 - 16:00 часов (рабочее время)"
             ],
             "notes": [
-              "Сферы деятельности: север Лейпцига с акцентом на центр Север, Северо-запад, Эутриц, Гольис, Мёккерн, Моккау, Текла, Линденхальт",
+              "Районы работы: север Leipzig, прежде всего Zentrum Nord, Nordwest, Eutritzsch, Gohlis, Möckern, Mockau, Thekla, Lindenthal",
               "Instagram-канал: #safeleipzig"
             ]
           },
@@ -1933,10 +1933,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:09:03.305953Z",
-          "translation_version": "fa056082916bb228d4417d517ee105b2641dc9763fd96bc4e3542ed081ab091c",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "da7c4dc442b09db3cddeced23bd1076332522aaa12b273c44758ceeb8cb3632e",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -1957,9 +1957,9 @@
               "> social counseling",
               "> mobile clothing closet",
               "> distribution of rolls or soup",
-              "Stand time:",
-              "Tuesdays 17:00 - 18:00 o'clock Goethestraße (Schwanenteich or at the Dresden railway monument)",
-              "in cooperation with the addiction centre"
+              "Scheduled stop:",
+              "Tuesdays 17:00 - 18:00, Goethestraße (Schwanenteich or at Denkmal der Dresdner Eisenbahn)",
+              "in cooperation with Suchtzentrum"
             ],
             "opening_hours_raw": [
               "> Tuesday: 10:00 - 13:00 o'clock (office hours)"
@@ -1976,10 +1976,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:09:06.529726Z",
-          "translation_version": "6b581d42f4bdd0f767bcdcb983a4b2d8ef8b0d47d371296120b74e711027c54b",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "54f5aa5c787805b5d89dede36e05383bfe597d1df0c2590e86bc49f7df287dd4",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -1993,9 +1993,9 @@
               "> poradnictwo społeczne",
               "> mobilna szafa z ubraniami",
               "> rozdawanie bułek lub zupy",
-              "Czas trwania:",
-              "We wtorki 17:00 - 18:00 godz. Goethestraße (Schwanenteich bzw. am Denkmal der Dresdner Eisenbahn)",
-              "współpracy z centrum uzależnień"
+              "Postój:",
+              "we wtorki 17:00 - 18:00, Goethestraße (Schwanenteich lub przy Denkmal der Dresdner Eisenbahn)",
+              "we współpracy z Suchtzentrum"
             ],
             "opening_hours_raw": [
               "> Wtorek: 10:00 - 13:00 godz. (godziny biurowe)"
@@ -2012,10 +2012,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:09:14.134033Z",
-          "translation_version": "61df85996b5a25795b2f99696f770e22ccd2a6a0f4d1f13f80cacc14076653b4",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "79ff618b8e44eff6ebbfe7829aeb2be1006ae6167f474d01c7bbfe15c45ba2a7",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -2029,9 +2029,9 @@
               "> consiliere socială",
               "> camera de haine mobilă",
               "> distribuție de chifle sau supă",
-              "Perioada de funcționare:",
-              "Marţi 17:00 - 18:00 ora Goethestraße (Schwanenteich bzw. am Denkmal der Dresdner Eisenbahn)",
-              "în cooperare cu centrul de dependență"
+              "Oprire programată:",
+              "marțea, 17:00 - 18:00, Goethestraße (Schwanenteich sau lângă Denkmal der Dresdner Eisenbahn)",
+              "în cooperare cu Suchtzentrum"
             ],
             "opening_hours_raw": [
               "> Marţi: 10:00 - 13:00 ora (Program de birou)"
@@ -2048,10 +2048,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:09:20.050215Z",
-          "translation_version": "9092ea4728ee7266a356d4ad0eb0a37d5e8068cadc0b843983eb8eda85f7457d",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "cdc9fc5ca8a7a097671267c157696fabe155b64ec422b1723101d53e085d48ee",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -2065,9 +2065,9 @@
               "> социальное консультирование",
               "> мобильный гардероб",
               "> раздача булочек или супа",
-              "Время работы:",
-              "По вторникам 17:00 - 18:00 часов Goethestraße (Schwanenteich bzw. am Denkmal der Dresdner Eisenbahn)",
-              "в сотрудничестве с центром зависимости"
+              "Время стоянки:",
+              "по вторникам 17:00 - 18:00, Goethestraße (Schwanenteich или у Denkmal der Dresdner Eisenbahn)",
+              "в сотрудничестве с Suchtzentrum"
             ],
             "opening_hours_raw": [
               "> Вторник: 10:00 - 13:00 часов (рабочее время)"
@@ -2084,10 +2084,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:09:26.455990Z",
-          "translation_version": "19d26ad7aaaa7025bbfa246bf1b478cc1866f7646ba70f0d1555b412bc633bc2",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "89b278fed9e7ff3f3bca518238b728f6da729c07f23cb29b6001e698b57bf116",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -2116,7 +2116,7 @@
               "> Accompaniment to doctors, authorities, offices"
             ],
             "opening_hours_raw": [
-              "Opening times:",
+              "Scheduled stops:",
               "> Tuesday: Koehlerstr. 10:00 - 12:00",
               "> Wednesday: Brücke am Kohlweg / Torgauer Platz 13:00 - 15:00",
               "> Thursday: Rabet 17:00 - 19:00",
@@ -2132,10 +2132,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:09:32.952567Z",
-          "translation_version": "3e9067e3ae2dae64415e732443617b558c09af591db0315cd2e72c494a4d5dc2",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "1311dde74dd7c6ce841e222fd12385dbbce860f05866cdb9be983fd8b32c4762",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -2157,11 +2157,11 @@
               "> Towarzyszenie do lekarzy, urzędów, instytucji"
             ],
             "opening_hours_raw": [
-              "Godziny otwarcia:",
-              "> wtorek: Koehlerstr. 10:00 - 12:00 godz.",
-              "> środa: Brücke am Kohlweg / Torgauer Platz 13:00 - 15:00 godz.",
-              "> czwartek: Rabet 17:00 - 19:00 godz.",
-              "> piątek: Koehlerstr. 10:00 - 12:00 godz. wspólnie z Medibusem od CABL e. V."
+              "Postoje:",
+              "> wtorek: Koehlerstr. 10:00 - 12:00",
+              "> środa: Brücke am Kohlweg / Torgauer Platz 13:00 - 15:00",
+              "> czwartek: Rabet 17:00 - 19:00",
+              "> piątek: Koehlerstr. 10:00 - 12:00 wspólnie z Medibus należącym do CABL e. V."
             ],
             "notes": []
           },
@@ -2173,10 +2173,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:09:39.664901Z",
-          "translation_version": "06983a4749a0fd7e6fb077d8cfc40b6a7c11cc309d47795595ae4ce46b5770e0",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "3eb68abd6e61787266d1ab9ab103783ff186975c91f36396d7164617b23a8563",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -2198,11 +2198,11 @@
               "> Însoțire la medici, autorități, birouri"
             ],
             "opening_hours_raw": [
-              "Program:",
-              "> Marţi: Koehlerstr. 10:00 - 12:00 ora",
-              "> Miercuri: Brücke am Kohlweg / Torgauer Platz 13:00 - 15:00 ora",
-              "> Joi: Rabet 17:00 - 19:00 ora",
-              "> Vineri: Koehlerstr. 10:00 - 12:00 ora împreună cu Medibus de la CABL e. V."
+              "Opriri programate:",
+              "> marți: Koehlerstr. 10:00 - 12:00",
+              "> miercuri: Brücke am Kohlweg / Torgauer Platz 13:00 - 15:00",
+              "> joi: Rabet 17:00 - 19:00",
+              "> vineri: Koehlerstr. 10:00 - 12:00 împreună cu Medibus al CABL e. V."
             ],
             "notes": []
           },
@@ -2214,10 +2214,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:09:48.913002Z",
-          "translation_version": "65394eff32a43de3afca7774d8cb64ec09948fff4ab199b48432a93e6545e29f",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "bb7dfabe5e810a8fa52b4f95fea862d9978c8da9b1dbae163b524ccfbaafe35c",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -2239,11 +2239,11 @@
               "> Сопровождение к врачам, в органы власти, в учреждения"
             ],
             "opening_hours_raw": [
-              "Время работы:",
-              "> Вторник: Koehlerstr. 10:00 - 12:00 ч",
-              "> Среда: Brücke am Kohlweg / Torgauer Platz 13:00 - 15:00 ч",
-              "> Четверг: Rabet 17:00 - 19:00 ч",
-              "> Пятница: Koehlerstr. 10:00 - 12:00 ч совместно с Medibus от CABL e. V."
+              "Время стоянок:",
+              "> вторник: Koehlerstr. 10:00 - 12:00",
+              "> среда: Brücke am Kohlweg / Torgauer Platz 13:00 - 15:00",
+              "> четверг: Rabet 17:00 - 19:00",
+              "> пятница: Koehlerstr. 10:00 - 12:00 совместно с Medibus организации CABL e. V."
             ],
             "notes": []
           },
@@ -2255,10 +2255,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:09:57.657222Z",
-          "translation_version": "206951460841a86d5ee1f9d58c0829418bf93b11472f75a819f5c8559b1d7145",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "546ab914ac79a204f57e5f7b93aaa84085fbc9e8467aee4af57b23d640f87570",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -2909,18 +2909,18 @@
             ],
             "notes": [
               "Уличная работа и использование уличного мобильного подразделения осуществляются в районах:",
-              "- Эутрицш",
-              "- Гольис-Норд",
-              "- Гольис-Митте",
-              "- Гольис-Зюд",
-              "- Линденхаль",
-              "- Лютшена-Штамельн",
-              "- Мёккерн",
-              "- Варен",
-              "- Видеритш",
-              "- Зеехаузен",
-              "- Центр-Юго-восток",
-              "- Центр-Восток"
+              "- Eutritzsch",
+              "- Gohlis-Nord",
+              "- Gohlis-Mitte",
+              "- Gohlis-Süd",
+              "- Lindenthal",
+              "- Lützschena-Stahmeln",
+              "- Möckern",
+              "- Wahren",
+              "- Wiederitzsch",
+              "- Seehausen",
+              "- Zentrum-Südost",
+              "- Zentrum-Ost"
             ]
           },
           "linguistic_review_status": "machine",
@@ -2931,10 +2931,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:11:39.658527Z",
-          "translation_version": "bba2eb4059d0626296d1c0885a92f3e5418e4e0cb57a6734316c670e1b90b724",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "ae8f7b66a851fbdb48651d333765d2c3f09f138a49879931ede4578db913fa60",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -2973,10 +2973,10 @@
               "> Friday: 16:00 - 17:00 o'clock"
             ],
             "notes": [
-              "Streetwork deployment areas / presence times:",
-              "> Wednesday: 15:00 - 17:30 o'clock on the move in the South district",
-              "> Thursday: 15:30 - 18:00 o'clock on the move in Dölitz DÖsen / Lößnig",
-              "> Friday occasional on the move in southern Leipzig",
+              "Streetwork areas / scheduled stops:",
+              "> Wednesday: 15:00 - 17:30, on outreach in Südvorstadt",
+              "> Thursday: 15:30 - 18:00, on outreach in Dölitz DÖsen / Lößnig",
+              "> Friday: outreach in southern Leipzig as needed for specific occasions",
               "Instagram channel: machtlos_streetwork"
             ]
           },
@@ -2988,10 +2988,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:11:48.280384Z",
-          "translation_version": "5d768df96d2781a0e7b747f39ea4c4ce2e34519946e554c4273dad671baf1def",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "1867be010cc204b26981e49e6147eb115781ef24441a41313cee5742f6f87869",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -3023,10 +3023,10 @@
               "> Piątek: 16:00 - 17:00 godz."
             ],
             "notes": [
-              "Obszary działań Streetwork / Czas przebywania:",
-              "> Środa: 15:00 - 17:30 godz. w drodze w południowej dzielnicy",
-              "> Czwartek: 15:30 - 18:00 godz. w drodze w Dölitz DÖsen / Lößnig",
-              "> Piątek, w zależności od okazji, w drodze w południowej części Lipska",
+              "Obszary pracy ulicznej / postoje:",
+              "> środa: 15:00 - 17:30, praca w terenie w Südvorstadt",
+              "> czwartek: 15:30 - 18:00, praca w terenie w Dölitz DÖsen / Lößnig",
+              "> piątek: praca w terenie na południu Leipzig zależnie od okoliczności",
               "Kanał na Instagramie: machtlos_streetwork"
             ]
           },
@@ -3038,10 +3038,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:12:02.264727Z",
-          "translation_version": "46a3a7049b1a29b42c137750eca60b5fcdbcdf6de613ef49ce8874e170c7e7f0",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "32b66d4df0d489b0119a32fe034e600f26b3a8afa6642201b8a749785ad7b254",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -3073,10 +3073,10 @@
               "> Vineri: 16:00 - 17:00 ore"
             ],
             "notes": [
-              "Zone de intervenție Streetwork / Timp de prezență:",
-              "> Miercuri: 15:00 - 17:30 ore în mișcare în zona Südvorstadt",
-              "> Joi: 15:30 - 18:00 ore în mișcare în Dölitz DÖsen / Lößnig",
-              "> Vineri, în funcție de eveniment, în mișcare în sudul Leipzigului",
+              "Zone de lucru stradal / opriri programate:",
+              "> miercuri: 15:00 - 17:30, activitate pe teren în Südvorstadt",
+              "> joi: 15:30 - 18:00, activitate pe teren în Dölitz DÖsen / Lößnig",
+              "> vineri: activitate pe teren în sudul Leipzig, în funcție de situație",
               "Canal Instagram: machtlos_streetwork"
             ]
           },
@@ -3088,10 +3088,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:12:16.490164Z",
-          "translation_version": "7732aa79734a1437dac74462519707b225ff1c2b62c31675b9810e2a64ca8048",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "8fa5436fd97cca796900169cac341ec4cca2cc925ee3aa4d2072cf4ec5ee50ec",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -3123,10 +3123,10 @@
               "> Пятница: 16:00 - 17:00 часов"
             ],
             "notes": [
-              "Области работы уличной работы / часы присутствия:",
-              "> Среда: 15:00 - 17:30 часов в пути в южном предместье",
-              "> Четверг: 15:30 - 18:00 часов в пути в Дёлиц Дёзен / Лёссниг",
-              "> Пятница, в зависимости от случая, в пути в южной части Лейпцига",
+              "Районы уличной работы / время стоянок:",
+              "> среда: 15:00 - 17:30, выездная работа в Südvorstadt",
+              "> четверг: 15:30 - 18:00, выездная работа в Dölitz DÖsen / Lößnig",
+              "> пятница: выездная работа на юге Leipzig по конкретным поводам",
               "Instagram-канал: machtlos_streetwork"
             ]
           },
@@ -3138,10 +3138,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:12:27.547804Z",
-          "translation_version": "75cd5a9b5db314636826ef61ee8762a97bdec2763fab743aee038de04cf56fe7",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "974a5580fee43aecb549208aee09f3855f880eff2be8824a3a83978c2124a7b7",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -3169,7 +3169,7 @@
             ],
             "opening_hours_raw": [],
             "notes": [
-              "> Operating time: Thursday 16:00 - 17:30 o'clock at weekly rotating locations",
+              "> Scheduled stop: Thursday 16:00 - 17:30 at locations changing weekly",
               "> Locations are always published at the beginning of the month on Instagram",
               "> https://www.instagram.com/streetworkwesten/"
             ]
@@ -3182,10 +3182,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:12:33.442637Z",
-          "translation_version": "0f57370e8ea43ef6afaf071f1777ac6f24444e3cd9f83a9a80239a45264aaa35",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "da8856c8c387ab9b8598746e0145b4294310ff36a4045f91108a7a96b8a5a817",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -3206,7 +3206,7 @@
             ],
             "opening_hours_raw": [],
             "notes": [
-              "> Czas trwania: czwartek 16:00 - 17:30 godz. w tygodniowo zmieniających się miejscach",
+              "> Postój: czwartek 16:00 - 17:30 w miejscach zmieniających się co tydzień",
               "> Lokalizacje są zawsze publikowane na początku miesiąca na Instagramie",
               "> https://www.instagram.com/streetworkwesten/"
             ]
@@ -3219,10 +3219,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:12:39.274103Z",
-          "translation_version": "721132c4072ebe19a7aee9f727732e37b8e2faf82ad4b89eff6e70bec16fa4e8",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "a74709147dd1d85dbd671b41d3d277ac03e1cd23f55bf66e0e8f9602d79e550f",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -3243,7 +3243,7 @@
             ],
             "opening_hours_raw": [],
             "notes": [
-              "> Perioadă de prezență: Joi 16:00 - 17:30 ora la locații care se schimbă săptămânal",
+              "> Oprire programată: joi 16:00 - 17:30 în locuri care se schimbă săptămânal",
               "> Locațiile sunt întotdeauna publicate la începutul lunii pe Instagram",
               "> https://www.instagram.com/streetworkwesten/"
             ]
@@ -3256,10 +3256,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:12:44.450858Z",
-          "translation_version": "29395319cc0337cb77695586c61d3289460c0a5b7781a9cd248a39a555fc52d2",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "a47ab9f4d61fbc4bb533a3b1fb2b3858dc942e8af9563dd9c7d1a4a57081d3dd",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -3280,7 +3280,7 @@
             ],
             "opening_hours_raw": [],
             "notes": [
-              "> Время работы: четверг 16:00 - 17:30 часов в еженедельно меняющихся местах",
+              "> Время стоянки: четверг 16:00 - 17:30, места меняются каждую неделю",
               "> Места всегда публикуются в начале месяца в Instagram",
               "> https://www.instagram.com/streetworkwesten/"
             ]
@@ -3293,10 +3293,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:12:50.790090Z",
-          "translation_version": "20716f99071f2d291631bd543fad7956d3fdc6bb2f6831eaa0216ec430ec47f0",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "23c77b82e367a0993a52c7e5d0d0dbaa14c4afaa30a20cd0623b7c6233ddb254",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -3903,8 +3903,8 @@
               "> warm clothing, blankets and sleeping bags",
               "> referral to emergency overnight shelters",
               "> mobile basic supplies and referral counseling",
-              "Stand times:",
-              "> every Sunday 20:00 - 21:00 o'clock at the west side of the main station with soup distribution"
+              "Scheduled stops:",
+              "> every Sunday 20:00 - 21:00 on the west side of Hauptbahnhof, with soup distribution"
             ],
             "opening_hours_raw": [
               "> Deployment daily 18:00 - 23:00 o'clock, citywide",
@@ -3923,10 +3923,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:14:09.264129Z",
-          "translation_version": "b94413e74fb362d543440903459ce073ac44b6e7e610f413e0d5f73ca784e65d",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "9886c13f4f1fe14e3cf509a77a63498598cb81e9b685062e6e4633f3246f79cd",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -3942,8 +3942,8 @@
               "> ciepłe ubrania, koce i śpiwory",
               "> pośrednictwo w noclegach awaryjnych",
               "> mobilna podstawowa opieka i doradztwo skierowujące",
-              "Godziny postoju:",
-              "> każdej niedzieli 20:00 - 21:00 godz. po zachodniej stronie dworca głównego z wydawaniem zupy"
+              "Postoje:",
+              "> w każdą niedzielę 20:00 - 21:00 po zachodniej stronie Hauptbahnhof, wydawanie zupy"
             ],
             "opening_hours_raw": [
               "> działanie codziennie 18:00 - 23:00 godz., ogólnomiejski",
@@ -3962,10 +3962,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:14:17.880044Z",
-          "translation_version": "53122c21399e8e0adb63c6fe69adf3c9097965e497f7292103b025bbb265d41e",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "32436e45a6426b3eb22087bb2225ec5889f832197d6a389204db016a7c805271",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -3981,8 +3981,8 @@
               "> îmbrăcăminte călduroasă, pături și saci de dormit",
               "> mediere către adăposturile de urgență",
               "> asistență de bază mobilă și consiliere de orientare",
-              "Program:",
-              "> în fiecare duminică 20:00 - 21:00 ora la partea vestică a gara principală cu distribuție de supă"
+              "Opriri programate:",
+              "> în fiecare duminică, 20:00 - 21:00, pe latura de vest a Hauptbahnhof, cu distribuire de supă"
             ],
             "opening_hours_raw": [
               "> Intervenție zilnic 18:00 - 23:00 ora, în toată orașul",
@@ -4001,10 +4001,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:14:28.028344Z",
-          "translation_version": "0524364395ad35320b498c3bb08053d575b5f949e418e87faea2edc1ca04eedd",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "75a8d2a043728ab0932beee669e47f156ff9063248e3a2c711f539f945f022d5",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -4020,8 +4020,8 @@
               "> теплая одежда, одеяла и спальные мешки",
               "> передача в пункты ночлежки",
               "> мобильное базовое обеспечение и консультация по направлениям",
-              "Время работы:",
-              "> каждое воскресенье 20:00 - 21:00 часов на западной стороне главного вокзала с раздачей супа"
+              "Время стоянок:",
+              "> каждое воскресенье 20:00 - 21:00 с западной стороны Hauptbahnhof, раздача супа"
             ],
             "opening_hours_raw": [
               "> операция ежедневно 18:00 - 23:00 часов, по всему городу",
@@ -4040,10 +4040,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:14:37.422552Z",
-          "translation_version": "008097fa72a9d03875774b30df46e8ebdaec9ad2991759d640a837701c81639d",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "356dd0b3267a83a31abeb8155060e0207cd90d422737281ae4857587e5f4c9a2",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -4531,23 +4531,23 @@
             ],
             "opening_hours_raw": [
               "Mobile offering / Medibus:",
-              "> Wednesday: 18:30 o'clock Central Station",
-              "> Friday: 10:00 o'clock Koehlerstraße / Dresdner Straße and 14:00 o'clock Central Station",
-              "> Sunday: 20:00 o'clock Central Station"
+              "> Wednesday: 18:30 o'clock Hauptbahnhof",
+              "> Friday: 10:00 o'clock Koehlerstraße / Dresdner Straße and 14:00 o'clock Hauptbahnhof",
+              "> Sunday: 20:00 o'clock Hauptbahnhof"
             ],
             "notes": [
               "Free medical consultations by appointment only:",
               "Monday:",
-              "> 15:00 - 16:00 o'clock at the day center OASE, Nürnberger Straße 31 (nursing consultation)",
-              "> 19:00 - 20:00 o'clock in Alternative III, Braunstraße 28a",
-              "> 20:00 to 21:00 o'clock at the emergency shelter for homeless men, Helenenstraße 26",
+              "> 15:00 - 16:00 at Tagestref OASE, Nürnberger Straße 31 (nursing consultation)",
+              "> 19:00 - 20:00 at Alternative III, Braunstraße 28a",
+              "> 20:00 to 21:00 at emergency shelter for homeless men, Helenenstraße 26",
               "Tuesday:",
-              "> 13:00 - 15:00 o'clock at the day center OASE, Nürnberger Straße 31 (medical consultation)",
+              "> 13:00 - 15:00 at Tagestreff OASE, Nürnberger Straße 31 (medical consultation)",
               "Wednesday:",
-              "> 16:00 - 17:00 o'clock in Alternative I, Chopinstraße 13",
-              "> 17:00 - 19:00 o'clock at the overnight house for homeless men, Helenenstraße 26",
+              "> 16:00 - 17:00 at Alternative I, Chopinstraße 13",
+              "> 17:00 - 19:00 at overnight accommodation for homeless men, Helenenstraße 26",
               "Thursday:",
-              "> 19:30 to 21:00 o'clock at the emergency shelter for homeless men, Rückmarsdorfer Straße 5-7"
+              "> 19:30 to 21:00 at emergency shelter for homeless men, Rückmarsdorfer Straße 5-7"
             ]
           },
           "linguistic_review_status": "machine",
@@ -4558,10 +4558,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:15:52.742195Z",
-          "translation_version": "a2e7d3d614b5023f74dd7624b860063ccf611f5e4b359e0a7469132a49c012e0",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "991442f702026eecb481b2dba413c2141d3f4a457c76b52fd1b25e854420f3cf",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -4584,16 +4584,16 @@
             "notes": [
               "Bezpłatne konsultacje lekarskie po wcześniejszej rejestracji:",
               "Poniedziałek:",
-              "> 15:00 - 16:00 godz. w Tagestref OASE, Nürnberger Straße 31 (porada pielęgniarska)",
-              "> 19:00 - 20:00 godz. w Alternative III, Braunstraße 28a",
-              "> 20:00 do 21:00 godz. w nocnym schronisku dla bezdomnych mężczyzn, Helenenstraße 26",
+              "> 15:00 - 16:00 w Tagestref OASE, Nürnberger Straße 31 (porada pielęgniarska)",
+              "> 19:00 - 20:00 w Alternative III, Braunstraße 28a",
+              "> 20:00 do 21:00 w noclegowni dla bezdomnych mężczyzn, Helenenstraße 26",
               "Wtorek:",
-              "> 13:00 - 15:00 godz. w Tagestreff OASE, Nürnberger Straße 31 (porada lekarska)",
+              "> 13:00 - 15:00 w Tagestreff OASE, Nürnberger Straße 31 (porada lekarska)",
               "Środa:",
-              "> 16:00 - 17:00 godz. w Alternative I, Chopinstraße 13",
-              "> 17:00 - 19:00 godz. w domu noclegowym dla bezdomnych mężczyzn, Helenenstraße 26",
+              "> 16:00 - 17:00 w Alternative I, Chopinstraße 13",
+              "> 17:00 - 19:00 w domu noclegowym dla bezdomnych mężczyzn, Helenenstraße 26",
               "Czwartek:",
-              "> 19:30 do 21:00 godz. w nocnym schronisku dla bezdomnych mężczyzn, Rückmarsdorfer Straße 5-7"
+              "> 19:30 do 21:00 w noclegowni dla bezdomnych mężczyzn, Rückmarsdorfer Straße 5-7"
             ]
           },
           "linguistic_review_status": "machine",
@@ -4604,10 +4604,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:16:04.667911Z",
-          "translation_version": "114a8c38fc87567b820b8463b415875c7020456007335963e4c67697899c342f",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "44ced1290c236df7ac1dbf6f457141b2f1fc8fc4b5cafbcef7cdd14af37a13c3",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -4623,23 +4623,23 @@
             ],
             "opening_hours_raw": [
               "Ofertă mobilă / Medibus:",
-              "> Miercuri: 18:30 ora Gara Centrală",
-              "> Vineri: 10:00 ora Strada Koehler / Strada Dresdner și 14:00 ora Gara Centrală",
-              "> Duminică: 20:00 ora Gara Centrală"
+              "> Miercuri: 18:30 ora Hauptbahnhof",
+              "> Vineri: 10:00 ora Koehlerstraße / Dresdner Straße și 14:00 ora Hauptbahnhof",
+              "> Duminică: 20:00 ora Hauptbahnhof"
             ],
             "notes": [
               "Consultații medicale gratuite cu programare prealabilă:",
               "Luni:",
-              "> 15:00 - 16:00 ora la punctul de zi OASE, Strada Nürnberger 31 (consultație de îngrijire)",
-              "> 19:00 - 20:00 ora în Alternativa III, Strada Braun 28a",
-              "> 20:00 până la 21:00 ora la adăpostul de urgență pentru bărbați fără locuință, Strada Helenen 26",
+              "> 15:00 - 16:00 la Tagestref OASE, Nürnberger Straße 31 (consultație de îngrijire)",
+              "> 19:00 - 20:00 la Alternative III, Braunstraße 28a",
+              "> 20:00 până la 21:00 la adăpostul de urgență pentru bărbați fără locuință, Helenenstraße 26",
               "Marți:",
-              "> 13:00 - 15:00 ora la punctul de zi OASE, Strada Nürnberger 31 (consultație medicală)",
+              "> 13:00 - 15:00 la Tagestreff OASE, Nürnberger Straße 31 (consultație medicală)",
               "Miercuri:",
-              "> 16:00 - 17:00 ora în Alternativa I, Strada Chopin 13",
-              "> 17:00 - 19:00 ora la casa de cazare pentru bărbați fără locuință, Strada Helenen 26",
+              "> 16:00 - 17:00 la Alternative I, Chopinstraße 13",
+              "> 17:00 - 19:00 la centrul de cazare pentru bărbați fără locuință, Helenenstraße 26",
               "Joi:",
-              "> 19:30 până la 21:00 ora la adăpostul de urgență pentru bărbați fără locuință, Strada Rückmarsdorfer 5-7"
+              "> 19:30 până la 21:00 la adăpostul de urgență pentru bărbați fără locuință, Rückmarsdorfer Straße 5-7"
             ]
           },
           "linguistic_review_status": "machine",
@@ -4650,10 +4650,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:16:13.333346Z",
-          "translation_version": "ed2b8ac59200b24e6e55a4a273f12be594e9ef888abcb7bae9c5dcf0c47a97ca",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "736b1a4d6fd3bf2e61edb96d8de92f1b189c3deaf3111710d04ae654f50ee5be",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,
@@ -4676,16 +4676,16 @@
             "notes": [
               "Бесплатные врачебные приёмы по предварительной записи:",
               "Понедельник:",
-              "> 15:00 - 16:00 ч. в дневном центре OASE, Nürnberger Straße 31 (консультация по уходу)",
-              "> 19:00 - 20:00 ч. в Alternative III, Braunstraße 28a",
-              "> 20:00 до 21:00 ч. в ночлежке для бездомных мужчин, Helenenstraße 26",
+              "> 15:00 - 16:00 в Tagestref OASE, Nürnberger Straße 31 (консультация по уходу)",
+              "> 19:00 - 20:00 в Alternative III, Braunstraße 28a",
+              "> 20:00 до 21:00 в ночлежке для бездомных мужчин, Helenenstraße 26",
               "Вторник:",
-              "> 13:00 - 15:00 ч. в дневном центре OASE, Nürnberger Straße 31 (врачебный приём)",
+              "> 13:00 - 15:00 в Tagestreff OASE, Nürnberger Straße 31 (врачебный приём)",
               "Среда:",
-              "> 16:00 - 17:00 ч. в Alternative I, Chopinstraße 13",
-              "> 17:00 - 19:00 ч. в ночлежке для бездомных мужчин, Helenenstraße 26",
+              "> 16:00 - 17:00 в Alternative I, Chopinstraße 13",
+              "> 17:00 - 19:00 в доме ночлега для бездомных мужчин, Helenenstraße 26",
               "Четверг:",
-              "> 19:30 до 21:00 ч. в ночлежке для бездомных мужчин, Rückmarsdorfer Straße 5-7"
+              "> 19:30 до 21:00 в ночлежке для бездомных мужчин, Rückmarsdorfer Straße 5-7"
             ]
           },
           "linguistic_review_status": "machine",
@@ -4696,10 +4696,10 @@
           "curation_catalog_hash": "7a585741ca1c70db6121c335b94d662d5ce7db276ff60c7dbb6be9dc6383d831",
           "curation_version": "prototype-2026-10-27-validator-ablation",
           "translation_prompt_version": "4",
-          "provider": "blablador",
-          "model_identifier": "alias-fast",
-          "created_at": "2026-08-14T10:16:24.263350Z",
-          "translation_version": "8f000528bc9dc5a87ae6ae59cd7ea745a7d6b1b1ded35adc0c2e2c3e47e1d77b",
+          "provider": "codex-machine-revision",
+          "model_identifier": "codex-machine-revision",
+          "created_at": "2026-10-28T08:08:11.287223+00:00",
+          "translation_version": "5b265833e5d636496d1da1032699c7e4337d2f54871ab2b71d7032e44656cf63",
           "reviewed_by_role": null,
           "reviewed_at": null,
           "review_scope": null,

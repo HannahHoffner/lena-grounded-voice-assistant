@@ -23,11 +23,32 @@ bis drei kurze Sätze in einfacher Sprache. Die endliche Faktenprüfung ist kein
 allgemeine semantische Wahrheitsgarantie (siehe [Systemgrenzen](#systemgrenzen)).
 Planvertrag 6 und sein Renderer bleiben nur für historische Vergleiche erhalten.
 
-**Letzter begrenzter Arbeitsstand:** Validator 10 korrigiert die belegten
+**Aktueller Arbeitsstand, 28.10.2026:** Kachelübersetzungen nach manueller
+Erhebung ergänzt, **Copy 11**, noch uncommittiert. Standzeitprosa und
+Telefonzusätze sind in Kachel, Marker-Tafel und registriertem Vorlesetext
+lokalisiert; Namen/Adressen und operative Werte bleiben erhalten. Nativ und
+im netzlosen Container je **1695 Python bestanden + bekannter XFAIL**, je
+**19 JS**; No-Cache-Build und Runtime/Persistenz bestanden. 28 soziale
+Angebote, 21 Toiletten und 21 Brunnen in fünf Sprachen geprüft. Maschinenstatus
+bleibt ehrlich; keine muttersprachliche Freigabe. Server zur Aktivierung neu
+starten. [Änderungen und Belege](IMPLEMENTATION_REPORT.md#21-kachelübersetzungen-nach-manueller-erhebung).
+
+**Letzter Live-Messstand: Commit `557a487`, Validator 10, Copy 10.** Vierstufenmessung:
+83 Requests, 126 Provideraufrufe; nur Interpreter besteht beide Rohgates.
+Technische Fehlerfälle gegenüber 482f1f9: 0→0, 6→4, 1→3, 3→2
+(Interpreter, Selector/Formulator, E2E, Stabilität). Ohne den bereits abgelösten
+Markermaßstab bleiben E2E/Stabilität je 0 anwendbare Inhaltsbeanstandungen;
+53/51 Metrikvorkommen bleiben ungeprüft. 6/6 Antworttypfolgen stabil.
+Keine allgemeine Korrektheitsquote. Die inzwischen bereitgestellten manuellen
+Erhebungsdateien gehören ebenfalls zu diesem Stand vor der Kachelkorrektur.
+[Messung und Grenzen](IMPLEMENTATION_REPORT.md#20-neue-vierstufenmessung-auf-557a487).
+
+**Letzte begrenzte Korrektur:** Validator 10 korrigiert die belegten
 Preis-/Alters- und polnischen Erkennungsfehler. 28 neue Gegenproben und
 Offline-Replay: zwei der sechs zuletzt gesperrten Texte zusätzlich angenommen,
 vier weiterhin gesperrt; die früheren 134 Entscheidungen unverändert.
-Keine neue Live-Fehlerquote. [Versionen und Prüfbelege](IMPLEMENTATION_REPORT.md#19-begrenzte-korrektur-der-letzten-validator-fehlalarme).
+Dies ist ein Offline-Replay; die anschließende neue Live-Reihe steht oben.
+[Versionen und Prüfbelege](IMPLEMENTATION_REPORT.md#19-begrenzte-korrektur-der-letzten-validator-fehlalarme).
 Abschließend nativ und im netzlosen Container je 1665 Python bestanden plus
 bekannter XFAIL, je 19 JS; No-Cache-Build und Runtime/Persistenz bestanden.
 
@@ -59,8 +80,9 @@ Markdown-Quellmarker erscheinen nicht als Listenformat in der Antwort.
 Zugangsvorbehalte und Hinweise bleiben gebunden. Komplexe Quelltexte werden
 nicht frei umgeschrieben; zertifizierte Leichte Sprache oder unabhängig geprüfte
 Fremdsprachen werden damit nicht behauptet. Die Wiederherstellung der Modellprosa
-ist ein neuer Arbeitsstand gegenüber der Live-Messung auf 2462e7d und benötigt
-vor der finalen manuellen Erhebung eine gemeinsame Commit-/Evidenzzuordnung.
+ist ein anderer Artefaktstand als die Live-Messung auf 2462e7d. Die aktuelle
+Commit-/Evidenzzuordnung steht in Bericht 20; die tatsächliche manuelle Instanz
+ist vor Erhebung abzugleichen.
 
 Die normale Bedarfsauswahl benötigt einen konfigurierten LLM-Interpreter. Ohne
 ihn startet die Anwendung, liefert bei normalen Anfragen aber nur den

@@ -14,6 +14,7 @@ from typing import Any
 from pydantic import ValidationError
 
 from .config import Settings
+from .card_texts import localize_card_text
 from .kb_loader import KnowledgeBase
 from .models import Language, OfferCard, OfferRecord
 from .spoken_text import offer_spoken_text
@@ -474,9 +475,10 @@ def localize_offer_card(
     catalog: TranslationCatalog,
     policy: TranslationRuntimePolicy,
 ) -> OfferCard:
-    """Übersetzt nur die freigegebenen Textfelder in TRANSLATABLE_FIELDS; Namen,
+    """Localize stored prose and closed operational annotations for display.
 
-    Adressen, Kontakte und Standzeiten bleiben immer aus der Runtime-KB.
+    Names/addresses and source facts remain unchanged; only phone annotations
+    and stand prose use the versioned application-copy projection.
     """
     card = _base_card(offer)
     update: dict[str, object] = {}
@@ -494,6 +496,8 @@ def localize_offer_card(
                 "opening_hours_raw": record.fields.opening_hours_raw,
                 "notes": record.fields.notes,
             }
+    update["phone_numbers"] = [localize_card_text(value, language, policy) for value in card.phone_numbers]
+    update["standzeiten_raw"] = [localize_card_text(value, language, policy) for value in card.standzeiten_raw]
     # Single point where spoken_text is built, from whichever fields (source or
     # translated) actually ended up on the card -- keeps card, tile and the TTS
     # allow-list (app/spoken_text.py) from ever disagreeing.
@@ -504,6 +508,8 @@ def localize_offer_card(
         services=update.get("services", card.services),
         opening_hours_raw=update.get("opening_hours_raw", card.opening_hours_raw),
         notes=update.get("notes", card.notes),
+        phone_numbers=update["phone_numbers"],
+        standzeiten_raw=update["standzeiten_raw"],
     )
     return card.model_copy(update=update)
 def analyze_translation_catalog(catalog: TranslationCatalog, kb: KnowledgeBase) -> dict[str, object]:

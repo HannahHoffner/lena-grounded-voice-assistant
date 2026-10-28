@@ -1,4 +1,12 @@
-# Kontrollierte Antwortakte – Stand 27.10.2026
+# Kontrollierte Antwortakte – Stand 28.10.2026
+
+Nachfolgende Kacheldarstellungskorrektur: Copy 11 lokalisiert bekannte Kontakt-
+und Standzeitprosa sowie Infrastrukturhinweise. Formulatorvertrag 7/Prompt 27,
+Evidence 5, Validator 10 und Safety 2 unverändert. Rohtelefon-/Standzeitfakten
+des Formulators bleiben erhalten; registrierte Kachel-/Marker-Vorlesetexte
+verwenden dieselbe lokalisierte Anzeigeprojektion. Einzelne vorhandene
+Sprachdatensätze mit neuen Übersetzungshashes, ohne menschliche Freigabe.
+[Bericht 21](../IMPLEMENTATION_REPORT.md#21-kachelübersetzungen-nach-manueller-erhebung).
 
 ## Aktueller produktiver Textvertrag 7 (ersetzt den folgenden Planpfad)
 

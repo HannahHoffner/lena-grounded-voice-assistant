@@ -261,7 +261,9 @@ def test_timmitohelp_machine_localizations_are_current_without_human_approval(cu
         assert record.linguistic_review_status.value == "machine"
         assert record.reviewed_by_role is None and record.reviewed_at is None
         assert card.address is None
-        assert card.standzeiten_raw == offer.standzeiten_raw
+        assert card.standzeiten_raw != offer.standzeiten_raw
+        for token in ("16:00", "16:30", "17:30", "Dittrichring", "Lennéanlage", "Nikolaistraße"):
+            assert any(token in line for line in card.standzeiten_raw)
         assert card.notes == record.fields.notes
 
 
@@ -392,9 +394,10 @@ def test_hilfebus_runtime_notes_include_operating_hours_call_reminder(curated_kb
 
 
 def test_card_translation_cannot_override_curated_identity_facts(curated_kb) -> None:
-    """Name, Adresse, Kontakte und Standzeiten bleiben immer aus der
+    """Name, Adresse und operative Werte bleiben immer aus der
 
-    Runtime-KB. opening_hours_raw/notes sind seit Schema 3 übersetzbar
+    Runtime-KB; bekannte Kontakt-/Standzeitprosa wird nun lokalisiert.
+    opening_hours_raw/notes sind seit Schema 3 übersetzbar
     (Länge bleibt erhalten, exakte Uhrzeiten bleiben als geschützte Tokens
     unverändert), dürfen sich im Wortlaut aber vom deutschen Original
     unterscheiden.

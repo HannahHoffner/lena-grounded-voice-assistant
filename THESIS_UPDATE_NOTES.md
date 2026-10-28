@@ -1,6 +1,13 @@
 # Notwendige Thesis-Anpassungen nach der Audit-Umsetzung
 
-## Aktuelle notwendige Korrektur: Modellprosa wiederhergestellt
+**Aktuell:** Kachelübersetzungskorrektur nach der Erhebung, Copy 11, noch
+uncommittiert; [Abschnitt Q](#q-kachelübersetzungen-nach-manueller-erhebung).
+**Letzte Live-Messung:** Commit `557a487`, Validator 10; Einbauhinweise
+in [Abschnitt P](#p-neue-abschlussmessung-auf-557a487-validator-10).
+Die folgenden früheren Angaben behalten ihre historischen Versionsbezüge.
+Keine Thesisdateien wurden geändert.
+
+## Historische Korrektur: Modellprosa wiederhergestellt
 
 **Technisch belegt:** In `Chapters/5Solutionneu.tex` beim Formulator und der
 Faktenprüfung (bisher Zeilen 502–503) das aktuelle Protokoll als Evidence 4,
@@ -354,3 +361,55 @@ Zehn verfälschte Kopien echter gespeicherter Live-Texte zusätzlich abgewiesen;
 keine neue menschliche Fehlerquote. Die normale native Instanz wurde wegen
 automatischer Neustartablehnung nicht aktiviert; vor manueller Erhebung
 Server neu starten und tatsächlichen finalen Commit binden.
+
+## P. Neue Abschlussmessung auf 557a487, Validator 10
+
+27.10.2026, nach Nutzerinnen-Commit und erneutem Live-Auftrag. Keine Thesis-
+oder Anwendungscodeänderung. Dieser Abschnitt ist der aktuelle Messbezug;
+M/N bleiben Validator 9 zugeordnet, O dokumentiert die formative Präzisierung.
+
+| Fundstelle | Neue korrekte Aussage | Code-/Testbeleg |
+|---|---|---|
+| `Chapters/5Solutionneu.tex`, Implementierung/Faktenprüfung; R-20/R-21 | Eingefrorener Commit 557a487a43d0edc3cac57f4bbc80670673ddc066: Interpreter 4/12, Selector 1/3, Formulator 7/27, Evidence 5, Validator 10, Copy 10, Safety 2. Letzte Preis-/Polnischpräzisierungen aus O jetzt committed. Endliche Referenz-/Literal-/Relationsprüfung, keine allgemeine Wahrheitsgarantie. | Bericht 19/20, `docs/final-implementation-decisions.md`, Traceability, neue Gegenprobentests |
+| `Chapters/6Resultsneu.tex:69–89`, Reproduktionsanhang | Alle 167 App-/Testdateien bytegleich zum endgültigen Validator-10-Export: je 1665 Python bestanden plus bekannter XFAIL und Warnung, je 19 JS, No-Cache-Build und Runtime/Persistenz aus O. Diese vollständigen Prüfungen nicht wegen reiner Commit-/Livemessung erneut ausgeführt; SHA-Zuordnung statt neuer Testdurchführung behaupten. | `regression-link.json` im neuen Messpaket; ursprüngliche vollständige Belege in `2026-10-27-validator-final-false-positives/reviewed/` |
+| `Chapters/6Resultsneu.tex:173–233`, Vierstufen-Livemessung | Neue einmalige Reihe: 83 Requests/126 Provideraufrufe plus ein separates Modellinventar-GET. Interpreter 15/15, 0 technische Fehlerfälle, beide Gates ja. Selector/Formulator 16/20, 4 terminale Fehlerfälle; E2E 34/53, 3 Fehlerfälle (2 erholt, 1 Templatefallback); Stabilität 18/38, 2 erholte Fehlerfälle. Letzte drei Stufen bestehen beide Rohgates nicht. | Bericht 20.1–20.3; neue Primärreports, `live/measurement-summary.json`, `audit.json`; gleicher Katalog/KB/Limits/Profil wie 482f1f9 |
+| Derselbe Ergebnisabschnitt, aktueller Inhaltsmaßstab/Stabilität | Nach bereits beschlossener Ablösung des Markermaßstabs E2E und Stabilität je 0 anwendbare Inhaltsbeanstandungen; Rohzähler 3/6 bleiben archiviert. Normale out_of_scope-Kontaktkachel zulässig, Akutgefahrverbote unverändert. 53/51 verbleibende Metrikvorkommen ungeprüft. Alle 6 Antworttypfolgen über je 3 Wiederholungen stabil, vorher 5/6; keine Aussage identischer Texte. | `current-assessment.json` mit SHA-geschützten Originalen und Ableitungsskript; Bericht 20.2 |
+| Ergebnisvergleich/Diskussion | Gegenüber 482f1f9 technische Fehlerfälle 0→0, 6→4, 1→3, 3→2. Formulator und Antworttypstabilität besser beobachtet, Gesamtpfad diesmal technisch schlechter. Stochastische neue Texte und bekannter Entwicklungskatalog: kein kausaler oder unabhängiger Generalisierungsnachweis. Keine menschliche Richtigkeitsquote für diese neuen Antworten vorhanden. Null automatisch kritische Safetyabweichungen ist keine Garantie null Falschaussagen. | Bericht 20.2/20.3, unveränderte neue Antworten/Ablehnungen im Messpaket |
+| Vier Formulatorablehnungen, R-20/R-21 | Zwei neue Texte nennen „Rücken“ statt „Rücke“, zwei referenzieren nicht bereitgestelltes out_of_scope_boundary. Beide polnischen Fälle passieren. Ablehnung, Vertragsverletzung, fachliche Falschaussage und erfolgreiche Wiederholung getrennt benennen. Der neue deutsche Normaltext scheitert am Namen, nicht erneut an Preis/Alter. | Neue gespeicherte `rejected_structured_output`, Fehlercodes; Bericht 20.3 |
+| `Chapters/4Approachneu.tex:488–509`, `Chapters/6Resultsneu.tex:235–243`, manuelles Instrument | Die geplante 16-Einheiten-Eigenbewertung bleibt ausstehend. Neues vorbereitetes Paket bindet finalen Commit, aktuelle Modellkennung und Referenzlauf; Eingaben/Erwartungen/Kriterien/Skalen unverändert, CSVs bytegleich. Tatsächliche Instanz vor Beginn abgleichen; S-11/S-12 isolierte Fehlerfixtures, zeitbezogene Fälle mit realer Zeit, unzureichend beherrschte Sprachen nicht beurteilbar. | `manuelle-evaluation-557a487-vorbereitet.zip`, `validator10-baseline-note.json`; Katalog-SHA bf1c4eccc7e0fef472b41643712dc0a72bc365c4da71c139b4813d669cc2daa1 |
+
+Belegwurzel: `%LOCALAPPDATA%/LENA/verification/2026-10-27-validator10-live/`.
+Alle vier Stufen wurden vollständig und ohne ausgewählte Wiederholungen
+ausgeführt; ursprüngliche Reports/Gates bleiben unverändert. Die neue Reihe
+ist keine Wiederholung der historischen 120er-Ablation und keine manuelle
+Erhebung. Datengetreue Fehler, ungeprüfte offene Leistungsprosa, Sprachqualität
+und Zielgruppenverständlichkeit bleiben Grenzen. Hilfebus bei Akutgefahr
+weiterhin unverändert; die frühere ausdrückliche Nutzerinnenentscheidung steht
+aus. Nach dieser Messung ausschließlich Dokumentation fortgeschrieben.
+
+## Q. Kachelübersetzungen nach manueller Erhebung
+
+28.10.2026, enger Folgeauftrag; keine Thesisänderung. P beschreibt weiterhin
+die letzte Live-Reihe auf 557a487/Copy 10. Neue Korrektur noch uncommittiert.
+
+| Fundstelle | Neue korrekte Aussage | Code-/Testbeleg |
+|---|---|---|
+| Implementierung Mehrsprachigkeit/Kacheln, R-04/R-08/R-12 und FR-09 | Copy 11 ergänzt geschlossene Anzeigeübersetzungen für Standzeitprosa und Telefonbedingungen. Namen/Adressen, Nummern/Zeiten/Preise und kanonische Fakten bleiben erhalten. Marker-Tafeln und registrierte Vorlesetexte verwenden dieselbe Projektion. Hilfebus-Kontakt ohne Ort; Mitarbeitertelefon nur Kontaktkachel, Einsatztelefon in Vorlesetext/Sonntagsmarker. | Bericht 21; `card_texts.py`, `i18n.py`, `service.py`, `spoken_text.py`, `hilfebus.py`, Copy-Ressource |
+| Übersetzungsarchitektur und Provenienz | 34 neue Copy-Schlüssel je Sprache; 131 Textfelder in 33 vorhandenen Sprachdatensätzen korrigiert. Inhaltsgebundene Übersetzungsversionen neu; Schema 3/Übersetzungsprompt 4 bleiben. Zielsprachen machine, DE review_pending; keine muttersprachliche Freigabe. Unbekannte spätere Quelltexte bleiben unverändert. | `translation-revisions.json`, `inventory-audit.json`; gespeicherte Übersetzungen und identische Checkoutkopie |
+| Technische Nachprüfung / Abgrenzung zur Evaluation | Inventar: 28 soziale Angebote, drei Standorte, 21 Toiletten und 21 Brunnen in fünf Sprachen. 30 neue Tests; vorhandene Sprachinvarianten bewusst auf operative Werte präzisiert. Alle Grounding-Negativtests unverändert. Vollständige aktuelle Regression/Container/Runtimebelege nach Abschluss in Bericht 21. | `test_card_translation_completeness.py`, Bericht 21.3; externe Abschlussbelege `reviewed/` |
+| Manuelle Evaluation, Ergebnisdarstellung und Diskussion | Erhobene Antworten, Screenshots und P1-Datei gehören zum Stand vor diesem Patch. Deutsche Kontakt-/Standzeitreste sind beobachtete Befunde; Korrektur als anschließende formative Nachbesserung berichten. Originalurteile nicht auf den neuen Stand übertragen oder überschreiben. `ratings.py` kennzeichnet den erzeugten Stand als KI-gestützten Entwurf zur P1-Prüfung; persönliche Bestätigung nicht allein aus Skript oder Dateiname ableiten. | Unveränderte Originaldateien und SHA in `input-manifest.json`; Bericht 21.1/21.4 |
+| Systemgrenzen und Versionsbindung | Formulator 7/27, Evidence 5, Validator 10, Safety 2 und fachliche Auswahl unverändert. Bestehende Safety-/Dialog-/Fallback-/UI-Texte bytegleich. KB-Fingerprint unverändert; neue Copy-/Übersetzungshashes und nachfolgend tatsächlichen finalen Commit angeben. Keine neue Live-Fehlerquote oder unabhängige Generalisierung. | Inventaraudit und Regression, Bericht 21 |
+
+Belegwurzel: `%LOCALAPPDATA%/LENA/verification/2026-10-28-card-translation-review/`.
+Providerfreie Frontendprüfung in vier Zielsprachen mit Screenshots/DOM/JSON;
+keine erneute menschliche Bewertung und keine neue Live-Modellreihe. Für die
+Nachbesserung gezielte anschließende Anzeige-/Vorlesetextprüfung gesondert
+protokollieren, andere Erhebungsbefunde nicht als behoben ausgeben.
+
+Abschlussnachweis für diesen Korrekturexport: nativ und im netzlosen Container
+je **1695 Python bestanden, 1 bekannter strikter XFAIL und 1 bekannte Warnung**,
+je **19 JS**. Erfolgreicher sauberer No-Cache-Neubau, Packaging/Syntax/
+Abhängigkeiten sowie Runtime-Health/Start ohne Zugang/Sitzungserhalt über
+Neustart und Containerersatz. 169 App-/Testdateien und 112 installierte
+Runtime-Appdateien per SHA gebunden. Keine neue Live-Fehlerquote; Bericht 21.3
+und externe Abschlussbelege in `reviewed/`.

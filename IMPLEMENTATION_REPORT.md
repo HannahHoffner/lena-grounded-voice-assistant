@@ -1,6 +1,13 @@
 # Umsetzung des LENA-Audits
 
-## Aktueller Korrekturstand auf 5f9ddd8, 27.10.2026
+**Aktueller Arbeitsstand, 28.10.:** Kachelübersetzungskorrektur mit Copy 11,
+noch uncommittiert; [Abschnitt 21](#21-kachelübersetzungen-nach-manueller-erhebung).
+**Letzter Live-Messstand:** Commit `557a487`, Validator 10, vollständige
+Vierstufenreihe mit 83 Requests/126 Provideraufrufen:
+[Abschnitt 20](#20-neue-vierstufenmessung-auf-557a487).
+Frühere Abschnitte beschreiben ihre jeweiligen historischen Stände.
+
+## Historischer Korrekturstand auf 5f9ddd8, 27.10.2026
 
 Validator 9 / Prompt 27 (Textvertrag 7, Evidence 5, Copy 10). Das gezielte
 Korrekturpaket nach der zweiten menschlichen Blindbewertung steht in Abschnitt
@@ -1686,3 +1693,241 @@ Stoppen/Neustarten der normalen nativen Instanz auf Port 8002 mit
 ausgeführt; die alte Instanz (PID 21200) bleibt bestehen und muss durch die
 Nutzerin neu gestartet werden. Der aktuelle Code und das neue Runtimeimage
 sind geprüft; diese Aktivierung wird nicht als erfolgt behauptet.
+
+## 20. Neue Vierstufenmessung auf 557a487
+
+27.10.2026, nach Nutzerinnen-Commit und erneutem Live-Auftrag. Alle vier
+offiziellen Stufen jeweils einmal auf sauberem Commit
+`557a487a43d0edc3cac57f4bbc80670673ddc066` abgeschlossen; keine Wiederholung
+zur Verbesserung der Ergebnisse. **83 Requests, 126 reale Provideraufrufe**,
+zusätzlich ein separater Modellinventar-GET. Anwendung/Tests/Daten während
+der gesamten Reihe unverändert; danach ausschließlich Dokumentation.
+
+### 20.1 Identität und Vergleichbarkeit
+
+Interpreter 4/12, Selector 1/3, Formulator 7/27, Evidence 5, Validator **10**,
+Copy 10, Safety 2, Live-Katalog 3 und E2E-Assessment 3. Gleicher KB-Fingerprint
+`287a3fd53f517dbbdcc1ebd6330b3280239d4e23739b6a89d3e1a2d8465e08dc`,
+gleiche Szenariohashes, Limits und Konfiguration wie bei 482f1f9. Alle Stufen
+mit `alias-fast`; Provider bestätigt durchgehend
+`01_-_GPT-OSS-120b_-_an_open_model_released_by_OpenAI_in_August_2025`.
+Timeouts 15/30/30 s, Requestbudget 45 s, maximal 4096 Tokens pro Komponente.
+Automatische Synchronisation/Promotion, Interaktionslogging, Kartenprovider
+und Audio im isolierten Textmessprofil deaktiviert; keine Änderung am normalen
+lokalen Audio-Profil. Das vorhandene Audio-Smoke bleibt ein separater Beleg.
+
+Alle **167 App-/Testdateien** sind bytegleich zum endgültigen Validator-10-
+Export aus Abschnitt 19. Dessen vollständige native/netzlose Pythonprüfung
+(je 1665 bestanden + bekannter XFAIL), je 19 JS, No-Cache-Neubau und
+Runtime-/Persistenznachweise werden über `regression-link.json` gebunden;
+wegen dieser reinen neuen Messung nicht erneut ausgeführt. **Keine Tests
+geändert**, keine neuen Anwendungsversionen oder Konfiguration eingeführt.
+
+### 20.2 Ergebnisse und bisheriger Referenzlauf
+
+| Stufe | Requests / Calls neu | Technische Fehlerfälle alt → neu | Anwendbare Inhaltsbeanstandungen alt → neu | Rohgates Vertrag / Inhalt neu |
+|---|---:|---:|---:|---|
+| Interpreter | 15 / 15 | 0 → 0 | 0 → 0 | ja / ja |
+| Selector/Formulator | 16 / 20 | 6 → 4 | 0 → 0 | nein / nein |
+| End-to-End | 34 / 53 | 1 → 3 | 0 → 0 | nein / nein |
+| Stabilität | 18 / 38 | 3 → 2 | 1 → 0 | nein / nein |
+
+„Alt“ ist 482f1f9/Validator 9 aus Abschnitten 17/18, nicht die historische
+120er-Ablation. Die anwendbare Auswertung verwendet in beiden Reihen den
+bereits beschlossenen Maßstab ohne `marker_set_valid` und ohne Kartenverbot
+bei normalem `out_of_scope`; Akutgefahr-Kartenverbote bleiben aktiv.
+Die neuen Rohberichte enthalten E2E **3** und Stabilität **6** ausschließlich
+markerbedingte Inhaltsbeanstandungen. Sie bleiben unverändert archiviert,
+zählen aber nicht als aktuelle Anwendungsabweichungen. Keine Rohgates neu
+berechnet. Das Inhaltsgate setzt außerdem ein bestandenes Vertragsgate voraus;
+null anwendbare Inhaltsbeanstandungen bedeutet daher kein bestandenes Gate.
+
+Alle **6/6 Antworttypfolgen** sind diesmal über je drei Wiederholungen stabil
+(vorher 5/6); dies belegt keine identischen Texte oder durchgehend korrekte
+Ausgaben. E2E/Stabilität behalten **53/51 ungeprüfte anwendbare
+Metrikvorkommen**. Null automatisch katalogseitig kritische Safetyabweichungen
+in allen Stufen ist keine Garantie null falscher oder riskanter Aussagen.
+
+### 20.3 Verbleibende technische Befunde
+
+- Selector/Formulator: `f_de_grounded` und `f_de_injection` nennen „Rücken“
+  statt „Rücke“ (`proper_name_not_exact`). `f_ro_injection` und
+  `f_ru_injection` referenzieren die im angebotenen Paket nicht enthaltene
+  Policy `out_of_scope_boundary` (`formulator_invalid_fact`). Beide polnischen
+  Fälle passieren diesmal. Die vier terminalen Ablehnungen sind konkrete
+  Namens-/Referenzvertragsverletzungen, keine vier nachgewiesenen fachlichen
+  Falschaussagen. Der deutsche neue Normalfall unterscheidet sich vom alten
+  Preissatz; sein neuer Namensfehler widerspricht dem erfolgreichen Offline-
+  Replay des ursprünglichen Preissatzes nicht.
+- E2E: `e_food_time` zuerst `time_not_cited`, danach erholt;
+  `e_sleep_minor` erst `email_not_cited`, dann `unsafe_realtime_claim`,
+  anschließend Template-Fallback mit passendem Antworttyp;
+  `e_session_continuation` im zweiten Turn `formulator_invalid_fact`, danach
+  erholt. Zwei erholte Fehler und ein terminaler Rückfall, keine verschwundenen
+  technischen Befunde durch erfolgreiche Antwortausgabe.
+- Stabilität: `e_sleep_minor` in Wiederholung 1 und 2 je `email_not_cited`,
+  beide erholt; keine weitere technische Fehlerzeile. Alle Antworttypen
+  bleiben über ihre drei Wiederholungen gleich.
+
+Das ist ein neuer vollständiger Lauf mit stochastisch anderen Modelltexten,
+kein kontrollierter kausaler Nachweis jeder Zähleränderung durch den Patch.
+Der Gesamtpfad hat diesmal mehr technische Fehlerfälle; keine pauschale
+Verbesserung aller Maße behaupten. Fachliche/sprachliche Richtigkeit der neuen
+Antworten wurde nicht durch Codex bewertet. Bekannter Katalog, ein Modellprofil,
+ein Durchlauf, kein unabhängiger Holdout.
+
+### 20.4 Belege und nächste manuelle Erhebung
+
+Externes unverändertes Messpaket:
+`%LOCALAPPDATA%/LENA/verification/2026-10-27-validator10-live/`.
+
+- `live/measurement-summary.json`, `live/case-review-input.json`,
+  `live/source-manifest.json`, `live/source-557a487.zip`, Konfiguration ohne
+  Secrets und vollständige Originalreports unter `live/runtime/live-evaluations/`.
+- Run-IDs: Interpreter `run_9cdcfa75c2c94005aedbe68f0c9d521c`,
+  Selector/Formulator `run_fd1c51a3715e47788f45a24ae6cf471c`,
+  E2E `run_091c6bb40c6047439f940cf1e2a85021`,
+  Stabilität `run_f746d371099d4e7480cd3b9d61acd6fb`.
+- `current-assessment.json` mit kriterienspezifischer Ableitung und Hashes;
+  `audit.json` mit Vergleich, Fehlerzeilen und Identitätsprüfungen;
+  `regression-link.json` bindet die bereits vollständige technische Regression.
+
+Das vorbereitete manuelle Paket ist jetzt ebenfalls an 557a487/Validator 10
+und den aktuellen Referenzlauf gebunden:
+`manuelle-evaluation-557a487-vorbereitet.zip`. Dieselben 16 Eingaben,
+Erwartungen, Kriterien und Skalen wie im vorher vorbereiteten Validator-10-
+Paket; CSVs bytegleich und unbewertet. Katalog-SHA
+`bf1c4eccc7e0fef472b41643712dc0a72bc365c4da71c139b4813d669cc2daa1`.
+Vor Erhebung tatsächliche Instanz abgleichen; die CLI-Messung startet den
+normalen Server 8002 nicht neu. Noch keine manuellen Antworten oder Urteile.
+
+code-documentation und Selbstreview: aktuelle Verweise fortgeschrieben,
+historische Messungen standgebunden erhalten; externe Ableitung geprüft,
+Originalhashes unverändert. Keine Source-/Test-/Daten-/Safety-/Thesisänderung,
+keine Secrets, kein Commit/Tag/Push. Die manuelle 16-Einheiten-Eigenbewertung
+bleibt bei Beibehaltung der geplanten Methode auszuführen; keine neue
+allgemeine Wahrheits- oder Abgabefreigabe aus technischen Metriken ableiten.
+
+## 21. Kachelübersetzungen nach manueller Erhebung
+
+28.10.2026, ausdrücklich beauftragte Darstellungskorrektur nach der Erhebung
+auf 557a487. Plan: `docs/exec-plans/card-translation-completeness.md`.
+Vorhandene Dokumentationsfortschreibungen erhalten; kein Commit/Tag/Push.
+
+### 21.1 Eingaben und Umfang
+
+Gespeicherte P1-XLSX, korrigierte Erfassungs-XLSX, Screenshot-DOCX und
+`ratings.py` gelesen, Originalhashes und Kopien extern gesichert. Keine
+verbundene Office-Sitzung verfügbar, daher keine Aussage über ungespeicherte
+Excelwerte. Originale unverändert, Skript nicht ausgeführt. Es bezeichnet seine
+Urteile als KI-gestützten Entwurf zur P1-Prüfung; daraus wird keine unabhängige
+menschliche Bestätigung abgeleitet. Hier ausschließlich Fundstellen für die
+beauftragte Darstellungskorrektur, keine neue Richtigkeitsbewertung.
+
+Ursache: vollständige Telefonzeilen/Standzeiten waren als operative Fakten
+geschützt, einschließlich deutscher Prosa. Bei Marker-Standorten blieben
+außerdem Beschreibung/Öffnungszeiten deutsch. Das Frontend führt Markerziele
+vor API-Karten zu Kacheln zusammen; nur `response.cards` zu prüfen reicht nicht.
+
+Geprüft: **28 soziale Angebote × 5 Sprachen = 140 Projektionen**, die drei
+gesonderten Standorte sowie **21 Toiletten und 21 Trinkbrunnen jeweils in fünf
+Sprachen**. Telefon-/Standzeitreste, einzelne Hinweise, Brunnenbeschreibungen
+und Toilettenausstattung korrigiert. Übersetzte/transliterierte Orts- und
+Straßenschreibweisen wieder auf ihre Quellschreibweise gesetzt; keine neuen
+Angebotsnamen. Alle Angebotsübersetzungen weiterhin formal gültig.
+
+### 21.2 Umsetzung und Verträge
+
+- `app/card_texts.py`: geschlossene serverseitige Anzeigeprojektion mit **34
+  neuen Copy-Schlüsseln je Sprache**. Bekannte Kontaktbedingungen, Anreden und
+  Standzeitprosa lokalisieren; Nummern, Personennamen, Zeiten und Ortsnamen
+  erhalten. Kein allgemeines Wortersetzen in Namen/Adressen. Operative Zahlen,
+  URLs und E-Mails vor Rückgabe auf Gleichheit prüfen. Unbekannte zukünftige
+  Quelltexte bleiben unverändert statt ungeprüfter Laufzeitübersetzung.
+- `i18n`, `service`, `spoken_text`, `hilfebus`: gleiche Felder in Kacheln,
+  zusätzlichen Marker-Tafeln und sessiongebundenem Vorlesetext. Mitarbeiter-
+  kontakt weiterhin nur Kontaktkachel, Einsatztelefon in deren Vorlesetext
+  und am Sonntagsmarker; mobiler Hilfebuskontakt weiterhin ohne Ort.
+- Infrastruktur: bekannte Standortprosa/Betriebszeiten und „All Gender“
+  lokalisiert. Reine Namen und Anschriften unverändert. Eine Brunnenmarker-
+  Adresszeile kann bislang auch Beschreibungstext enthalten: dort ausschließlich
+  bekannte Prosa lokalisieren, keine tatsächliche Anschrift ändern.
+- **131 Textfelder in 33 Sprachdatensätzen für neun Angebote** korrigiert.
+  Neue inhaltsgebundene `translation_version` je geändertem Datensatz;
+  `machine`, keine menschliche Freigabe. Bootstrap und bestehende Checkoutkopie
+  `data/i18n/offer_translations.json` identisch.
+
+**Application Copy 10 → 11**, neuer Statusbereich `card`. Deutsches Inventar
+weiter `review_pending`, Zielsprachen `machine`; Source-/Reviewed-only-Policy
+bleibt wirksam. Übersetzungsschema 3/Übersetzungsprompt 4 unverändert: die vier
+gespeicherten Feldtypen nicht erweitert, zusätzliche Anzeigeprosa in der Copy.
+Formulatorvertrag 7/Prompt 27, Evidence 5, Validator 10 und Safety 2 unverändert.
+Alle bisherigen UI-/Dialog-/Fallback-/Safety-Textwerte außerhalb neuer
+Kacheltexte bytegleich. Rohe Telefon-/Standzeitfakten im Formulatorpaket bleiben
+aus der Runtime-KB. Keine Auswahl-/Grounding-/Safetyänderung.
+
+Keine Kuration geändert, daher keine neue Kurationsentscheidung/-version.
+Keine WFS-/Release-/Manifest-/Snapshotänderung. Runtime-KB-Fingerprint bleibt
+`287a3fd53f517dbbdcc1ebd6330b3280239d4e23739b6a89d3e1a2d8465e08dc`;
+kein pauschaler Sessionreset durch diese Darstellungskorrektur.
+
+### 21.3 Tests und Belege
+
+**30 neue Fälle** in `tests/test_card_translation_completeness.py`: gesamtes
+Telefon-/Standzeitinventar, Namen/Adressen/Literale, echte API-/Marker-/Session-
+TTS-Pfade für Sonntagsbus und Schwanenteich, Medibus-Standprosa, Infrastruktur,
+Source-/Reviewed-only-Fallback, unbekannte Namen/Texte und manipulierte Ziffer
+einer Textressource. Alle 30 gezielt bestanden; Medibus-Standprojektion mit
+`medical_care` geprüft, fachliche Auswahl nicht verändert.
+
+| Angepasster bestehender Test | Grund |
+|---|---|
+| `test_translation_quality.test_all_runtime_cards_preserve_names_and_operational_facts` | Deutsche Kontakt-/Standzeitstrings sind kein sprachunabhängiger Vertrag mehr: Listenlänge, operative Literale und deutsche Quellansicht absichern; Namen/Adressen weiterhin exakt. |
+| `test_curation.test_timmitohelp_machine_localizations_are_current_without_human_approval` | Standzeitprosa übersetzt, alle drei Zeiten/Standorte unverändert; keine menschliche Freigabe. |
+| `test_translation_quality.test_application_resources_and_scenario_review_inventory_are_complete` | Neuer Statusbereich `card`. |
+| `test_dialogue.test_dialog_copy_has_five_languages_and_explicit_review_status_in_health` | Nur erwartete Copy-Version 10 → 11. |
+| `test_packaging.test_clean_wheel_install_starts_outside_checkout` | Nur erwartete Copy-Version 10 → 11. |
+
+Kein Grounding-Negativtest geändert oder gelöscht. Erster voller Lauf mit 14
+Fehlschlägen: zwei alte Copy-Versionserwartungen und zwölf an ein gespeichertes
+RU-Zeitliteral gebundene Fälle. Bereits vollständige RU-Übersetzung samt
+Fakt-ID wiederhergestellt; danach alle 26 Schedule-Literal-Tests unverändert
+grün. Erste native-/Containerlogs bleiben Zwischenbelege; Abschlussprüfungen
+anschließend erneut in `reviewed/`.
+
+Providerfreie Prüfung im echten Frontend: EN/PL/RO/RU, aufgeklappte Kacheln,
+keine JavaScriptfehler; Kontaktzusätze/Standzeittexte in Screenshots, DOM und
+JSON gesichert. Keine Modellaufrufe, keine neue manuelle Bewertung, kein neuer
+externer Audio-Smoke.
+
+Abschluss am endgültigen Export in `reviewed/`:
+
+| Prüfung | Ergebnis |
+|---|---|
+| Python nativ, vollständig | **1695 bestanden, 1 bekannter strikter XFAIL, 1 bekannte Warnung**, 435,88 s; `native.xml`, `native.log` |
+| Python im netzlosen Container, vollständig | **1695 bestanden, 1 bekannter XFAIL, 1 bekannte Warnung**, 318,67 s; `docker-tests.log` |
+| Frontend / Syntax / Abhängigkeiten | Je **19/19 JS** nativ/Container; compileall und pip check bestanden, JS-Syntax im Container geprüft |
+| Sauberer Neubau / Packaging | `docker build --pull --no-cache --target test` und Runtime-Build erfolgreich; Wheel-/SDist-/sauberer Installationspfad in voller Suite geprüft |
+| Runtime | Healthy, installiertes Modul Validator 10/Copy 11; ohne Zugang kontrollierter Rückfall; Sitzung nach Neustart und Containerersatz erhalten; eigener Loopback-Port 8020/read-only; `runtime-smoke.json` |
+| Bytebindung | 169 App-/Testdateien im Testimage und 112 installierte Runtime-Appdateien exakt per SHA an endgültigen Export gebunden; `image-source-identity.json` |
+
+Testimage `sha256:c2027ef5467e0544033e9c4b0c840d41023cf7af79c21d0aa99ffe375c7ce11f`,
+Runtimeimage `sha256:9f715e024211f59787e8ec08febe3e1b38e70597a0585c8b80be3e6fd5494f41`.
+Spätere Änderungen am geprüften Export ausschließlich Markdown. Eigene
+Prüfcontainer/-volumes entfernt; code-documentation und Selbstreview
+durchgeführt, keine Secrets. Keine App-/Test-/Übersetzungsänderung nach Abschluss.
+
+### 21.4 Versionsbindung und Grenzen
+
+Extern: `%LOCALAPPDATA%/LENA/verification/2026-10-28-card-translation-review/`:
+`input-manifest.json`, `input-sources/`, `translation-revisions.json`,
+`inventory-audit.json`, `cards-before.json`, `cards-after.json`, `ui-check/`;
+Abschlussregression/Build/Runtime in `reviewed/`.
+
+Manuelle Erhebung und Vierstufenreihe bleiben **557a487/Copy 10** zugeordnet.
+Dieser Patch verbessert keine historischen Urteile rückwirkend. Andere manuelle
+Befunde hier nicht behoben oder umgewertet. Nachprüfung betroffener Kacheln
+gesondert protokollieren. Vollständigkeit des aktuellen Inventars und
+Literalbindung geprüft; keine muttersprachliche Sprachqualität oder allgemeine
+semantische Fehlerfreiheit behauptet. Normaler Server nicht neu gestartet;
+zur Aktivierung erforderlich. Thesis unverändert.

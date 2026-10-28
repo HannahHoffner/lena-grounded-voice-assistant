@@ -1,6 +1,33 @@
 # Thesis–Code-Traceability
 
-## Letzter begrenzter Arbeitsstand: Validator 10
+## Kachelübersetzungen nach manueller Erhebung, 28.10.2026
+
+Aktueller Arbeitsstand auf 557a487, noch uncommittiert: Copy 11, Formulator
+7/27, Evidence 5, Validator 10, Safety 2 unverändert. Geschlossene Anzeige-
+projektion für Kontaktbedingungen/Standzeitprosa in Kachel/Marker/TTS;
+bekannte Infrastrukturtexte ergänzt. Namen/Adressen und operative Werte
+erhalten. 131 Textfelder in 33 Sprachdatensätzen korrigiert, 34 neue Copy-
+Schlüssel je Sprache; Maschinenstatus, keine menschliche Freigabe.
+R-04/R-08/R-12 und FR-09 betroffen, keine fachliche Auswahländerung.
+Erhobene manuelle Ergebnisse und letzte Livemessung bleiben auf Copy 10;
+Originale unverändert. [Bericht 21](IMPLEMENTATION_REPORT.md#21-kachelübersetzungen-nach-manueller-erhebung),
+[Thesisnotizen Q](THESIS_UPDATE_NOTES.md#q-kachelübersetzungen-nach-manueller-erhebung).
+
+## Aktueller Messstand: 557a487, Validator 10
+
+Sauberer Commit `557a487a43d0edc3cac57f4bbc80670673ddc066`, neue einmalige
+Vierstufenreihe: 83 Requests/126 Calls. Technische Fehlerfälle 0/4/3/2;
+nur Interpreter besteht beide Rohgates. E2E/Stabilität je 0 anwendbare
+Inhaltsbeanstandungen nach Ablösung des Markermaßstabs, 53/51 ungeprüfte
+Metrikvorkommen, 6/6 Antworttypfolgen stabil. Keine menschliche Richtigkeitsquote.
+Alle 167 App-/Testdateien bytegleich zum vollständigen 1665er-/Dockerprüfstand.
+Keine Code-/Test-/Thesisänderung durch die Messung. Manuelles 16-Einheiten-
+Paket nun commitgebunden, noch nicht durchgeführt.
+[Bericht 20](IMPLEMENTATION_REPORT.md#20-neue-vierstufenmessung-auf-557a487),
+[Thesisnotizen P](THESIS_UPDATE_NOTES.md#p-neue-abschlussmessung-auf-557a487-validator-10).
+Die nachfolgenden Abschnitte behalten ihre historischen Zeit-/Versionsbezüge.
+
+## Letzter begrenzter Arbeitsstand vor Commit: Validator 10
 
 Folgeauftrag nach Diagnose: Eurobeträge aus Altersanalyse ausnehmen,
 polnische Betriebs-/Erhaltphrasen und Tagesformen präzisieren; eigentliche

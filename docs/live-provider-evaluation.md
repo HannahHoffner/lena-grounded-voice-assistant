@@ -1,6 +1,15 @@
 # Kontrollierte Live-Provider-Evaluation (WP9B)
 
-> **Aktuell: vollständige Vierstufenmessung am Commit 2462e7d** vom 26.10.2026;
+> **Aktuell: vollständige Vierstufenmessung am Commit 557a487**, 27.10.2026,
+> Validator 10: 83 Requests/126 Calls, technische Fehlerfälle 0/4/3/2.
+> Nur Interpreter besteht beide Rohgates; E2E/Stabilität ohne den bereits
+> abgelösten Markermaßstab je 0 anwendbare Inhaltsbeanstandungen, 53/51
+> ungeprüfte Metrikvorkommen, 6/6 Antworttypfolgen stabil. Keine allgemeine
+> Korrektheitsquote. [Bericht 20](../IMPLEMENTATION_REPORT.md#20-neue-vierstufenmessung-auf-557a487)
+> bindet Quellen, Konfiguration, Originalberichte und Grenzen. Ältere Reihen
+> und ihre Rohgates bleiben ihren ursprünglichen Versionen zugeordnet.
+
+> **Historische vollständige Vierstufenmessung am Commit 2462e7d** vom 26.10.2026;
 > [Ergebnisse und Grenzen](#abschließende-vierstufige-messung-am-commit-2462e7d).
 > Frühere negative Läufe bleiben historische Ergebnisse. Auch die neue Reihe
 > besteht nicht alle Gates; keine vollständige menschliche Evaluation.

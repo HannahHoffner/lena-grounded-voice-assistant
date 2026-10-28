@@ -49,6 +49,7 @@ from app.translation_contract import (
     TranslationRuntimePolicy,
     TranslationFields,
 )
+from app.translation_tokens import PROTECTED_TOKEN_RE
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -183,8 +184,12 @@ def test_all_runtime_cards_preserve_names_and_operational_facts(tmp_path: Path) 
             card = localize_offer_card(offer, language, catalog, TranslationRuntimePolicy.REVIEWED_OR_MACHINE)
             assert card.name == (offer.display_name or offer.name)
             assert card.address == offer.address
-            assert card.phone_numbers == offer.phone_numbers
-            assert card.standzeiten_raw == offer.standzeiten_raw
+            for field in ("phone_numbers", "standzeiten_raw"):
+                assert len(getattr(card, field)) == len(getattr(offer, field))
+                for source, translated in zip(getattr(offer, field), getattr(card, field), strict=True):
+                    assert PROTECTED_TOKEN_RE.findall(translated) == PROTECTED_TOKEN_RE.findall(source)
+                if language == Language.DE:
+                    assert getattr(card, field) == getattr(offer, field)
             # opening_hours_raw/notes sind seit Schema 3 übersetzbar; Länge
             # bleibt immer erhalten, Inhalt nur für Deutsch garantiert gleich.
             assert len(card.opening_hours_raw) == len(offer.opening_hours_raw)
@@ -597,7 +602,7 @@ def test_application_resources_and_scenario_review_inventory_are_complete(tmp_pa
     assert set(resources.languages) == set(Language)
     assert all(item.linguistic_review_status != LinguisticReviewStatus.REVIEWED for item in resources.languages.values())
     summary = application_text_summary()
-    assert set(summary["areas"]) == {"ui", "dialogue", "fallback", "safety"}
+    assert set(summary["areas"]) == {"ui", "dialogue", "fallback", "safety", "card"}
     assert all(summary["areas"]["dialogue"][language.value]["missing"] == 0 for language in Language)
 
     scenarios = load_scenario_catalog()

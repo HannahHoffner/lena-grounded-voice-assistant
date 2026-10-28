@@ -13,6 +13,7 @@ from __future__ import annotations
 import re
 
 from .application_texts import application_text
+from .card_texts import localize_card_text
 from .infrastructure import (
     DrinkingFountainRecord, PublicToiletRecord, TOILET_FACILITY_TRANSLATIONS,
     TOILET_FEE_TRANSLATIONS, TOILET_HOURS_TRANSLATIONS, localize_toilet_text,
@@ -52,6 +53,8 @@ def offer_spoken_text(
     services: list[str] | None = None,
     opening_hours_raw: list[str] | None = None,
     notes: list[str] | None = None,
+    phone_numbers: list[str] | None = None,
+    standzeiten_raw: list[str] | None = None,
 ) -> str:
     """Fasst genau die Felder zusammen, die die Angebotskarte anzeigt.
 
@@ -66,9 +69,9 @@ def offer_spoken_text(
             ("description", [description] if description else []),
             ("services", services if services is not None else offer.services),
             ("address", [offer.address] if offer.address else []),
-            ("phone", offer.phone_numbers),
+            ("phone", phone_numbers if phone_numbers is not None else [localize_card_text(v, language) for v in offer.phone_numbers]),
             ("hours", opening_hours_raw if opening_hours_raw is not None else offer.opening_hours_raw),
-            ("standTimes", offer.standzeiten_raw),
+            ("standTimes", standzeiten_raw if standzeiten_raw is not None else [localize_card_text(v, language) for v in offer.standzeiten_raw]),
             ("notes", notes if notes is not None else offer.notes),
         ],
     )
@@ -89,7 +92,7 @@ def toilet_spoken_text(record: PublicToiletRecord, language: Language) -> str:
 
 
 def fountain_spoken_text(record: DrinkingFountainRecord, language: Language) -> str:
-    location = record.location_description or record.address
+    location = localize_card_text(record.location_description, language) if record.location_description else record.address
     return _spoken_text(
         record.name,
         language,

@@ -10,6 +10,7 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 from .application_texts import application_text
+from .card_texts import localize_card_text
 from .hilfebus import append_contact, operational_phone, present_card, prose_limit, sunday_food_hint
 from .candidate_contract import CandidateDecision, CandidateRole, ReasonCode, SelectionStatus
 from .candidates import CandidateSelector, build_selection_context
@@ -505,8 +506,12 @@ class QueryService:
                     # inherits unchanged from the offer get localized here.
                     destination.services = card.services
                     destination.notes = card.notes
+                    destination.phone_numbers = card.phone_numbers
+                    destination.standzeiten_raw = card.standzeiten_raw
+                    destination.description = localize_card_text(destination.description or "", payload.language, self.translation_policy)
+                    destination.opening_hours = [localize_card_text(value, payload.language, self.translation_policy) for value in destination.opening_hours]
                     if offer.place_type == "help_bus":
-                        destination.phone_numbers = [operational_phone(offer)]
+                        destination.phone_numbers = [localize_card_text(operational_phone(offer), payload.language, self.translation_policy)]
                     destination.spoken_text = offer_spoken_text(
                         offer.model_copy(update={
                             "display_name": destination.label,
@@ -517,6 +522,8 @@ class QueryService:
                         services=destination.services,
                         opening_hours_raw=destination.opening_hours,
                         notes=destination.notes,
+                        phone_numbers=destination.phone_numbers,
+                        standzeiten_raw=destination.standzeiten_raw,
                     )
                 else:
                     destination.label = card.name

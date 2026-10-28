@@ -8,6 +8,7 @@ from enum import Enum
 from typing import Literal
 
 from .candidate_contract import CandidateDecision, CandidateRole
+from .card_texts import localize_card_text
 from .infrastructure import (
     CoordinatesStatus,
     DrinkingFountainRecord,
@@ -284,7 +285,7 @@ def drinking_fountain_card(
     return DrinkingFountainCard(
         id=record.id,
         name=record.name,
-        location_description=record.location_description,
+        location_description=localize_card_text(record.location_description, language) if record.location_description else None,
         address=record.address,
         cost_status=record.cost_status.value,
         potable_water_status=record.potable_water_status.value,
@@ -310,11 +311,11 @@ def drinking_water_map_data(
         destinations.append(MapDestination(
             id=record.id,
             label=record.name,
-            address=record.location_description or record.name,
+            address=localize_card_text(record.location_description or record.name, language),
             latitude=record.latitude,
             longitude=record.longitude,
             distance_meters=result.distance_meters,
-            description="Trinkwasserbrunnen",
+            description=localize_card_text(record.location_description or "Trinkwasserbrunnen", language),
             record_type="drinking_fountain",
             cost_status=record.cost_status.value,
             potable_water_status=record.potable_water_status.value,

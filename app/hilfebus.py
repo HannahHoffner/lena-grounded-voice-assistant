@@ -66,6 +66,8 @@ def present_card(card: OfferCard, offer: OfferRecord, language: Language, *, sta
                                  "standzeiten_raw": card.standzeiten_raw}), language,
         short_description=card.short_description, services=card.services,
         opening_hours_raw=card.opening_hours_raw, notes=card.notes,
+        phone_numbers=[card.phone_numbers[offer.phone_numbers.index(operational_phone(offer))]],
+        standzeiten_raw=card.standzeiten_raw,
     )
     return card
 

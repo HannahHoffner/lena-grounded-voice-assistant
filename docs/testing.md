@@ -1,5 +1,39 @@
 # Tests und Qualitätssicherung
 
+## Kachelübersetzungen nach manueller Erhebung, 28.10.2026
+
+30 neue Fälle in `test_card_translation_completeness.py` prüfen das gesamte
+Telefon-/Standzeitinventar, Literal-/Namens-/Adressbindung, API-Marker-Tafeln,
+Session-TTS-Freigabe, Infrastruktur und Source-/Reviewed-only-Fallback.
+Alle 30 bestanden; sämtliche 26 Schedule-Literal-Tests unverändert bestanden.
+Bestehende Sprachinvarianten auf operative Werte präzisiert, zwei erwartete
+Copy-Versionen auf 11 und Statusbereich um `card` ergänzt. Kein Grounding-
+Negativtest geändert. Abschluss: nativ und netzlos im Container je **1695 Python
+bestanden, 1 bekannter XFAIL und 1 bekannte Warnung**, je **19 JS**; sauberer
+No-Cache-Build, Packaging/Syntax/Abhängigkeiten und Runtime/Health/ohne Zugang/
+Sitzungserhalt über Neustart und Containerersatz bestanden. 169 App-/Testdateien
+im Testimage und 112 installierte Appdateien per SHA gebunden. Belege in
+`2026-10-28-card-translation-review/reviewed/` nach letzter Präzisierung.
+[Bericht 21](../IMPLEMENTATION_REPORT.md#21-kachelübersetzungen-nach-manueller-erhebung)
+listet jeden betroffenen bestehenden Test. Vier providerfreie Frontendfälle
+prüfen echte Darstellung; keine neue Live- oder menschliche Qualitätsmessung.
+
+## Aktuelle Vierstufenmessung auf 557a487
+
+27.10.2026, Validator 10, Prompt 27/Evidence 5/Copy 10. Unveränderter Katalog,
+gleiche KB, Limits und Profil wie 482f1f9; alle vier Stufen einmal mit 83
+Requests/126 Calls. Technische Fehlerfälle 0/4/3/2; nur Interpreter besteht
+beide Rohgates. Nach bereits beschlossener Ablösung des Markermaßstabs E2E/
+Stabilität je 0 anwendbare Inhaltsbeanstandungen, 53/51 ungeprüfte
+Metrikvorkommen; 6/6 Antworttypfolgen stabil. Rohberichte unverändert.
+
+Alle 167 App-/Testdateien bytegleich zum endgültigen Validator-10-Export und
+dessen vollständigem 1665er-/Dockernachweis unten, per `regression-link.json`
+gebunden. Keine Tests geändert oder wegen reiner Messung erneut voll ausgeführt.
+Kein menschliches Richtigkeitsurteil für die neuen Antworten.
+[Bericht 20](../IMPLEMENTATION_REPORT.md#20-neue-vierstufenmessung-auf-557a487),
+extern `2026-10-27-validator10-live/`. Frühere Abschnitte sind historische Belege.
+
 ## Letzte gezielte Präzisierung: Validator 10
 
 28 neue Fälle in `test_grounding_final_false_positives.py` prüfen Preis/Alter,

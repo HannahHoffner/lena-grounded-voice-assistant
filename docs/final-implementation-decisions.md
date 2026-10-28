@@ -1,7 +1,8 @@
 # Implementierungsentscheidungen am eingefrorenen Anwendungsstand
 
-Bezugsstand: `482f1f9` und anschließende begrenzte Validator-10-Präzisierung
-(noch uncommittiert), Anwendungsversion 0.2.0. Dieser Überblick dient der
+Bezugsstand: `557a487` plus Kachelübersetzungskorrektur vom 28.10. (Copy 11,
+noch uncommittiert), Validator 10, Anwendungsversion 0.2.0. Die begrenzte
+Präzisierung nach 482f1f9 ist committed und erneut live gemessen. Dieser Überblick dient der
 Übernahme in Methodik, Implementierung und Diskussion der Thesis; die Thesis
 wird in diesem Auftrag nicht geändert. Einzelmessungen behalten ihren Commit.
 
@@ -23,7 +24,8 @@ wird in diesem Auftrag nicht geändert. Einzelmessungen behalten ihren Commit.
 | Getrennte technische und menschliche Evaluation | Verträge und ausgewählte Regeln sind automatisch prüfbar; Relevanz, Risiko und sprachliche Gestaltung benötigen eigene Urteile. | Vierstufenkatalog, manuelles 16-Einheiten-Protokoll; `THESIS_UPDATE_NOTES.md` | Keine LLM-as-a-Judge-Korrektheitsbewertung, kein Zielgruppen-/Usabilitynachweis aus Eigenbewertung. |
 | Explizite externe Dienstprofile und lokale Datenspeicherung | Dienste sollen nicht still Zugangsdaten übernehmen; Kernstart ohne Zugang muss kontrolliert funktionieren. | `app/config.py`, `external_services.py`, Dockerfile, Sessions; neue Runtimeprüfungen | Sessions/Logs können Personenbezug haben; kein öffentlicher Mehrprozessbetrieb oder Konformitätsnachweis. |
 | Blablador-STT und separate Edge-TTS | Firefox benötigt hier Server-STT; lokales TTS-Paket wurde an vorhandenen Pin 7.3.1 angeglichen, nachdem 7.2.8 HTTP 403 erzeugte. | lokale ignorierte Profile, `app/speech.py`, fünfsprachiger synthetischer HTTP-Test und Nutzerinnenbestätigung | Aufnahmen bzw. Vorlesetexte verlassen den Rechner. Funktionstest ist keine allgemeine Erkennungs- oder Aussprachevalidierung. |
-| Eingefrorene Evaluation statt weiterer Optimierung | Nach formativer Verbesserung soll ein klarer Abschlussstand gemessen und bewertet werden. | Commit 482f1f9, Quellarchiv/SHA-Inventar, neue Regression und einmalige vierstufige Erhebung | Bekannter Katalog ist kein unabhängiger Holdout; alle negativen Gates und Instrumentkonflikte bleiben sichtbar. |
+| Eingefrorene Evaluation statt weiterer Optimierung | Nach formativer Verbesserung soll ein klarer Abschlussstand gemessen und bewertet werden. | Commit 557a487, Quellarchiv/SHA-Inventar, bytegleiche 1665er-/Dockerregression und neue einmalige vierstufige Erhebung; Bericht 20 | Bekannter Katalog ist kein unabhängiger Holdout; technische Fehler, negative Rohgates und ungeprüfte Kriterien bleiben sichtbar. |
+| Operative Werte von Anzeigeprosa trennen | Vollständiger Schutz deutscher Telefon-/Standzeitzeilen ließ deutsche Zusätze in Zielsprachen stehen. | Geschlossene Copy-11-Projektion für Kachel, Marker und Session-TTS; `card_texts.py`, 30 neue Tests, Bericht 21 | Namen/Adressen/Nummern/Zeiten erhalten; unbekannte zukünftige Texte bleiben Quelle. Maschinelle Korrektur ist kein muttersprachliches Review. Erhobene Urteile bleiben dem Vorzustand zugeordnet. |
 
 Der letzte begrenzte Validator-10-Patch korrigiert Preis-/Alterskontext,
 polnische Betriebs-/Erhaltphrasen und Tagesformen; echte Gegenbeispiele bleiben
@@ -36,7 +38,8 @@ Die fachlichen Entscheidungen vom 27.10. beruhen auf den Vorgaben der Nutzerin
 und den dokumentierten Ablationsbefunden, nicht auf einer allgemeinen
 medizinischen oder behördlichen Freigabe. Vorbereitete manuelle Erwartungen
 werden vor der Erhebung an diese Entscheidungen gebunden; Rohurteile werden
-nicht nachträglich passend gemacht. Die aktuelle Vierstufenmessung umfasst 83 Requests und 124 Provideraufrufe; nur
+nicht nachträglich passend gemacht. Die aktuelle Vierstufenmessung auf 557a487
+umfasst 83 Requests und 126 Provideraufrufe; nur
 die Interpreterstufe besteht beide automatischen Gates. Regression, negative
 Livebefunde und noch ausstehende manuelle Urteile werden getrennt berichtet
-(siehe Implementierungsbericht 17 und THESIS_UPDATE_NOTES, Abschnitt M).
+(siehe Implementierungsbericht 20 und THESIS_UPDATE_NOTES, Abschnitt P).

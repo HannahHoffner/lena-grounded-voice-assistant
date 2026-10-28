@@ -1,5 +1,47 @@
 # Manueller Release-Review – LENA
 
+## Kachelübersetzungen nach Erhebung, 28.10.2026
+
+- [x] Bereitgestellte Erfassungs-/Bewertungsdateien und Screenshot-DOCX
+  unverändert sichern; ratings.py nicht ausführen oder Urteile umschreiben.
+- [x] Alle 28 sozialen Angebote, drei Standorte und je 21 Infrastrukturangebote
+  in fünf Sprachen prüfen; bekannte deutsche Reste beheben, Namen/Adressen
+  und operative Werte erhalten. Copy 11, Übersetzungsstatus weiter maschinell.
+- [x] 30 neue Prüfungen, vollständige Inventar-/Integritätsprüfung und
+  providerfreie Frontendprüfung in vier Zielsprachen erfolgreich.
+- [x] Vollständige Regression nativ/netzloser Container je 1695 Python plus
+  bekannter XFAIL/Warnung, je 19 JS; No-Cache-Build und Runtime/Persistenz
+  bestanden. 169 App-/Test- und 112 installierte Appdateien per SHA gebunden.
+- [ ] Normalen Server neu starten und betroffene Kontakt-/Standzeitkacheln
+  separat nachprüfen; Originalerhebung auf 557a487/Copy 10 erhalten.
+- [ ] Persönliche P1-Prüfung des laut ratings.py KI-gestützten Entwurfs und
+  tatsächliche finale Versionsbindung bei Ergebnisübernahme dokumentieren.
+
+[Bericht 21](IMPLEMENTATION_REPORT.md#21-kachelübersetzungen-nach-manueller-erhebung).
+Die folgenden Abschnitte beschreiben ihre historischen Stände.
+
+## Aktueller Messstand 557a487, 27.10.2026
+
+- [x] Nutzerinnen-Commit 557a487 sauber an neue Vierstufenreihe gebunden;
+  alle vier Stufen einmal, 83 Requests/126 Calls, keine ausgewählten Wiederholungen.
+- [x] Technische Fehlerfälle 0/4/3/2 und negative Gates der letzten drei
+  Stufen dokumentiert. Überholten Markermaßstab nicht aktuell angelegt:
+  E2E/Stabilität je 0 anwendbare Inhaltsbeanstandungen, 53/51 ungeprüfte
+  Metrikvorkommen; 6/6 Antworttypfolgen stabil. Keine Wahrheitsgarantie.
+- [x] 167 App-/Testdateien an vollständigen 1665er-/Dockerbeleg gebunden;
+  neue Messung ändert weder Anwendung noch Tests oder Konfiguration.
+- [x] Manuelles 16-Einheiten-Paket auf 557a487/Validator 10 und aktuellen
+  Referenzlauf gebunden; Inputs/Kriterien/Skalen unverändert, keine Urteile.
+- [ ] Tatsächliche manuelle Instanz abgleichen und nötigenfalls neu starten;
+  diese isolierte CLI-Messung aktiviert den normalen Server 8002 nicht.
+- [ ] Manuelle 16-Einheiten-Eigenbewertung durchführen; S-11/S-12 mit isolierten
+  Fehlerfixtures und Sprachgrenzen wie im vorbereiteten Paket dokumentieren.
+- [ ] Thesisnotizen P und Implementierungsentscheidungen in gesondertem
+  Thesisauftrag übernehmen; aktuelle und historische Messungen getrennt berichten.
+
+[Bericht 20](IMPLEMENTATION_REPORT.md#20-neue-vierstufenmessung-auf-557a487).
+Die nachfolgenden Checklisten beschreiben ihre damaligen Stände.
+
 ## Letzte begrenzte Korrektur: Validator 10
 
 Auf Folgeauftrag Preis-/Alters- und polnische Erkennungsfehler gezielt korrigiert.

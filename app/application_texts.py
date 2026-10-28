@@ -17,7 +17,7 @@ from .translation_contract import LinguisticReviewStatus, ReviewRole
 
 
 APPLICATION_TEXT_SCHEMA_VERSION = "2"
-APPLICATION_COPY_VERSION = "10"
+APPLICATION_COPY_VERSION = "11"
 PLACEHOLDER_RE = re.compile(r"\{([a-z_]+)\}")
 SAFETY_TEXT_RESOURCE_IDS = {
     "safety.detected",
@@ -114,7 +114,7 @@ def application_text_summary() -> dict[str, object]:
     resource = load_application_texts()
     languages: dict[str, dict[str, int]] = {}
     areas: dict[str, dict[str, dict[str, int]]] = {
-        area: {} for area in ("ui", "dialogue", "fallback", "safety")
+        area: {} for area in ("ui", "dialogue", "fallback", "safety", "card")
     }
     for language, inventory in resource.languages.items():
         counts = {status.value: 0 for status in LinguisticReviewStatus}

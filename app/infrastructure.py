@@ -33,6 +33,13 @@ TOILET_SOURCE_REFERENCE_ID = "leipzig-public-toilets-csv"
 # Kleiner geschlossener Wortschatz der amtlichen CSV; unbekannte Werte bleiben
 # unübersetzt im deutschen Original statt eine falsche Übersetzung zu erfinden.
 TOILET_FACILITY_TRANSLATIONS: dict[str, dict[Language, str]] = {
+    "All Gender": {
+        Language.DE: "Für alle Geschlechter",
+        Language.EN: "All genders",
+        Language.PL: "Dla osób każdej płci",
+        Language.RO: "Pentru toate genurile",
+        Language.RU: "Для людей любого пола",
+    },
     "Barrierefrei": {
         Language.EN: "Accessible",
         Language.PL: "Bez barier",
@@ -84,8 +91,6 @@ TOILET_HOURS_TRANSLATIONS: dict[str, dict[Language, str]] = {
 
 def localize_toilet_text(value: str, table: dict[str, dict[Language, str]], language: Language) -> str:
     """Übersetzt nur bekannte Werte aus dem geschlossenen Wortschatz; sonst Original."""
-    if language == Language.DE:
-        return value
     return table.get(value, {}).get(language, value)
 REQUIRED_COLUMNS = (
     "ID",
