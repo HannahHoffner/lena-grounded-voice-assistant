@@ -3,7 +3,7 @@
 ## Status
 
 - State: In progress
-- Owner: Codex
+- Arbeitsbereich: Repository-Wartung
 - Created: 2026-07-15
 - Last updated: 2026-07-17
 - Review source: `docs/architecture/codebase-review.md`

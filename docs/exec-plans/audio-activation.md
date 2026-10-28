@@ -3,7 +3,7 @@
 ## Status
 
 - State: Complete; Audiofunktion in Firefox durch Nutzerin bestaetigt
-- Owner: Codex
+- Arbeitsbereich: Repository-Wartung
 - Created: 2026-10-27
 - Last updated: 2026-10-27
 

@@ -447,7 +447,7 @@ Transportfehlern nicht. Liegt eine geschlossene Groundingdiagnose vor, erhält
 dieser zweite Versuch einen festen Korrekturhinweis, niemals den verworfenen
 Text. Evidence und Validator bleiben unverändert. Der Hinweis korrigiert keine
 Antwort automatisch und ist kein Beleg für semantische Vollständigkeit;
-[bekannte Grenzen und Diagnoseverfahren](live-provider-evaluation.md#prompt-17-und-begrenztes-korrekturfeedback)
+[bekannte Grenzen und Diagnoseverfahren](live-provider-evaluation.md#prompt-18-und-begrenztes-korrekturfeedback)
 bleiben ausdrücklich dokumentiert. Bleibt die Antwort ungültig, verwendet die Anwendung
 die bereits finalen Angebote im lokalisierten Templatefallback.
 

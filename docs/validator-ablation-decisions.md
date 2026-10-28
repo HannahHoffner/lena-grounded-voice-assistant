@@ -13,7 +13,10 @@ Erstversuche ohne unklare Bewertungen eine Fehlerquote von 4,9 % (5/103),
 keine beobachtete Formulator-Erfindung und 86 unnötige Ablehnungen unter 98
 richtigen Antworten. Alle fünf beobachteten Fehler entsprachen der vorgelegten
 Daten-/Angebotsauswahl. Das ist keine allgemeine Fehlerfreiheitsgarantie.
-Verfahren, Grenzen und Vierfeldertafel: [ursprünglicher Plan](exec-plans/validator-ablation.md).
+Verfahren, Grenzen und Vierfeldertafel:
+[Ergebnisbericht zur Ablation](../IMPLEMENTATION_REPORT.md#14-fachentscheidungen-nach-validator-ablation-27102026).
+Der ursprüngliche Arbeitsplan liegt im Entwicklungscheckout unter
+`docs/exec-plans/validator-ablation.md` und ist bewusst nicht Teil der Distribution.
 
 Validator 8 verwendet deshalb weder `content_not_covered` noch lexikalisches
 NOT_CHECKED/UNDECIDABLE als Ablehnungsgrund. `service_fact_missing` bleibt bei

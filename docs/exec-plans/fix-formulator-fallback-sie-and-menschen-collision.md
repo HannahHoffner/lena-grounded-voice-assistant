@@ -3,7 +3,7 @@
 ## Status
 
 - State: Complete (Root Cause 1 & 2); Residualverhalten durch Retry gemildert (siehe Nachtrag), nicht vollständig behebbar
-- Owner: Claude
+- Arbeitsbereich: Repository-Wartung
 - Created: 2026-08-05
 - Last updated: 2026-08-07
 

@@ -1,7 +1,7 @@
 # Notwendige Thesis-Anpassungen nach der Audit-Umsetzung
 
-**Aktuell:** Kachelübersetzungskorrektur nach der Erhebung, Copy 11, noch
-uncommittiert; [Abschnitt Q](#q-kachelübersetzungen-nach-manueller-erhebung).
+**Aktuell:** Kachelübersetzungskorrektur nach der Erhebung, Copy 11,
+committiert in `5eebb72`; [Abschnitt Q](#q-kachelübersetzungen-nach-manueller-erhebung).
 **Letzte Live-Messung:** Commit `557a487`, Validator 10; Einbauhinweise
 in [Abschnitt P](#p-neue-abschlussmessung-auf-557a487-validator-10).
 Die folgenden früheren Angaben behalten ihre historischen Versionsbezüge.

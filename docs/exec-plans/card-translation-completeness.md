@@ -2,7 +2,7 @@
 
 ## Status und Ziel
 
-Verified, Codex, 28.10.2026. Eng begrenzter Folgeauftrag nach der manuellen
+Verified, 28.10.2026. Eng begrenzter Folgeauftrag nach der manuellen
 Evaluation: alle Kacheltexte in DE/EN/PL/RO/RU auf Vollständigkeit prüfen und
 fehlende Übersetzungen ergänzen. Eigennamen und Adressen unverändert lassen.
 Der vorherige Codefreeze ist nur für diese Darstellungskorrektur geöffnet.

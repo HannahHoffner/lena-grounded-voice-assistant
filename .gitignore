@@ -53,8 +53,8 @@ test-results/
 .playwright/
 browser-profile*/
 
-# Lokale Agenten-Worktrees (Arbeitskopien, kein Repositoryinhalt)
-.claude/worktrees/
+# Lokale Worktrees in versteckten Werkzeugverzeichnissen
+/.*/worktrees/
 
 # Editor-, Betriebssystem- und OneDrive-Artefakte
 .idea/

@@ -3,7 +3,7 @@
 ## Status
 
 - State: Complete — sichere lokale Prüfung; dokumentierte Live-Grenzen bleiben offen
-- Owner: Codex
+- Arbeitsbereich: Repository-Wartung
 - Created: 2026-09-16
 - Ausgangscommit: `534ffba` auf `maintenance/repository-cleanup`
 

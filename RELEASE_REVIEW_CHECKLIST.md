@@ -115,7 +115,7 @@ Vierstufenresultate gehören weiterhin zum historischen Commit 2462e7d.
   Spracheingabe festhalten; bisherige automatisierte Nachweise ersetzen sie nicht.
 - [ ] Aktuellen Abgabe-Commit und externe Belege gemeinsam zuordnen; Thesis-
   Anpassungen aus Abschnitt K der THESIS_UPDATE_NOTES erst im gesonderten
-  Thesisauftrag übernehmen. Kein neuer Commit durch Codex autorisiert.
+  Thesisauftrag übernehmen. Keine neuen Commits im damaligen Prüfauftrag autorisiert.
 
 Zwei FU-Kommentare betreffen Handlungsorientierung bzw. explizite Abgrenzung
 einer Manipulationsfrage und bleiben sichtbar. Hilfebus bei Akutgefahr bleibt

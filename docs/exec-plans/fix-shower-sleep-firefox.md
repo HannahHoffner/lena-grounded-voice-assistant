@@ -3,7 +3,7 @@
 ## Status
 
 - State: Complete — lokale Fehler korrigiert und geprüft; Live-STT offen
-- Owner: Codex
+- Arbeitsbereich: Repository-Wartung
 - Created: 2026-09-16
 
 ## Objective / Acceptance contract

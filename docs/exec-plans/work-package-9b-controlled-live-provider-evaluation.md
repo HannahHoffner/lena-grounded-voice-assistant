@@ -5,7 +5,7 @@
 - State: Complete
 - Status: preparation_only
 - live_provider_calls_authorized: false
-- Owner: Codex
+- Arbeitsbereich: Repository-Wartung
 - Created: 2026-08-03
 - Last updated: 2026-08-03
 

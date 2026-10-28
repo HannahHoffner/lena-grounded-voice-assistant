@@ -3,7 +3,7 @@
 ## Status
 
 - State: Complete
-- Owner: Codex
+- Arbeitsbereich: Repository-Wartung
 - Created: 2026-07-31
 - Last updated: 2026-07-31
 

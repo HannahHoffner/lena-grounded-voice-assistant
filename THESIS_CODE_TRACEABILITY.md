@@ -2,7 +2,7 @@
 
 ## Kachelübersetzungen nach manueller Erhebung, 28.10.2026
 
-Aktueller Arbeitsstand auf 557a487, noch uncommittiert: Copy 11, Formulator
+Aktueller Arbeitsstand auf `5eebb72`, committiert: Copy 11, Formulator
 7/27, Evidence 5, Validator 10, Safety 2 unverändert. Geschlossene Anzeige-
 projektion für Kontaktbedingungen/Standzeitprosa in Kachel/Marker/TTS;
 bekannte Infrastrukturtexte ergänzt. Namen/Adressen und operative Werte

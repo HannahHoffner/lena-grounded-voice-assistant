@@ -1,7 +1,7 @@
 # Execution Plan: Vollständige synthetische Evaluationsläufe
 
 ## Status
-In progress; Codex; 2026-10-22. Nutzerauftrag: alle Szenarien ausführen, kein Abbruch nach wenigen bewerteten Fehlern; anschließend Messung und Thesis auf neuestem Commit.
+In progress; 2026-10-22. Nutzerauftrag: alle Szenarien ausführen, kein Abbruch nach wenigen bewerteten Fehlern; anschließend Messung und Thesis auf neuestem Commit.
 
 ## Review and acceptance contract
 Die bestehende CLI und alle Runner verlangen exakt die versionierten Kataloglimits. Gewöhnliche Fehler stoppen per AtomicRunCounter.record_failure; E2E/Stabilität haben zusätzlich separate Schwellen für kritische synthetische Befunde. E2E erlaubt nur einen Formulatorcall pro Anfrage im Maximalbudget, obwohl der Anwendungspfad einen Retry haben kann. Deshalb reicht ein CLI-Override nicht.

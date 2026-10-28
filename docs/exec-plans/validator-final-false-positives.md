@@ -2,7 +2,7 @@
 
 ## Status und Auftrag
 
-Verified, Codex, 27.10.2026. Basis `482f1f9` mit vorhandenen eigenen
+Verified, 27.10.2026. Basis `482f1f9` mit vorhandenen eigenen
 Dokumentationsfortschreibungen aus Abschlussmessung/Diagnose. Die Nutzerin
 fragt anschließend nach einer schnellen, unkomplizierten Verbesserung.
 Dieser begrenzte Korrekturauftrag öffnet die zuvor eingefrorene Implementierung

@@ -24,7 +24,7 @@ allgemeine semantische Wahrheitsgarantie (siehe [Systemgrenzen](#systemgrenzen))
 Planvertrag 6 und sein Renderer bleiben nur für historische Vergleiche erhalten.
 
 **Aktueller Arbeitsstand, 28.10.2026:** Kachelübersetzungen nach manueller
-Erhebung ergänzt, **Copy 11**, noch uncommittiert. Standzeitprosa und
+Erhebung ergänzt, **Copy 11**, committiert in `5eebb72`. Standzeitprosa und
 Telefonzusätze sind in Kachel, Marker-Tafel und registriertem Vorlesetext
 lokalisiert; Namen/Adressen und operative Werte bleiben erhalten. Nativ und
 im netzlosen Container je **1695 Python bestanden + bekannter XFAIL**, je
@@ -294,12 +294,12 @@ Netzwerkzugriffe. Ein bewusst dokumentierter `strict xfail`
 (`tests/test_formulation.py`, „minor injuries“) markiert eine bekannte
 Überablehnung und zählt nicht als bestanden. Live-Provider-Läufe sind getrennt
 freizugeben ([Live-Provider-Evaluation](docs/live-provider-evaluation.md)).
-Aktueller Korrekturstand auf `5f9ddd8` (Prompt 27/Validator 9): nativ und im
-frisch ohne Cache gebauten netzlosen Testcontainer je **1637 bestanden,
+Aktueller Stand auf `5eebb72` (Prompt 27/Validator 10/Copy 11): nativ und im
+frisch ohne Cache gebauten netzlosen Testcontainer je **1695 bestanden,
 1 bekannter XFAIL**, Frontend je **19/19**. Runtime-Health, Start ohne
 Zugangsdaten und Persistenz nach Neustart/Containerersatz bestanden.
-[Aktuelle Belege](IMPLEMENTATION_REPORT.md#155-technische-prüfung-und-abgabegrenzen).
-Neuer Ablationsarbeitsstand auf `02a3612`, 27.10.2026: nativ und im netzlosen
+[Aktuelle Belege](IMPLEMENTATION_REPORT.md#21-kachelübersetzungen-nach-manueller-erhebung).
+Historischer Ablationsarbeitsstand auf `02a3612`, 27.10.2026: nativ und im netzlosen
 Testcontainer jeweils **1585 bestanden, 1 bekannter XFAIL**, JavaScript jeweils
 **19/19**. Runtime-Health, Start ohne Zugangsdaten und Sitzungserhalt über
 Neustart/Containerersatz bestanden. Der Containerbuild verwendet vorhandene

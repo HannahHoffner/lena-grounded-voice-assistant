@@ -3,7 +3,7 @@
 ## Status
 
 - State: Complete
-- Owner: Claude
+- Arbeitsbereich: Repository-Wartung
 - Created: 2026-08-04
 - Last updated: 2026-08-04
 

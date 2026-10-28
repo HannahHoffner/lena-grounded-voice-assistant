@@ -1,7 +1,7 @@
 # Umsetzung des LENA-Audits
 
 **Aktueller Arbeitsstand, 28.10.:** Kachelübersetzungskorrektur mit Copy 11,
-noch uncommittiert; [Abschnitt 21](#21-kachelübersetzungen-nach-manueller-erhebung).
+committiert in `5eebb72`; [Abschnitt 21](#21-kachelübersetzungen-nach-manueller-erhebung).
 **Letzter Live-Messstand:** Commit `557a487`, Validator 10, vollständige
 Vierstufenreihe mit 83 Requests/126 Provideraufrufen:
 [Abschnitt 20](#20-neue-vierstufenmessung-auf-557a487).
@@ -527,7 +527,7 @@ Parser-/Groundingstrecke, identische Payloads und Grenzen von 80/50 Aufrufen.
 Keine bestehenden Tests verändert, gelöscht oder abgeschwächt. Kein neuer
 Dockerneubau oder Vier-Stufen-E2E-Lauf in diesem Promptvergleich, da keine
 produktiven Abläufe/Abhängigkeiten verändert wurden; keine alten Ergebnisse
-als neue Prüfung ausgeben. Thesis unverändert, keine Commits durch Codex.
+als neue Prüfung ausgeben. Thesis unverändert, keine neuen Commits im damaligen Prüfauftrag.
 
 Nachweise: `C:/Users/User/AppData/Local/LENA/verification/2026-10-24-formulator-prompts/`.
 Die gemessenen App-Pythonquellen sind dort unverändert kopiert und gehasht.
@@ -1414,7 +1414,7 @@ Die Nutzerin beendet die Codeentwicklung; Anwendung, Tests, Daten, Prompts,
 Validator, Bewertungscode, Katalog und Limits wurden **nicht verändert**.
 Anschließend wurden ausschließlich diese Dokumentation und die nachstehend
 genannten Markdown-Dateien fortgeschrieben. Keine Thesisdateien bearbeitet,
-kein Commit/Tag/Push durch Codex. Die Vierstufenreihe einschließlich diagnostischer
+kein Commit/Tag/Push im damaligen Prüfauftrag. Die Vierstufenreihe einschließlich diagnostischer
 Fortsetzung nach negativen Gates wurde gesondert ausdrücklich freigegeben.
 
 Aktuell: Interpreter Vertrag/Prompt 4/12, Selector 1/3, Formulator 7/27,

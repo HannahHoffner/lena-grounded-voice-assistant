@@ -248,7 +248,7 @@ with TestClient(app_instance) as client:
     assert health['technical_fallback_includes_emergency_guidance'] is True
     copy = client.get('/api/i18n/copy?language=pl').json()
     assert copy['copy_version'] == '11' and copy['language'] == 'pl' and copy['texts']
-    # Seit Version 0.3.0 enthaelt der technische Fallback zusaetzlich den
+    # Der technische Fallback enthaelt zusaetzlich den
     # deterministischen Hilfebus-Kontakt statt eines reinen 112-Hinweises,
     # sofern die Wissensbasis ihn liefert (Untersuchung Zeile 5).
     hilfebus_id = next(o.id for o in app_instance.state.kb.offers if 'general_help_referral_first' in o.priority_rules)

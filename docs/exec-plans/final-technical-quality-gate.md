@@ -2,7 +2,7 @@
 
 ## Status and objective
 
-Review completed, 2026-09-21. Owner: Codex. Establish evidence-based readiness for
+Review completed, 2026-09-21. Arbeitsbereich: Repository-Wartung. Establish evidence-based readiness for
 manual evaluation against the supplied thesis matrix; correct demonstrated
 defects locally without expanding the prototype. No manual evaluation, live
 provider/source calls, thesis edits, Git history changes, or new dependencies.
