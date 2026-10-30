@@ -23,66 +23,35 @@ bis drei kurze Sätze in einfacher Sprache. Die endliche Faktenprüfung ist kein
 allgemeine semantische Wahrheitsgarantie (siehe [Systemgrenzen](#systemgrenzen)).
 Planvertrag 6 und sein Renderer bleiben nur für historische Vergleiche erhalten.
 
-**Aktueller Arbeitsstand, 28.10.2026:** Kachelübersetzungen nach manueller
-Erhebung ergänzt, **Copy 11**, committiert in `5eebb72`. Standzeitprosa und
-Telefonzusätze sind in Kachel, Marker-Tafel und registriertem Vorlesetext
-lokalisiert; Namen/Adressen und operative Werte bleiben erhalten. Nativ und
-im netzlosen Container je **1695 Python bestanden + bekannter XFAIL**, je
-**19 JS**; No-Cache-Build und Runtime/Persistenz bestanden. 28 soziale
-Angebote, 21 Toiletten und 21 Brunnen in fünf Sprachen geprüft. Maschinenstatus
-bleibt ehrlich; keine muttersprachliche Freigabe. Server zur Aktivierung neu
-starten. [Änderungen und Belege](IMPLEMENTATION_REPORT.md#21-kachelübersetzungen-nach-manueller-erhebung).
+## Aktueller Prüfstand
 
-**Letzter Live-Messstand: Commit `557a487`, Validator 10, Copy 10.** Vierstufenmessung:
-83 Requests, 126 Provideraufrufe; nur Interpreter besteht beide Rohgates.
-Technische Fehlerfälle gegenüber 482f1f9: 0→0, 6→4, 1→3, 3→2
-(Interpreter, Selector/Formulator, E2E, Stabilität). Ohne den bereits abgelösten
-Markermaßstab bleiben E2E/Stabilität je 0 anwendbare Inhaltsbeanstandungen;
-53/51 Metrikvorkommen bleiben ungeprüft. 6/6 Antworttypfolgen stabil.
-Keine allgemeine Korrektheitsquote. Die inzwischen bereitgestellten manuellen
-Erhebungsdateien gehören ebenfalls zu diesem Stand vor der Kachelkorrektur.
-[Messung und Grenzen](IMPLEMENTATION_REPORT.md#20-neue-vierstufenmessung-auf-557a487).
+Anwendungsversion **0.2.0**, Anwendungs- und Datenbasis **5962d6c**;
+Dokumentationsstand 30.10.2026. Die Kartenkorrektur vom 28.10. ist enthalten
+(Anwendungstexte 11). Der lokale Bestand enthält 28 soziale Angebote,
+21 Toilettendatensätze mit 20 auswählbaren Einträgen und 21 freigegebene feste
+Trinkbrunnen in Leipzig.
 
-**Letzte begrenzte Korrektur:** Validator 10 korrigiert die belegten
-Preis-/Alters- und polnischen Erkennungsfehler. 28 neue Gegenproben und
-Offline-Replay: zwei der sechs zuletzt gesperrten Texte zusätzlich angenommen,
-vier weiterhin gesperrt; die früheren 134 Entscheidungen unverändert.
-Dies ist ein Offline-Replay; die anschließende neue Live-Reihe steht oben.
-[Versionen und Prüfbelege](IMPLEMENTATION_REPORT.md#19-begrenzte-korrektur-der-letzten-validator-fehlalarme).
-Abschließend nativ und im netzlosen Container je 1665 Python bestanden plus
-bekannter XFAIL, je 19 JS; No-Cache-Build und Runtime/Persistenz bestanden.
+Die **manuelle Finalprüfung vom 29.10.2026 ist durchgeführt und bewertet**:
+32 Fälle F-01 bis F-32, sechs Kriterien und gesonderte Fallurteile, durch eine
+Prüferin. 21 Fälle wurden als erfüllt, neun als teilweise erfüllt und zwei als
+nicht erfüllt bewertet; daraus wird keine allgemeine Erfolgsquote abgeleitet.
+F-03/F-25 endeten im sicheren technischen Rückfall, erfüllten aber den
+Schlafhilfebedarf nicht. Weitere Teilbefunde betreffen medizinische Verweise,
+einzelne Kartenfelder, Priorisierung und Sprache. Reale Spracherkennung und
+hörbare Sprachausgabe wurden von der Prüferin wiederholt erfolgreich
+funktional getestet. Die Sprachurteile sind keine muttersprachliche Vollprüfung.
 
-**Referenzmessung mit Validator 9, 27.10.2026:** Anwendung und Tests auf Commit `482f1f9`
-eingefroren. Neue vollständige Regression: nativ und im netzlosen Container je
-1637 Python bestanden plus bekannter XFAIL, je 19 JS; No-Cache-Build und
-Runtime/Persistenz bestanden. Vierstufen-Livemessung mit 83 Requests und 124
-Provideraufrufen abgeschlossen; nur die Interpreterstufe besteht beide Gates.
-Technische Beanstandungen bleiben sichtbar. Der überholte Kachel-/Markermaßstab
-wird in der aktuellen Auswertung nicht mehr angewendet: E2E hat damit 0,
-Stabilität 1 verbleibende anwendbare Inhaltsbeanstandung; Rohberichte bleiben
-erhalten ([Einordnung](IMPLEMENTATION_REPORT.md#18-aktueller-bewertungsmaßstab-und-formulator-diagnose)).
-Die geplante manuelle 16-Einheiten-Eigenbewertung steht noch aus.
-[Ergebnisse und Grenzen](IMPLEMENTATION_REPORT.md#17-abschlussmessung-ohne-codeänderung-commit-482f1f9),
-[Implementierungsentscheidungen](docs/final-implementation-decisions.md).
+Die vollständigen manuellen Prüfunterlagen gehören zum getrennten
+Thesis-Repository unter `Evaluation/manual_final_20261029/`; sie sind kein
+Bestandteil dieses Code-Checkouts. Aktuelle Aufgaben und offene Punkte stehen
+in der [Release-Checkliste](RELEASE_REVIEW_CHECKLIST.md). Technische Regression
+und historische Live-Läufe werden unter [Tests](#tests) getrennt eingeordnet.
 
-Die Validator-Korrektur auf `5f9ddd8` unterscheidet gleichwertige Telefon-/
-Betragsdarstellung von veränderten Werten, prüft Zeitfenster ohne das frühere
-NOT_CHECKED-Wortgate und trennt belegte Orte/Zielgruppen von Sprach- und
-Negationsfehlern. Im Offline-Replay passieren 23 von 30 zuvor verworfenen,
-menschlich als richtig bewerteten Ersttexten zusätzlich; tatsächliche E-Mail-,
-Namens-, Referenz- und Reihenfolgeabweichungen bleiben gesperrt. Dies ist keine
-neue Live-Erhebung und keine allgemeine Korrektheitsgarantie.
-[Korrekturen und Grenzen](IMPLEMENTATION_REPORT.md#15-validator-korrekturpaket-auf-5f9ddd8).
-
-Der historisch erhaltene Faktenrenderer verwendet feste vollständige Satzvorlagen statt Feldlabels
-und Semikolonlisten; zusammengehörige Werte werden gemeinsam genannt. Äußere
-Markdown-Quellmarker erscheinen nicht als Listenformat in der Antwort.
-Zugangsvorbehalte und Hinweise bleiben gebunden. Komplexe Quelltexte werden
-nicht frei umgeschrieben; zertifizierte Leichte Sprache oder unabhängig geprüfte
-Fremdsprachen werden damit nicht behauptet. Die Wiederherstellung der Modellprosa
-ist ein anderer Artefaktstand als die Live-Messung auf 2462e7d. Die aktuelle
-Commit-/Evidenzzuordnung steht in Bericht 20; die tatsächliche manuelle Instanz
-ist vor Erhebung abzugleichen.
+Vorgesehen ist die Weitergabe über ein **privates Repository mit gezieltem
+Zugriff für die Betreuenden**. Die Weitergaberechte des Trinkbrunnenbestands
+bleiben **ungeklärt**; öffentliche Erreichbarkeit und Forschungszweck werden
+nicht als ausdrückliche Datenlizenz ausgegeben. Quellen, Abrufstände und Daten
+bleiben erhalten; siehe [Lizenz und Herkunft](THIRD_PARTY_NOTICES.md).
 
 Die normale Bedarfsauswahl benötigt einen konfigurierten LLM-Interpreter. Ohne
 ihn startet die Anwendung, liefert bei normalen Anfragen aber nur den
@@ -95,11 +64,11 @@ fachlichen Leitplanken weiterentwickeln.
 
 ## Funktionsumfang
 
-Vor einer manuellen Prüfung: [Evaluationsvoraussetzungen](docs/manual-evaluation-prerequisites.md).
+Für eine spätere erneute Prüfung: [Evaluationsvoraussetzungen](docs/manual-evaluation-prerequisites.md).
 
 - Textanfragen in Deutsch, Englisch, Polnisch, Rumänisch und Russisch
 - deterministische, begründete Kandidatenbegrenzung mit Mandatory-/Selectable-Trennung
-- kontrollierte optionale LLM-Auswahl nur innerhalb zulässiger Kandidaten sowie faktengebundene Antwortplanung mit serverseitiger Ausgabe
+- kontrollierte optionale LLM-Auswahl innerhalb zulässiger Kandidaten und frei formulierte, faktengebundene Antworten mit serverseitiger Prüfung
 - Karten und Kartenansicht für Angebote mit verwertbaren Koordinaten
 - lokale Sitzungsverläufe für kurze Folgefragen
 - optionale serverseitige Speech-to-Text- und Text-to-Speech-Schnittstellen
@@ -130,17 +99,20 @@ kein zusätzlicher Server sind nötig.
 
 ## Schnellstart mit Docker (empfohlen)
 
-Aus diesem Verzeichnis (`code/`); Befehle gelten in PowerShell und Bash:
+Nach Freigabe des Zugriffs das Repository klonen und in dessen Wurzel wechseln.
+Docker muss Linux-Container verwenden; Befehle gelten in PowerShell und Bash:
 
 ```text
-# 1. Vollständige Tests offline im Container (Python, Packaging, JavaScript)
-docker build --target test -t lena-check .
-docker run --rm --network none lena-check
-
-# 2. Runtime-Image bauen und flüchtig starten (Kernprofil ohne Zugangsdaten)
+git clone https://github.com/HannahHoffner/lena-grounded-voice-assistant.git
+cd lena-grounded-voice-assistant
 docker build --target runtime -t lena:0.2.0 .
 docker run --rm --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m -p 127.0.0.1:8002:8002 lena:0.2.0
 ```
+
+Dieses Startprofil lädt Oberfläche und lokale Daten. **Für normale fachliche
+Suchanfragen ist zusätzlich ein eigener LLM-Zugang erforderlich.** Ohne ihn
+erscheint der technische Hilfepfad. Die optionalen Containerprüfungen stehen
+unter [Tests](#tests); sie sind kein notwendiger erster Bedienungsschritt.
 
 Öffne `http://127.0.0.1:8002`; `http://127.0.0.1:8002/api/health` zeigt Daten-
 und Dienststatus. Den Port immer an `127.0.0.1` binden: Es gibt weder
@@ -219,7 +191,8 @@ TTS-Modell (`gpt-4o-mini-tts` → HTTP 404). Sprachausgabe erfordert daher Edge-
 oder einen anderen kompatiblen TTS-Endpunkt. Die gepinnten Constraints und der
 Docker-Lock verwenden `edge-tts 7.3.1`; der frühere Client 7.2.8 wurde vom
 externen Dienst mit HTTP 403 abgewiesen. Edge bleibt optional und dienstabhängig.
-Der Audioerfolg vom 25.10. ist kein neuer Hör-/TTS-Nachweis für den 26.10.
+Ergänzend zur Finalprüfung sind wiederholte erfolgreiche reale STT-/TTS-Funktionstests
+der Prüferin dokumentiert; diese ersetzen keine systematische Akustik- oder Sprachprüfung.
 
 **Lokales Audio-Profil, auch für Firefox:** Bei vorhandenem Blablador-Zugang
 in der Git-ignorierten `.env.local` ausdrücklich setzen:
@@ -284,71 +257,49 @@ nicht gewährleistet: Rohpfade und Uvicorn-Query-Strings werden protokolliert
 ## Tests
 
 ```text
-python -m pytest                          # vollständige Python-Suite inkl. Packaging
-node --test tests/frontend.test.cjs       # Frontend-Verhaltenstests
-docker run --rm --network none lena-check # beides offline im fixierten Container
+python -m pytest
+node --test tests/frontend.test.cjs
+docker build --target test -t lena-check .
+docker run --rm --network none lena-check
 ```
 
-Kein Test benötigt Providerzugänge; `tests/conftest.py` sperrt externe
-Netzwerkzugriffe. Ein bewusst dokumentierter `strict xfail`
-(`tests/test_formulation.py`, „minor injuries“) markiert eine bekannte
-Überablehnung und zählt nicht als bestanden. Live-Provider-Läufe sind getrennt
-freizugeben ([Live-Provider-Evaluation](docs/live-provider-evaluation.md)).
-Aktueller Stand auf `5eebb72` (Prompt 27/Validator 10/Copy 11): nativ und im
-frisch ohne Cache gebauten netzlosen Testcontainer je **1695 bestanden,
-1 bekannter XFAIL**, Frontend je **19/19**. Runtime-Health, Start ohne
-Zugangsdaten und Persistenz nach Neustart/Containerersatz bestanden.
-[Aktuelle Belege](IMPLEMENTATION_REPORT.md#21-kachelübersetzungen-nach-manueller-erhebung).
-Historischer Ablationsarbeitsstand auf `02a3612`, 27.10.2026: nativ und im netzlosen
-Testcontainer jeweils **1585 bestanden, 1 bekannter XFAIL**, JavaScript jeweils
-**19/19**. Runtime-Health, Start ohne Zugangsdaten und Sitzungserhalt über
-Neustart/Containerersatz bestanden. Der Containerbuild verwendet vorhandene
-Basis-Layer; drei No-Cache-Neubauten scheiterten vor Anwendungscode am
-Ubuntu-Snapshotserver mit HTTP 502/503 und bleiben als Abnahme offen.
-[Belege und Messgrenzen](IMPLEMENTATION_REPORT.md#144-technische-abschlussprüfung-und-offene-punkte).
-Historischer Rendererprüfstand nach fb773e9, 26.10.2026: nativ und im netzlosen
-Container jeweils **1506 bestanden, 1 bekannter strikter XFAIL, 1 bekannte
-TestClient-Warnung**; JavaScript jeweils **19/19**. Sauberer Docker-Neubau,
-Runtime-Health, Loopback-Port und persistente Session nach Neustart und
-Containerwechsel geprüft. Keine neuen Live-Provider-/Sprach-/Browsermessungen.
-[Nachweis und Grenzen](IMPLEMENTATION_REPORT.md#13-vollständige-antwortsätze-nach-fb773e9).
+Die automatisierten Tests benötigen keine Providerzugänge;
+`tests/conftest.py` sperrt externe Netzwerkzugriffe. Die letzte vollständige
+Regression vom 28.10. nach der Kartenkorrektur bestand nativ und im netzlosen
+Container jeweils mit **1695 bestandenen Pythonfällen, einem bekannten strikten
+XFAIL und 19 bestandenen JavaScriptfällen**. Der XFAIL zur Formulierung
+„minor injuries“ zählt nicht als bestanden. Die spätere Finalprüfung bewertete
+die entsprechende sichtbare englische Wundhilfe separat in F-12.
 
-Voriger Prüfstand vom 26.10.2026 vor der Rendereränderung: nativ und im netzlosen Container jeweils
-**1476 Python-Tests bestanden, 1 bekannter strikter XFAIL**, je **19/19 JS**;
-bekannte Starlette-TestClient-DeprecationWarning bleibt sichtbar. Sauberer
-Docker-Neubau, HTTP-Runtime, Blablador und Sessionerhalt nach Neustart und
-Containerersatz sind geprüft. Zehn direkte Live-Formulatorfälle ergaben neun
-gültige Pläne und eine korrekte Ablehnung; das ersetzt keinen vollständigen
-Vierstufenlauf. Anschließend wurde am Commit `2462e7d` die vollständige
-Reihe neu erhoben: 83 Anfragen/122 Provideraufrufe. Selector/Formulator besteht
-beide Gates, Interpreter nur Vertragsgate; E2E/Stabilität bleiben wegen erholter
-Fehler negativ. Kein katalogseitig kritischer Fehler in dieser Reihe; menschliche
-Prüfung und manuelle Evaluation weiter offen.
-Nachweise: [IMPLEMENTATION_REPORT.md, Abschnitt 11](IMPLEMENTATION_REPORT.md#11-technisch-geprüfter-stand-für-den-manuellen-release-review-26102026).
-Neue Live-Bewertung: [Bericht 12](IMPLEMENTATION_REPORT.md#12-abschließende-vierstufige-live-messung-am-commit-2462e7d).
-Vor manueller Evaluation: [Release-Review-Checkliste](RELEASE_REVIEW_CHECKLIST.md).
-Keine uneingeschränkte Abgabe- oder Veröffentlichungsempfehlung.
+Die App-/Datendateien des Wartungsstands 5962d6c wurden dem geprüften
+Korrekturstand zugeordnet. Das ist kein neuer vollständiger Testlauf auf dem
+Wartungscommit. Ein Runtime-Image aus einem frischen Git-Export dieses Stands
+wurde am 30.10.2026 auf Linux/AMD64 erneut gebaut und ohne Zugangsdaten mit
+Oberfläche, geladenen Daten und erwartetem technischem Rückfall geprüft.
+Dabei wurden weder die Vollsuite noch externe Sprach- oder Modellpfade erneut
+ausgeführt.
 
-Der [diagnostische Promptvergleich vom 24.10.2026](docs/formulator-prompt-comparison.md)
-trennt ungefilterte Modellantworten, Schemafehler und Grounding-Ergebnis.
-130 ursprüngliche und 30 separat ergänzende Liveaufrufe wurden ausgewertet;
-Semantikurteile stammen von Codex, menschliches Review bleibt offen. Der
-Kandidatenprompt ist nicht produktiv übernommen. Nach Ergänzung von zwölf
-Offline-Werkzeugtests: nativ 1355 bestanden, ein bekannter XFAIL; JS 19/19.
+Die letzte vierstufige Live-Messung vom 27.10. betrifft den früheren Stand
+557a487 vor der Kartenkorrektur. Nur die Interpreterstufe bestand beide
+Rohgates; technische Fehler und nicht geprüfte Kriterien bleiben dokumentiert.
+Diese historischen Messwerte werden nicht als aktuelle manuelle Ergebnisse
+ausgegeben. Nachweise und Entwicklungsgeschichte stehen im
+[Implementierungsbericht](IMPLEMENTATION_REPORT.md#21-kachelübersetzungen-nach-manueller-erhebung)
+und in der [Live-Dokumentation](docs/live-provider-evaluation.md).
 
 ## Systemgrenzen
 
 - Forschungsprototyp für isolierten lokalen Betrieb: keine Authentifizierung,
   kein TLS, keine Rate-Limits, ein Prozess; nicht für öffentlichen Betrieb.
 - Seit der Überarbeitung vom 26.10.2026 formuliert das LLM wieder sichtbaren
-  Text (Vertrag 7, Prompt 27, Validator 9). Referenzen, Zahlen, Zeiten,
+  Text (Vertrag 7, Prompt 27, Validator 10). Referenzen, Zahlen, Zeiten,
   Angebotsbindung, Rollen und verbotene Zusatzbehauptungen werden geprüft;
   die lexikalische Inhaltswortabdeckung und unentscheidbare Leistungsabgleiche
   verwerfen seit der Fachentscheidung vom 27.10.2026 keine Antworten mehr.
   R-20/R-21 sind damit nur begrenzt technisch abgesichert. Datengetreue Fehler
   erkennt der Validator grundsätzlich nicht. Ein Retry und danach atomarer Template-Fallback
   bleiben bestehen; maximal 600 Zeichen, keine automatische Kürzung von Fakten.
-  Sprachliche Eignung und Bedarfspassung benötigen manuelle Evaluation.
+  Die Finalprüfung dokumentiert verbleibende Grenzen von Sprache und Bedarfspassung.
   Interpreter-`explicit_facts` werden weiterhin nicht gegen Quellspannen geprüft.
   Aufbau und neue Prüfbelege: [Kontrollierte Antwortakte](docs/controlled-answer-acts.md).
 - Modellantworten sind nicht deterministisch wiederholbar; Modellaliase des
@@ -621,28 +572,21 @@ fixiert die direkte und transitive Auflösung für CPython 3.11. Ein vorhandener
 Workflow ist noch kein Nachweis eines erfolgreichen Remote-Laufs; maßgeblich ist
 der jeweilige Checkstatus auf GitHub.
 
-Der zusätzliche CI-Job `container` baut die Docker-Test- und Runtime-Images,
-führt die vollständige Suite ohne Netzwerk aus und prüft Healthcheck und zwei
-Starts mit leerem temporärem Zustand. Dieser neue Job wurde noch nicht remote
-ausgeführt.
+Der CI-Job `container` baut zusätzlich die Docker-Test- und Runtime-Images,
+führt die vollständige Suite ohne Netzwerk aus und prüft Healthcheck sowie zwei
+Starts mit leerem temporärem Zustand. Für die App-/Datenbasis 5962d6c ist der
+[GitHub-Lauf vom 28.10.2026](https://github.com/HannahHoffner/lena-grounded-voice-assistant/actions/runs/40693191060)
+mit den Jobs `test` und `container` erfolgreich; beide protokollieren 1695
+bestandene Pythonfälle und einen XFAIL. Das ist ein vorhandener Remote-Nachweis,
+kein neuer Lauf für die anschließenden Dokumentationsänderungen.
 
-Der Ubuntu-24.04-Docker-Build mit Python 3.12 und hashgesperrten Abhängigkeiten
-wurde am 21.10.2026 auf Linux/AMD64 unter Docker Desktop erfolgreich geprüft:
-vollständige Tests, Paketierung, Healthcheck und Neustart mit leerem temporärem
-Zustand. Am 23.10.2026 wurde der Stand nach Umsetzung der Audit-Maßnahmen
-erneut aus einem sauberen Export ohne Cache gebaut und geprüft (1.343 Python-Tests
-bestanden, ein bekannter `xfail`, 19 Frontendtests, Volume/Neustart, Start ohne
-Zugangsdaten, Blablador-Textanfrage, Edge-TTS); siehe
-[IMPLEMENTATION_REPORT.md](IMPLEMENTATION_REPORT.md). Am 26.10.2026 bestand
-auch der korrigierte Blockerstand den sauberen Neubau, vollständige netzlose
-Containerregression und Runtime-/Volumeprüfung (1476 + 1 XFAIL, JS 19/19).
-Zwei vorausgehende Buildversuche scheiterten am Ubuntu-Snapshotserver; der
-erfolgreiche dritte Versuch änderte keine Locks. Historische Messungen bleiben
-standgebunden; der anschließende vollständige Live-Lauf am Commit 2462e7d
-ist separat in Bericht 12 dokumentiert und besteht nicht alle Gates.
-Details und sichere
-Startbefehle stehen in [Docker und Reproduzierbarkeit](docs/reproducibility.md). Eine Zenodo-DOI
-existiert für diesen vorbereiteten Stand noch nicht.
+Am 30.10. wurden 394 lokale Protokoll-/Belegdateien und 27 abrufbare
+GitHub-Jobprotokolle auf den vorhandenen lokalen API-Schlüssel und typische
+Secret-Muster geprüft; keine Treffer. Sieben weitere Jobprotokolle sind
+abgelaufen und bleiben ungeprüft. Lokale Sessions und Interaktionslogs enthalten
+Nutzertexte und Kennungen und bleiben Git-ignoriert. Prüfumfang und Grenzen
+dokumentiert der [Protokollprüfbericht](docs/reviews/protokollpruefung-2026-10-30.md)
+im Git-Repository; Rohlogs werden dort nicht neu abgelegt.
 
 ## Weiterentwicklung und Wartung
 
