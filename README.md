@@ -1,11 +1,12 @@
 # LENA
 
-LENA ist ein lokal betriebener, mehrsprachiger **Forschungsprototyp** zur Suche
-nach Hilfsangeboten für wohnungslose Menschen in Leipzig. Ein statisches
-Browser-Frontend spricht mit einem FastAPI-Backend. Fachliche Inhalte stammen
-aus lokal freigegebenen, getrennt geprüften Beständen für soziale Angebote,
-öffentliche Toiletten und feste Trinkwasserbrunnen; das Sprachmodell ist keine
-Wissensquelle. Die Verarbeitung ist in vier Schichten getrennt:
+LENA ist ein mehrsprachiger Forschungsprototyp zur Suche nach Hilfsangeboten
+für wohnungslose Menschen in Leipzig. Die Anwendung läuft lokal und verbindet
+eine Oberfläche im Browser mit einem FastAPI-Backend. Informationen zu sozialen
+Angeboten, öffentlichen Toiletten und festen Trinkwasserbrunnen stammen aus
+getrennt geprüften und lokal freigegebenen Datenbeständen. Das Sprachmodell
+verarbeitet Anfragen und formuliert Antworten auf dieser Grundlage; als eigene
+Wissensquelle dient es nicht. Die Aufgaben verteilen sich auf vier Schichten:
 
 | Schicht | Module | Verantwortung |
 |---|---|---|
@@ -14,57 +15,60 @@ Wissensquelle. Die Verarbeitung ist in vier Schichten getrennt:
 | LLM-Stufen | `providers/llm`, `llm_stages`, `formulation`, `formulator_prose` | Interpretation, kontrollierte Auswahl und freie, fragebezogene Formulierung aus einem Evidence-Paket; Budget, Retry, Template-Rückfall |
 | Faktenprüfung | `grounding`, `grounding_*` | atomare Prüfung des Modelltexts und seiner Referenzen; ohne Zugriff auf Provider, Wissensbasis oder Fachregeln |
 
-`app/service.py` orchestriert diese Schichten; `tests/test_architecture_boundaries.py`
-sichert die Importgrenzen. Der produktive Formulator liefert **selbst formulierte
-Sätze mit Faktenreferenzen** (Vertrag 7, Prompt 27, Evidence 5, Validator 10). Nach atomarer Prüfung wird
-der Modelltext als `provider: "blablador"` ausgegeben, ohne Satzschablonen.
-Bei Fehlern greift der bestehende Template-Fallback. Der Prompt verlangt ein
-bis drei kurze Sätze in einfacher Sprache. Die endliche Faktenprüfung ist keine
-allgemeine semantische Wahrheitsgarantie (siehe [Systemgrenzen](#systemgrenzen)).
-Planvertrag 6 und sein Renderer bleiben nur für historische Vergleiche erhalten.
+`app/service.py` führt diese Schichten zusammen;
+`tests/test_architecture_boundaries.py` prüft ihre Importgrenzen. Im regulären
+Antwortpfad formuliert der Formulator eigene Sätze mit Faktenreferenzen
+(Vertrag 7, Prompt 27, Evidence 5, Validator 10). Nach atomarer Prüfung erscheint
+der Modelltext als `provider: "blablador"`, ohne Satzschablonen. Bei Fehlern
+greift eine lokale Vorlage (Template-Fallback). Der Prompt sieht ein bis drei
+kurze Sätze in einfacher Sprache vor. Die endlichen Prüfregeln können nicht
+jede inhaltlich falsche Aussage erkennen (siehe [Systemgrenzen](#systemgrenzen)).
+Planvertrag 6 und sein Renderer dienen nur noch historischen Vergleichen.
 
 ## Aktueller Prüfstand
 
-Anwendungsversion **0.2.0**, Anwendungs- und Datenbasis **5962d6c**;
-Dokumentationsstand 30.10.2026. Die Kartenkorrektur vom 28.10. ist enthalten
+Die folgenden Angaben beziehen sich auf Anwendungsversion **0.2.0**, die
+Anwendungs- und Datenbasis **5962d6c** und die bis zum 30.10.2026 dokumentierten
+Prüfungen. Die Kartenkorrektur vom 28.10. ist enthalten
 (Anwendungstexte 11). Der lokale Bestand enthält 28 soziale Angebote,
 21 Toilettendatensätze mit 20 auswählbaren Einträgen und 21 freigegebene feste
 Trinkbrunnen in Leipzig.
 
-Die **manuelle Finalprüfung vom 29.10.2026 ist durchgeführt und bewertet**:
-32 Fälle F-01 bis F-32, sechs Kriterien und gesonderte Fallurteile, durch eine
-Prüferin. 21 Fälle wurden als erfüllt, neun als teilweise erfüllt und zwei als
-nicht erfüllt bewertet; daraus wird keine allgemeine Erfolgsquote abgeleitet.
+Am 29.10.2026 führte eine Prüferin die manuelle Finalprüfung durch. Sie bewertete
+32 Fälle F-01 bis F-32 anhand von sechs Kriterien und vergab jeweils ein
+gesondertes Fallurteil. 21 Fälle wurden als erfüllt, neun als teilweise erfüllt
+und zwei als nicht erfüllt bewertet. Die gezielt ausgewählten Fälle erlauben
+keine allgemeine Erfolgsquote.
 F-03/F-25 endeten im sicheren technischen Rückfall, erfüllten aber den
 Schlafhilfebedarf nicht. Weitere Teilbefunde betreffen medizinische Verweise,
 einzelne Kartenfelder, Priorisierung und Sprache. Reale Spracherkennung und
 hörbare Sprachausgabe wurden von der Prüferin wiederholt erfolgreich
 funktional getestet. Die Sprachurteile sind keine muttersprachliche Vollprüfung.
 
-Die vollständigen manuellen Prüfunterlagen gehören zum getrennten
-Thesis-Repository unter `Evaluation/manual_final_20261029/`; sie sind kein
-Bestandteil dieses Code-Checkouts. Aktuelle Aufgaben und offene Punkte stehen
-in der [Release-Checkliste](RELEASE_REVIEW_CHECKLIST.md). Technische Regression
+Die vollständigen manuellen Prüfunterlagen liegen im getrennten
+Thesis-Repository unter `Evaluation/manual_final_20261029/`. Aktuelle Aufgaben
+und offene Punkte stehen in der [Release-Checkliste](RELEASE_REVIEW_CHECKLIST.md).
+Technische Regression
 und historische Live-Läufe werden unter [Tests](#tests) getrennt eingeordnet.
 
-Vorgesehen ist die Weitergabe über ein **privates Repository mit gezieltem
-Zugriff für die Betreuenden**. Die Weitergaberechte des Trinkbrunnenbestands
-bleiben **ungeklärt**; öffentliche Erreichbarkeit und Forschungszweck werden
-nicht als ausdrückliche Datenlizenz ausgegeben. Quellen, Abrufstände und Daten
-bleiben erhalten; siehe [Lizenz und Herkunft](THIRD_PARTY_NOTICES.md).
+Die Weitergaberechte des Trinkbrunnenbestands sind **ungeklärt**. Die öffentliche
+Erreichbarkeit der Quelle und der Forschungszweck ersetzen keine ausdrückliche
+Datenlizenz. Quellen, Abrufstände und Daten sind dokumentiert; Einzelheiten
+stehen unter [Lizenz und Herkunft](THIRD_PARTY_NOTICES.md).
 
-Die normale Bedarfsauswahl benötigt einen konfigurierten LLM-Interpreter. Ohne
-ihn startet die Anwendung, liefert bei normalen Anfragen aber nur den
+Für normale Suchanfragen muss ein LLM-Interpreter konfiguriert sein. Ohne ihn
+startet die Anwendung, beantwortet solche Anfragen aber nur mit einem
 technischen Hilfepfad. LENA ersetzt keine Notfallversorgung, medizinische oder
 soziale Beratung und kennt weder freie Kapazitäten noch eine garantierte Aufnahme.
 
-Die Anwendung richtet sich an technisch betreuende Personen sowie an Fachkräfte,
-die LENA installieren, Datenänderungen prüfen, Übersetzungen pflegen und die
-fachlichen Leitplanken weiterentwickeln.
+Diese README beschreibt die Installation und den Betrieb von LENA sowie die
+Pflege der Daten und Übersetzungen. Sie richtet sich an Personen, die mit der
+Anwendung arbeiten oder sie weiterentwickeln möchten.
 
 ## Funktionsumfang
 
-Für eine spätere erneute Prüfung: [Evaluationsvoraussetzungen](docs/manual-evaluation-prerequisites.md).
+Was für eine erneute Prüfung benötigt wird, beschreiben die
+[Evaluationsvoraussetzungen](docs/manual-evaluation-prerequisites.md).
 
 - Textanfragen in Deutsch, Englisch, Polnisch, Rumänisch und Russisch
 - deterministische, begründete Kandidatenbegrenzung mit Mandatory-/Selectable-Trennung
@@ -99,8 +103,9 @@ kein zusätzlicher Server sind nötig.
 
 ## Schnellstart mit Docker (empfohlen)
 
-Nach Freigabe des Zugriffs das Repository klonen und in dessen Wurzel wechseln.
-Docker muss Linux-Container verwenden; Befehle gelten in PowerShell und Bash:
+Klone das Repository und wechsle in sein Hauptverzeichnis. Docker muss
+Linux-Container verwenden. Die folgenden Befehle funktionieren in PowerShell
+und Bash:
 
 ```text
 git clone https://github.com/HannahHoffner/lena-grounded-voice-assistant.git
@@ -109,18 +114,20 @@ docker build --target runtime -t lena:0.2.0 .
 docker run --rm --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m -p 127.0.0.1:8002:8002 lena:0.2.0
 ```
 
-Dieses Startprofil lädt Oberfläche und lokale Daten. **Für normale fachliche
-Suchanfragen ist zusätzlich ein eigener LLM-Zugang erforderlich.** Ohne ihn
-erscheint der technische Hilfepfad. Die optionalen Containerprüfungen stehen
-unter [Tests](#tests); sie sind kein notwendiger erster Bedienungsschritt.
+Damit starten die Oberfläche und die lokalen Daten. Für normale fachliche
+Suchanfragen brauchst du zusätzlich einen eigenen LLM-Zugang. Ohne ihn erscheint
+der technische Hilfepfad. Die optionalen Containerprüfungen findest du unter
+[Tests](#tests).
 
-Öffne `http://127.0.0.1:8002`; `http://127.0.0.1:8002/api/health` zeigt Daten-
-und Dienststatus. Den Port immer an `127.0.0.1` binden: Es gibt weder
-Authentifizierung noch TLS.
+Öffne `http://127.0.0.1:8002` im Browser. Unter
+`http://127.0.0.1:8002/api/health` siehst du den Daten- und Dienststatus. Binde
+den Port immer an `127.0.0.1`, da die Anwendung weder Authentifizierung noch TLS
+bereitstellt.
 
-**Textsuche mit LLM:** Zugangsdaten nie in Befehlszeilen oder Dateien im
-Repository schreiben. Eine geschützte Datei außerhalb des Repositorys (Vorlage:
-[`.env.example`](.env.example)) mit `--env-file` übergeben, mindestens:
+**Textsuche mit LLM:** Lege die Zugangsdaten in einer geschützten Datei außerhalb
+des Repositorys ab und übergib sie mit `--env-file`. Schreibe sie nicht direkt
+in Befehlszeilen oder versionierte Dateien. Als Vorlage dient
+[`.env.example`](.env.example). Benötigt werden mindestens:
 
 ```text
 REWRITE_PROVIDER=blablador
@@ -133,9 +140,10 @@ BLABLADOR_MODEL=alias-fast
 docker run --rm --read-only --tmpfs /tmp:rw,noexec,nosuid,size=64m --env-file <pfad/zur/lena.env> -p 127.0.0.1:8002:8002 lena:0.2.0
 ```
 
-**Persistenter Zustand (optional):** Standardmäßig liegt der Zustand im
-flüchtigen `/tmp` und verschwindet mit dem Container. Für Sessions über Neustarts
-hinweg ein Named Volume einmalig für UID 10001 vorbereiten und einbinden:
+**Persistenter Zustand (optional):** Standardmäßig liegen die Laufzeitdaten im
+flüchtigen `/tmp` und gehen beim Entfernen des Containers verloren. Wenn du
+Sessions über Neustarts erhalten möchtest, bereite einmalig ein Named Volume
+für UID 10001 vor und binde es ein:
 
 ```text
 docker volume create lena-state
@@ -149,9 +157,9 @@ beim nächsten Zugriff, beschädigte Sessiondateien werden höchstens dreifach i
 Quarantäne aufbewahrt. Volume bei Bedarf mit `docker volume rm lena-state` löschen.
 Der Store ist für **genau einen Prozess** ausgelegt.
 
-Eine Compose-Datei ist bewusst nicht enthalten: LENA ist ein einzelner Prozess
-ohne eigene Begleitdienste (LLM, STT, TTS und Kartenkacheln sind externe Dienste,
-keine Container dieses Projekts). Compose würde nur die obigen Optionen bündeln.
+Eine Compose-Datei ist nicht enthalten. LENA läuft als einzelner Prozess;
+LLM, STT, TTS und Kartenkacheln kommen von externen Diensten. Compose würde hier
+die bereits gezeigten Startoptionen bündeln.
 
 ## Nativer Start
 
@@ -173,9 +181,10 @@ immer. Der Server bindet standardmäßig nur lokal; nicht lokale Hosts erfordern
 
 ## Betriebsprofile und externe Dienste
 
-Jeder externe Dienst hat ein **explizites Profil**; kein Profil übernimmt
-Zugangsdaten eines anderen stillschweigend. Fehlt etwas, startet LENA trotzdem
-und degradiert kontrolliert.
+LLM, Spracherkennung und Sprachausgabe werden jeweils über ein eigenes Profil
+eingerichtet. Die Profile übernehmen keine Zugangsdaten voneinander. Fehlt die
+Konfiguration eines Dienstes, startet LENA trotzdem; die betreffende Funktion
+bleibt eingeschränkt oder deaktiviert.
 
 | Dienst | Profilvariable (Default) | Ohne Konfiguration | Datenempfänger bei Nutzung |
 |---|---|---|---|
@@ -185,8 +194,8 @@ und degradiert kontrolliert.
 | Kartenkacheln | `MAP_PROVIDER` (`osm`) | `disabled`: Marker ohne Basiskarte | OpenStreetMap, direkt aus dem Browser |
 | Quellabgleich WFS/Toiletten/Brunnen | `*_AUTO_SYNC` (`false`) | gebündelte, hashgeprüfte Bootstrap-Daten | städtische Quellen, nur bei Wartung |
 
-Für Blablador gilt: Der Zugang reicht für die geprüfte **Textsuche**; das
-Modellinventar bot am 23.10.2026 `faster-whisper-large-v3` (STT), aber **kein**
+Mit Blablador wurde die Textsuche geprüft. Das Modellinventar bot am
+23.10.2026 `faster-whisper-large-v3` (STT), aber kein
 TTS-Modell (`gpt-4o-mini-tts` → HTTP 404). Sprachausgabe erfordert daher Edge-TTS
 oder einen anderen kompatiblen TTS-Endpunkt. Die gepinnten Constraints und der
 Docker-Lock verwenden `edge-tts 7.3.1`; der frühere Client 7.2.8 wurde vom
@@ -215,8 +224,8 @@ Am 27.10.2026 wurden auf `209edfa` mit diesem lokalen Profil und
 `edge-tts 7.3.1` synthetische Ogg/Opus-Aufnahmen in allen fünf Sprachen über die echten
 HTTP-Endpunkte transkribiert und sessiongebundene Antworttexte als dekodierbare
 MP3 ausgegeben. Anschließend bestätigte die Nutzerin funktionierende Ein- und
-Ausgabe in Firefox. Eine unabhängige sprachliche oder akustische
-Qualitätsprüfung aller fünf Sprachen wird damit nicht behauptet.
+Ausgabe in Firefox. Diese Funktionsprüfung ersetzt keine unabhängige
+sprachliche oder akustische Qualitätsprüfung aller fünf Sprachen.
 
 Das tatsächlich geprüfte Blablador-Messprofil setzt zusätzlich 4096 Tokens und
 15/30/30 Sekunden Stufenlimits bei 45 Sekunden Gesamtbudget. Die Minimalwerte
@@ -227,11 +236,12 @@ für jedes Modell oder jede Anfrage.
 
 ## Offline-Grenzen
 
-Ohne Netzwerk funktionieren: Start, Healthcheck, Oberfläche, lokale Daten,
-Sessions, Safety-Preflight, technischer Hilfepfad mit Hilfebus-Kontakt,
-alle automatisierten Tests (`docker run --network none lena-check`). **Nicht**
-offline verfügbar: fachliche Freitextsuche (benötigt LLM), Server-STT, TTS,
-Browser-Spracherkennung einiger Browser, OpenStreetMap-Basiskarte sowie jeder
+Ohne Netzwerk lassen sich die Anwendung starten, der Healthcheck aufrufen und
+die Oberfläche mit lokalen Daten und Sessions nutzen. Auch Safety-Preflight,
+technischer Hilfepfad mit Hilfebus-Kontakt und alle automatisierten Tests
+funktionieren offline (`docker run --network none lena-check`). Netzwerkzugriff
+benötigen dagegen die fachliche Freitextsuche über das LLM, Server-STT, TTS,
+die Spracherkennung einiger Browser, die OpenStreetMap-Basiskarte und jeder
 Docker-Neubau (Basisimage, Ubuntu-Snapshot, PyPI).
 
 ## Fehlerdiagnose
@@ -263,17 +273,17 @@ docker build --target test -t lena-check .
 docker run --rm --network none lena-check
 ```
 
-Die automatisierten Tests benötigen keine Providerzugänge;
-`tests/conftest.py` sperrt externe Netzwerkzugriffe. Die letzte vollständige
-Regression vom 28.10. nach der Kartenkorrektur bestand nativ und im netzlosen
-Container jeweils mit **1695 bestandenen Pythonfällen, einem bekannten strikten
-XFAIL und 19 bestandenen JavaScriptfällen**. Der XFAIL zur Formulierung
+Für die automatisierten Tests brauchst du keine Providerzugänge;
+`tests/conftest.py` sperrt externe Netzwerkzugriffe. Bei der letzten vollständigen
+Regression nach der Kartenkorrektur am 28.10. bestanden nativ und im netzlosen
+Container jeweils 1695 Pythonfälle und 19 JavaScriptfälle. Ein bekannter
+strikter XFAIL blieb bestehen. Der XFAIL zur Formulierung
 „minor injuries“ zählt nicht als bestanden. Die spätere Finalprüfung bewertete
 die entsprechende sichtbare englische Wundhilfe separat in F-12.
 
-Die App-/Datendateien des Wartungsstands 5962d6c wurden dem geprüften
-Korrekturstand zugeordnet. Das ist kein neuer vollständiger Testlauf auf dem
-Wartungscommit. Ein Runtime-Image aus einem frischen Git-Export dieses Stands
+Die App-/Datendateien des Wartungsstands 5962d6c stimmen mit dem geprüften
+Korrekturstand überein; die vollständige Testsuite wurde auf dem Wartungscommit
+nicht erneut ausgeführt. Ein Runtime-Image aus einem frischen Git-Export dieses Stands
 wurde am 30.10.2026 auf Linux/AMD64 erneut gebaut und ohne Zugangsdaten mit
 Oberfläche, geladenen Daten und erwartetem technischem Rückfall geprüft.
 Dabei wurden weder die Vollsuite noch externe Sprach- oder Modellpfade erneut
@@ -282,8 +292,9 @@ ausgeführt.
 Die letzte vierstufige Live-Messung vom 27.10. betrifft den früheren Stand
 557a487 vor der Kartenkorrektur. Nur die Interpreterstufe bestand beide
 Rohgates; technische Fehler und nicht geprüfte Kriterien bleiben dokumentiert.
-Diese historischen Messwerte werden nicht als aktuelle manuelle Ergebnisse
-ausgegeben. Nachweise und Entwicklungsgeschichte stehen im
+Diese Messwerte beschreiben den damaligen Stand. Die aktuellen manuellen
+Ergebnisse stehen gesondert in der Finalprüfung. Nachweise und
+Entwicklungsgeschichte stehen im
 [Implementierungsbericht](IMPLEMENTATION_REPORT.md#21-kachelübersetzungen-nach-manueller-erhebung)
 und in der [Live-Dokumentation](docs/live-provider-evaluation.md).
 
@@ -403,8 +414,8 @@ python -m app.translate_offers generate --provider blablador
 python -m app.translate_offers export-review --languages en,pl,ro,ru --output translation-review.json
 ```
 
-Die Details und Sicherheitsfolgen dieser Befehle stehen in den verlinkten
-Dokumentationsdateien.
+Weitere Hinweise zu diesen Befehlen und ihren Auswirkungen findest du in der
+verlinkten Dokumentation.
 
 ## Schnittstellen
 
@@ -450,10 +461,11 @@ werden nur über ihre Profile aktiviert (siehe
 `app/static/vendor/` ausgeliefert; die Kartenkacheln lädt der Browser bei
 `MAP_PROVIDER=osm` von OpenStreetMap.
 
-Quelle: Stadt Leipzig, WFS Wohnungslosenhilfe. Die vorhandenen Notices/UI
-ordnen die [Datenlizenz Deutschland – Namensnennung – Version 2.0](https://www.govdata.de/dl-de/by-2-0)
-zu; die konkrete Endpunkt-/Weitergabeberechtigung ist noch nicht abschließend
-belegt. Diese Attribution ersetzt die offene Rechteklärung nicht.
+Die Quellenangaben in Dokumentation und Oberfläche nennen für den WFS
+Wohnungslosenhilfe der Stadt Leipzig die
+[Datenlizenz Deutschland – Namensnennung – Version 2.0](https://www.govdata.de/dl-de/by-2-0).
+Ob diese Zuordnung die konkrete Endpunktnutzung und Weitergabe abdeckt, ist noch
+nicht abschließend belegt und muss gesondert geklärt werden.
 
 Öffentliche Toiletten stammen aus dem amtlichen Datensatz „Öffentliche
 Toiletten, Stadt Leipzig“. Ressourcen-URL, Abrufzeit, SHA-256, Lizenz und
@@ -552,10 +564,9 @@ Das kanonische Repository ist
 Historische Import- und Reviewstände bleiben in Git nachvollziehbar; sie sind
 keine Rekonstruktion der zuvor außerhalb von Git entstandenen Entwicklung.
 
-Erstelle Änderungen auf kurzen Arbeitsbranches und halte Commits auf ein
-reviewbares Thema begrenzt. Echte Zugangsdaten, Sessions und lokale Runtime-
-Artefakte dürfen nicht versioniert werden. Vor einem Commit sollten mindestens
-folgende Befehle erfolgreich sein:
+Nutze für Änderungen kurze Arbeitsbranches und beschränke jeden Commit auf ein
+nachvollziehbares Thema. Zugangsdaten, Sessions und lokale Laufzeitdateien
+gehören nicht in Git. Prüfe vor einem Commit mindestens:
 
 ```powershell
 python -m pytest
@@ -569,16 +580,16 @@ Requests auf GitHub aus. Die Tests bauen Wheel und Source Distribution, prüfen
 deren Inventar, bauen das Wheel erneut aus dem Source-Archiv und starten eine
 frisch installierte App außerhalb des Checkouts. `requirements/constraints-py311.txt`
 fixiert die direkte und transitive Auflösung für CPython 3.11. Ein vorhandener
-Workflow ist noch kein Nachweis eines erfolgreichen Remote-Laufs; maßgeblich ist
-der jeweilige Checkstatus auf GitHub.
+Workflow zeigt, welche Prüfungen vorgesehen sind. Ob ein Lauf erfolgreich war,
+zeigt der jeweilige Checkstatus auf GitHub.
 
 Der CI-Job `container` baut zusätzlich die Docker-Test- und Runtime-Images,
 führt die vollständige Suite ohne Netzwerk aus und prüft Healthcheck sowie zwei
 Starts mit leerem temporärem Zustand. Für die App-/Datenbasis 5962d6c ist der
 [GitHub-Lauf vom 28.10.2026](https://github.com/HannahHoffner/lena-grounded-voice-assistant/actions/runs/40693191060)
 mit den Jobs `test` und `container` erfolgreich; beide protokollieren 1695
-bestandene Pythonfälle und einen XFAIL. Das ist ein vorhandener Remote-Nachweis,
-kein neuer Lauf für die anschließenden Dokumentationsänderungen.
+bestandene Pythonfälle und einen XFAIL. Für die anschließenden
+Dokumentationsänderungen wurde kein neuer Lauf ausgeführt.
 
 Am 30.10. wurden 394 lokale Protokoll-/Belegdateien und 27 abrufbare
 GitHub-Jobprotokolle auf den vorhandenen lokalen API-Schlüssel und typische
@@ -590,9 +601,9 @@ im Git-Repository; Rohlogs werden dort nicht neu abgelegt.
 
 ## Weiterentwicklung und Wartung
 
-Ändere fachliche Fakten nicht direkt in Antworten oder Prompts. Aktualisiere sie
-über den WFS-Prüf- und Promotionsprozess und, wo fachlich erforderlich, über
-den getrennten Kurationskatalog. Neue Antwortlogik muss sowohl den
+Pflege fachliche Angaben über den WFS-Prüf- und Promotionsprozess und, wo nötig,
+über den getrennten Kurationskatalog. Direkte Änderungen in Antworten oder
+Prompts sind dafür nicht vorgesehen. Neue Antwortlogik muss sowohl den
 deterministischen Fallback als auch die Grounding-Prüfung berücksichtigen.
 Erweitere Datenmodelle rückwärtskompatibel und ergänze für jede fachliche Regel
 einen Test. Echte Zugangsdaten gehören ausschließlich in die ignorierten Dateien
