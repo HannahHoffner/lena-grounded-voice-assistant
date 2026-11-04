@@ -1,0 +1,5 @@
+# Use explicitly with compose.yaml; keep credentials outside the repository.
+services:
+  lena:
+    env_file:
+      - ${LENA_ENV_FILE:?Set LENA_ENV_FILE to an external configuration file}

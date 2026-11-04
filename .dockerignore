@@ -1,6 +1,8 @@
 # Explicit build-context allowlist: no local credentials, sessions or reports.
 **
 !Dockerfile
+!compose.yaml
+!compose.provider.yaml
 !.dockerignore
 !.gitignore
 !pyproject.toml

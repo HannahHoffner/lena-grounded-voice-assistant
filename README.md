@@ -157,14 +157,40 @@ beim nächsten Zugriff, beschädigte Sessiondateien werden höchstens dreifach i
 Quarantäne aufbewahrt. Volume bei Bedarf mit `docker volume rm lena-state` löschen.
 Der Store ist für **genau einen Prozess** ausgelegt.
 
-Eine Compose-Datei ist nicht enthalten. LENA läuft als einzelner Prozess;
-LLM, STT, TTS und Kartenkacheln kommen von externen Diensten. Compose würde hier
-die bereits gezeigten Startoptionen bündeln.
+### Start mit Docker Compose
+
+Alternativ bündelt [compose.yaml](compose.yaml) denselben lokalen Start:
+
+```text
+docker compose up --build -d
+docker compose ps
+docker compose down
+```
+
+Voraussetzung ist Docker mit dem Compose-Plugin (`docker compose version`).
+Die Oberfläche liegt ebenfalls unter `http://127.0.0.1:8002`. Der Container
+verwendet ein schreibgeschütztes Dateisystem mit flüchtigem `/tmp` und übernimmt
+keine persönliche Konfiguration. Für normale Suchanfragen eine externe Datei
+mit den oben beschriebenen LLM-Einstellungen anlegen und ausdrücklich die
+Provider-Erweiterung verwenden:
+
+```powershell
+$env:LENA_ENV_FILE = 'C:/pfad/ausserhalb/des/repositorys/lena.env'
+docker compose -f compose.yaml -f compose.provider.yaml up --build -d
+```
+
+Unter Bash zuerst `export LENA_ENV_FILE=/pfad/ausserhalb/des/repositorys/lena.env`
+setzen und denselben Compose-Befehl ausführen. Zum Beenden dieses Profils
+`docker compose -f compose.yaml -f compose.provider.yaml down` verwenden.
+Die Erweiterung verlangt eine ausdrücklich benannte Datei. Beide Profile
+speichern keinen Zustand über das Entfernen des Containers hinaus. LLM,
+STT, TTS und Kartenkacheln bleiben externe Dienste. Aufgelöste Compose-Ausgaben
+und Logs können Zugangsdaten oder Eingaben enthalten; nicht ungeprüft teilen.
 
 ## Nativer Start
 
 ```powershell
-cd code
+# Aus der Wurzel des geklonten Repositorys ausführen.
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -c requirements/constraints-py311.txt -e ".[dev]"
@@ -598,6 +624,22 @@ abgelaufen und bleiben ungeprüft. Lokale Sessions und Interaktionslogs enthalte
 Nutzertexte und Kennungen und bleiben Git-ignoriert. Prüfumfang und Grenzen
 dokumentiert der [Protokollprüfbericht](docs/reviews/protokollpruefung-2026-10-30.md)
 im Git-Repository; Rohlogs werden dort nicht neu abgelegt.
+
+## Lizenz und Zitation
+
+Der eigene Quellcode und die eigene Projektdokumentation stehen unter
+**GPL-3.0-only**, Copyright (c) 2026 Hannah Hoffner; der vollständige Lizenztext
+steht in [LICENSE](LICENSE). Fremddaten, eingebundene Bibliotheken und Dienste
+unterliegen ihren eigenen Bedingungen. Insbesondere sind die Weitergaberechte
+der Trinkbrunnendaten vor einer öffentlichen Archivierung zu klären; siehe
+[Lizenz und Herkunft](THIRD_PARTY_NOTICES.md).
+
+[CITATION.cff](CITATION.cff) enthält Titel, Autorin, Version `0.2.0` und
+Softwarelizenz. Das tatsächliche Releasedatum und eine von Zenodo vergebene
+oder reservierte DOI werden bei der Veröffentlichung ergänzt. Für die Thesis
+die Versions-DOI des verwendeten Archivs zitieren. Die Zuordnung zum
+evaluierten Codestand und den Ablauf beschreibt
+[Release und wissenschaftliche Archivierung](docs/release.md).
 
 ## Weiterentwicklung und Wartung
 

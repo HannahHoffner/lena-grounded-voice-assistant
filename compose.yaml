@@ -1,0 +1,11 @@
+services:
+  lena:
+    build:
+      context: .
+      target: runtime
+    image: lena:0.2.0
+    ports:
+      - "127.0.0.1:8002:8002"
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=64m

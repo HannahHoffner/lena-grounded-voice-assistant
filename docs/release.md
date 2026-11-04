@@ -2,6 +2,33 @@
 
 ## Vorbereiteter Stand
 
+Die Veröffentlichungsvorbereitung vom 04.11.2026 verwendet das kanonische
+Entwicklungsrepository `HannahHoffner/lena-grounded-voice-assistant`.
+Ausgangspunkt ist `105c0b19fd91a8d1c71b9eda259f0380a947cf9c`.
+Die Git-Objekte für `app/`, `data/`, `tests/`, `requirements/`, `Dockerfile`,
+`pyproject.toml` und `.env.example` stimmen dort vollständig mit dem in der
+Thesis dokumentierten Prüfstand
+`5962d6c172d6f6eeddf6bc65c8644b833838b671` überein. Die Vorbereitung ergänzt
+Dokumentation, Zitierhinweise und Compose, ohne Anwendung oder Daten zu ändern.
+Die historische Evaluation bleibt an ihren ursprünglichen Commit gebunden.
+
+Als Archivkandidat dient der lokale Commit mit der Nachricht
+`Prepare thesis-aligned Zenodo archive and Compose setup`. Seine vollständige
+SHA und die SHA-256 des daraus exportierten ZIP werden in einem getrennten
+lokalen Prüfmanifest festgehalten. Die SHA lässt sich nach Abschluss auch mit
+`git log -1 --format=%H --grep="Prepare thesis-aligned Zenodo archive and Compose setup"`
+ermitteln. Eine spätere Änderung erfordert einen neu geprüften Archivkandidaten.
+
+Das Repository ist am 04.11.2026 privat. Die GitHub-Anbindung von Zenodo benötigt
+ein öffentliches Repository. Ein manuelles Quellarchiv enthält keine
+Git-Historie; bei einer öffentlichen GitHub-Freigabe würden dagegen auch
+historische Autorinnen-E-Mail-Adressen sichtbar. Die Sichtbarkeit bleibt im
+Vorbereitungsauftrag unverändert. Vor Veröffentlichung bleiben die bereits
+dokumentierten Weitergaberechte der Trinkbrunnendaten zu klären.
+
+Der aktuelle Secret-Scan ist im internen, vom Software-ZIP ausgeschlossenen
+Git-Dokument `docs/reviews/zenodo-preflight-2026-11-04.md` protokolliert.
+
 Die Projektversion ist unverändert `0.2.0` (Paketmetadaten und vorhandene Tests).
 Es wurde kein Release erzeugt und keine DOI vergeben. `CITATION.cff` ist die
 einzige maschinenlesbare Zitiermetadatenquelle; eine parallele `.zenodo.json`
@@ -65,9 +92,9 @@ archivieren; keine Rohinteraktionen in ein öffentliches Softwarepaket mischen.
    veröffentlicht ist, vor einem neuen Release eine tatsächlich beschlossene
    Folgeversion vergeben und alle Stellen konsistent aktualisieren.
 4. Diff, Secrets, Paket- und Archivinventar prüfen. `git diff --check` ausführen.
-   Vorbestehende Änderungen anderer Aufgaben getrennt halten. Erst nach eigener
-   ausdrücklicher Freigabe committen; der Bereinigungsauftrag selbst erlaubt
-   weder Commit noch Push.
+   Vorbestehende Änderungen anderer Aufgaben getrennt halten. Einen geprüften
+   lokalen Vorbereitungscommit von Push, Tag und öffentlichem Release trennen.
+   Die Festlegung eines Archivkandidaten veröffentlicht das Repository nicht.
 5. Tagkonvention: `v<Projektversion>`, beispielsweise `v0.2.0` **nur**, falls diese
    Version tatsächlich für dieses Release festgelegt, geprüft und noch frei ist.
    Historische Tags nicht verschieben. Tag und Release müssen auf denselben
@@ -101,6 +128,11 @@ darstellen. Bei der GitHub-Integration steht die neue DOI gegebenenfalls erst
 nach dem Release fest; eine spätere Metadatenkorrektur ist kein stillschweigender
 Austausch des bereits archivierten Quellarchivs. Den Zusammenhang in den
 Releasehinweisen dokumentieren.
+
+Sobald das tatsächliche Releasedatum feststeht, `date-released: YYYY-MM-DD`
+in `CITATION.cff` setzen, erneut validieren und den daraus entstehenden Commit
+als endgültigen Release-Commit protokollieren. Der hier festgelegte
+Vorbereitungscommit enthält bewusst kein erfundenes Veröffentlichungsdatum.
 
 Nach erfolgreicher Veröffentlichung:
 

@@ -6,6 +6,7 @@ include .env.example
 include pyproject.toml
 include LICENSE CITATION.cff THIRD_PARTY_NOTICES.md
 include Dockerfile .dockerignore
+include compose.yaml compose.provider.yaml
 include app/static/vendor/leaflet/LICENSE
 recursive-include app *.py *.html *.css *.js *.png *.json *.geojson *.csv *.kml
 recursive-include docs *.md

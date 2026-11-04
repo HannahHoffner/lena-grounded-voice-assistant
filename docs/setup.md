@@ -5,6 +5,12 @@ Für Windows, Linux und macOS steht zusätzlich der vorbereitete
 Verfügung. Build, Tests und Runtime wurden auf Linux/AMD64 unter Docker Desktop
 geprüft. Die folgenden Abschnitte beschreiben die direkte Python-Installation.
 
+Der [Compose-Start](../README.md#start-mit-docker-compose) verwendet denselben
+Runtime-Build. `compose.yaml` startet ohne persönliche Konfiguration;
+`compose.provider.yaml` ergänzt ausschließlich eine ausdrücklich über
+`LENA_ENV_FILE` benannte externe Konfigurationsdatei. Beide Profile binden den
+Port nur an `127.0.0.1` und verwenden flüchtigen Zustand in `/tmp`.
+
 ## Voraussetzungen
 
 - Python 3.11 oder neuer
@@ -15,7 +21,7 @@ geprüft. Die folgenden Abschnitte beschreiben die direkte Python-Installation.
 ## Entwicklungsinstallation
 
 ```powershell
-cd code
+# Aus der Wurzel des geklonten Repositorys ausführen.
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install --upgrade pip

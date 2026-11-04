@@ -1,7 +1,7 @@
 cff-version: 1.2.0
 message: >-
   Please cite the specific archived release of LENA that you used.
-  A Zenodo DOI and release date will be added after publication.
+  Release metadata will be completed when the archive is published.
 type: software
 title: "LENA: Grounded Multilingual Local-Referral Prototype"
 abstract: >-
@@ -22,4 +22,5 @@ keywords:
   - grounding
   - reproducibility
 # Release preparation: do not add a fabricated DOI or publication date.
-# Add doi and date-released only for the actual archived release.
+# Add date-released (YYYY-MM-DD) when the release date is established.
+# Add doi only after a real DOI has been assigned or reserved by Zenodo.
