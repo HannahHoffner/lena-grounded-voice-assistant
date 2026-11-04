@@ -1,7 +1,6 @@
 cff-version: 1.2.0
 message: >-
   Please cite the specific archived release of LENA that you used.
-  Release metadata will be completed when the archive is published.
 type: software
 title: "LENA: Grounded Multilingual Local-Referral Prototype"
 abstract: >-
@@ -13,6 +12,7 @@ authors:
     given-names: Hannah
 version: 0.2.0
 date-released: 2026-11-04
+doi: 10.5281/zenodo.23958503
 license: GPL-3.0-only
 repository-code: "https://github.com/HannahHoffner/lena-grounded-voice-assistant"
 keywords:

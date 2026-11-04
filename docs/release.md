@@ -1,6 +1,15 @@
 # Release und wissenschaftliche Archivierung
 
-## Vorbereiteter Stand
+## Veröffentlichte Version
+
+Version v0.2.0 wurde am 04.11.2026 auf Zenodo veröffentlicht:
+https://doi.org/10.5281/zenodo.23958503.
+Die Softwarezitation steht in [CITATION.cff](../CITATION.cff).
+Die nachträgliche Ergänzung der DOI in lokalen Zitiermetadaten ersetzt keine
+Dateien im veröffentlichten Archiv. Die folgende Vorbereitungshistorie
+dokumentiert die Zuordnung zum evaluierten Stand.
+
+## Dokumentation der Vorbereitung
 
 Die Veröffentlichungsvorbereitung vom 04.11.2026 verwendet das kanonische
 Entwicklungsrepository `HannahHoffner/lena-grounded-voice-assistant`.
@@ -19,7 +28,7 @@ lokalen Prüfmanifest festgehalten. Die SHA lässt sich nach Abschluss auch mit
 `git log -1 --format=%H --grep="Prepare thesis-aligned Zenodo archive and Compose setup"`
 ermitteln. Eine spätere Änderung erfordert einen neu geprüften Archivkandidaten.
 
-Das Repository ist am 04.11.2026 privat. Die GitHub-Anbindung von Zenodo benötigt
+Das Repository war zum Zeitpunkt der Vorbereitung am 04.11.2026 privat. Die GitHub-Anbindung von Zenodo benötigt
 ein öffentliches Repository. Ein manuelles Quellarchiv enthält keine
 Git-Historie; bei einer öffentlichen GitHub-Freigabe würden dagegen auch
 historische Autorinnen-E-Mail-Adressen sichtbar. Die Sichtbarkeit bleibt im
@@ -30,7 +39,7 @@ Der aktuelle Secret-Scan ist im internen, vom Software-ZIP ausgeschlossenen
 Git-Dokument `docs/reviews/zenodo-preflight-2026-11-04.md` protokolliert.
 
 Die Projektversion ist unverändert `0.2.0` (Paketmetadaten und vorhandene Tests).
-Es wurde kein Release erzeugt und keine DOI vergeben. `CITATION.cff` ist die
+Während der Vorbereitung war noch kein Release erzeugt und keine DOI vergeben. `CITATION.cff` ist die
 einzige maschinenlesbare Zitiermetadatenquelle; eine parallele `.zenodo.json`
 ist nicht erforderlich. Autorin: Hannah Hoffner, ohne Affiliation. Eigener Code:
 GPL-3.0-only, siehe [Lizenz und Herkunft](../THIRD_PARTY_NOTICES.md).

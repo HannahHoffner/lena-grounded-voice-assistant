@@ -634,11 +634,14 @@ unterliegen ihren eigenen Bedingungen. Insbesondere sind die Weitergaberechte
 der Trinkbrunnendaten vor einer öffentlichen Archivierung zu klären; siehe
 [Lizenz und Herkunft](THIRD_PARTY_NOTICES.md).
 
-[CITATION.cff](CITATION.cff) enthält Titel, Autorin, Version `0.2.0` und
-Softwarelizenz. Das tatsächliche Releasedatum und eine von Zenodo vergebene
-oder reservierte DOI werden bei der Veröffentlichung ergänzt. Für die Thesis
-die Versions-DOI des verwendeten Archivs zitieren. Die Zuordnung zum
-evaluierten Codestand und den Ablauf beschreibt
+[CITATION.cff](CITATION.cff) enthält die Zitiermetadaten einschließlich der
+Versions-DOI des am 04.11.2026 veröffentlichten Zenodo-Archivs:
+
+Hoffner, H. (2026). *LENA: Grounded Multilingual Local-Referral Prototype*
+(Version v0.2.0) [Computer software]. Zenodo.
+https://doi.org/10.5281/zenodo.23958503
+
+Die Zuordnung zum evaluierten Codestand und den Ablauf beschreibt
 [Release und wissenschaftliche Archivierung](docs/release.md).
 
 ## Weiterentwicklung und Wartung
