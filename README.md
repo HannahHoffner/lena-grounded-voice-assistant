@@ -1,5 +1,7 @@
 # LENA
 
+[![Zenodo (Software)](https://zenodo.org/badge/DOI/10.5281/zenodo.23958503.svg)](https://doi.org/10.5281/zenodo.23958503)
+
 LENA ist ein mehrsprachiger Forschungsprototyp zur Suche nach Hilfsangeboten
 für wohnungslose Menschen in Leipzig. Die Anwendung läuft lokal und verbindet
 eine Oberfläche im Browser mit einem FastAPI-Backend. Informationen zu sozialen
@@ -634,12 +636,10 @@ unterliegen ihren eigenen Bedingungen. Insbesondere sind die Weitergaberechte
 der Trinkbrunnendaten vor einer öffentlichen Archivierung zu klären; siehe
 [Lizenz und Herkunft](THIRD_PARTY_NOTICES.md).
 
-[CITATION.cff](CITATION.cff) enthält die Zitiermetadaten einschließlich der
-Versions-DOI des am 04.11.2026 veröffentlichten Zenodo-Archivs:
-
-Hoffner, H. (2026). *LENA: Grounded Multilingual Local-Referral Prototype*
-(Version v0.2.0) [Computer software]. Zenodo.
-https://doi.org/10.5281/zenodo.23958503
+Die Softwareversion **v0.2.0** ist seit dem 04.11.2026 auf
+[Zenodo](https://doi.org/10.5281/zenodo.23958503) archiviert.
+Die maschinenlesbaren Zitiermetadaten einschließlich der Versions-DOI
+stehen in [CITATION.cff](CITATION.cff).
 
 Die Zuordnung zum evaluierten Codestand und den Ablauf beschreibt
 [Release und wissenschaftliche Archivierung](docs/release.md).
