@@ -19,8 +19,9 @@ Die technischen und formativen Entwicklungsstände bleiben im
   32 Fälle F-01 bis F-32, sechs Kriterien und gesonderte Fallurteile.
   Durchführung und Bewertung erfolgten durch eine Prüferin.
 - [x] Vollständiger manueller Testplan, Kriterienmatrix, sichtbare Texte,
-  Rohdaten und 48 Screenshots im getrennten Thesis-Repository unter
-  `Evaluation/manual_final_20261029/` dokumentiert.
+  Rohdaten und 48 Screenshots unter
+  [`evaluation/manual_final_20261029/`](evaluation/manual_final_20261029/README.md)
+  dokumentiert (am 06.11.2026 aus dem Thesisrepository übernommen).
 - [x] Reale Spracherkennung und hörbare Sprachausgabe von der Prüferin
   wiederholt erfolgreich funktional getestet. Keine systematische Sprach-
   oder Akustikvollprüfung daraus abgeleitet.

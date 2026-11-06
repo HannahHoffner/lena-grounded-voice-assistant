@@ -1,0 +1,25 @@
+✔ Firefox-style Ogg recording keeps recording status and releases microphone before STT (9.4617ms)
+✔ a failed recorder constructor still releases the granted microphone (1.5951ms)
+✔ STT service failure differs from unintelligible or invalid audio (1.6471ms)
+✔ a successful response enables the next clarification (1.4784ms)
+✔ relocalizing an in-flight choice does not allow duplicate submission (1.4568ms)
+✔ typing leaves the dialogue usable and sends no request (1.2905ms)
+✔ query submission is single-flight and choice payload excludes category (1.9902ms)
+✔ query failure releases the guard and restores dialogue choices (1.3768ms)
+✔ TTS sends the active session and releases audio on interruption (3.9655ms)
+✔ Start clears private content and ignores an old query without unlocking a new query (1.8733ms)
+✔ inactivity clears visible content, session and audio and returns to language selection (1.8059ms)
+✔ reset discards deferred STT success and failure (2.6817ms)
+✔ a microphone grant arriving after reset is immediately released (1.3228ms)
+✔ reset stops recording without submitting the discarded audio (2.4488ms)
+✔ a failed old query cannot replace the reset view with an error (1.3937ms)
+✔ same playback button stops instead of issuing a second TTS call (1.661ms)
+✔ language change ignores a previous-language query response while retaining the session (1.905ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 17
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 117.2859

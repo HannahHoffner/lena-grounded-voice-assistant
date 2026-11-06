@@ -1,0 +1,236 @@
+{
+  "answer": "Te oferty pasują do pytania: Hilfebus, Bahnhofsmission Leipzig. Więcej informacji znajdziesz poniżej. Hilfebus: wydawanie zupy w niedzielę, Westseite des Hauptbahnhofes, 04109 Leipzig, 20:00–21:00.",
+  "cards": [
+    {
+      "record_type": "social_offer",
+      "id": "21",
+      "name": "Hilfebus",
+      "short_description": "Hilfebus",
+      "services": [
+        "> dostosowane do potrzeb nagłe zaopatrzenie osób bezdomnych",
+        "> ciepłe jedzenie i napoje",
+        "> ciepłe ubrania, koce i śpiwory",
+        "> pośrednictwo w noclegach awaryjnych",
+        "> mobilna podstawowa opieka i doradztwo skierowujące",
+        "Postoje:",
+        "> w każdą niedzielę 20:00 - 21:00 po zachodniej stronie Hauptbahnhof, wydawanie zupy"
+      ],
+      "address": "Westseite des Hauptbahnhofes, 04109 Leipzig",
+      "phone_numbers": [
+        "0175 6758041 (pan Neufert)",
+        "0152 33661087 (tylko w godzinach działania autobusu)"
+      ],
+      "opening_hours_raw": [
+        "> działanie codziennie 18:00 - 23:00 godz., ogólnomiejski",
+        "> każdej niedzieli: 20:00 -21:00 godz. po zachodniej stronie dworca głównego z wydawaniem zupy"
+      ],
+      "standzeiten_raw": [
+        "Postoje:",
+        "> w każdą niedzielę 20:00 - 21:00 po zachodniej stronie Hauptbahnhof, wydawanie zupy"
+      ],
+      "notes": [
+        "Kanał Instagram: #safeleipzig",
+        "Zadzwoń w czasie działań (codziennie 18:00–23:00 godz.) bezpośrednio do Hilfebus."
+      ],
+      "spoken_text": "Hilfebus. Opis: Hilfebus. Pomoc: dostosowane do potrzeb nagłe zaopatrzenie osób bezdomnych, ciepłe jedzenie i napoje, ciepłe ubrania, koce i śpiwory, pośrednictwo w noclegach awaryjnych, mobilna podstawowa opieka i doradztwo skierowujące, Postoje:, w każdą niedzielę 20:00 - 21:00 po zachodniej stronie Hauptbahnhof, wydawanie zupy. Adres: Westseite des Hauptbahnhofes, 04109 Leipzig. Telefon: 0152 33661087 (tylko w godzinach działania autobusu). Godziny otwarcia: działanie codziennie 18:00 - 23:00 godz., ogólnomiejski, każdej niedzieli: 20:00 -21:00 godz. po zachodniej stronie dworca głównego z wydawaniem zupy. Godziny w tym miejscu: Postoje:, w każdą niedzielę 20:00 - 21:00 po zachodniej stronie Hauptbahnhof, wydawanie zupy. Ważne informacje: Kanał Instagram: #safeleipzig, Zadzwoń w czasie działań (codziennie 18:00–23:00 godz.) bezpośrednio do Hilfebus."
+    },
+    {
+      "record_type": "social_offer",
+      "id": "22",
+      "name": "Bahnhofsmission Leipzig",
+      "short_description": "Ekumeniczna misja dworcowa",
+      "services": [
+        "> kawa, herbata, woda",
+        "> kanapki",
+        "> wydawanie ubrań, śpiworów itp.",
+        "> społeczne doradztwo w przypadkach kryzysów mieszkaniowych i problemów społecznych",
+        "> pomoc w podróży na głównym dworcu w Lipsku"
+      ],
+      "address": "Willy-Brandt-Platz 2a, 04109 Leipzig",
+      "phone_numbers": [
+        "0341 9683254"
+      ],
+      "opening_hours_raw": [
+        "> Poniedziałek - Piątek: 09:00 - 18:00 godz.",
+        "> Niedziela: 13:30 - 18:00 godz.",
+        "> Elastyczność w zależności od potrzeb i zapytań możliwa"
+      ],
+      "standzeiten_raw": [],
+      "notes": [],
+      "spoken_text": "Bahnhofsmission Leipzig. Opis: Ekumeniczna misja dworcowa. Pomoc: kawa, herbata, woda, kanapki, wydawanie ubrań, śpiworów itp., społeczne doradztwo w przypadkach kryzysów mieszkaniowych i problemów społecznych, pomoc w podróży na głównym dworcu w Lipsku. Adres: Willy-Brandt-Platz 2a, 04109 Leipzig. Telefon: 0341 9683254. Godziny otwarcia: Poniedziałek - Piątek: 09:00 - 18:00 godz., Niedziela: 13:30 - 18:00 godz., Elastyczność w zależności od potrzeb i zapytań możliwa"
+    },
+    {
+      "record_type": "social_offer",
+      "id": "9",
+      "name": "Tagestreff Insel",
+      "short_description": "Miejsce spotkań",
+      "services": [
+        "> Porada socjalna codziennie 09:00 - 12:00 godz. i na umówienie",
+        "> Niedziela 09:00 - 15:00 godz.",
+        "> Adresy dostawy poczty",
+        "> Prysznic, pralka, szafa na ubrania",
+        "> Skrzynki depozytowe",
+        "> Przekąski i obiad"
+      ],
+      "address": "Plautstr. 18, 04179 Leipzig",
+      "phone_numbers": [
+        "0341 24676655"
+      ],
+      "opening_hours_raw": [
+        "> Poniedziałek - piątek: 08:00 - 16:00 godz.",
+        "> Niedziela: 09:00 - 15:00 godz."
+      ],
+      "standzeiten_raw": [],
+      "notes": [],
+      "spoken_text": "Tagestreff Insel. Opis: Miejsce spotkań. Pomoc: Porada socjalna codziennie 09:00 - 12:00 godz. i na umówienie, Niedziela 09:00 - 15:00 godz., Adresy dostawy poczty, Prysznic, pralka, szafa na ubrania, Skrzynki depozytowe, Przekąski i obiad. Adres: Plautstr. 18, 04179 Leipzig. Telefon: 0341 24676655. Godziny otwarcia: Poniedziałek - piątek: 08:00 - 16:00 godz., Niedziela: 09:00 - 15:00 godz."
+    }
+  ],
+  "language": "pl",
+  "provider": "template",
+  "status": "ok",
+  "answer_type": "grounded_result",
+  "session_id": "3bb0b94c4442404fb5c94c0d099478da",
+  "question": "Hilfe bitte",
+  "history": [
+    {
+      "question": "Hilfe bitte",
+      "answer": "Te oferty pasują do pytania: Hilfebus, Bahnhofsmission Leipzig. Więcej informacji znajdziesz poniżej. Hilfebus: wydawanie zupy w niedzielę, Westseite des Hauptbahnhofes, 04109 Leipzig, 20:00–21:00."
+    }
+  ],
+  "map_data": {
+    "origin": {
+      "id": "leipzig-hbf",
+      "label": "Leipzig Hauptbahnhof",
+      "address": "Willy-Brandt-Platz 5, 04109 Leipzig",
+      "latitude": 51.34556,
+      "longitude": 12.38222
+    },
+    "destinations": [
+      {
+        "id": "21:hbf-west",
+        "label": "Hilfebus - Westseite Hauptbahnhof",
+        "address": "Westseite des Hauptbahnhofes, 04109 Leipzig",
+        "latitude": 51.34556,
+        "longitude": 12.37935,
+        "distance_meters": 199,
+        "description": "Wydawanie zupy: niedziela 20:00-21:00",
+        "phone_numbers": [
+          "0152 33661087 (tylko w godzinach działania autobusu)"
+        ],
+        "opening_hours": [
+          "> niedziela: 20:00 - 21:00 po zachodniej stronie Hauptbahnhof"
+        ],
+        "services": [
+          "> dostosowane do potrzeb nagłe zaopatrzenie osób bezdomnych",
+          "> ciepłe jedzenie i napoje",
+          "> ciepłe ubrania, koce i śpiwory",
+          "> pośrednictwo w noclegach awaryjnych",
+          "> mobilna podstawowa opieka i doradztwo skierowujące",
+          "Postoje:",
+          "> w każdą niedzielę 20:00 - 21:00 po zachodniej stronie Hauptbahnhof, wydawanie zupy"
+        ],
+        "standzeiten_raw": [
+          "Postoje:",
+          "> w każdą niedzielę 20:00 - 21:00 po zachodniej stronie Hauptbahnhof, wydawanie zupy"
+        ],
+        "notes": [
+          "Kanał Instagram: #safeleipzig",
+          "Zadzwoń w czasie działań (codziennie 18:00–23:00 godz.) bezpośrednio do Hilfebus."
+        ],
+        "record_type": "social_offer",
+        "spoken_text": "Hilfebus - Westseite Hauptbahnhof. Opis: Wydawanie zupy: niedziela 20:00-21:00. Pomoc: dostosowane do potrzeb nagłe zaopatrzenie osób bezdomnych, ciepłe jedzenie i napoje, ciepłe ubrania, koce i śpiwory, pośrednictwo w noclegach awaryjnych, mobilna podstawowa opieka i doradztwo skierowujące, Postoje:, w każdą niedzielę 20:00 - 21:00 po zachodniej stronie Hauptbahnhof, wydawanie zupy. Adres: Westseite des Hauptbahnhofes, 04109 Leipzig. Telefon: 0152 33661087 (tylko w godzinach działania autobusu). Godziny otwarcia: niedziela: 20:00 - 21:00 po zachodniej stronie Hauptbahnhof. Godziny w tym miejscu: Postoje:, w każdą niedzielę 20:00 - 21:00 po zachodniej stronie Hauptbahnhof, wydawanie zupy. Ważne informacje: Kanał Instagram: #safeleipzig, Zadzwoń w czasie działań (codziennie 18:00–23:00 godz.) bezpośrednio do Hilfebus.",
+        "fee_raw": null,
+        "facilities": [],
+        "cost_status": null,
+        "potable_water_status": null,
+        "seasonal_status": null,
+        "source_attribution": null
+      },
+      {
+        "id": "22",
+        "label": "Bahnhofsmission Leipzig",
+        "address": "Willy-Brandt-Platz 2a, 04109 Leipzig",
+        "latitude": 51.34532794191829,
+        "longitude": 12.379234835188623,
+        "distance_meters": 209,
+        "description": "Ekumeniczna misja dworcowa",
+        "phone_numbers": [
+          "0341 9683254"
+        ],
+        "opening_hours": [
+          "> Poniedziałek - Piątek: 09:00 - 18:00 godz.",
+          "> Niedziela: 13:30 - 18:00 godz.",
+          "> Elastyczność w zależności od potrzeb i zapytań możliwa"
+        ],
+        "services": [
+          "> kawa, herbata, woda",
+          "> kanapki",
+          "> wydawanie ubrań, śpiworów itp.",
+          "> społeczne doradztwo w przypadkach kryzysów mieszkaniowych i problemów społecznych",
+          "> pomoc w podróży na głównym dworcu w Lipsku"
+        ],
+        "standzeiten_raw": [],
+        "notes": [],
+        "record_type": "social_offer",
+        "spoken_text": "Bahnhofsmission Leipzig. Opis: Ekumeniczna misja dworcowa. Pomoc: kawa, herbata, woda, kanapki, wydawanie ubrań, śpiworów itp., społeczne doradztwo w przypadkach kryzysów mieszkaniowych i problemów społecznych, pomoc w podróży na głównym dworcu w Lipsku. Adres: Willy-Brandt-Platz 2a, 04109 Leipzig. Telefon: 0341 9683254. Godziny otwarcia: Poniedziałek - Piątek: 09:00 - 18:00 godz., Niedziela: 13:30 - 18:00 godz., Elastyczność w zależności od potrzeb i zapytań możliwa",
+        "fee_raw": null,
+        "facilities": [],
+        "cost_status": null,
+        "potable_water_status": null,
+        "seasonal_status": null,
+        "source_attribution": null
+      },
+      {
+        "id": "9",
+        "label": "Tagestreff Insel",
+        "address": "Plautstr. 18, 04179 Leipzig",
+        "latitude": 51.33249610277894,
+        "longitude": 12.307454785097576,
+        "distance_meters": 5393,
+        "description": "Miejsce spotkań",
+        "phone_numbers": [
+          "0341 24676655"
+        ],
+        "opening_hours": [
+          "> Poniedziałek - piątek: 08:00 - 16:00 godz.",
+          "> Niedziela: 09:00 - 15:00 godz."
+        ],
+        "services": [
+          "> Porada socjalna codziennie 09:00 - 12:00 godz. i na umówienie",
+          "> Niedziela 09:00 - 15:00 godz.",
+          "> Adresy dostawy poczty",
+          "> Prysznic, pralka, szafa na ubrania",
+          "> Skrzynki depozytowe",
+          "> Przekąski i obiad"
+        ],
+        "standzeiten_raw": [],
+        "notes": [],
+        "record_type": "social_offer",
+        "spoken_text": "Tagestreff Insel. Opis: Miejsce spotkań. Pomoc: Porada socjalna codziennie 09:00 - 12:00 godz. i na umówienie, Niedziela 09:00 - 15:00 godz., Adresy dostawy poczty, Prysznic, pralka, szafa na ubrania, Skrzynki depozytowe, Przekąski i obiad. Adres: Plautstr. 18, 04179 Leipzig. Telefon: 0341 24676655. Godziny otwarcia: Poniedziałek - piątek: 08:00 - 16:00 godz., Niedziela: 09:00 - 15:00 godz.",
+        "fee_raw": null,
+        "facilities": [],
+        "cost_status": null,
+        "potable_water_status": null,
+        "seasonal_status": null,
+        "source_attribution": null
+      }
+    ],
+    "selected_destination_id": "21:hbf-west"
+  },
+  "clarification": null,
+  "spoken_result_ids": [
+    "21",
+    "22",
+    "9"
+  ],
+  "card_ids": [
+    "21",
+    "22",
+    "9"
+  ],
+  "map_marker_ids": [
+    "21:hbf-west",
+    "22",
+    "9"
+  ]
+}

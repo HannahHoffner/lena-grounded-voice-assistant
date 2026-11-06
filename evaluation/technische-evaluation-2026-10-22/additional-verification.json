@@ -1,0 +1,17 @@
+{
+  "commit": "597e1f0216c72eedd01b7b9e6d49be67ca8150f9",
+  "native_ast_files": 101,
+  "native_pip_check_passed": true,
+  "native_frontend_passed": 17,
+  "native_frontend_ms": 117.2859,
+  "native_js_syntax_passed": true,
+  "container_tests": 1220,
+  "container_passed": 1219,
+  "container_xfail": 1,
+  "container_pytest_seconds": 212.73,
+  "container_junit_seconds": 212.698,
+  "container_frontend_passed": 17,
+  "container_frontend_ms": 253.612389,
+  "container_dependency_syntax_checks_passed": true,
+  "smoke_queries_are_provider_free_technical_fallback": true
+}

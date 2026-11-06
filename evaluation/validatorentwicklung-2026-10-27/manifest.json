@@ -1,0 +1,31 @@
+{
+  "started_utc": "2026-10-27T07:24:41.800586+00:00",
+  "git_head": "02a361265ac92a502f3e88dafc973d6302255308",
+  "git_status_app": "M app/application_texts.py\n M app/candidates.py\n M app/formulation.py\n M app/formulator_prose.py\n M app/grounding.py\n M app/grounding_content.py\n M app/resources/bootstrap/curation/social_offers.json\n M app/resources/bootstrap/i18n/application_texts.json\n M app/resources/bootstrap/i18n/offer_translations.json\n M app/service.py\n M tests/test_answer_plan.py\n M tests/test_api.py\n M tests/test_candidates.py\n M tests/test_curation.py\n M tests/test_formulation.py\n M tests/test_formulator_factual_freedom.py\n M tests/test_formulator_prose.py\n M tests/test_grounding_audience.py\n M tests/test_grounding_claims.py\n M tests/test_grounding_constraints.py\n M tests/test_grounding_content.py\n M tests/test_grounding_lexical_boundaries.py\n M tests/test_grounding_schedule_literals.py\n M tests/test_interpreter.py\n M tests/test_offer_evidence_contract.py\n M tests/test_sessions.py\n M tests/test_translation_quality.py\n M tests/test_translation_tokens.py\n?? app/hilfebus.py\n?? tests/test_validator_ablation_decisions.py",
+  "queries_sha256": "043a2560221005a11aad760bd785168b8174b5056bdd8b353b7b1a26f9e22751",
+  "run_script_sha256": "583c26c54d04dbbb1daca21b612c39964f5e26fefb41a8c6f88f353ee1bb12c0",
+  "app_source_manifest_sha256": "fea371e76945a2e09f44379ce6dc057cf526f0867287789d0674a3b49aee07a2",
+  "runtime_kb_fingerprint": "287a3fd53f517dbbdcc1ebd6330b3280239d4e23739b6a89d3e1a2d8465e08dc",
+  "formulator_contract": "7",
+  "formulator_prompt": "26",
+  "grounding_validator": "8",
+  "models": {
+    "interpreter": "alias-fast",
+    "selector": "alias-fast",
+    "formulator": "alias-fast"
+  },
+  "max_tokens": 4096,
+  "timeouts": [
+    15.0,
+    30.0,
+    30.0
+  ],
+  "budget_seconds": 45.0,
+  "seed": 261026,
+  "concurrency": 2,
+  "requests": 120,
+  "finished_utc": "2026-10-27T07:39:30.159473+00:00",
+  "completed_requests": 120,
+  "aborted": false,
+  "app_source_unchanged": true
+}

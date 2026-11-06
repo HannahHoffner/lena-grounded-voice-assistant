@@ -1,0 +1,14 @@
+[
+  {
+    "log": "python-tests.log",
+    "returncode": 0
+  },
+  {
+    "log": "javascript-tests.log",
+    "returncode": 0
+  },
+  {
+    "log": "pip-check.log",
+    "returncode": 0
+  }
+]

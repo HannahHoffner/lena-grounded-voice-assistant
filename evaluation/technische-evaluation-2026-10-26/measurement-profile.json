@@ -1,0 +1,73 @@
+{
+  "git_commit": "2462e7d07cdc3f3408d318b8c4654ea7e8d3d213",
+  "git_dirty": false,
+  "date_utc": "2026-10-26T08:03:15.969244+00:00",
+  "model_aliases": {
+    "interpreter": "alias-fast",
+    "selector": "alias-fast",
+    "formulator": "alias-fast"
+  },
+  "provider_base_domain": "api.blablador.fz-juelich.de",
+  "maximum_tokens": 4096,
+  "context_chars": 50000,
+  "timeouts": [
+    15,
+    30,
+    30
+  ],
+  "request_budget_seconds": 45,
+  "data_runtime_outside_cloudsync": true,
+  "automatic_sync": false,
+  "interaction_logging": false,
+  "additional_inventory_check": "one preflight service check, separate from stage counters",
+  "stages": [
+    {
+      "stage": "interpreter",
+      "live_limits": {
+        "max_requests": 15,
+        "max_provider_calls": 15,
+        "max_interpreter_calls": 15,
+        "max_selector_calls": 0,
+        "max_formulator_calls": 0,
+        "max_total_runtime_seconds": 300,
+        "max_failures": 16
+      }
+    },
+    {
+      "stage": "selector-formulator",
+      "live_limits": {
+        "max_requests": 16,
+        "max_provider_calls": 26,
+        "max_interpreter_calls": 0,
+        "max_selector_calls": 6,
+        "max_formulator_calls": 20,
+        "max_total_runtime_seconds": 900,
+        "max_failures": 17
+      }
+    },
+    {
+      "stage": "end-to-end",
+      "live_limits": {
+        "max_requests": 34,
+        "max_provider_calls": 136,
+        "max_interpreter_calls": 34,
+        "max_selector_calls": 34,
+        "max_formulator_calls": 68,
+        "max_total_runtime_seconds": 1960,
+        "max_failures": 28
+      }
+    },
+    {
+      "stage": "stability",
+      "live_limits": {
+        "max_requests": 18,
+        "max_provider_calls": 72,
+        "max_interpreter_calls": 18,
+        "max_selector_calls": 18,
+        "max_formulator_calls": 36,
+        "max_total_runtime_seconds": 1050,
+        "max_failures": 19
+      }
+    }
+  ]
+}

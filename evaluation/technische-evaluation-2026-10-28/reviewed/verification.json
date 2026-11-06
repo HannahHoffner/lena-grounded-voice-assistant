@@ -1,0 +1,56 @@
+{
+  "completed_utc": "2026-10-28T08:38:06.700437+00:00",
+  "base_commit": "557a487a43d0edc3cac57f4bbc80670673ddc066",
+  "working_tree_patch_not_committed": true,
+  "native_suite": {
+    "name": "pytest",
+    "errors": "0",
+    "failures": "0",
+    "skipped": "1",
+    "tests": "1696",
+    "time": "435.864",
+    "timestamp": "2026-10-28T09:24:40.612555+01:00",
+    "hostname": "DESKTOP-N0GOUBK"
+  },
+  "container_suite": "1695 passed, 1 xfailed, 1 warning",
+  "frontend_native_container": 19,
+  "changed_after_final_test_export_only_markdown": [
+    "IMPLEMENTATION_REPORT.md",
+    "README.md",
+    "RELEASE_REVIEW_CHECKLIST.md",
+    "THESIS_CODE_TRACEABILITY.md",
+    "THESIS_UPDATE_NOTES.md",
+    "docs/controlled-answer-acts.md",
+    "docs/exec-plans/card-translation-completeness.md",
+    "docs/final-implementation-decisions.md",
+    "docs/testing.md"
+  ],
+  "protected_curation_source_release_files_unchanged": 24,
+  "grounding_prompts_candidates_policy_unchanged": true,
+  "original_evaluation_hashes_unchanged": true,
+  "configured_secret_absent_scanned_text_files": 485,
+  "source_archive_files": 248,
+  "live_model_calls": 0,
+  "manual_ratings_generated_or_changed": false,
+  "thesis_modified": false,
+  "normal_server_restarted": false,
+  "committed_tagged_pushed": false,
+  "image_source_identity": {
+    "test_image_app_and_test_files_byte_identical": 169,
+    "installed_runtime_app_files_byte_identical": 112
+  },
+  "runtime": {
+    "kb_loaded": true,
+    "without_credentials_controlled_fallback": true,
+    "session_survives_restart": true,
+    "session_survives_container_replacement": true,
+    "docker_healthcheck": "healthy",
+    "read_only_loopback": true,
+    "installed_text_contract": "7/27",
+    "installed_grounding_validator": "10",
+    "application_text_version": "11",
+    "image_id": "sha256:9f715e024211f59787e8ec08febe3e1b38e70597a0585c8b80be3e6fd5494f41",
+    "live_provider_calls": 0,
+    "status": "passed"
+  }
+}

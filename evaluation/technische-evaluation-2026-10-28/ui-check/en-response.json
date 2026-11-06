@@ -1,0 +1,313 @@
+{
+  "answer": "These services match your question: Bahnhofsmission Leipzig, Diakonie Leipzig. More information is below.",
+  "cards": [
+    {
+      "record_type": "social_offer",
+      "id": "22",
+      "name": "Bahnhofsmission Leipzig",
+      "short_description": "Ecumenical station mission",
+      "services": [
+        "> coffee, tea, water",
+        "> filled rolls",
+        "> distribution of clothing, sleeping bags, etc.",
+        "> social counseling for housing emergencies and social difficulties",
+        "> travel assistance at Leipzig main train station"
+      ],
+      "address": "Willy-Brandt-Platz 2a, 04109 Leipzig",
+      "phone_numbers": [
+        "0341 9683254"
+      ],
+      "opening_hours_raw": [
+        "> Monday - Friday: 09:00 - 18:00",
+        "> Sunday: 13:30 - 18:00",
+        "> Flexibility possible depending on need and request"
+      ],
+      "standzeiten_raw": [],
+      "notes": [],
+      "spoken_text": "Bahnhofsmission Leipzig. Description: Ecumenical station mission. Help offered: coffee, tea, water, filled rolls, distribution of clothing, sleeping bags, etc., social counseling for housing emergencies and social difficulties, travel assistance at Leipzig main train station. Address: Willy-Brandt-Platz 2a, 04109 Leipzig. Phone: 0341 9683254. Opening hours: Monday - Friday: 09:00 - 18:00, Sunday: 13:30 - 18:00, Flexibility possible depending on need and request"
+    },
+    {
+      "record_type": "social_offer",
+      "id": "14",
+      "name": "Diakonie Leipzig",
+      "short_description": "Streetwork adults",
+      "services": [
+        "> social counseling",
+        "> mobile clothing closet",
+        "> distribution of rolls or soup",
+        "Scheduled stop:",
+        "Tuesdays 17:00 - 18:00, Goethestraße (Schwanenteich or at Denkmal der Dresdner Eisenbahn)",
+        "in cooperation with Suchtzentrum"
+      ],
+      "address": "Nürnberger Str. 37, 04103 Leipzig",
+      "phone_numbers": [
+        "0151 56382800 (Ms Berengo)",
+        "0157 80549406 (Ms Kunze)",
+        "0151 56382508 (Mr Rode)",
+        "0157 80549803 (Ms Leger)"
+      ],
+      "opening_hours_raw": [
+        "> Tuesday: 10:00 - 13:00 o'clock (office hours)"
+      ],
+      "standzeiten_raw": [
+        "Scheduled stop:",
+        "Tuesdays 17:00 - 18:00, Goethestraße (Schwanenteich or at Denkmal der Dresdner Eisenbahn)"
+      ],
+      "notes": [
+        "Areas of operation: South, East and Center"
+      ],
+      "spoken_text": "Diakonie Leipzig. Description: Streetwork adults. Help offered: social counseling, mobile clothing closet, distribution of rolls or soup, Scheduled stop:, Tuesdays 17:00 - 18:00, Goethestraße (Schwanenteich or at Denkmal der Dresdner Eisenbahn), in cooperation with Suchtzentrum. Address: Nürnberger Str. 37, 04103 Leipzig. Phone: 0151 56382800 (Ms Berengo), 0157 80549406 (Ms Kunze), 0151 56382508 (Mr Rode), 0157 80549803 (Ms Leger). Opening hours: Tuesday: 10:00 - 13:00 o'clock (office hours). Times at this place: Scheduled stop:, Tuesdays 17:00 - 18:00, Goethestraße (Schwanenteich or at Denkmal der Dresdner Eisenbahn). Important notes: Areas of operation: South, East and Center"
+    },
+    {
+      "record_type": "social_offer",
+      "id": "10",
+      "name": "Tagestreff Oase",
+      "short_description": "Day meeting point",
+      "services": [
+        "> Shower facility, laundry service",
+        "> Mailing address",
+        "> Accompaniment to authorities and to the hospital",
+        "> Social counseling",
+        "> Breakfast: 09:00 - 10:00 o'clock",
+        "> Lunch: 12:00 - 13:30 o'clock",
+        "> Medical consultation hours:",
+        "Thursday from 15:00 o'clock"
+      ],
+      "address": "Nürnberger Str. 31, 04103 Leipzig",
+      "phone_numbers": [
+        "0341 56124357"
+      ],
+      "opening_hours_raw": [
+        "> Monday - Friday: 08:00 - 16:00 o'clock with social counseling",
+        "> Saturday and public holiday: 09:00 - 14:00 o'clock"
+      ],
+      "standzeiten_raw": [],
+      "notes": [
+        "Mailing address service:",
+        "> Monday, Tuesday: 12:30 - 14:30 o'clock",
+        "> Wednesday: 12:30 - 14:00 o'clock",
+        "> Thursday, Friday: 12:30 - 14:30 o'clock"
+      ],
+      "spoken_text": "Tagestreff Oase. Description: Day meeting point. Help offered: Shower facility, laundry service, Mailing address, Accompaniment to authorities and to the hospital, Social counseling, Breakfast: 09:00 - 10:00 o'clock, Lunch: 12:00 - 13:30 o'clock, Medical consultation hours:, Thursday from 15:00 o'clock. Address: Nürnberger Str. 31, 04103 Leipzig. Phone: 0341 56124357. Opening hours: Monday - Friday: 08:00 - 16:00 o'clock with social counseling, Saturday and public holiday: 09:00 - 14:00 o'clock. Important notes: Mailing address service:, Monday, Tuesday: 12:30 - 14:30 o'clock, Wednesday: 12:30 - 14:00 o'clock, Thursday, Friday: 12:30 - 14:30 o'clock"
+    },
+    {
+      "record_type": "social_offer",
+      "id": "21",
+      "name": "Hilfebus",
+      "short_description": "Hilfebus",
+      "services": [
+        "> needs-based emergency care for homeless people",
+        "> warm food and drinks",
+        "> warm clothing, blankets and sleeping bags",
+        "> referral to emergency overnight shelters",
+        "> mobile basic supplies and referral counseling"
+      ],
+      "address": null,
+      "phone_numbers": [
+        "0175 6758041 (Mr Neufert)",
+        "0152 33661087 (only during the bus operating hours)"
+      ],
+      "opening_hours_raw": [
+        "> Deployment daily 18:00 - 23:00 o'clock, citywide"
+      ],
+      "standzeiten_raw": [],
+      "notes": [
+        "Instagram channel: #safeleipzig",
+        "Call during deployment times (daily 18:00–23:00 o'clock) directly at the Hilfebus."
+      ],
+      "spoken_text": "Hilfebus. Description: Hilfebus. Help offered: needs-based emergency care for homeless people, warm food and drinks, warm clothing, blankets and sleeping bags, referral to emergency overnight shelters, mobile basic supplies and referral counseling. Phone: 0152 33661087 (only during the bus operating hours). Opening hours: Deployment daily 18:00 - 23:00 o'clock, citywide. Important notes: Instagram channel: #safeleipzig, Call during deployment times (daily 18:00–23:00 o'clock) directly at the Hilfebus."
+    }
+  ],
+  "language": "en",
+  "provider": "template",
+  "status": "ok",
+  "answer_type": "grounded_result",
+  "session_id": "bcbbfcacdc6643bcb0db3910c8a8a8eb",
+  "question": "Hilfe bitte",
+  "history": [
+    {
+      "question": "Hilfe bitte",
+      "answer": "These services match your question: Bahnhofsmission Leipzig, Diakonie Leipzig. More information is below."
+    }
+  ],
+  "map_data": {
+    "origin": {
+      "id": "leipzig-hbf",
+      "label": "Leipzig Hauptbahnhof",
+      "address": "Willy-Brandt-Platz 5, 04109 Leipzig",
+      "latitude": 51.34556,
+      "longitude": 12.38222
+    },
+    "destinations": [
+      {
+        "id": "22",
+        "label": "Bahnhofsmission Leipzig",
+        "address": "Willy-Brandt-Platz 2a, 04109 Leipzig",
+        "latitude": 51.34532794191829,
+        "longitude": 12.379234835188623,
+        "distance_meters": 209,
+        "description": "Ecumenical station mission",
+        "phone_numbers": [
+          "0341 9683254"
+        ],
+        "opening_hours": [
+          "> Monday - Friday: 09:00 - 18:00",
+          "> Sunday: 13:30 - 18:00",
+          "> Flexibility possible depending on need and request"
+        ],
+        "services": [
+          "> coffee, tea, water",
+          "> filled rolls",
+          "> distribution of clothing, sleeping bags, etc.",
+          "> social counseling for housing emergencies and social difficulties",
+          "> travel assistance at Leipzig main train station"
+        ],
+        "standzeiten_raw": [],
+        "notes": [],
+        "record_type": "social_offer",
+        "spoken_text": "Bahnhofsmission Leipzig. Description: Ecumenical station mission. Help offered: coffee, tea, water, filled rolls, distribution of clothing, sleeping bags, etc., social counseling for housing emergencies and social difficulties, travel assistance at Leipzig main train station. Address: Willy-Brandt-Platz 2a, 04109 Leipzig. Phone: 0341 9683254. Opening hours: Monday - Friday: 09:00 - 18:00, Sunday: 13:30 - 18:00, Flexibility possible depending on need and request",
+        "fee_raw": null,
+        "facilities": [],
+        "cost_status": null,
+        "potable_water_status": null,
+        "seasonal_status": null,
+        "source_attribution": null
+      },
+      {
+        "id": "14:schwanenteich",
+        "label": "Schwanenteich - Goethestraße",
+        "address": "Goethestraße / Schwanenteich, 04109 Leipzig",
+        "latitude": 51.34135,
+        "longitude": 12.38135,
+        "distance_meters": 472,
+        "description": "Scheduled stop: Tuesday 17:00-18:00",
+        "phone_numbers": [
+          "0151 56382800 (Ms Berengo)",
+          "0157 80549406 (Ms Kunze)",
+          "0151 56382508 (Mr Rode)",
+          "0157 80549803 (Ms Leger)"
+        ],
+        "opening_hours": [
+          "> Tuesday: 17:00 - 18:00"
+        ],
+        "services": [
+          "> social counseling",
+          "> mobile clothing closet",
+          "> distribution of rolls or soup",
+          "Scheduled stop:",
+          "Tuesdays 17:00 - 18:00, Goethestraße (Schwanenteich or at Denkmal der Dresdner Eisenbahn)",
+          "in cooperation with Suchtzentrum"
+        ],
+        "standzeiten_raw": [
+          "Scheduled stop:",
+          "Tuesdays 17:00 - 18:00, Goethestraße (Schwanenteich or at Denkmal der Dresdner Eisenbahn)"
+        ],
+        "notes": [
+          "Areas of operation: South, East and Center"
+        ],
+        "record_type": "social_offer",
+        "spoken_text": "Schwanenteich - Goethestraße. Description: Scheduled stop: Tuesday 17:00-18:00. Help offered: social counseling, mobile clothing closet, distribution of rolls or soup, Scheduled stop:, Tuesdays 17:00 - 18:00, Goethestraße (Schwanenteich or at Denkmal der Dresdner Eisenbahn), in cooperation with Suchtzentrum. Address: Goethestraße / Schwanenteich, 04109 Leipzig. Phone: 0151 56382800 (Ms Berengo), 0157 80549406 (Ms Kunze), 0151 56382508 (Mr Rode), 0157 80549803 (Ms Leger). Opening hours: Tuesday: 17:00 - 18:00. Times at this place: Scheduled stop:, Tuesdays 17:00 - 18:00, Goethestraße (Schwanenteich or at Denkmal der Dresdner Eisenbahn). Important notes: Areas of operation: South, East and Center",
+        "fee_raw": null,
+        "facilities": [],
+        "cost_status": null,
+        "potable_water_status": null,
+        "seasonal_status": null,
+        "source_attribution": null
+      },
+      {
+        "id": "10",
+        "label": "Tagestreff Oase",
+        "address": "Nürnberger Str. 31, 04103 Leipzig",
+        "latitude": 51.335152170422035,
+        "longitude": 12.38404486119614,
+        "distance_meters": 1164,
+        "description": "Day meeting point",
+        "phone_numbers": [
+          "0341 56124357"
+        ],
+        "opening_hours": [
+          "> Monday - Friday: 08:00 - 16:00 o'clock with social counseling",
+          "> Saturday and public holiday: 09:00 - 14:00 o'clock"
+        ],
+        "services": [
+          "> Shower facility, laundry service",
+          "> Mailing address",
+          "> Accompaniment to authorities and to the hospital",
+          "> Social counseling",
+          "> Breakfast: 09:00 - 10:00 o'clock",
+          "> Lunch: 12:00 - 13:30 o'clock",
+          "> Medical consultation hours:",
+          "Thursday from 15:00 o'clock"
+        ],
+        "standzeiten_raw": [],
+        "notes": [
+          "Mailing address service:",
+          "> Monday, Tuesday: 12:30 - 14:30 o'clock",
+          "> Wednesday: 12:30 - 14:00 o'clock",
+          "> Thursday, Friday: 12:30 - 14:30 o'clock"
+        ],
+        "record_type": "social_offer",
+        "spoken_text": "Tagestreff Oase. Description: Day meeting point. Help offered: Shower facility, laundry service, Mailing address, Accompaniment to authorities and to the hospital, Social counseling, Breakfast: 09:00 - 10:00 o'clock, Lunch: 12:00 - 13:30 o'clock, Medical consultation hours:, Thursday from 15:00 o'clock. Address: Nürnberger Str. 31, 04103 Leipzig. Phone: 0341 56124357. Opening hours: Monday - Friday: 08:00 - 16:00 o'clock with social counseling, Saturday and public holiday: 09:00 - 14:00 o'clock. Important notes: Mailing address service:, Monday, Tuesday: 12:30 - 14:30 o'clock, Wednesday: 12:30 - 14:00 o'clock, Thursday, Friday: 12:30 - 14:30 o'clock",
+        "fee_raw": null,
+        "facilities": [],
+        "cost_status": null,
+        "potable_water_status": null,
+        "seasonal_status": null,
+        "source_attribution": null
+      },
+      {
+        "id": "9",
+        "label": "Tagestreff Insel",
+        "address": "Plautstr. 18, 04179 Leipzig",
+        "latitude": 51.33249610277894,
+        "longitude": 12.307454785097576,
+        "distance_meters": 5393,
+        "description": "Day meeting point",
+        "phone_numbers": [
+          "0341 24676655"
+        ],
+        "opening_hours": [
+          "> Monday - Friday: 08:00 - 16:00 o'clock",
+          "> Sunday: 09:00 - 15:00 o'clock"
+        ],
+        "services": [
+          "> Social counseling daily 09:00 - 12:00 o'clock and by appointment",
+          "> Sunday 09:00 - 15:00 o'clock",
+          "> Mail delivery addresses",
+          "> Shower, washing machine, clothing room",
+          "> Lockers",
+          "> Snack bar and lunch"
+        ],
+        "standzeiten_raw": [],
+        "notes": [],
+        "record_type": "social_offer",
+        "spoken_text": "Tagestreff Insel. Description: Day meeting point. Help offered: Social counseling daily 09:00 - 12:00 o'clock and by appointment, Sunday 09:00 - 15:00 o'clock, Mail delivery addresses, Shower, washing machine, clothing room, Lockers, Snack bar and lunch. Address: Plautstr. 18, 04179 Leipzig. Phone: 0341 24676655. Opening hours: Monday - Friday: 08:00 - 16:00 o'clock, Sunday: 09:00 - 15:00 o'clock",
+        "fee_raw": null,
+        "facilities": [],
+        "cost_status": null,
+        "potable_water_status": null,
+        "seasonal_status": null,
+        "source_attribution": null
+      }
+    ],
+    "selected_destination_id": "22"
+  },
+  "clarification": null,
+  "spoken_result_ids": [
+    "22",
+    "14",
+    "10"
+  ],
+  "card_ids": [
+    "22",
+    "14",
+    "10",
+    "21"
+  ],
+  "map_marker_ids": [
+    "22",
+    "14:schwanenteich",
+    "10",
+    "9"
+  ]
+}

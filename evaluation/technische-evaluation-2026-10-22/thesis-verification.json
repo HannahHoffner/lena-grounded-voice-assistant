@@ -1,0 +1,82 @@
+{
+  "source_commit": "597e1f0216c72eedd01b7b9e6d49be67ca8150f9",
+  "code_clean_unchanged": true,
+  "active_tex_sources": 18,
+  "active_tex_sha256": {
+    "Chapters\\1Introductionneu.tex": "af788fc592d6004318c0c37f7d59678c59971ea2fd49e620eb167acdb4766c23",
+    "Chapters\\2Preliminariesneu.tex": "929e96c33ad2019675652a6ce4baa8cc9481fd9b166968b518f2ec6019fd57cd",
+    "Chapters\\3RelatedWork.tex": "62bceb3c342d957ead42df2e03fe37c0e568011cfed29daf0b026b7106efb693",
+    "Chapters\\4Approachneu.tex": "9e990e48a2345ad452300f34e62e7f8fd0952ee0c39df961b3e44024d2290376",
+    "Chapters\\5Solutionneu.tex": "a76811d28fe48edda0301df48d6be167e4c3bb9308bb8fa9a3eb7e672e11873a",
+    "Chapters\\6Resultsneu.tex": "47fc041940e5f34cfbbc48806480270405d8dc13985a81137d39b96eaf8a2352",
+    "Chapters\\7Discussion.tex": "1821e45be809b73a618272610631c735e965e8e0b9b377b590880f02c9413129",
+    "Chapters\\AppendixLenaDesign.tex": "6dada0875f76956ea8a7cfa5cd8ef8a2f3516c112696e9a94f6ee997113a3ac4",
+    "Chapters\\ErgebnisSpezifikation.tex": "e458d0210c51951f022f62dbcc0f6ca6010ec5c441ac0347af2209e8d959144d",
+    "classicthesis-config.tex": "4a547551d410ae3ac55dc9dacc218f08c1950eb1aa634e1218e660d9c8366eee",
+    "FrontBackmatter\\Acknowledgments.tex": "5d690ae8eae23e8b8c6076f3cee58dee7a73b93ee5ca28da8c843b1de4f33929",
+    "FrontBackmatter\\Acronym.tex": "f6a24f17957405b34a9f7c343efbd9f0a9fed9216280a30f158ae66a23d4979f",
+    "FrontBackmatter\\Bibliography.tex": "b74fb36da865b9a2ca578ff7da44faa7be9dfba9faa6f9d7cc3fef2289446ba8",
+    "FrontBackmatter\\Contents.tex": "28b6085de76b6131d7150f985cd2c9fcb5d428bb2879fd0c8b1edc64f2de93b8",
+    "FrontBackmatter\\Declaration.tex": "b71b0d1aa65e370fc310697191a79aaa0165ead70da0d6b95f6fa6169fa4a9cd",
+    "FrontBackmatter\\Summary.tex": "844a38220687f723d04750f326c567643d6f4756a69f83f600ee2a2da3131f49",
+    "FrontBackmatter\\Titlepage.tex": "f7dee85afb7b1a8013487866d9d41015e9e076631e6ab2d6cd64d86cc8709ae5",
+    "thesis.tex": "2f7d0bcbce47aa6bfd870722b662d864c1b1ecd30b4435fe865ab059614f6034"
+  },
+  "changed_tex_sources": {
+    "Chapters\\4Approachneu.tex": "9e990e48a2345ad452300f34e62e7f8fd0952ee0c39df961b3e44024d2290376",
+    "Chapters\\5Solutionneu.tex": "a76811d28fe48edda0301df48d6be167e4c3bb9308bb8fa9a3eb7e672e11873a",
+    "Chapters\\6Resultsneu.tex": "47fc041940e5f34cfbbc48806480270405d8dc13985a81137d39b96eaf8a2352",
+    "Chapters\\7Discussion.tex": "1821e45be809b73a618272610631c735e965e8e0b9b377b590880f02c9413129",
+    "Chapters\\AppendixLenaDesign.tex": "6dada0875f76956ea8a7cfa5cd8ef8a2f3516c112696e9a94f6ee997113a3ac4",
+    "Chapters\\ErgebnisSpezifikation.tex": "e458d0210c51951f022f62dbcc0f6ca6010ec5c441ac0347af2209e8d959144d",
+    "FrontBackmatter\\Summary.tex": "844a38220687f723d04750f326c567643d6f4756a69f83f600ee2a2da3131f49"
+  },
+  "module_table_matches_junit": true,
+  "native_cases": 1220,
+  "native_passed": 1219,
+  "manual_catalog_sha256": "1f0682b9160befacf49a6a4e405c4bfa8fd6bd6b36f44bc9f5a17e01c9936a4b",
+  "manual_inputs_and_criteria_preserved": true,
+  "manual_output_rating_files_byte_identical": [
+    "manuelle-evaluation-ausgaben.csv",
+    "manuelle-evaluation-bewertungen.csv",
+    "manuelle-evaluation-pruefpersonen.csv",
+    "manuelle-evaluation-codelisten.csv",
+    "manuelle-evaluation-auswertung.csv"
+  ],
+  "all_live_primary_files_byte_identical": true,
+  "live_counts": {
+    "interpreter": {
+      "failures": 0,
+      "formulator_calls": 0,
+      "interpreter_calls": 15,
+      "provider_calls": 15,
+      "requests": 15,
+      "selector_calls": 0
+    },
+    "end-to-end": {
+      "failures": 8,
+      "formulator_calls": 23,
+      "interpreter_calls": 31,
+      "provider_calls": 59,
+      "requests": 34,
+      "selector_calls": 5
+    },
+    "selector-formulator": {
+      "failures": 5,
+      "formulator_calls": 18,
+      "interpreter_calls": 0,
+      "provider_calls": 24,
+      "requests": 16,
+      "selector_calls": 6
+    },
+    "stability": {
+      "failures": 4,
+      "formulator_calls": 19,
+      "interpreter_calls": 18,
+      "provider_calls": 40,
+      "requests": 18,
+      "selector_calls": 3
+    }
+  },
+  "audit_source_paths_exist": true
+}

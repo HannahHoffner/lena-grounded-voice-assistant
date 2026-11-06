@@ -1,0 +1,1050 @@
+[
+  {
+    "offer_id": "12",
+    "language": "en",
+    "field": "services",
+    "index": 2,
+    "old": "Stand time:",
+    "new": "Scheduled stop:"
+  },
+  {
+    "offer_id": "12",
+    "language": "en",
+    "field": "services",
+    "index": 3,
+    "old": "every Thursday 16:00 to 17:30 o'clock at the Lindenau market",
+    "new": "every Thursday 16:00 to 17:30 at Lindenauer Markt"
+  },
+  {
+    "offer_id": "12",
+    "language": "pl",
+    "field": "services",
+    "index": 2,
+    "old": "Czas trwania:",
+    "new": "Postój:"
+  },
+  {
+    "offer_id": "12",
+    "language": "pl",
+    "field": "services",
+    "index": 3,
+    "old": "każdy czwartek 16:00 do 17:30 godz. na rynku Lindenauer",
+    "new": "w każdy czwartek od 16:00 do 17:30 na Lindenauer Markt"
+  },
+  {
+    "offer_id": "12",
+    "language": "ro",
+    "field": "services",
+    "index": 2,
+    "old": "Program:",
+    "new": "Oprire programată:"
+  },
+  {
+    "offer_id": "12",
+    "language": "ro",
+    "field": "services",
+    "index": 3,
+    "old": "în fiecare joi 16:00 până 17:30 ora pe piața Lindenauer",
+    "new": "în fiecare joi, de la 16:00 la 17:30, la Lindenauer Markt"
+  },
+  {
+    "offer_id": "12",
+    "language": "ru",
+    "field": "services",
+    "index": 2,
+    "old": "Время работы:",
+    "new": "Время стоянки:"
+  },
+  {
+    "offer_id": "12",
+    "language": "ru",
+    "field": "services",
+    "index": 3,
+    "old": "каждый четверг 16:00 до 17:30 часов на рынке Линденау",
+    "new": "каждый четверг с 16:00 до 17:30 на Lindenauer Markt"
+  },
+  {
+    "offer_id": "12",
+    "language": "ru",
+    "field": "notes",
+    "index": 2,
+    "old": "Lindenau, Neulindenau, Altlindenau, Plagwitz, Kleinzschocher, Leutzsch und Grünau",
+    "new": "Lindenau, Neulindenau, Altlindenau, Plagwitz, Kleinzschocher, Leutzsch и Grünau"
+  },
+  {
+    "offer_id": "13",
+    "language": "en",
+    "field": "services",
+    "index": 6,
+    "old": "Opening times:",
+    "new": "Scheduled stops:"
+  },
+  {
+    "offer_id": "13",
+    "language": "en",
+    "field": "services",
+    "index": 7,
+    "old": "> every Tuesday 17:00 to 18:00 o'clock at Schwanenteich (Goethestraße)",
+    "new": "> every Tuesday 17:00 to 18:00 at Schwanenteich (Goethestraße)"
+  },
+  {
+    "offer_id": "13",
+    "language": "en",
+    "field": "services",
+    "index": 8,
+    "old": "in cooperation with the Streetwork team of the Diakonie",
+    "new": "in cooperation with the streetwork team of Diakonie"
+  },
+  {
+    "offer_id": "13",
+    "language": "en",
+    "field": "services",
+    "index": 9,
+    "old": "> every Wednesday and Friday 10:00 - 16:00 o'clock Hauptbahnhof",
+    "new": "> every Wednesday and Friday 10:00 - 16:00 Hauptbahnhof"
+  },
+  {
+    "offer_id": "13",
+    "language": "en",
+    "field": "notes",
+    "index": 0,
+    "old": "Areas of operation: Leipzig north with focus on Zentrum Nord, Nordwest, Eutritzsch, Gohlis, Möckern, Mockau, Thekla, Lindenthal",
+    "new": "Areas of outreach: northern Leipzig, focusing on Zentrum Nord, Nordwest, Eutritzsch, Gohlis, Möckern, Mockau, Thekla, Lindenthal"
+  },
+  {
+    "offer_id": "13",
+    "language": "pl",
+    "field": "services",
+    "index": 6,
+    "old": "Godziny otwarcia:",
+    "new": "Postoje:"
+  },
+  {
+    "offer_id": "13",
+    "language": "pl",
+    "field": "services",
+    "index": 7,
+    "old": "> każdy wtorek 17:00 do 18:00 godziny w Schwanenteich (Goethestraße)",
+    "new": "> w każdy wtorek od 17:00 do 18:00 przy Schwanenteich (Goethestraße)"
+  },
+  {
+    "offer_id": "13",
+    "language": "pl",
+    "field": "services",
+    "index": 8,
+    "old": "we współpracy z zespołem Streetwork Diakonie",
+    "new": "we współpracy z zespołem pracy ulicznej Diakonie"
+  },
+  {
+    "offer_id": "13",
+    "language": "pl",
+    "field": "services",
+    "index": 9,
+    "old": "> każdy środę i piątek 10:00 - 16:00 godziny Dworzec Główny",
+    "new": "> w każdą środę i piątek 10:00 - 16:00 Hauptbahnhof"
+  },
+  {
+    "offer_id": "13",
+    "language": "pl",
+    "field": "notes",
+    "index": 0,
+    "old": "Obszary działania: północny Leipzig z naciskiem na Centrum Północne, Północny Zachód, Eutritzsch, Gohlis, Möckern, Mockau, Thekla, Lindenthal",
+    "new": "Obszary działania: północ Leipzig, przede wszystkim Zentrum Nord, Nordwest, Eutritzsch, Gohlis, Möckern, Mockau, Thekla, Lindenthal"
+  },
+  {
+    "offer_id": "13",
+    "language": "ro",
+    "field": "services",
+    "index": 6,
+    "old": "Program:",
+    "new": "Opriri programate:"
+  },
+  {
+    "offer_id": "13",
+    "language": "ro",
+    "field": "services",
+    "index": 7,
+    "old": "> în fiecare marți 17:00 până 18:00 ora la Schwanenteich (Goethestraße)",
+    "new": "> în fiecare marți, de la 17:00 la 18:00, la Schwanenteich (Goethestraße)"
+  },
+  {
+    "offer_id": "13",
+    "language": "ro",
+    "field": "services",
+    "index": 8,
+    "old": "în cooperare cu echipa Streetwork a Diaconiei",
+    "new": "în cooperare cu echipa de lucru stradal a Diakonie"
+  },
+  {
+    "offer_id": "13",
+    "language": "ro",
+    "field": "services",
+    "index": 9,
+    "old": "> în fiecare miercuri și vineri 10:00 - 16:00 ora la Gara Centrală",
+    "new": "> în fiecare miercuri și vineri 10:00 - 16:00 Hauptbahnhof"
+  },
+  {
+    "offer_id": "13",
+    "language": "ro",
+    "field": "notes",
+    "index": 0,
+    "old": "Zone de intervenție: nordul Leipzigului cu accent pe Centrul Nord, Nordvest, Eutritzsch, Gohlis, Möckern, Mockau, Thekla, Lindenthal",
+    "new": "Zone de intervenție: nordul Leipzig, în special Zentrum Nord, Nordwest, Eutritzsch, Gohlis, Möckern, Mockau, Thekla, Lindenthal"
+  },
+  {
+    "offer_id": "13",
+    "language": "ru",
+    "field": "services",
+    "index": 6,
+    "old": "Время работы:",
+    "new": "Время стоянок:"
+  },
+  {
+    "offer_id": "13",
+    "language": "ru",
+    "field": "services",
+    "index": 7,
+    "old": "> каждый вторник 17:00 до 18:00 часов у Шванентайх (Гёте-штрассе)",
+    "new": "> каждый вторник с 17:00 до 18:00 у Schwanenteich (Goethestraße)"
+  },
+  {
+    "offer_id": "13",
+    "language": "ru",
+    "field": "services",
+    "index": 8,
+    "old": "в сотрудничестве с командой уличной работы Диаконии",
+    "new": "в сотрудничестве с командой уличной работы Diakonie"
+  },
+  {
+    "offer_id": "13",
+    "language": "ru",
+    "field": "services",
+    "index": 9,
+    "old": "> каждую среду и пятницу 10:00 - 16:00 часов главный вокзал",
+    "new": "> каждую среду и пятницу 10:00 - 16:00 Hauptbahnhof"
+  },
+  {
+    "offer_id": "13",
+    "language": "ru",
+    "field": "notes",
+    "index": 0,
+    "old": "Сферы деятельности: север Лейпцига с акцентом на центр Север, Северо-запад, Эутриц, Гольис, Мёккерн, Моккау, Текла, Линденхальт",
+    "new": "Районы работы: север Leipzig, прежде всего Zentrum Nord, Nordwest, Eutritzsch, Gohlis, Möckern, Mockau, Thekla, Lindenthal"
+  },
+  {
+    "offer_id": "14",
+    "language": "en",
+    "field": "services",
+    "index": 3,
+    "old": "Stand time:",
+    "new": "Scheduled stop:"
+  },
+  {
+    "offer_id": "14",
+    "language": "en",
+    "field": "services",
+    "index": 4,
+    "old": "Tuesdays 17:00 - 18:00 o'clock Goethestraße (Schwanenteich or at the Dresden railway monument)",
+    "new": "Tuesdays 17:00 - 18:00, Goethestraße (Schwanenteich or at Denkmal der Dresdner Eisenbahn)"
+  },
+  {
+    "offer_id": "14",
+    "language": "en",
+    "field": "services",
+    "index": 5,
+    "old": "in cooperation with the addiction centre",
+    "new": "in cooperation with Suchtzentrum"
+  },
+  {
+    "offer_id": "14",
+    "language": "pl",
+    "field": "services",
+    "index": 3,
+    "old": "Czas trwania:",
+    "new": "Postój:"
+  },
+  {
+    "offer_id": "14",
+    "language": "pl",
+    "field": "services",
+    "index": 4,
+    "old": "We wtorki 17:00 - 18:00 godz. Goethestraße (Schwanenteich bzw. am Denkmal der Dresdner Eisenbahn)",
+    "new": "we wtorki 17:00 - 18:00, Goethestraße (Schwanenteich lub przy Denkmal der Dresdner Eisenbahn)"
+  },
+  {
+    "offer_id": "14",
+    "language": "pl",
+    "field": "services",
+    "index": 5,
+    "old": "współpracy z centrum uzależnień",
+    "new": "we współpracy z Suchtzentrum"
+  },
+  {
+    "offer_id": "14",
+    "language": "ro",
+    "field": "services",
+    "index": 3,
+    "old": "Perioada de funcționare:",
+    "new": "Oprire programată:"
+  },
+  {
+    "offer_id": "14",
+    "language": "ro",
+    "field": "services",
+    "index": 4,
+    "old": "Marţi 17:00 - 18:00 ora Goethestraße (Schwanenteich bzw. am Denkmal der Dresdner Eisenbahn)",
+    "new": "marțea, 17:00 - 18:00, Goethestraße (Schwanenteich sau lângă Denkmal der Dresdner Eisenbahn)"
+  },
+  {
+    "offer_id": "14",
+    "language": "ro",
+    "field": "services",
+    "index": 5,
+    "old": "în cooperare cu centrul de dependență",
+    "new": "în cooperare cu Suchtzentrum"
+  },
+  {
+    "offer_id": "14",
+    "language": "ru",
+    "field": "services",
+    "index": 3,
+    "old": "Время работы:",
+    "new": "Время стоянки:"
+  },
+  {
+    "offer_id": "14",
+    "language": "ru",
+    "field": "services",
+    "index": 4,
+    "old": "По вторникам 17:00 - 18:00 часов Goethestraße (Schwanenteich bzw. am Denkmal der Dresdner Eisenbahn)",
+    "new": "по вторникам 17:00 - 18:00, Goethestraße (Schwanenteich или у Denkmal der Dresdner Eisenbahn)"
+  },
+  {
+    "offer_id": "14",
+    "language": "ru",
+    "field": "services",
+    "index": 5,
+    "old": "в сотрудничестве с центром зависимости",
+    "new": "в сотрудничестве с Suchtzentrum"
+  },
+  {
+    "offer_id": "15",
+    "language": "en",
+    "field": "opening_hours_raw",
+    "index": 0,
+    "old": "Opening times:",
+    "new": "Scheduled stops:"
+  },
+  {
+    "offer_id": "15",
+    "language": "pl",
+    "field": "opening_hours_raw",
+    "index": 0,
+    "old": "Godziny otwarcia:",
+    "new": "Postoje:"
+  },
+  {
+    "offer_id": "15",
+    "language": "pl",
+    "field": "opening_hours_raw",
+    "index": 1,
+    "old": "> wtorek: Koehlerstr. 10:00 - 12:00 godz.",
+    "new": "> wtorek: Koehlerstr. 10:00 - 12:00"
+  },
+  {
+    "offer_id": "15",
+    "language": "pl",
+    "field": "opening_hours_raw",
+    "index": 2,
+    "old": "> środa: Brücke am Kohlweg / Torgauer Platz 13:00 - 15:00 godz.",
+    "new": "> środa: Brücke am Kohlweg / Torgauer Platz 13:00 - 15:00"
+  },
+  {
+    "offer_id": "15",
+    "language": "pl",
+    "field": "opening_hours_raw",
+    "index": 3,
+    "old": "> czwartek: Rabet 17:00 - 19:00 godz.",
+    "new": "> czwartek: Rabet 17:00 - 19:00"
+  },
+  {
+    "offer_id": "15",
+    "language": "pl",
+    "field": "opening_hours_raw",
+    "index": 4,
+    "old": "> piątek: Koehlerstr. 10:00 - 12:00 godz. wspólnie z Medibusem od CABL e. V.",
+    "new": "> piątek: Koehlerstr. 10:00 - 12:00 wspólnie z Medibus należącym do CABL e. V."
+  },
+  {
+    "offer_id": "15",
+    "language": "ro",
+    "field": "opening_hours_raw",
+    "index": 0,
+    "old": "Program:",
+    "new": "Opriri programate:"
+  },
+  {
+    "offer_id": "15",
+    "language": "ro",
+    "field": "opening_hours_raw",
+    "index": 1,
+    "old": "> Marţi: Koehlerstr. 10:00 - 12:00 ora",
+    "new": "> marți: Koehlerstr. 10:00 - 12:00"
+  },
+  {
+    "offer_id": "15",
+    "language": "ro",
+    "field": "opening_hours_raw",
+    "index": 2,
+    "old": "> Miercuri: Brücke am Kohlweg / Torgauer Platz 13:00 - 15:00 ora",
+    "new": "> miercuri: Brücke am Kohlweg / Torgauer Platz 13:00 - 15:00"
+  },
+  {
+    "offer_id": "15",
+    "language": "ro",
+    "field": "opening_hours_raw",
+    "index": 3,
+    "old": "> Joi: Rabet 17:00 - 19:00 ora",
+    "new": "> joi: Rabet 17:00 - 19:00"
+  },
+  {
+    "offer_id": "15",
+    "language": "ro",
+    "field": "opening_hours_raw",
+    "index": 4,
+    "old": "> Vineri: Koehlerstr. 10:00 - 12:00 ora împreună cu Medibus de la CABL e. V.",
+    "new": "> vineri: Koehlerstr. 10:00 - 12:00 împreună cu Medibus al CABL e. V."
+  },
+  {
+    "offer_id": "15",
+    "language": "ru",
+    "field": "opening_hours_raw",
+    "index": 0,
+    "old": "Время работы:",
+    "new": "Время стоянок:"
+  },
+  {
+    "offer_id": "15",
+    "language": "ru",
+    "field": "opening_hours_raw",
+    "index": 1,
+    "old": "> Вторник: Koehlerstr. 10:00 - 12:00 ч",
+    "new": "> вторник: Koehlerstr. 10:00 - 12:00"
+  },
+  {
+    "offer_id": "15",
+    "language": "ru",
+    "field": "opening_hours_raw",
+    "index": 2,
+    "old": "> Среда: Brücke am Kohlweg / Torgauer Platz 13:00 - 15:00 ч",
+    "new": "> среда: Brücke am Kohlweg / Torgauer Platz 13:00 - 15:00"
+  },
+  {
+    "offer_id": "15",
+    "language": "ru",
+    "field": "opening_hours_raw",
+    "index": 3,
+    "old": "> Четверг: Rabet 17:00 - 19:00 ч",
+    "new": "> четверг: Rabet 17:00 - 19:00"
+  },
+  {
+    "offer_id": "15",
+    "language": "ru",
+    "field": "opening_hours_raw",
+    "index": 4,
+    "old": "> Пятница: Koehlerstr. 10:00 - 12:00 ч совместно с Medibus от CABL e. V.",
+    "new": "> пятница: Koehlerstr. 10:00 - 12:00 совместно с Medibus организации CABL e. V."
+  },
+  {
+    "offer_id": "17.3",
+    "language": "ru",
+    "field": "notes",
+    "index": 1,
+    "old": "- Эутрицш",
+    "new": "- Eutritzsch"
+  },
+  {
+    "offer_id": "17.3",
+    "language": "ru",
+    "field": "notes",
+    "index": 2,
+    "old": "- Гольис-Норд",
+    "new": "- Gohlis-Nord"
+  },
+  {
+    "offer_id": "17.3",
+    "language": "ru",
+    "field": "notes",
+    "index": 3,
+    "old": "- Гольис-Митте",
+    "new": "- Gohlis-Mitte"
+  },
+  {
+    "offer_id": "17.3",
+    "language": "ru",
+    "field": "notes",
+    "index": 4,
+    "old": "- Гольис-Зюд",
+    "new": "- Gohlis-Süd"
+  },
+  {
+    "offer_id": "17.3",
+    "language": "ru",
+    "field": "notes",
+    "index": 5,
+    "old": "- Линденхаль",
+    "new": "- Lindenthal"
+  },
+  {
+    "offer_id": "17.3",
+    "language": "ru",
+    "field": "notes",
+    "index": 6,
+    "old": "- Лютшена-Штамельн",
+    "new": "- Lützschena-Stahmeln"
+  },
+  {
+    "offer_id": "17.3",
+    "language": "ru",
+    "field": "notes",
+    "index": 7,
+    "old": "- Мёккерн",
+    "new": "- Möckern"
+  },
+  {
+    "offer_id": "17.3",
+    "language": "ru",
+    "field": "notes",
+    "index": 8,
+    "old": "- Варен",
+    "new": "- Wahren"
+  },
+  {
+    "offer_id": "17.3",
+    "language": "ru",
+    "field": "notes",
+    "index": 9,
+    "old": "- Видеритш",
+    "new": "- Wiederitzsch"
+  },
+  {
+    "offer_id": "17.3",
+    "language": "ru",
+    "field": "notes",
+    "index": 10,
+    "old": "- Зеехаузен",
+    "new": "- Seehausen"
+  },
+  {
+    "offer_id": "17.3",
+    "language": "ru",
+    "field": "notes",
+    "index": 11,
+    "old": "- Центр-Юго-восток",
+    "new": "- Zentrum-Südost"
+  },
+  {
+    "offer_id": "17.3",
+    "language": "ru",
+    "field": "notes",
+    "index": 12,
+    "old": "- Центр-Восток",
+    "new": "- Zentrum-Ost"
+  },
+  {
+    "offer_id": "18",
+    "language": "en",
+    "field": "notes",
+    "index": 0,
+    "old": "Streetwork deployment areas / presence times:",
+    "new": "Streetwork areas / scheduled stops:"
+  },
+  {
+    "offer_id": "18",
+    "language": "en",
+    "field": "notes",
+    "index": 1,
+    "old": "> Wednesday: 15:00 - 17:30 o'clock on the move in the South district",
+    "new": "> Wednesday: 15:00 - 17:30, on outreach in Südvorstadt"
+  },
+  {
+    "offer_id": "18",
+    "language": "en",
+    "field": "notes",
+    "index": 2,
+    "old": "> Thursday: 15:30 - 18:00 o'clock on the move in Dölitz DÖsen / Lößnig",
+    "new": "> Thursday: 15:30 - 18:00, on outreach in Dölitz DÖsen / Lößnig"
+  },
+  {
+    "offer_id": "18",
+    "language": "en",
+    "field": "notes",
+    "index": 3,
+    "old": "> Friday occasional on the move in southern Leipzig",
+    "new": "> Friday: outreach in southern Leipzig as needed for specific occasions"
+  },
+  {
+    "offer_id": "18",
+    "language": "pl",
+    "field": "notes",
+    "index": 0,
+    "old": "Obszary działań Streetwork / Czas przebywania:",
+    "new": "Obszary pracy ulicznej / postoje:"
+  },
+  {
+    "offer_id": "18",
+    "language": "pl",
+    "field": "notes",
+    "index": 1,
+    "old": "> Środa: 15:00 - 17:30 godz. w drodze w południowej dzielnicy",
+    "new": "> środa: 15:00 - 17:30, praca w terenie w Südvorstadt"
+  },
+  {
+    "offer_id": "18",
+    "language": "pl",
+    "field": "notes",
+    "index": 2,
+    "old": "> Czwartek: 15:30 - 18:00 godz. w drodze w Dölitz DÖsen / Lößnig",
+    "new": "> czwartek: 15:30 - 18:00, praca w terenie w Dölitz DÖsen / Lößnig"
+  },
+  {
+    "offer_id": "18",
+    "language": "pl",
+    "field": "notes",
+    "index": 3,
+    "old": "> Piątek, w zależności od okazji, w drodze w południowej części Lipska",
+    "new": "> piątek: praca w terenie na południu Leipzig zależnie od okoliczności"
+  },
+  {
+    "offer_id": "18",
+    "language": "ro",
+    "field": "notes",
+    "index": 0,
+    "old": "Zone de intervenție Streetwork / Timp de prezență:",
+    "new": "Zone de lucru stradal / opriri programate:"
+  },
+  {
+    "offer_id": "18",
+    "language": "ro",
+    "field": "notes",
+    "index": 1,
+    "old": "> Miercuri: 15:00 - 17:30 ore în mișcare în zona Südvorstadt",
+    "new": "> miercuri: 15:00 - 17:30, activitate pe teren în Südvorstadt"
+  },
+  {
+    "offer_id": "18",
+    "language": "ro",
+    "field": "notes",
+    "index": 2,
+    "old": "> Joi: 15:30 - 18:00 ore în mișcare în Dölitz DÖsen / Lößnig",
+    "new": "> joi: 15:30 - 18:00, activitate pe teren în Dölitz DÖsen / Lößnig"
+  },
+  {
+    "offer_id": "18",
+    "language": "ro",
+    "field": "notes",
+    "index": 3,
+    "old": "> Vineri, în funcție de eveniment, în mișcare în sudul Leipzigului",
+    "new": "> vineri: activitate pe teren în sudul Leipzig, în funcție de situație"
+  },
+  {
+    "offer_id": "18",
+    "language": "ru",
+    "field": "notes",
+    "index": 0,
+    "old": "Области работы уличной работы / часы присутствия:",
+    "new": "Районы уличной работы / время стоянок:"
+  },
+  {
+    "offer_id": "18",
+    "language": "ru",
+    "field": "notes",
+    "index": 1,
+    "old": "> Среда: 15:00 - 17:30 часов в пути в южном предместье",
+    "new": "> среда: 15:00 - 17:30, выездная работа в Südvorstadt"
+  },
+  {
+    "offer_id": "18",
+    "language": "ru",
+    "field": "notes",
+    "index": 2,
+    "old": "> Четверг: 15:30 - 18:00 часов в пути в Дёлиц Дёзен / Лёссниг",
+    "new": "> четверг: 15:30 - 18:00, выездная работа в Dölitz DÖsen / Lößnig"
+  },
+  {
+    "offer_id": "18",
+    "language": "ru",
+    "field": "notes",
+    "index": 3,
+    "old": "> Пятница, в зависимости от случая, в пути в южной части Лейпцига",
+    "new": "> пятница: выездная работа на юге Leipzig по конкретным поводам"
+  },
+  {
+    "offer_id": "19.1",
+    "language": "en",
+    "field": "notes",
+    "index": 0,
+    "old": "> Operating time: Thursday 16:00 - 17:30 o'clock at weekly rotating locations",
+    "new": "> Scheduled stop: Thursday 16:00 - 17:30 at locations changing weekly"
+  },
+  {
+    "offer_id": "19.1",
+    "language": "pl",
+    "field": "notes",
+    "index": 0,
+    "old": "> Czas trwania: czwartek 16:00 - 17:30 godz. w tygodniowo zmieniających się miejscach",
+    "new": "> Postój: czwartek 16:00 - 17:30 w miejscach zmieniających się co tydzień"
+  },
+  {
+    "offer_id": "19.1",
+    "language": "ro",
+    "field": "notes",
+    "index": 0,
+    "old": "> Perioadă de prezență: Joi 16:00 - 17:30 ora la locații care se schimbă săptămânal",
+    "new": "> Oprire programată: joi 16:00 - 17:30 în locuri care se schimbă săptămânal"
+  },
+  {
+    "offer_id": "19.1",
+    "language": "ru",
+    "field": "notes",
+    "index": 0,
+    "old": "> Время работы: четверг 16:00 - 17:30 часов в еженедельно меняющихся местах",
+    "new": "> Время стоянки: четверг 16:00 - 17:30, места меняются каждую неделю"
+  },
+  {
+    "offer_id": "21",
+    "language": "en",
+    "field": "services",
+    "index": 5,
+    "old": "Stand times:",
+    "new": "Scheduled stops:"
+  },
+  {
+    "offer_id": "21",
+    "language": "en",
+    "field": "services",
+    "index": 6,
+    "old": "> every Sunday 20:00 - 21:00 o'clock at the west side of the main station with soup distribution",
+    "new": "> every Sunday 20:00 - 21:00 on the west side of Hauptbahnhof, with soup distribution"
+  },
+  {
+    "offer_id": "21",
+    "language": "pl",
+    "field": "services",
+    "index": 5,
+    "old": "Godziny postoju:",
+    "new": "Postoje:"
+  },
+  {
+    "offer_id": "21",
+    "language": "pl",
+    "field": "services",
+    "index": 6,
+    "old": "> każdej niedzieli 20:00 - 21:00 godz. po zachodniej stronie dworca głównego z wydawaniem zupy",
+    "new": "> w każdą niedzielę 20:00 - 21:00 po zachodniej stronie Hauptbahnhof, wydawanie zupy"
+  },
+  {
+    "offer_id": "21",
+    "language": "ro",
+    "field": "services",
+    "index": 5,
+    "old": "Program:",
+    "new": "Opriri programate:"
+  },
+  {
+    "offer_id": "21",
+    "language": "ro",
+    "field": "services",
+    "index": 6,
+    "old": "> în fiecare duminică 20:00 - 21:00 ora la partea vestică a gara principală cu distribuție de supă",
+    "new": "> în fiecare duminică, 20:00 - 21:00, pe latura de vest a Hauptbahnhof, cu distribuire de supă"
+  },
+  {
+    "offer_id": "21",
+    "language": "ru",
+    "field": "services",
+    "index": 5,
+    "old": "Время работы:",
+    "new": "Время стоянок:"
+  },
+  {
+    "offer_id": "21",
+    "language": "ru",
+    "field": "services",
+    "index": 6,
+    "old": "> каждое воскресенье 20:00 - 21:00 часов на западной стороне главного вокзала с раздачей супа",
+    "new": "> каждое воскресенье 20:00 - 21:00 с западной стороны Hauptbahnhof, раздача супа"
+  },
+  {
+    "offer_id": "25",
+    "language": "en",
+    "field": "opening_hours_raw",
+    "index": 1,
+    "old": "> Wednesday: 18:30 o'clock Central Station",
+    "new": "> Wednesday: 18:30 o'clock Hauptbahnhof"
+  },
+  {
+    "offer_id": "25",
+    "language": "en",
+    "field": "opening_hours_raw",
+    "index": 2,
+    "old": "> Friday: 10:00 o'clock Koehlerstraße / Dresdner Straße and 14:00 o'clock Central Station",
+    "new": "> Friday: 10:00 o'clock Koehlerstraße / Dresdner Straße and 14:00 o'clock Hauptbahnhof"
+  },
+  {
+    "offer_id": "25",
+    "language": "en",
+    "field": "opening_hours_raw",
+    "index": 3,
+    "old": "> Sunday: 20:00 o'clock Central Station",
+    "new": "> Sunday: 20:00 o'clock Hauptbahnhof"
+  },
+  {
+    "offer_id": "25",
+    "language": "en",
+    "field": "notes",
+    "index": 2,
+    "old": "> 15:00 - 16:00 o'clock at the day center OASE, Nürnberger Straße 31 (nursing consultation)",
+    "new": "> 15:00 - 16:00 at Tagestref OASE, Nürnberger Straße 31 (nursing consultation)"
+  },
+  {
+    "offer_id": "25",
+    "language": "en",
+    "field": "notes",
+    "index": 3,
+    "old": "> 19:00 - 20:00 o'clock in Alternative III, Braunstraße 28a",
+    "new": "> 19:00 - 20:00 at Alternative III, Braunstraße 28a"
+  },
+  {
+    "offer_id": "25",
+    "language": "en",
+    "field": "notes",
+    "index": 4,
+    "old": "> 20:00 to 21:00 o'clock at the emergency shelter for homeless men, Helenenstraße 26",
+    "new": "> 20:00 to 21:00 at emergency shelter for homeless men, Helenenstraße 26"
+  },
+  {
+    "offer_id": "25",
+    "language": "en",
+    "field": "notes",
+    "index": 6,
+    "old": "> 13:00 - 15:00 o'clock at the day center OASE, Nürnberger Straße 31 (medical consultation)",
+    "new": "> 13:00 - 15:00 at Tagestreff OASE, Nürnberger Straße 31 (medical consultation)"
+  },
+  {
+    "offer_id": "25",
+    "language": "en",
+    "field": "notes",
+    "index": 8,
+    "old": "> 16:00 - 17:00 o'clock in Alternative I, Chopinstraße 13",
+    "new": "> 16:00 - 17:00 at Alternative I, Chopinstraße 13"
+  },
+  {
+    "offer_id": "25",
+    "language": "en",
+    "field": "notes",
+    "index": 9,
+    "old": "> 17:00 - 19:00 o'clock at the overnight house for homeless men, Helenenstraße 26",
+    "new": "> 17:00 - 19:00 at overnight accommodation for homeless men, Helenenstraße 26"
+  },
+  {
+    "offer_id": "25",
+    "language": "en",
+    "field": "notes",
+    "index": 11,
+    "old": "> 19:30 to 21:00 o'clock at the emergency shelter for homeless men, Rückmarsdorfer Straße 5-7",
+    "new": "> 19:30 to 21:00 at emergency shelter for homeless men, Rückmarsdorfer Straße 5-7"
+  },
+  {
+    "offer_id": "25",
+    "language": "pl",
+    "field": "notes",
+    "index": 2,
+    "old": "> 15:00 - 16:00 godz. w Tagestref OASE, Nürnberger Straße 31 (porada pielęgniarska)",
+    "new": "> 15:00 - 16:00 w Tagestref OASE, Nürnberger Straße 31 (porada pielęgniarska)"
+  },
+  {
+    "offer_id": "25",
+    "language": "pl",
+    "field": "notes",
+    "index": 3,
+    "old": "> 19:00 - 20:00 godz. w Alternative III, Braunstraße 28a",
+    "new": "> 19:00 - 20:00 w Alternative III, Braunstraße 28a"
+  },
+  {
+    "offer_id": "25",
+    "language": "pl",
+    "field": "notes",
+    "index": 4,
+    "old": "> 20:00 do 21:00 godz. w nocnym schronisku dla bezdomnych mężczyzn, Helenenstraße 26",
+    "new": "> 20:00 do 21:00 w noclegowni dla bezdomnych mężczyzn, Helenenstraße 26"
+  },
+  {
+    "offer_id": "25",
+    "language": "pl",
+    "field": "notes",
+    "index": 6,
+    "old": "> 13:00 - 15:00 godz. w Tagestreff OASE, Nürnberger Straße 31 (porada lekarska)",
+    "new": "> 13:00 - 15:00 w Tagestreff OASE, Nürnberger Straße 31 (porada lekarska)"
+  },
+  {
+    "offer_id": "25",
+    "language": "pl",
+    "field": "notes",
+    "index": 8,
+    "old": "> 16:00 - 17:00 godz. w Alternative I, Chopinstraße 13",
+    "new": "> 16:00 - 17:00 w Alternative I, Chopinstraße 13"
+  },
+  {
+    "offer_id": "25",
+    "language": "pl",
+    "field": "notes",
+    "index": 9,
+    "old": "> 17:00 - 19:00 godz. w domu noclegowym dla bezdomnych mężczyzn, Helenenstraße 26",
+    "new": "> 17:00 - 19:00 w domu noclegowym dla bezdomnych mężczyzn, Helenenstraße 26"
+  },
+  {
+    "offer_id": "25",
+    "language": "pl",
+    "field": "notes",
+    "index": 11,
+    "old": "> 19:30 do 21:00 godz. w nocnym schronisku dla bezdomnych mężczyzn, Rückmarsdorfer Straße 5-7",
+    "new": "> 19:30 do 21:00 w noclegowni dla bezdomnych mężczyzn, Rückmarsdorfer Straße 5-7"
+  },
+  {
+    "offer_id": "25",
+    "language": "ro",
+    "field": "opening_hours_raw",
+    "index": 1,
+    "old": "> Miercuri: 18:30 ora Gara Centrală",
+    "new": "> Miercuri: 18:30 ora Hauptbahnhof"
+  },
+  {
+    "offer_id": "25",
+    "language": "ro",
+    "field": "opening_hours_raw",
+    "index": 2,
+    "old": "> Vineri: 10:00 ora Strada Koehler / Strada Dresdner și 14:00 ora Gara Centrală",
+    "new": "> Vineri: 10:00 ora Koehlerstraße / Dresdner Straße și 14:00 ora Hauptbahnhof"
+  },
+  {
+    "offer_id": "25",
+    "language": "ro",
+    "field": "opening_hours_raw",
+    "index": 3,
+    "old": "> Duminică: 20:00 ora Gara Centrală",
+    "new": "> Duminică: 20:00 ora Hauptbahnhof"
+  },
+  {
+    "offer_id": "25",
+    "language": "ro",
+    "field": "notes",
+    "index": 2,
+    "old": "> 15:00 - 16:00 ora la punctul de zi OASE, Strada Nürnberger 31 (consultație de îngrijire)",
+    "new": "> 15:00 - 16:00 la Tagestref OASE, Nürnberger Straße 31 (consultație de îngrijire)"
+  },
+  {
+    "offer_id": "25",
+    "language": "ro",
+    "field": "notes",
+    "index": 3,
+    "old": "> 19:00 - 20:00 ora în Alternativa III, Strada Braun 28a",
+    "new": "> 19:00 - 20:00 la Alternative III, Braunstraße 28a"
+  },
+  {
+    "offer_id": "25",
+    "language": "ro",
+    "field": "notes",
+    "index": 4,
+    "old": "> 20:00 până la 21:00 ora la adăpostul de urgență pentru bărbați fără locuință, Strada Helenen 26",
+    "new": "> 20:00 până la 21:00 la adăpostul de urgență pentru bărbați fără locuință, Helenenstraße 26"
+  },
+  {
+    "offer_id": "25",
+    "language": "ro",
+    "field": "notes",
+    "index": 6,
+    "old": "> 13:00 - 15:00 ora la punctul de zi OASE, Strada Nürnberger 31 (consultație medicală)",
+    "new": "> 13:00 - 15:00 la Tagestreff OASE, Nürnberger Straße 31 (consultație medicală)"
+  },
+  {
+    "offer_id": "25",
+    "language": "ro",
+    "field": "notes",
+    "index": 8,
+    "old": "> 16:00 - 17:00 ora în Alternativa I, Strada Chopin 13",
+    "new": "> 16:00 - 17:00 la Alternative I, Chopinstraße 13"
+  },
+  {
+    "offer_id": "25",
+    "language": "ro",
+    "field": "notes",
+    "index": 9,
+    "old": "> 17:00 - 19:00 ora la casa de cazare pentru bărbați fără locuință, Strada Helenen 26",
+    "new": "> 17:00 - 19:00 la centrul de cazare pentru bărbați fără locuință, Helenenstraße 26"
+  },
+  {
+    "offer_id": "25",
+    "language": "ro",
+    "field": "notes",
+    "index": 11,
+    "old": "> 19:30 până la 21:00 ora la adăpostul de urgență pentru bărbați fără locuință, Strada Rückmarsdorfer 5-7",
+    "new": "> 19:30 până la 21:00 la adăpostul de urgență pentru bărbați fără locuință, Rückmarsdorfer Straße 5-7"
+  },
+  {
+    "offer_id": "25",
+    "language": "ru",
+    "field": "notes",
+    "index": 2,
+    "old": "> 15:00 - 16:00 ч. в дневном центре OASE, Nürnberger Straße 31 (консультация по уходу)",
+    "new": "> 15:00 - 16:00 в Tagestref OASE, Nürnberger Straße 31 (консультация по уходу)"
+  },
+  {
+    "offer_id": "25",
+    "language": "ru",
+    "field": "notes",
+    "index": 3,
+    "old": "> 19:00 - 20:00 ч. в Alternative III, Braunstraße 28a",
+    "new": "> 19:00 - 20:00 в Alternative III, Braunstraße 28a"
+  },
+  {
+    "offer_id": "25",
+    "language": "ru",
+    "field": "notes",
+    "index": 4,
+    "old": "> 20:00 до 21:00 ч. в ночлежке для бездомных мужчин, Helenenstraße 26",
+    "new": "> 20:00 до 21:00 в ночлежке для бездомных мужчин, Helenenstraße 26"
+  },
+  {
+    "offer_id": "25",
+    "language": "ru",
+    "field": "notes",
+    "index": 6,
+    "old": "> 13:00 - 15:00 ч. в дневном центре OASE, Nürnberger Straße 31 (врачебный приём)",
+    "new": "> 13:00 - 15:00 в Tagestreff OASE, Nürnberger Straße 31 (врачебный приём)"
+  },
+  {
+    "offer_id": "25",
+    "language": "ru",
+    "field": "notes",
+    "index": 8,
+    "old": "> 16:00 - 17:00 ч. в Alternative I, Chopinstraße 13",
+    "new": "> 16:00 - 17:00 в Alternative I, Chopinstraße 13"
+  },
+  {
+    "offer_id": "25",
+    "language": "ru",
+    "field": "notes",
+    "index": 9,
+    "old": "> 17:00 - 19:00 ч. в ночлежке для бездомных мужчин, Helenenstraße 26",
+    "new": "> 17:00 - 19:00 в доме ночлега для бездомных мужчин, Helenenstraße 26"
+  },
+  {
+    "offer_id": "25",
+    "language": "ru",
+    "field": "notes",
+    "index": 11,
+    "old": "> 19:30 до 21:00 ч. в ночлежке для бездомных мужчин, Rückmarsdorfer Straße 5-7",
+    "new": "> 19:30 до 21:00 в ночлежке для бездомных мужчин, Rückmarsdorfer Straße 5-7"
+  }
+]

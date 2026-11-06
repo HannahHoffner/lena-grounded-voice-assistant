@@ -1,0 +1,124 @@
+TAP version 13
+# Subtest: Firefox-style Ogg recording keeps recording status and releases microphone before STT
+ok 1 - Firefox-style Ogg recording keeps recording status and releases microphone before STT
+  ---
+  duration_ms: 12.3845
+  type: 'test'
+  ...
+# Subtest: a failed recorder constructor still releases the granted microphone
+ok 2 - a failed recorder constructor still releases the granted microphone
+  ---
+  duration_ms: 2.3579
+  type: 'test'
+  ...
+# Subtest: STT service failure differs from unintelligible or invalid audio
+ok 3 - STT service failure differs from unintelligible or invalid audio
+  ---
+  duration_ms: 2.0222
+  type: 'test'
+  ...
+# Subtest: a successful response enables the next clarification
+ok 4 - a successful response enables the next clarification
+  ---
+  duration_ms: 1.6908
+  type: 'test'
+  ...
+# Subtest: relocalizing an in-flight choice does not allow duplicate submission
+ok 5 - relocalizing an in-flight choice does not allow duplicate submission
+  ---
+  duration_ms: 2.5849
+  type: 'test'
+  ...
+# Subtest: typing leaves the dialogue usable and sends no request
+ok 6 - typing leaves the dialogue usable and sends no request
+  ---
+  duration_ms: 1.8707
+  type: 'test'
+  ...
+# Subtest: query submission is single-flight and choice payload excludes category
+ok 7 - query submission is single-flight and choice payload excludes category
+  ---
+  duration_ms: 2.4668
+  type: 'test'
+  ...
+# Subtest: query failure releases the guard and restores dialogue choices
+ok 8 - query failure releases the guard and restores dialogue choices
+  ---
+  duration_ms: 1.4777
+  type: 'test'
+  ...
+# Subtest: TTS sends the active session and releases audio on interruption
+ok 9 - TTS sends the active session and releases audio on interruption
+  ---
+  duration_ms: 5.7437
+  type: 'test'
+  ...
+# Subtest: Start clears private content and ignores an old query without unlocking a new query
+ok 10 - Start clears private content and ignores an old query without unlocking a new query
+  ---
+  duration_ms: 3.5498
+  type: 'test'
+  ...
+# Subtest: inactivity clears visible content, session and audio and returns to language selection
+ok 11 - inactivity clears visible content, session and audio and returns to language selection
+  ---
+  duration_ms: 3.8896
+  type: 'test'
+  ...
+# Subtest: reset discards deferred STT success and failure
+ok 12 - reset discards deferred STT success and failure
+  ---
+  duration_ms: 3.0695
+  type: 'test'
+  ...
+# Subtest: a microphone grant arriving after reset is immediately released
+ok 13 - a microphone grant arriving after reset is immediately released
+  ---
+  duration_ms: 1.6648
+  type: 'test'
+  ...
+# Subtest: reset stops recording without submitting the discarded audio
+ok 14 - reset stops recording without submitting the discarded audio
+  ---
+  duration_ms: 2.806
+  type: 'test'
+  ...
+# Subtest: a failed old query cannot replace the reset view with an error
+ok 15 - a failed old query cannot replace the reset view with an error
+  ---
+  duration_ms: 1.6153
+  type: 'test'
+  ...
+# Subtest: same playback button stops instead of issuing a second TTS call
+ok 16 - same playback button stops instead of issuing a second TTS call
+  ---
+  duration_ms: 3.8191
+  type: 'test'
+  ...
+# Subtest: language change ignores a previous-language query response while retaining the session
+ok 17 - language change ignores a previous-language query response while retaining the session
+  ---
+  duration_ms: 3.0922
+  type: 'test'
+  ...
+# Subtest: map base tiles follow the server map profile and never fall back to a hard-coded tile host
+ok 18 - map base tiles follow the server map profile and never fall back to a hard-coded tile host
+  ---
+  duration_ms: 4.299
+  type: 'test'
+  ...
+# Subtest: client config exposes server speech availability without enabling unsupported speech
+ok 19 - client config exposes server speech availability without enabling unsupported speech
+  ---
+  duration_ms: 1.635
+  type: 'test'
+  ...
+1..19
+# tests 19
+# suites 0
+# pass 19
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 155.4188

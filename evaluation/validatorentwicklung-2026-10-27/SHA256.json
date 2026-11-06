@@ -1,0 +1,19 @@
+{
+  "anzeigepruefung.csv": "0a4319ad60d7ca9a8c32aa6ad3a5cea5af2737e2e86ab8eac200c723e4d27b60",
+  "auswertung-erstversuche.json": "6e4fa51f20a8b7979a650838a6c086a19cedddfdbc2aeecca5db538787e90099",
+  "bewertung.csv": "47211a0a1f96f7b6805953f70ff86c84716175581482c672f71f867521cce4cc",
+  "bewertung_ausgefüllt.csv": "78d1d729c88004748f62464d3a1f0092172bc74085b10adaa4fc13c68ab420e6",
+  "BEWERTUNG_LESEN.md": "3071f22b6d766a3d9588affa5a9fb9dac84add9707ee666e601e51511cd119a0",
+  "displayed-responses.jsonl": "178e90a25595d1abedb16b154d1aa34963c87a0da47dd21cce1582f9e046ceca",
+  "evidenz.md": "534bfc257424f16112896700764561bd68dabcccfd55226a259561652af31673",
+  "fehlablehnungen-30-befunde.json": "271709c39c1df89d5844d4a42e0644b1966406e2ed788c7125985de810113e94",
+  "fehlablehnungen-30-replay.json": "92b4fcfdbed8777654fd72fe246a0ded765d6d676ccbbd9112ab28ea1e82e936",
+  "fehlablehnungen-30.md": "6e3e56c5bfcc069d5a617df00662075525cda0bc02208008706a1d4eda0a96bb",
+  "hilfsuebersetzungen.json": "5850d15c52f0da2af1c310debfe178175e5497095f289992ebc9b40c4f3b4eac",
+  "manifest.json": "09ad9f13620ef4f85d71892a1d01eed0dbbeb996ef4e132f54b798eadc210b3e",
+  "queries.json": "043a2560221005a11aad760bd785168b8174b5056bdd8b353b7b1a26f9e22751",
+  "README.md": "085e12921069a2240a72e26d4030b6390b879cc4014ba6809c169b86320cd9c0",
+  "results.jsonl": "02d5b90a6632e967ec56ac77ae7a532c8164f97d6c18a7d0415d420fff8d90ea",
+  "schluessel.json": "dabdeffbe84874ed19676e4188467ba68e1d9882f49462413bf9178a41d03735",
+  "technical-summary.json": "99ee95867dae04731c15364409f0d3d48d0f6ab86bc6d27b99a20afa39717af8"
+}

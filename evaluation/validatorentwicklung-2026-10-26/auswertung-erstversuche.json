@@ -1,0 +1,47 @@
+{
+  "first_attempts": 113,
+  "cross_table": [
+    {
+      "validator": "accepted",
+      "rating": "FK",
+      "n": 1
+    },
+    {
+      "validator": "accepted",
+      "rating": "FU",
+      "n": 1
+    },
+    {
+      "validator": "accepted",
+      "rating": "R",
+      "n": 12
+    },
+    {
+      "validator": "accepted",
+      "rating": "U",
+      "n": 9
+    },
+    {
+      "validator": "rejected",
+      "rating": "FK",
+      "n": 3
+    },
+    {
+      "validator": "rejected",
+      "rating": "R",
+      "n": 86
+    },
+    {
+      "validator": "rejected",
+      "rating": "U",
+      "n": 1
+    }
+  ],
+  "all_text_ratings": {
+    "R": 111,
+    "FK": 4,
+    "U": 11,
+    "FU": 1
+  },
+  "method": "Join item_id; role=erstversuch; U bleibt separat; keine Umwertung."
+}

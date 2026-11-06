@@ -47,8 +47,18 @@ einzelne Kartenfelder, Priorisierung und Sprache. Reale Spracherkennung und
 hörbare Sprachausgabe wurden von der Prüferin wiederholt erfolgreich
 funktional getestet. Die Sprachurteile sind keine muttersprachliche Vollprüfung.
 
-Die vollständigen manuellen Prüfunterlagen liegen im getrennten
-Thesis-Repository unter `Evaluation/manual_final_20261029/`. Aktuelle Aufgaben
+Die vollständigen manuellen Prüfunterlagen liegen unter
+[`evaluation/manual_final_20261029/`](evaluation/manual_final_20261029/README.md).
+Der [Evaluationsindex](evaluation/README.md) erschließt auch die historischen
+technischen und formativen Belege sowie die providerfreie Integritätsprüfung:
+
+```text
+python evaluation/pruefe_evidenz.py
+```
+
+Die vollständigen Originalbelege wurden am 06.11.2026 aus dem Thesisrepository
+übernommen. Das bestehende Zenodo-Softwarearchiv v0.2.0 enthält sie noch nicht.
+Aktuelle Aufgaben
 und offene Punkte stehen in der [Release-Checkliste](RELEASE_REVIEW_CHECKLIST.md).
 Technische Regression
 und historische Live-Läufe werden unter [Tests](#tests) getrennt eingeordnet.

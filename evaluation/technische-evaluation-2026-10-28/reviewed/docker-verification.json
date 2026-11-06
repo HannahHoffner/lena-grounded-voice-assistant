@@ -1,0 +1,54 @@
+{
+  "mode": "docker",
+  "commands": [
+    {
+      "args": [
+        "docker",
+        "build",
+        "--pull",
+        "--no-cache",
+        "--target",
+        "test",
+        "-t",
+        "lena-card-translation-test",
+        "C:\\Users\\User\\AppData\\Local\\LENA\\verification\\2026-10-28-card-translation-review\\reviewed\\source"
+      ],
+      "log": "docker-build.log",
+      "code": 0,
+      "seconds": 96.56
+    },
+    {
+      "args": [
+        "docker",
+        "run",
+        "--rm",
+        "--network",
+        "none",
+        "--label",
+        "lena.verification=card-translation-20261028",
+        "lena-card-translation-test"
+      ],
+      "log": "docker-tests.log",
+      "code": 0,
+      "seconds": 323.16
+    },
+    {
+      "args": [
+        "docker",
+        "build",
+        "--target",
+        "runtime",
+        "-t",
+        "lena-card-translation-runtime",
+        "C:\\Users\\User\\AppData\\Local\\LENA\\verification\\2026-10-28-card-translation-review\\reviewed\\source"
+      ],
+      "log": "runtime-build.log",
+      "code": 0,
+      "seconds": 12.66
+    }
+  ],
+  "images": {
+    "lena-card-translation-test": "sha256:c2027ef5467e0544033e9c4b0c840d41023cf7af79c21d0aa99ffe375c7ce11f",
+    "lena-card-translation-runtime": "sha256:9f715e024211f59787e8ec08febe3e1b38e70597a0585c8b80be3e6fd5494f41"
+  }
+}

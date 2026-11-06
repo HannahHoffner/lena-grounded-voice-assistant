@@ -1,0 +1,25 @@
+{
+  "commit": "597e1f0216c72eedd01b7b9e6d49be67ca8150f9",
+  "git_clean_before_after": true,
+  "test_image": "sha256:b64f7f02e8625f1d53430c2d71e291026f36159f6a97d4aef1b4f0971732b0de",
+  "runtime_image": "sha256:cab86cc2d58c0b5ae6cdf26ff1bc6383245be9b122813ea0d9acc871be46d46b",
+  "platform": "linux/x86_64",
+  "smokes": [
+    {
+      "iteration": 1,
+      "health": "healthy",
+      "user": "10001:10001",
+      "read_only": true,
+      "network": "none",
+      "fresh_temporary_state": true
+    },
+    {
+      "iteration": 2,
+      "health": "healthy",
+      "user": "10001:10001",
+      "read_only": true,
+      "network": "none",
+      "fresh_temporary_state": true
+    }
+  ]
+}

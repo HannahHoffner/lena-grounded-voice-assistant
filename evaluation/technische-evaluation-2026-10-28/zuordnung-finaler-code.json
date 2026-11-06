@@ -1,0 +1,12 @@
+{
+  "checked_date": "2026-10-28",
+  "commits": {
+    "HEAD": "5962d6c172d6f6eeddf6bc65c8644b833838b671",
+    "5eebb72": "5eebb72c41ef5444565dc384a0092f70444151e0",
+    "557a487": "557a487a43d0edc3cac57f4bbc80670673ddc066"
+  },
+  "reviewed_app_data_files": 122,
+  "differences": [],
+  "method": "SHA256 der aktuellen app/ und data/-Dateien gegen final-source-manifest.json; keine Codeänderung durch Thesisredaktion.",
+  "limits": "Wartungscommit 5962d6c änderte Dokumentation/Paketmetadaten und einen eingebetteten Testkommentar; dies ist kein neuer kompletter Testlauf auf diesem Git-Commit."
+}

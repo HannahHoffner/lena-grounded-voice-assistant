@@ -1,0 +1,39 @@
+{
+  "base_commit": "557a487a43d0edc3cac57f4bbc80670673ddc066",
+  "languages": [
+    "de",
+    "en",
+    "pl",
+    "ro",
+    "ru"
+  ],
+  "social_offers": 28,
+  "social_language_projections": 140,
+  "stand_destinations_per_language": 3,
+  "public_toilets": 21,
+  "drinking_fountains": 21,
+  "copy_version": "11",
+  "new_card_copy_keys_per_language": 34,
+  "stored_translation_fields_revised": 131,
+  "stored_records_revised": 33,
+  "revisions_by_offer": {
+    "12": 9,
+    "13": 20,
+    "14": 12,
+    "15": 16,
+    "17.3": 12,
+    "18": 16,
+    "19.1": 4,
+    "21": 8,
+    "25": 34
+  },
+  "translation_integrity_errors": [],
+  "source_offer_facts_unchanged": true,
+  "existing_application_safety_dialogue_fallback_ui_strings_unchanged": true,
+  "runtime_kb_fingerprint": "287a3fd53f517dbbdcc1ebd6330b3280239d4e23739b6a89d3e1a2d8465e08dc",
+  "input_evaluation_files_unchanged": true,
+  "original_ratings_script_executed": false,
+  "new_live_calls": 0,
+  "new_manual_quality_ratings": false,
+  "native_speaker_review_asserted": false
+}

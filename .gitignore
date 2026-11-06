@@ -68,3 +68,8 @@ desktop.ini
 *.conflict*
 *OneDrive-conflict*
 *OneDrive-Konflikt*
+
+# Versioned scientific evidence, including archived logs, audio and runtime reports.
+!/evaluation/
+!/evaluation/**/
+!/evaluation/**

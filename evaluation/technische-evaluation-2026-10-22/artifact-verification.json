@@ -1,0 +1,40 @@
+{
+  "commit": "597e1f0216c72eedd01b7b9e6d49be67ca8150f9",
+  "git_clean_after": true,
+  "native_passed": 1219,
+  "known_xfail": 1,
+  "versions": {
+    "evidence": "4",
+    "formulator_contract": "5",
+    "formulator_prompt": "22",
+    "grounding_validator": "3"
+  },
+  "all_four_stages_completed": true,
+  "total_requests": 83,
+  "total_provider_calls": 138,
+  "manual_linguistic_and_factual_review": "pending",
+  "release_asserted": false,
+  "thesis_updated": false,
+  "sha256": {
+    "regression.xml": "f0d64a5940ff7bc1661a3a19974c44ae3347ede9fd9930350587dddef544ee28",
+    "TESTERGEBNIS.md": "db520bc41fcd27a6c7f5194c640b79982e10b388e09e4d3723664002db94c0fc",
+    "BEISPIELANTWORTEN.md": "8c5d0f37ea28f9af8d083dbdcbe70f0cce5f8497c34a379de9a848548e81eac1",
+    "VERTRAGSPRUEFUNG.md": "1e3607206183ece7dbbc083844ac11f5d6a8199346032df89dfb9f7dae8dbe9b",
+    "comparison.json": "d8f9bd6f28743447e5825b99f16dbca767458171948588709bd2e555e174a8c6",
+    "evidence-summary.json": "2d7f288ba36d46ed42715da7e6c9982e538c980ff00e6fc030ad5585105a947f",
+    "offline-replay.json": "882828eefd60f23c17ad96fbf90a4b24428a09c04130e527db92027ada093577",
+    "USER_CONFIRMATIONS.json": "712acdf9fbb5edea08e22da255014451e64045272659f654414be1592c0b962c",
+    "live-evaluations\\run_1977f38ae9474934b478bb4c5a83fa4c\\manifest.json": "9ab8c9c0edbd0623baf2cffb31980ef7610c7e8bab9e0f941429fc6f60950478",
+    "live-evaluations\\run_50d9cdb41a564aab909d737f0811546d\\manifest.json": "0f041a1769decea73a81b862e870948276913cf961969a7f5734573bdf03448d",
+    "live-evaluations\\run_ea2ce8564da94843895ada6e8cf2e04e\\manifest.json": "820e2f49143aaed06f68ad001b7c0e0a5d3ea7fd61028ab3bdb731a4909954c1",
+    "live-evaluations\\run_fced37b8811c44f382b4e2266146d78f\\manifest.json": "6001b2a6d3ea7c053077083365714a513d9e4555bd031ab81af8ae3cc10f5749",
+    "live-evaluations\\run_1977f38ae9474934b478bb4c5a83fa4c\\summary.json": "f9b187ac5da10b9ee89c9c396194f49665776081b42f1cceb142317d5887f11f",
+    "live-evaluations\\run_50d9cdb41a564aab909d737f0811546d\\summary.json": "9806b04a2d33bd21806af230eab0314fb66c5d25b6011bd9ae193a425962c812",
+    "live-evaluations\\run_ea2ce8564da94843895ada6e8cf2e04e\\summary.json": "d659a02424fca09c5b0a57827c823e93363bbf78aa1ac4f4806de22c76a37f71",
+    "live-evaluations\\run_fced37b8811c44f382b4e2266146d78f\\summary.json": "6d107e1ec05de1631169d1f0d6939c9f4b755aeaaebbd70aa78bc196cf968382",
+    "live-evaluations\\run_1977f38ae9474934b478bb4c5a83fa4c\\stage-results.jsonl": "93cf33d246f3a494acc6deb76c253e9b37e7a7f6ad89e897b772f4dcd1268dd0",
+    "live-evaluations\\run_50d9cdb41a564aab909d737f0811546d\\stage-results.jsonl": "890a7dc417b8f1fd239a0d06a29309182ffe669439edf666840cb2a37898ea22",
+    "live-evaluations\\run_ea2ce8564da94843895ada6e8cf2e04e\\stage-results.jsonl": "25de65a5c7e6a27cce0e87e75c35b4ccdc1deaaf8ddd8a67cd5e1a68d18d62e1",
+    "live-evaluations\\run_fced37b8811c44f382b4e2266146d78f\\stage-results.jsonl": "5e3fd9f7578bf9cde3d0ac1eb7005b24733b923834a0a7a86b32bf40355d592a"
+  }
+}

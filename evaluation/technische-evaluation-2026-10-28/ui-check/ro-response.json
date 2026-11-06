@@ -1,0 +1,88 @@
+{
+  "answer": "De ce ajutor ai nevoie? Poți contacta oricând Hilfebus în timpul programului (18–23) la 0152 33661087.",
+  "cards": [
+    {
+      "record_type": "social_offer",
+      "id": "21",
+      "name": "Hilfebus",
+      "short_description": "Hilfebus",
+      "services": [
+        "> asistență de urgență adaptată nevoilor persoanelor fără adăpost",
+        "> mâncare și băuturi calde",
+        "> îmbrăcăminte călduroasă, pături și saci de dormit",
+        "> mediere către adăposturile de urgență",
+        "> asistență de bază mobilă și consiliere de orientare"
+      ],
+      "address": null,
+      "phone_numbers": [
+        "0175 6758041 (dl Neufert)",
+        "0152 33661087 (numai în timpul programului autobuzului)"
+      ],
+      "opening_hours_raw": [
+        "> Intervenție zilnic 18:00 - 23:00 ora, în toată orașul"
+      ],
+      "standzeiten_raw": [],
+      "notes": [
+        "Canal Instagram: #safeleipzig",
+        "Sună în timpul orelor de intervenție (zilnic 18:00–23:00 ora) direct la Hilfebus."
+      ],
+      "spoken_text": "Hilfebus. Descriere: Hilfebus. Ajutor oferit: asistență de urgență adaptată nevoilor persoanelor fără adăpost, mâncare și băuturi calde, îmbrăcăminte călduroasă, pături și saci de dormit, mediere către adăposturile de urgență, asistență de bază mobilă și consiliere de orientare. Telefon: 0152 33661087 (numai în timpul programului autobuzului). Program: Intervenție zilnic 18:00 - 23:00 ora, în toată orașul. Informații importante: Canal Instagram: #safeleipzig, Sună în timpul orelor de intervenție (zilnic 18:00–23:00 ora) direct la Hilfebus."
+    }
+  ],
+  "language": "ro",
+  "provider": "template",
+  "status": "no_results",
+  "answer_type": "clarification",
+  "session_id": "79e06d5a832e4e97ba0eeaf56c46a6a4",
+  "question": "Hilfe bitte",
+  "history": [
+    {
+      "question": "Hilfe bitte",
+      "answer": "De ce ajutor ai nevoie? Poți contacta oricând Hilfebus în timpul programului (18–23) la 0152 33661087."
+    }
+  ],
+  "map_data": null,
+  "clarification": {
+    "dialog_id": "c4b65b4e0b5d4d5199d47d506d668fa6",
+    "type": "general_need",
+    "prompt": "De ce ajutor ai nevoie?",
+    "allow_free_text": true,
+    "allow_speech": true,
+    "multiple_facts_allowed": false,
+    "submit_label": "Trimite alegerea",
+    "choices": [
+      {
+        "value": "food",
+        "label": "Mâncare și ajutor de bază"
+      },
+      {
+        "value": "drinking_water",
+        "label": "Apă potabilă"
+      },
+      {
+        "value": "sleep",
+        "label": "Am nevoie de un loc de dormit"
+      },
+      {
+        "value": "medical",
+        "label": "Ajutor medical"
+      },
+      {
+        "value": "advice",
+        "label": "Consiliere"
+      },
+      {
+        "value": "toilet",
+        "label": "Toaletă"
+      }
+    ],
+    "spoken_text": "De ce ajutor ai nevoie? Mâncare și ajutor de bază. Apă potabilă. Am nevoie de un loc de dormit. Ajutor medical. Consiliere. Toaletă."
+  },
+  "spoken_result_ids": [
+    "21"
+  ],
+  "card_ids": [
+    "21"
+  ],
+  "map_marker_ids": []
+}

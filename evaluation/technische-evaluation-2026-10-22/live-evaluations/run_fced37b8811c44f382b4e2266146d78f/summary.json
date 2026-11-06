@@ -1,0 +1,33 @@
+{
+  "abort_reason": null,
+  "clinical_validation_asserted": false,
+  "completed_at": "2026-10-22T14:05:21.459533+00:00",
+  "content_evaluation_complete": false,
+  "content_gate_passed": false,
+  "content_mismatch_count": 0,
+  "contract_gate_passed": false,
+  "counts": {
+    "failures": 4,
+    "formulator_calls": 19,
+    "interpreter_calls": 18,
+    "provider_calls": 40,
+    "requests": 18,
+    "selector_calls": 3
+  },
+  "critical_content_error_count": 0,
+  "linguistic_review_status": "pending",
+  "next_stage_started": false,
+  "product_release_asserted": false,
+  "response_type_stable_per_scenario": {
+    "e_acute_uncertain": true,
+    "e_food_time": true,
+    "e_prompt_injection": true,
+    "e_sleep_minor": true,
+    "e_toilet": true,
+    "e_water": true
+  },
+  "run_id": "run_fced37b8811c44f382b4e2266146d78f",
+  "stage": "stability",
+  "status": "completed",
+  "unverified_metric_count": 51
+}

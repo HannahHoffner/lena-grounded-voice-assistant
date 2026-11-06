@@ -1,0 +1,40 @@
+{
+  "mode": "native",
+  "commands": [
+    {
+      "args": [
+        "C:\\Users\\User\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "pytest",
+        "-ra",
+        "--junitxml=C:\\Users\\User\\AppData\\Local\\LENA\\verification\\2026-10-28-card-translation-review\\reviewed\\native.xml"
+      ],
+      "log": "native.log",
+      "code": 0,
+      "seconds": 441.27
+    },
+    {
+      "args": [
+        "C:\\Users\\User\\AppData\\Local\\LENA\\verification\\2026-10-26-simple-sentences\\tools\\node.exe",
+        "--test",
+        "tests/frontend.test.cjs"
+      ],
+      "log": "javascript.log",
+      "code": 0,
+      "seconds": 0.27
+    },
+    {
+      "args": [
+        "C:\\Users\\User\\AppData\\Local\\Python\\pythoncore-3.14-64\\python.exe",
+        "-m",
+        "compileall",
+        "-q",
+        "app",
+        "tests"
+      ],
+      "log": "compileall.log",
+      "code": 0,
+      "seconds": 0.41
+    }
+  ]
+}

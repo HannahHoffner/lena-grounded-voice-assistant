@@ -1,0 +1,15 @@
+{
+  "confirmations": [
+    {
+      "date": "2026-10-22",
+      "offer_id": "10",
+      "offer_name": "Leipziger Oase",
+      "fact": "Die Leipziger Oase bietet warmes Essen.",
+      "source": "Explizite Bestätigung des Nutzers in dieser Unterhaltung",
+      "quote": "die Oase bietet aber warmes Essen, das ist schon okay",
+      "interpretation": "Die Formulierung warmes Essen wird für dieses Angebot als fachlich korrekt akzeptiert. Dafür wurde keine zusätzliche Sperrregel eingeführt.",
+      "runtime_dataset_changed": false,
+      "formal_manual_evaluation_rating_created": false
+    }
+  ]
+}

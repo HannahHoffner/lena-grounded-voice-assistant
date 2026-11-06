@@ -1,0 +1,4 @@
+{"error_code": "formulator_ungrounded_claim", "grounding_diagnostic_code": "proper_name_not_exact", "scenario_id": "f_de_grounded"}
+{"error_code": "formulator_ungrounded_claim", "grounding_diagnostic_code": "proper_name_not_exact", "scenario_id": "f_de_injection"}
+{"error_code": "formulator_invalid_fact", "scenario_id": "f_ro_injection"}
+{"error_code": "formulator_invalid_fact", "scenario_id": "f_ru_injection"}

@@ -11,3 +11,14 @@
 docs/exec-plans export-ignore
 docs/reviews export-ignore
 docs/architecture/codebase-review.md export-ignore
+
+# Preserve exact archived evaluation bytes and original SHA-256 bindings.
+/evaluation/pruefe_evidenz.py -text whitespace=cr-at-eol
+/evaluation/manual_final_20261029/** -text whitespace=-trailing-space,-space-before-tab,cr-at-eol
+/evaluation/speech-integration-2026-10-27/** -text whitespace=-trailing-space,-space-before-tab,cr-at-eol
+/evaluation/technische-evaluation-2026-10-22/** -text whitespace=-trailing-space,-space-before-tab,cr-at-eol
+/evaluation/technische-evaluation-2026-10-26/** -text whitespace=-trailing-space,-space-before-tab,cr-at-eol
+/evaluation/technische-evaluation-2026-10-27/** -text whitespace=-trailing-space,-space-before-tab,cr-at-eol
+/evaluation/technische-evaluation-2026-10-28/** -text whitespace=-trailing-space,-space-before-tab,cr-at-eol
+/evaluation/validatorentwicklung-2026-10-26/** -text whitespace=-trailing-space,-space-before-tab,cr-at-eol
+/evaluation/validatorentwicklung-2026-10-27/** -text whitespace=-trailing-space,-space-before-tab,cr-at-eol

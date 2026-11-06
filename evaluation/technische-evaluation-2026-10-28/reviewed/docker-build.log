@@ -1,0 +1,1286 @@
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 4.36kB 0.1s done
+#1 DONE 0.1s
+
+#2 resolve image config for docker-image://docker.io/docker/dockerfile:1
+#2 DONE 1.0s
+
+#3 docker-image://docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e
+#3 resolve docker.io/docker/dockerfile:1@sha256:4edf897a3ffa55b89f906fc8cc78afdb3f1834cc9c7083565e611a8a7d5fe99e 0.0s done
+#3 CACHED
+
+#4 [internal] load metadata for docker.io/library/ubuntu:24.04@sha256:68ee22004a9109b44973313b02ff7b1de250f1de0f5ecb628d73f579aaff33ac
+#4 DONE 0.0s
+
+#5 [internal] load .dockerignore
+#5 transferring context: 986B done
+#5 DONE 0.0s
+
+#6 [base 2/3] ADD --checksum=sha256:6bac2a01979e210d9eac1d4d56747ec709ea60654744d66705dc3c36e7629e50 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z/pool/main/c/ca-certificates/ca-certificates_20260601~24.04.1_all.deb /tmp/ca-certificates.deb
+#6 CACHED
+
+#7 [base 1/3] FROM docker.io/library/ubuntu:24.04@sha256:68ee22004a9109b44973313b02ff7b1de250f1de0f5ecb628d73f579aaff33ac
+#7 resolve docker.io/library/ubuntu:24.04@sha256:68ee22004a9109b44973313b02ff7b1de250f1de0f5ecb628d73f579aaff33ac 0.0s done
+#7 CACHED
+
+#8 [base 2/3] ADD --checksum=sha256:6bac2a01979e210d9eac1d4d56747ec709ea60654744d66705dc3c36e7629e50 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z/pool/main/c/ca-certificates/ca-certificates_20260601~24.04.1_all.deb /tmp/ca-certificates.deb
+#8 DONE 0.1s
+
+#9 [internal] load build context
+#9 transferring context: 5.95MB 0.5s done
+#9 DONE 0.5s
+
+#10 [base 3/3] RUN dpkg-deb -x /tmp/ca-certificates.deb /tmp/ca-bootstrap     && mkdir -p /etc/ssl/certs     && cat /tmp/ca-bootstrap/usr/share/ca-certificates/mozilla/*.crt > /etc/ssl/certs/ca-certificates.crt     && sed -i 's|http://archive.ubuntu.com/ubuntu/|http://snapshot.ubuntu.com/ubuntu/20261001T000000Z/|g; s|http://security.ubuntu.com/ubuntu/|http://snapshot.ubuntu.com/ubuntu/20261001T000000Z/|g; s|http://ports.ubuntu.com/ubuntu-ports/|http://snapshot.ubuntu.com/ubuntu/20261001T000000Z/|g' /etc/apt/sources.list.d/ubuntu.sources     && apt-get update     && apt-get install -y --no-install-recommends ca-certificates python3.12=3.12.3-1ubuntu0.17     && rm -rf /var/lib/apt/lists/* /tmp/ca-bootstrap /tmp/ca-certificates.deb
+#10 1.864 Get:1 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble InRelease [256 kB]
+#10 2.233 Get:2 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-updates InRelease [126 kB]
+#10 2.392 Get:3 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-backports InRelease [126 kB]
+#10 2.598 Get:4 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-security InRelease [126 kB]
+#10 2.802 Get:5 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble/universe amd64 Packages [19.3 MB]
+#10 3.678 Get:6 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble/main amd64 Packages [1808 kB]
+#10 3.750 Get:7 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble/multiverse amd64 Packages [331 kB]
+#10 3.913 Get:8 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble/restricted amd64 Packages [117 kB]
+#10 4.041 Get:9 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-updates/restricted amd64 Packages [2098 kB]
+#10 4.175 Get:10 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-updates/universe amd64 Packages [2162 kB]
+#10 4.263 Get:11 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-updates/multiverse amd64 Packages [56.2 kB]
+#10 4.332 Get:12 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-updates/main amd64 Packages [1661 kB]
+#10 4.446 Get:13 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-backports/universe amd64 Packages [36.0 kB]
+#10 4.534 Get:14 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-backports/main amd64 Packages [49.0 kB]
+#10 4.600 Get:15 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-backports/multiverse amd64 Packages [671 B]
+#10 4.700 Get:16 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-security/main amd64 Packages [1315 kB]
+#10 4.799 Get:17 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-security/restricted amd64 Packages [1943 kB]
+#10 4.942 Get:18 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-security/universe amd64 Packages [1542 kB]
+#10 5.079 Get:19 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-security/multiverse amd64 Packages [50.0 kB]
+#10 5.104 Fetched 33.1 MB in 4s (8866 kB/s)
+#10 5.104 Reading package lists...
+#10 6.195 Reading package lists...
+#10 7.358 Building dependency tree...
+#10 7.638 Reading state information...
+#10 7.977 The following additional packages will be installed:
+#10 7.977   libexpat1 libpython3.12-minimal libpython3.12-stdlib libreadline8t64
+#10 7.978   libsqlite3-0 media-types netbase openssl python3.12-minimal readline-common
+#10 7.978   tzdata
+#10 7.982 Suggested packages:
+#10 7.982   python3.12-venv python3.12-doc binutils binfmt-support readline-doc
+#10 8.062 The following NEW packages will be installed:
+#10 8.063   ca-certificates libexpat1 libpython3.12-minimal libpython3.12-stdlib
+#10 8.065   libreadline8t64 libsqlite3-0 media-types netbase openssl python3.12
+#10 8.066   python3.12-minimal readline-common tzdata
+#10 8.455 0 upgraded, 13 newly installed, 0 to remove and 0 not upgraded.
+#10 8.455 Need to get 8368 kB of archives.
+#10 8.455 After this operation, 30.0 MB of additional disk space will be used.
+#10 8.455 Get:1 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-updates/main amd64 libpython3.12-minimal amd64 3.12.3-1ubuntu0.17 [839 kB]
+#10 8.947 Get:2 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-updates/main amd64 libexpat1 amd64 2.6.1-2ubuntu0.6 [98.9 kB]
+#10 9.071 Get:3 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-updates/main amd64 python3.12-minimal amd64 3.12.3-1ubuntu0.17 [2335 kB]
+#10 9.411 Get:4 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-updates/main amd64 openssl amd64 3.0.13-0ubuntu3.16 [1004 kB]
+#10 9.562 Get:5 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-updates/main amd64 ca-certificates all 20260601~24.04.1 [139 kB]
+#10 9.660 Get:6 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble/main amd64 media-types all 10.1.0 [27.5 kB]
+#10 9.851 Get:7 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble/main amd64 netbase all 6.4 [13.1 kB]
+#10 9.996 Get:8 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-updates/main amd64 tzdata all 2026c-0ubuntu0.24.04.1 [280 kB]
+#10 10.22 Get:9 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble/main amd64 readline-common all 8.2-4build1 [56.5 kB]
+#10 10.39 Get:10 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble/main amd64 libreadline8t64 amd64 8.2-4build1 [153 kB]
+#10 10.55 Get:11 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-updates/main amd64 libsqlite3-0 amd64 3.45.1-1ubuntu2.8 [702 kB]
+#10 10.66 Get:12 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-updates/main amd64 libpython3.12-stdlib amd64 3.12.3-1ubuntu0.17 [2071 kB]
+#10 10.81 Get:13 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-updates/main amd64 python3.12 amd64 3.12.3-1ubuntu0.17 [651 kB]
+#10 11.06 debconf: delaying package configuration, since apt-utils is not installed
+#10 11.11 Fetched 8368 kB in 3s (3038 kB/s)
+#10 11.16 Selecting previously unselected package libpython3.12-minimal:amd64.
+#10 11.16 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 4381 files and directories currently installed.)
+#10 11.20 Preparing to unpack .../00-libpython3.12-minimal_3.12.3-1ubuntu0.17_amd64.deb ...
+#10 11.20 Unpacking libpython3.12-minimal:amd64 (3.12.3-1ubuntu0.17) ...
+#10 11.35 Selecting previously unselected package libexpat1:amd64.
+#10 11.35 Preparing to unpack .../01-libexpat1_2.6.1-2ubuntu0.6_amd64.deb ...
+#10 11.37 Unpacking libexpat1:amd64 (2.6.1-2ubuntu0.6) ...
+#10 11.42 Selecting previously unselected package python3.12-minimal.
+#10 11.42 Preparing to unpack .../02-python3.12-minimal_3.12.3-1ubuntu0.17_amd64.deb ...
+#10 11.43 Unpacking python3.12-minimal (3.12.3-1ubuntu0.17) ...
+#10 11.55 Selecting previously unselected package openssl.
+#10 11.55 Preparing to unpack .../03-openssl_3.0.13-0ubuntu3.16_amd64.deb ...
+#10 11.56 Unpacking openssl (3.0.13-0ubuntu3.16) ...
+#10 11.65 Selecting previously unselected package ca-certificates.
+#10 11.65 Preparing to unpack .../04-ca-certificates_20260601~24.04.1_all.deb ...
+#10 11.65 Unpacking ca-certificates (20260601~24.04.1) ...
+#10 11.74 Selecting previously unselected package media-types.
+#10 11.74 Preparing to unpack .../05-media-types_10.1.0_all.deb ...
+#10 11.75 Unpacking media-types (10.1.0) ...
+#10 11.79 Selecting previously unselected package netbase.
+#10 11.80 Preparing to unpack .../06-netbase_6.4_all.deb ...
+#10 11.80 Unpacking netbase (6.4) ...
+#10 11.85 Selecting previously unselected package tzdata.
+#10 11.86 Preparing to unpack .../07-tzdata_2026c-0ubuntu0.24.04.1_all.deb ...
+#10 11.86 Unpacking tzdata (2026c-0ubuntu0.24.04.1) ...
+#10 12.01 Selecting previously unselected package readline-common.
+#10 12.01 Preparing to unpack .../08-readline-common_8.2-4build1_all.deb ...
+#10 12.02 Unpacking readline-common (8.2-4build1) ...
+#10 12.07 Selecting previously unselected package libreadline8t64:amd64.
+#10 12.07 Preparing to unpack .../09-libreadline8t64_8.2-4build1_amd64.deb ...
+#10 12.09 Adding 'diversion of /lib/x86_64-linux-gnu/libhistory.so.8 to /lib/x86_64-linux-gnu/libhistory.so.8.usr-is-merged by libreadline8t64'
+#10 12.10 Adding 'diversion of /lib/x86_64-linux-gnu/libhistory.so.8.2 to /lib/x86_64-linux-gnu/libhistory.so.8.2.usr-is-merged by libreadline8t64'
+#10 12.10 Adding 'diversion of /lib/x86_64-linux-gnu/libreadline.so.8 to /lib/x86_64-linux-gnu/libreadline.so.8.usr-is-merged by libreadline8t64'
+#10 12.12 Adding 'diversion of /lib/x86_64-linux-gnu/libreadline.so.8.2 to /lib/x86_64-linux-gnu/libreadline.so.8.2.usr-is-merged by libreadline8t64'
+#10 12.13 Unpacking libreadline8t64:amd64 (8.2-4build1) ...
+#10 12.18 Selecting previously unselected package libsqlite3-0:amd64.
+#10 12.18 Preparing to unpack .../10-libsqlite3-0_3.45.1-1ubuntu2.8_amd64.deb ...
+#10 12.18 Unpacking libsqlite3-0:amd64 (3.45.1-1ubuntu2.8) ...
+#10 12.24 Selecting previously unselected package libpython3.12-stdlib:amd64.
+#10 12.24 Preparing to unpack .../11-libpython3.12-stdlib_3.12.3-1ubuntu0.17_amd64.deb ...
+#10 12.24 Unpacking libpython3.12-stdlib:amd64 (3.12.3-1ubuntu0.17) ...
+#10 12.45 Selecting previously unselected package python3.12.
+#10 12.45 Preparing to unpack .../12-python3.12_3.12.3-1ubuntu0.17_amd64.deb ...
+#10 12.45 Unpacking python3.12 (3.12.3-1ubuntu0.17) ...
+#10 12.51 Setting up libexpat1:amd64 (2.6.1-2ubuntu0.6) ...
+#10 12.52 Setting up media-types (10.1.0) ...
+#10 12.54 Setting up libsqlite3-0:amd64 (3.45.1-1ubuntu2.8) ...
+#10 12.56 Setting up libpython3.12-minimal:amd64 (3.12.3-1ubuntu0.17) ...
+#10 12.58 Setting up tzdata (2026c-0ubuntu0.24.04.1) ...
+#10 12.69 debconf: unable to initialize frontend: Dialog
+#10 12.69 debconf: (TERM is not set, so the dialog frontend is not usable.)
+#10 12.69 debconf: falling back to frontend: Readline
+#10 12.69 debconf: unable to initialize frontend: Readline
+#10 12.69 debconf: (Can't locate Term/ReadLine.pm in @INC (you may need to install the Term::ReadLine module) (@INC entries checked: /etc/perl /usr/local/lib/x86_64-linux-gnu/perl/5.38.2 /usr/local/share/perl/5.38.2 /usr/lib/x86_64-linux-gnu/perl5/5.38 /usr/share/perl5 /usr/lib/x86_64-linux-gnu/perl-base /usr/lib/x86_64-linux-gnu/perl/5.38 /usr/share/perl/5.38 /usr/local/lib/site_perl) at /usr/share/perl5/Debconf/FrontEnd/Readline.pm line 8.)
+#10 12.69 debconf: falling back to frontend: Teletype
+#10 12.73 Configuring tzdata
+#10 12.73 ------------------
+#10 12.73 
+#10 12.73 Please select the geographic area in which you live. Subsequent configuration
+#10 12.73 questions will narrow this down by presenting a list of cities, representing
+#10 12.73 the time zones in which they are located.
+#10 12.73 
+#10 12.73   1. Africa      4. Arctic    7. Australia  10. Pacific
+#10 12.73   2. America     5. Asia      8. Europe     11. Etc
+#10 12.73   3. Antarctica  6. Atlantic  9. Indian     12. Legacy
+#10 12.73 Geographic area: 
+#10 12.73 Use of uninitialized value $_[1] in join or string at /usr/share/perl5/Debconf/DbDriver/Stack.pm line 112.
+#10 12.74 
+#10 12.74 Current default time zone: '/UTC'
+#10 12.76 Local time is now:      Wed Oct 28 08:24:54 UTC 2026.
+#10 12.76 Universal Time is now:  Wed Oct 28 08:24:54 UTC 2026.
+#10 12.76 Run 'dpkg-reconfigure tzdata' if you wish to change it.
+#10 12.76 
+#10 12.76 Use of uninitialized value $val in substitution (s///) at /usr/share/perl5/Debconf/Format/822.pm line 84, <GEN6> line 4.
+#10 12.76 Use of uninitialized value $val in concatenation (.) or string at /usr/share/perl5/Debconf/Format/822.pm line 85, <GEN6> line 4.
+#10 12.78 Setting up netbase (6.4) ...
+#10 12.82 Setting up openssl (3.0.13-0ubuntu3.16) ...
+#10 12.83 Setting up readline-common (8.2-4build1) ...
+#10 12.85 Setting up python3.12-minimal (3.12.3-1ubuntu0.17) ...
+#10 13.78 Setting up ca-certificates (20260601~24.04.1) ...
+#10 13.87 debconf: unable to initialize frontend: Dialog
+#10 13.87 debconf: (TERM is not set, so the dialog frontend is not usable.)
+#10 13.87 debconf: falling back to frontend: Readline
+#10 13.87 debconf: unable to initialize frontend: Readline
+#10 13.87 debconf: (Can't locate Term/ReadLine.pm in @INC (you may need to install the Term::ReadLine module) (@INC entries checked: /etc/perl /usr/local/lib/x86_64-linux-gnu/perl/5.38.2 /usr/local/share/perl/5.38.2 /usr/lib/x86_64-linux-gnu/perl5/5.38 /usr/share/perl5 /usr/lib/x86_64-linux-gnu/perl-base /usr/lib/x86_64-linux-gnu/perl/5.38 /usr/share/perl/5.38 /usr/local/lib/site_perl) at /usr/share/perl5/Debconf/FrontEnd/Readline.pm line 8.)
+#10 13.87 debconf: falling back to frontend: Teletype
+#10 14.45 Updating certificates in /etc/ssl/certs...
+#10 15.33 rehash: warning: skipping ca-certificates.crt,it does not contain exactly one certificate or CRL
+#10 15.34 121 added, 0 removed; done.
+#10 15.39 Setting up libreadline8t64:amd64 (8.2-4build1) ...
+#10 15.40 Setting up libpython3.12-stdlib:amd64 (3.12.3-1ubuntu0.17) ...
+#10 15.41 Setting up python3.12 (3.12.3-1ubuntu0.17) ...
+#10 16.57 Processing triggers for libc-bin (2.39-0ubuntu8.9) ...
+#10 16.63 Processing triggers for ca-certificates (20260601~24.04.1) ...
+#10 16.64 Updating certificates in /etc/ssl/certs...
+#10 17.27 0 added, 0 removed; done.
+#10 17.27 Running hooks in /etc/ca-certificates/update.d...
+#10 17.27 done.
+#10 DONE 17.5s
+
+#11 [build 1/6] RUN apt-get update     && apt-get install -y --no-install-recommends python3.12-venv=3.12.3-1ubuntu0.17 nodejs     && rm -rf /var/lib/apt/lists/*     && python3.12 -m venv /opt/build
+#11 0.935 Get:1 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble InRelease [256 kB]
+#11 1.352 Get:2 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-updates InRelease [126 kB]
+#11 1.550 Get:3 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-backports InRelease [126 kB]
+#11 1.753 Get:4 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-security InRelease [126 kB]
+#11 1.960 Get:5 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble/main amd64 Packages [1808 kB]
+#11 2.285 Get:6 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble/universe amd64 Packages [19.3 MB]
+#11 3.318 Get:7 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble/restricted amd64 Packages [117 kB]
+#11 3.576 Get:8 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble/multiverse amd64 Packages [331 kB]
+#11 3.769 Get:9 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-updates/restricted amd64 Packages [2098 kB]
+#11 3.981 Get:10 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-updates/universe amd64 Packages [2162 kB]
+#11 4.149 Get:11 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-updates/multiverse amd64 Packages [56.2 kB]
+#11 4.299 Get:12 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-updates/main amd64 Packages [1661 kB]
+#11 4.415 Get:13 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-backports/universe amd64 Packages [36.0 kB]
+#11 4.515 Get:14 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-backports/multiverse amd64 Packages [671 B]
+#11 4.634 Get:15 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-backports/main amd64 Packages [49.0 kB]
+#11 4.901 Get:16 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-security/main amd64 Packages [1315 kB]
+#11 5.061 Get:17 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-security/multiverse amd64 Packages [50.0 kB]
+#11 5.725 Get:18 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-security/universe amd64 Packages [1542 kB]
+#11 5.874 Get:19 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-security/restricted amd64 Packages [1943 kB]
+#11 6.024 Fetched 33.1 MB in 6s (5836 kB/s)
+#11 6.024 Reading package lists...
+#11 7.038 Reading package lists...
+#11 8.227 Building dependency tree...
+#11 8.468 Reading state information...
+#11 8.836 The following additional packages will be installed:
+#11 8.837   libbrotli1 libcares2 libicu74 libnghttp2-14 libnode109 libuv1t64 node-acorn
+#11 8.838   node-busboy node-cjs-module-lexer node-undici node-xtend python3-pip-whl
+#11 8.838   python3-setuptools-whl
+#11 8.840 Suggested packages:
+#11 8.840   npm
+#11 8.840 Recommended packages:
+#11 8.840   nodejs-doc
+#11 8.970 The following NEW packages will be installed:
+#11 8.972   libbrotli1 libcares2 libicu74 libnghttp2-14 libnode109 libuv1t64 node-acorn
+#11 8.973   node-busboy node-cjs-module-lexer node-undici node-xtend nodejs
+#11 8.973   python3-pip-whl python3-setuptools-whl python3.12-venv
+#11 9.538 0 upgraded, 15 newly installed, 0 to remove and 0 not upgraded.
+#11 9.538 Need to get 26.3 MB of archives.
+#11 9.538 After this operation, 95.8 MB of additional disk space will be used.
+#11 9.538 Get:1 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-updates/main amd64 libicu74 amd64 74.2-1ubuntu3.1 [10.9 MB]
+#11 10.36 Get:2 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-updates/main amd64 libnghttp2-14 amd64 1.59.0-1ubuntu0.4 [74.6 kB]
+#11 10.46 Get:3 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble/main amd64 libuv1t64 amd64 1.48.0-1.1build1 [97.3 kB]
+#11 10.55 Get:4 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble/main amd64 libbrotli1 amd64 1.1.0-2build2 [331 kB]
+#11 10.77 Get:5 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble/main amd64 libcares2 amd64 1.27.0-1.0ubuntu1 [73.7 kB]
+#11 10.86 Get:6 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble/universe amd64 node-xtend all 4.0.2-3 [3902 B]
+#11 10.98 Get:7 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble/universe amd64 nodejs amd64 18.19.1+dfsg-6ubuntu5 [306 kB]
+#11 11.20 Get:8 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble/universe amd64 node-acorn all 8.8.1+ds+~cs25.17.7-2 [115 kB]
+#11 11.39 Get:9 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble/universe amd64 node-cjs-module-lexer all 1.2.3+dfsg-1 [32.1 kB]
+#11 11.53 Get:10 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble/universe amd64 node-busboy all 1.6.0+~cs2.6.0-2 [17.3 kB]
+#11 11.67 Get:11 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble/universe amd64 node-undici all 5.26.3+dfsg1+~cs23.10.12-2 [325 kB]
+#11 11.79 Get:12 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble/universe amd64 libnode109 amd64 18.19.1+dfsg-6ubuntu5 [11.6 MB]
+#11 12.27 Get:13 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-updates/universe amd64 python3-pip-whl all 24.0+dfsg-1ubuntu1.3 [1707 kB]
+#11 12.32 Get:14 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-updates/universe amd64 python3-setuptools-whl all 68.1.2-2ubuntu1.2 [716 kB]
+#11 12.41 Get:15 https://snapshot.ubuntu.com/ubuntu/20261001T000000Z noble-updates/universe amd64 python3.12-venv amd64 3.12.3-1ubuntu0.17 [5684 B]
+#11 12.57 debconf: delaying package configuration, since apt-utils is not installed
+#11 12.64 Fetched 26.3 MB in 3s (7770 kB/s)
+#11 12.67 Selecting previously unselected package libicu74:amd64.
+#11 12.67 (Reading database ... (Reading database ... 5%(Reading database ... 10%(Reading database ... 15%(Reading database ... 20%(Reading database ... 25%(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 6137 files and directories currently installed.)
+#11 12.69 Preparing to unpack .../00-libicu74_74.2-1ubuntu3.1_amd64.deb ...
+#11 12.70 Unpacking libicu74:amd64 (74.2-1ubuntu3.1) ...
+#11 13.01 Selecting previously unselected package libnghttp2-14:amd64.
+#11 13.01 Preparing to unpack .../01-libnghttp2-14_1.59.0-1ubuntu0.4_amd64.deb ...
+#11 13.01 Unpacking libnghttp2-14:amd64 (1.59.0-1ubuntu0.4) ...
+#11 13.06 Selecting previously unselected package libuv1t64:amd64.
+#11 13.06 Preparing to unpack .../02-libuv1t64_1.48.0-1.1build1_amd64.deb ...
+#11 13.07 Unpacking libuv1t64:amd64 (1.48.0-1.1build1) ...
+#11 13.11 Selecting previously unselected package libbrotli1:amd64.
+#11 13.11 Preparing to unpack .../03-libbrotli1_1.1.0-2build2_amd64.deb ...
+#11 13.12 Unpacking libbrotli1:amd64 (1.1.0-2build2) ...
+#11 13.17 Selecting previously unselected package libcares2:amd64.
+#11 13.17 Preparing to unpack .../04-libcares2_1.27.0-1.0ubuntu1_amd64.deb ...
+#11 13.17 Unpacking libcares2:amd64 (1.27.0-1.0ubuntu1) ...
+#11 13.21 Selecting previously unselected package node-xtend.
+#11 13.21 Preparing to unpack .../05-node-xtend_4.0.2-3_all.deb ...
+#11 13.21 Unpacking node-xtend (4.0.2-3) ...
+#11 13.26 Selecting previously unselected package nodejs.
+#11 13.26 Preparing to unpack .../06-nodejs_18.19.1+dfsg-6ubuntu5_amd64.deb ...
+#11 13.26 Unpacking nodejs (18.19.1+dfsg-6ubuntu5) ...
+#11 13.36 Selecting previously unselected package node-acorn.
+#11 13.36 Preparing to unpack .../07-node-acorn_8.8.1+ds+~cs25.17.7-2_all.deb ...
+#11 13.36 Unpacking node-acorn (8.8.1+ds+~cs25.17.7-2) ...
+#11 13.45 Selecting previously unselected package node-cjs-module-lexer.
+#11 13.45 Preparing to unpack .../08-node-cjs-module-lexer_1.2.3+dfsg-1_all.deb ...
+#11 13.46 Unpacking node-cjs-module-lexer (1.2.3+dfsg-1) ...
+#11 13.49 Selecting previously unselected package node-busboy.
+#11 13.50 Preparing to unpack .../09-node-busboy_1.6.0+~cs2.6.0-2_all.deb ...
+#11 13.50 Unpacking node-busboy (1.6.0+~cs2.6.0-2) ...
+#11 13.54 Selecting previously unselected package node-undici.
+#11 13.55 Preparing to unpack .../10-node-undici_5.26.3+dfsg1+~cs23.10.12-2_all.deb ...
+#11 13.55 Unpacking node-undici (5.26.3+dfsg1+~cs23.10.12-2) ...
+#11 13.65 Selecting previously unselected package libnode109:amd64.
+#11 13.65 Preparing to unpack .../11-libnode109_18.19.1+dfsg-6ubuntu5_amd64.deb ...
+#11 13.65 Unpacking libnode109:amd64 (18.19.1+dfsg-6ubuntu5) ...
+#11 14.01 Selecting previously unselected package python3-pip-whl.
+#11 14.01 Preparing to unpack .../12-python3-pip-whl_24.0+dfsg-1ubuntu1.3_all.deb ...
+#11 14.02 Unpacking python3-pip-whl (24.0+dfsg-1ubuntu1.3) ...
+#11 14.06 Selecting previously unselected package python3-setuptools-whl.
+#11 14.06 Preparing to unpack .../13-python3-setuptools-whl_68.1.2-2ubuntu1.2_all.deb ...
+#11 14.07 Unpacking python3-setuptools-whl (68.1.2-2ubuntu1.2) ...
+#11 14.12 Selecting previously unselected package python3.12-venv.
+#11 14.12 Preparing to unpack .../14-python3.12-venv_3.12.3-1ubuntu0.17_amd64.deb ...
+#11 14.12 Unpacking python3.12-venv (3.12.3-1ubuntu0.17) ...
+#11 14.18 Setting up python3-setuptools-whl (68.1.2-2ubuntu1.2) ...
+#11 14.19 Setting up python3-pip-whl (24.0+dfsg-1ubuntu1.3) ...
+#11 14.21 Setting up libbrotli1:amd64 (1.1.0-2build2) ...
+#11 14.22 Setting up libuv1t64:amd64 (1.48.0-1.1build1) ...
+#11 14.24 Setting up libnghttp2-14:amd64 (1.59.0-1ubuntu0.4) ...
+#11 14.25 Setting up node-cjs-module-lexer (1.2.3+dfsg-1) ...
+#11 14.26 Setting up libcares2:amd64 (1.27.0-1.0ubuntu1) ...
+#11 14.28 Setting up libicu74:amd64 (74.2-1ubuntu3.1) ...
+#11 14.29 Setting up node-xtend (4.0.2-3) ...
+#11 14.30 Setting up node-busboy (1.6.0+~cs2.6.0-2) ...
+#11 14.32 Setting up python3.12-venv (3.12.3-1ubuntu0.17) ...
+#11 14.40 Setting up node-undici (5.26.3+dfsg1+~cs23.10.12-2) ...
+#11 14.41 Setting up node-acorn (8.8.1+ds+~cs25.17.7-2) ...
+#11 14.42 Setting up libnode109:amd64 (18.19.1+dfsg-6ubuntu5) ...
+#11 14.44 Setting up nodejs (18.19.1+dfsg-6ubuntu5) ...
+#11 14.46 update-alternatives: using /usr/bin/nodejs to provide /usr/bin/js (js) in auto mode
+#11 14.46 update-alternatives: warning: skip creation of /usr/share/man/man1/js.1.gz because associated file /usr/share/man/man1/nodejs.1.gz (of link group js) doesn't exist
+#11 14.47 Processing triggers for libc-bin (2.39-0ubuntu8.9) ...
+#11 DONE 18.3s
+
+#12 [build 2/6] COPY requirements/ /locks/
+#12 DONE 0.1s
+
+#13 [build 3/6] RUN python -m pip download --require-hashes --only-binary=:all:       -r /locks/runtime-py312.lock -r /locks/build-py312.lock -d /wheelhouse     && python -m pip install --no-index --find-links=/wheelhouse --require-hashes       -r /locks/runtime-py312.lock -r /locks/build-py312.lock
+#13 0.873 Collecting aiohappyeyeballs==2.7.1 (from -r /locks/runtime-py312.lock (line 3))
+#13 1.214   Downloading aiohappyeyeballs-2.7.1-py3-none-any.whl (15 kB)
+#13 1.954 Collecting aiohttp==3.14.1 (from -r /locks/runtime-py312.lock (line 5))
+#13 2.033   Downloading aiohttp-3.14.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (1.8 MB)
+#13 2.203      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 11.9 MB/s eta 0:00:00
+#13 2.245 Collecting aiosignal==1.4.0 (from -r /locks/runtime-py312.lock (line 8))
+#13 2.268   Downloading aiosignal-1.4.0-py3-none-any.whl (7.5 kB)
+#13 2.309 Collecting annotated-doc==0.0.4 (from -r /locks/runtime-py312.lock (line 10))
+#13 2.338   Downloading annotated_doc-0.0.4-py3-none-any.whl (5.3 kB)
+#13 2.386 Collecting annotated-types==0.7.0 (from -r /locks/runtime-py312.lock (line 12))
+#13 2.407   Downloading annotated_types-0.7.0-py3-none-any.whl (13 kB)
+#13 2.457 Collecting anyio==4.14.2 (from -r /locks/runtime-py312.lock (line 14))
+#13 2.481   Downloading anyio-4.14.2-py3-none-any.whl (125 kB)
+#13 2.500      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 125.8/125.8 kB 7.7 MB/s eta 0:00:00
+#13 2.544 Collecting attrs==26.1.0 (from -r /locks/runtime-py312.lock (line 16))
+#13 2.563   Downloading attrs-26.1.0-py3-none-any.whl (67 kB)
+#13 2.576      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 67.5/67.5 kB 5.7 MB/s eta 0:00:00
+#13 2.659 Collecting av==17.0.1 (from -r /locks/runtime-py312.lock (line 18))
+#13 2.684   Downloading av-17.0.1-cp311-abi3-manylinux_2_28_x86_64.whl (36.3 MB)
+#13 4.141      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 36.3/36.3 MB 21.0 MB/s eta 0:00:00
+#13 4.268 Collecting certifi==2026.6.17 (from -r /locks/runtime-py312.lock (line 21))
+#13 4.300   Downloading certifi-2026.6.17-py3-none-any.whl (133 kB)
+#13 4.317      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 133.3/133.3 kB 9.2 MB/s eta 0:00:00
+#13 4.417 Collecting click==8.4.2 (from -r /locks/runtime-py312.lock (line 23))
+#13 4.479   Downloading click-8.4.2-py3-none-any.whl (119 kB)
+#13 4.496      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 119.2/119.2 kB 7.9 MB/s eta 0:00:00
+#13 4.563 Collecting edge-tts==7.3.1 (from -r /locks/runtime-py312.lock (line 25))
+#13 4.608   Downloading edge_tts-7.3.1-py3-none-any.whl (38 kB)
+#13 4.711 Collecting fastapi==0.139.2 (from -r /locks/runtime-py312.lock (line 27))
+#13 4.815   Downloading fastapi-0.139.2-py3-none-any.whl (130 kB)
+#13 4.852      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 130.2/130.2 kB 3.6 MB/s eta 0:00:00
+#13 5.019 Collecting frozenlist==1.8.0 (from -r /locks/runtime-py312.lock (line 29))
+#13 5.117   Downloading frozenlist-1.8.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (242 kB)
+#13 5.147      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 242.4/242.4 kB 8.2 MB/s eta 0:00:00
+#13 5.228 Collecting h11==0.16.0 (from -r /locks/runtime-py312.lock (line 33))
+#13 5.319   Downloading h11-0.16.0-py3-none-any.whl (37 kB)
+#13 5.456 Collecting httpcore==1.0.9 (from -r /locks/runtime-py312.lock (line 35))
+#13 5.526   Downloading httpcore-1.0.9-py3-none-any.whl (78 kB)
+#13 5.548      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 78.8/78.8 kB 3.6 MB/s eta 0:00:00
+#13 5.667 Collecting httpx==0.28.1 (from -r /locks/runtime-py312.lock (line 37))
+#13 5.694   Downloading httpx-0.28.1-py3-none-any.whl (73 kB)
+#13 5.714      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 73.5/73.5 kB 4.0 MB/s eta 0:00:00
+#13 5.756 Collecting idna==3.18 (from -r /locks/runtime-py312.lock (line 39))
+#13 5.837   Downloading idna-3.18-py3-none-any.whl (65 kB)
+#13 5.851      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 65.5/65.5 kB 4.7 MB/s eta 0:00:00
+#13 6.282 Collecting multidict==6.7.1 (from -r /locks/runtime-py312.lock (line 41))
+#13 6.301   Downloading multidict-6.7.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (256 kB)
+#13 6.345      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 256.3/256.3 kB 6.0 MB/s eta 0:00:00
+#13 6.457 Collecting propcache==0.5.2 (from -r /locks/runtime-py312.lock (line 45))
+#13 6.486   Downloading propcache-0.5.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (61 kB)
+#13 6.499      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 61.6/61.6 kB 5.0 MB/s eta 0:00:00
+#13 6.712 Collecting pydantic==2.13.4 (from -r /locks/runtime-py312.lock (line 49))
+#13 6.734   Downloading pydantic-2.13.4-py3-none-any.whl (472 kB)
+#13 6.769      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 472.3/472.3 kB 14.7 MB/s eta 0:00:00
+#13 7.880 Collecting pydantic-core==2.46.4 (from -r /locks/runtime-py312.lock (line 51))
+#13 7.903   Downloading pydantic_core-2.46.4-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (2.1 MB)
+#13 8.009      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2.1/2.1 MB 23.6 MB/s eta 0:00:00
+#13 8.068 Collecting starlette==1.3.1 (from -r /locks/runtime-py312.lock (line 54))
+#13 8.091   Downloading starlette-1.3.1-py3-none-any.whl (73 kB)
+#13 8.106      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 73.6/73.6 kB 6.0 MB/s eta 0:00:00
+#13 8.137 Collecting tabulate==0.10.0 (from -r /locks/runtime-py312.lock (line 56))
+#13 8.162   Downloading tabulate-0.10.0-py3-none-any.whl (39 kB)
+#13 8.215 Collecting typing-extensions==4.16.0 (from -r /locks/runtime-py312.lock (line 58))
+#13 8.240   Downloading typing_extensions-4.16.0-py3-none-any.whl (45 kB)
+#13 8.255      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 45.6/45.6 kB 3.0 MB/s eta 0:00:00
+#13 8.290 Collecting typing-inspection==0.4.2 (from -r /locks/runtime-py312.lock (line 60))
+#13 8.313   Downloading typing_inspection-0.4.2-py3-none-any.whl (14 kB)
+#13 8.365 Collecting tzdata==2026.3 (from -r /locks/runtime-py312.lock (line 62))
+#13 8.384   Downloading tzdata-2026.3-py2.py3-none-any.whl (348 kB)
+#13 8.409      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 348.2/348.2 kB 15.3 MB/s eta 0:00:00
+#13 8.464 Collecting uvicorn==0.51.0 (from -r /locks/runtime-py312.lock (line 64))
+#13 8.488   Downloading uvicorn-0.51.0-py3-none-any.whl (73 kB)
+#13 8.502      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 73.2/73.2 kB 5.4 MB/s eta 0:00:00
+#13 8.844 Collecting yarl==1.24.2 (from -r /locks/runtime-py312.lock (line 66))
+#13 8.872   Downloading yarl-1.24.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (105 kB)
+#13 8.909      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 105.6/105.6 kB 2.8 MB/s eta 0:00:00
+#13 8.953 Collecting build==1.5.0 (from -r /locks/build-py312.lock (line 3))
+#13 8.977   Downloading build-1.5.0-py3-none-any.whl (26 kB)
+#13 9.020 Collecting iniconfig==2.3.0 (from -r /locks/build-py312.lock (line 5))
+#13 9.039   Downloading iniconfig-2.3.0-py3-none-any.whl (7.5 kB)
+#13 9.092 Collecting packaging==26.2 (from -r /locks/build-py312.lock (line 7))
+#13 9.116   Downloading packaging-26.2-py3-none-any.whl (100 kB)
+#13 9.132      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100.2/100.2 kB 7.8 MB/s eta 0:00:00
+#13 9.194 Collecting pip==26.2.1 (from -r /locks/build-py312.lock (line 9))
+#13 9.216   Downloading pip-26.2.1-py3-none-any.whl (1.8 MB)
+#13 9.311      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.8/1.8 MB 19.4 MB/s eta 0:00:00
+#13 9.354 Collecting pluggy==1.6.0 (from -r /locks/build-py312.lock (line 11))
+#13 9.376   Downloading pluggy-1.6.0-py3-none-any.whl (20 kB)
+#13 9.438 Collecting pygments==2.20.0 (from -r /locks/build-py312.lock (line 13))
+#13 9.461   Downloading pygments-2.20.0-py3-none-any.whl (1.2 MB)
+#13 9.532      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 1.2/1.2 MB 17.7 MB/s eta 0:00:00
+#13 9.569 Collecting pyproject-hooks==1.2.0 (from -r /locks/build-py312.lock (line 15))
+#13 9.589   Downloading pyproject_hooks-1.2.0-py3-none-any.whl (10 kB)
+#13 9.660 Collecting pytest==8.4.2 (from -r /locks/build-py312.lock (line 17))
+#13 9.681   Downloading pytest-8.4.2-py3-none-any.whl (365 kB)
+#13 9.705      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 365.8/365.8 kB 17.0 MB/s eta 0:00:00
+#13 9.856 Collecting setuptools==84.2.0 (from -r /locks/build-py312.lock (line 19))
+#13 9.880   Downloading setuptools-84.2.0-py3-none-any.whl (875 kB)
+#13 9.958      ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 875.8/875.8 kB 11.6 MB/s eta 0:00:00
+#13 10.10 Collecting wheel==0.46.3 (from -r /locks/build-py312.lock (line 21))
+#13 10.12   Downloading wheel-0.46.3-py3-none-any.whl (30 kB)
+#13 10.49 Saved /wheelhouse/aiohappyeyeballs-2.7.1-py3-none-any.whl
+#13 10.50 Saved /wheelhouse/aiohttp-3.14.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
+#13 10.50 Saved /wheelhouse/aiosignal-1.4.0-py3-none-any.whl
+#13 10.50 Saved /wheelhouse/annotated_doc-0.0.4-py3-none-any.whl
+#13 10.50 Saved /wheelhouse/annotated_types-0.7.0-py3-none-any.whl
+#13 10.50 Saved /wheelhouse/anyio-4.14.2-py3-none-any.whl
+#13 10.50 Saved /wheelhouse/attrs-26.1.0-py3-none-any.whl
+#13 10.57 Saved /wheelhouse/av-17.0.1-cp311-abi3-manylinux_2_28_x86_64.whl
+#13 10.57 Saved /wheelhouse/certifi-2026.6.17-py3-none-any.whl
+#13 10.57 Saved /wheelhouse/click-8.4.2-py3-none-any.whl
+#13 10.57 Saved /wheelhouse/edge_tts-7.3.1-py3-none-any.whl
+#13 10.58 Saved /wheelhouse/fastapi-0.139.2-py3-none-any.whl
+#13 10.58 Saved /wheelhouse/frozenlist-1.8.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl
+#13 10.58 Saved /wheelhouse/h11-0.16.0-py3-none-any.whl
+#13 10.58 Saved /wheelhouse/httpcore-1.0.9-py3-none-any.whl
+#13 10.58 Saved /wheelhouse/httpx-0.28.1-py3-none-any.whl
+#13 10.58 Saved /wheelhouse/idna-3.18-py3-none-any.whl
+#13 10.58 Saved /wheelhouse/multidict-6.7.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
+#13 10.58 Saved /wheelhouse/propcache-0.5.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
+#13 10.58 Saved /wheelhouse/pydantic-2.13.4-py3-none-any.whl
+#13 10.59 Saved /wheelhouse/pydantic_core-2.46.4-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
+#13 10.59 Saved /wheelhouse/starlette-1.3.1-py3-none-any.whl
+#13 10.59 Saved /wheelhouse/tabulate-0.10.0-py3-none-any.whl
+#13 10.59 Saved /wheelhouse/typing_extensions-4.16.0-py3-none-any.whl
+#13 10.59 Saved /wheelhouse/typing_inspection-0.4.2-py3-none-any.whl
+#13 10.59 Saved /wheelhouse/tzdata-2026.3-py2.py3-none-any.whl
+#13 10.59 Saved /wheelhouse/uvicorn-0.51.0-py3-none-any.whl
+#13 10.60 Saved /wheelhouse/yarl-1.24.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
+#13 10.60 Saved /wheelhouse/build-1.5.0-py3-none-any.whl
+#13 10.60 Saved /wheelhouse/iniconfig-2.3.0-py3-none-any.whl
+#13 10.60 Saved /wheelhouse/packaging-26.2-py3-none-any.whl
+#13 10.60 Saved /wheelhouse/pip-26.2.1-py3-none-any.whl
+#13 10.60 Saved /wheelhouse/pluggy-1.6.0-py3-none-any.whl
+#13 10.60 Saved /wheelhouse/pygments-2.20.0-py3-none-any.whl
+#13 10.60 Saved /wheelhouse/pyproject_hooks-1.2.0-py3-none-any.whl
+#13 10.61 Saved /wheelhouse/pytest-8.4.2-py3-none-any.whl
+#13 10.61 Saved /wheelhouse/setuptools-84.2.0-py3-none-any.whl
+#13 10.61 Saved /wheelhouse/wheel-0.46.3-py3-none-any.whl
+#13 10.86 Successfully downloaded aiohappyeyeballs aiohttp aiosignal annotated-doc annotated-types anyio attrs av certifi click edge-tts fastapi frozenlist h11 httpcore httpx idna multidict propcache pydantic pydantic-core starlette tabulate typing-extensions typing-inspection tzdata uvicorn yarl build iniconfig packaging pip pluggy pygments pyproject-hooks pytest setuptools wheel
+#13 12.15 Looking in links: /wheelhouse
+#13 12.17 Processing /wheelhouse/aiohappyeyeballs-2.7.1-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 3))
+#13 12.17 Processing /wheelhouse/aiohttp-3.14.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (from -r /locks/runtime-py312.lock (line 5))
+#13 12.19 Processing /wheelhouse/aiosignal-1.4.0-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 8))
+#13 12.20 Processing /wheelhouse/annotated_doc-0.0.4-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 10))
+#13 12.20 Processing /wheelhouse/annotated_types-0.7.0-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 12))
+#13 12.21 Processing /wheelhouse/anyio-4.14.2-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 14))
+#13 12.22 Processing /wheelhouse/attrs-26.1.0-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 16))
+#13 12.23 Processing /wheelhouse/av-17.0.1-cp311-abi3-manylinux_2_28_x86_64.whl (from -r /locks/runtime-py312.lock (line 18))
+#13 12.30 Processing /wheelhouse/certifi-2026.6.17-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 21))
+#13 12.30 Processing /wheelhouse/click-8.4.2-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 23))
+#13 12.31 Processing /wheelhouse/edge_tts-7.3.1-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 25))
+#13 12.32 Processing /wheelhouse/fastapi-0.139.2-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 27))
+#13 12.33 Processing /wheelhouse/frozenlist-1.8.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (from -r /locks/runtime-py312.lock (line 29))
+#13 12.34 Processing /wheelhouse/h11-0.16.0-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 33))
+#13 12.34 Processing /wheelhouse/httpcore-1.0.9-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 35))
+#13 12.35 Processing /wheelhouse/httpx-0.28.1-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 37))
+#13 12.36 Processing /wheelhouse/idna-3.18-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 39))
+#13 12.37 Processing /wheelhouse/multidict-6.7.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (from -r /locks/runtime-py312.lock (line 41))
+#13 12.38 Processing /wheelhouse/propcache-0.5.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (from -r /locks/runtime-py312.lock (line 45))
+#13 12.38 Processing /wheelhouse/pydantic-2.13.4-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 49))
+#13 12.39 Processing /wheelhouse/pydantic_core-2.46.4-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (from -r /locks/runtime-py312.lock (line 51))
+#13 12.41 Processing /wheelhouse/starlette-1.3.1-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 54))
+#13 12.42 Processing /wheelhouse/tabulate-0.10.0-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 56))
+#13 12.43 Processing /wheelhouse/typing_extensions-4.16.0-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 58))
+#13 12.44 Processing /wheelhouse/typing_inspection-0.4.2-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 60))
+#13 12.45 Processing /wheelhouse/tzdata-2026.3-py2.py3-none-any.whl (from -r /locks/runtime-py312.lock (line 62))
+#13 12.46 Processing /wheelhouse/uvicorn-0.51.0-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 64))
+#13 12.47 Processing /wheelhouse/yarl-1.24.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (from -r /locks/runtime-py312.lock (line 66))
+#13 12.48 Processing /wheelhouse/build-1.5.0-py3-none-any.whl (from -r /locks/build-py312.lock (line 3))
+#13 12.49 Processing /wheelhouse/iniconfig-2.3.0-py3-none-any.whl (from -r /locks/build-py312.lock (line 5))
+#13 12.49 Processing /wheelhouse/packaging-26.2-py3-none-any.whl (from -r /locks/build-py312.lock (line 7))
+#13 12.50 Processing /wheelhouse/pip-26.2.1-py3-none-any.whl (from -r /locks/build-py312.lock (line 9))
+#13 12.52 Processing /wheelhouse/pluggy-1.6.0-py3-none-any.whl (from -r /locks/build-py312.lock (line 11))
+#13 12.52 Processing /wheelhouse/pygments-2.20.0-py3-none-any.whl (from -r /locks/build-py312.lock (line 13))
+#13 12.54 Processing /wheelhouse/pyproject_hooks-1.2.0-py3-none-any.whl (from -r /locks/build-py312.lock (line 15))
+#13 12.54 Processing /wheelhouse/pytest-8.4.2-py3-none-any.whl (from -r /locks/build-py312.lock (line 17))
+#13 12.55 Processing /wheelhouse/setuptools-84.2.0-py3-none-any.whl (from -r /locks/build-py312.lock (line 19))
+#13 12.56 Processing /wheelhouse/wheel-0.46.3-py3-none-any.whl (from -r /locks/build-py312.lock (line 21))
+#13 13.12 Installing collected packages: tzdata, typing-extensions, tabulate, setuptools, pyproject-hooks, pygments, propcache, pluggy, pip, packaging, multidict, iniconfig, idna, h11, frozenlist, click, certifi, av, attrs, annotated-types, annotated-doc, aiohappyeyeballs, yarl, wheel, uvicorn, typing-inspection, pytest, pydantic-core, httpcore, build, anyio, aiosignal, starlette, pydantic, httpx, aiohttp, fastapi, edge-tts
+#13 15.00   Attempting uninstall: pip
+#13 15.00     Found existing installation: pip 24.0
+#13 15.06     Uninstalling pip-24.0:
+#13 15.49       Successfully uninstalled pip-24.0
+#13 20.10 Successfully installed aiohappyeyeballs-2.7.1 aiohttp-3.14.1 aiosignal-1.4.0 annotated-doc-0.0.4 annotated-types-0.7.0 anyio-4.14.2 attrs-26.1.0 av-17.0.1 build-1.5.0 certifi-2026.6.17 click-8.4.2 edge-tts-7.3.1 fastapi-0.139.2 frozenlist-1.8.0 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 idna-3.18 iniconfig-2.3.0 multidict-6.7.1 packaging-26.2 pip-26.2.1 pluggy-1.6.0 propcache-0.5.2 pydantic-2.13.4 pydantic-core-2.46.4 pygments-2.20.0 pyproject-hooks-1.2.0 pytest-8.4.2 setuptools-84.2.0 starlette-1.3.1 tabulate-0.10.0 typing-extensions-4.16.0 typing-inspection-0.4.2 tzdata-2026.3 uvicorn-0.51.0 wheel-0.46.3 yarl-1.24.2
+#13 DONE 20.4s
+
+#14 [build 4/6] WORKDIR /src
+#14 DONE 0.1s
+
+#15 [build 5/6] COPY . .
+#15 DONE 0.1s
+
+#16 [build 6/6] RUN --network=none python -m build --outdir /dist     && python -m pip check     && python -m venv /opt/lena     && /opt/lena/bin/python -m pip install --no-index --find-links=/wheelhouse        --require-hashes -r /locks/runtime-py312.lock     && /opt/lena/bin/python -m pip install --no-deps /dist/*.whl     && /opt/lena/bin/python -m pip check     && rm -rf /opt/lena/lib/python3.12/site-packages/pip*        /opt/lena/lib/python3.12/site-packages/setuptools* /opt/lena/bin/pip*
+#16 0.252 * Creating isolated environment: venv+pip...
+#16 0.267 * Installing packages in isolated environment:
+#16 0.267   - setuptools>=77
+#16 1.092 * Getting build dependencies for sdist...
+#16 1.561 running egg_info
+#16 1.564 creating lena_code3.egg-info
+#16 1.567 writing lena_code3.egg-info/PKG-INFO
+#16 1.570 writing dependency_links to lena_code3.egg-info/dependency_links.txt
+#16 1.570 writing requirements to lena_code3.egg-info/requires.txt
+#16 1.571 writing top-level names to lena_code3.egg-info/top_level.txt
+#16 1.572 writing manifest file 'lena_code3.egg-info/SOURCES.txt'
+#16 1.591 reading manifest file 'lena_code3.egg-info/SOURCES.txt'
+#16 1.591 reading manifest template 'MANIFEST.in'
+#16 1.617 no previously-included directories found matching 'data'
+#16 1.617 no previously-included directories found matching 'runtime'
+#16 1.617 no previously-included directories found matching 'build'
+#16 1.618 no previously-included directories found matching 'dist'
+#16 1.618 warning: no previously-included files found matching '.env'
+#16 1.619 warning: no previously-included files found matching '.env.local'
+#16 1.620 warning: no previously-included files matching '*.py[cod]' found anywhere in distribution
+#16 1.621 warning: no previously-included files matching '__pycache__' found anywhere in distribution
+#16 1.622 warning: no previously-included files matching '.pytest_cache' found anywhere in distribution
+#16 1.623 no previously-included directories found matching 'docs/exec-plans'
+#16 1.624 no previously-included directories found matching 'docs/reviews'
+#16 1.624 warning: no previously-included files found matching 'docs/architecture/codebase-review.md'
+#16 1.625 adding license file 'LICENSE'
+#16 1.625 adding license file 'app/static/vendor/leaflet/LICENSE'
+#16 1.629 writing manifest file 'lena_code3.egg-info/SOURCES.txt'
+#16 1.661 * Building sdist...
+#16 2.145 running sdist
+#16 2.145 running egg_info
+#16 2.152 writing lena_code3.egg-info/PKG-INFO
+#16 2.154 writing dependency_links to lena_code3.egg-info/dependency_links.txt
+#16 2.154 writing requirements to lena_code3.egg-info/requires.txt
+#16 2.154 writing top-level names to lena_code3.egg-info/top_level.txt
+#16 2.172 reading manifest file 'lena_code3.egg-info/SOURCES.txt'
+#16 2.176 reading manifest template 'MANIFEST.in'
+#16 2.201 no previously-included directories found matching 'data'
+#16 2.202 no previously-included directories found matching 'runtime'
+#16 2.202 no previously-included directories found matching 'build'
+#16 2.203 no previously-included directories found matching 'dist'
+#16 2.204 warning: no previously-included files found matching '.env'
+#16 2.205 warning: no previously-included files found matching '.env.local'
+#16 2.206 warning: no previously-included files matching '*.py[cod]' found anywhere in distribution
+#16 2.207 warning: no previously-included files matching '__pycache__' found anywhere in distribution
+#16 2.208 warning: no previously-included files matching '.pytest_cache' found anywhere in distribution
+#16 2.209 no previously-included directories found matching 'docs/exec-plans'
+#16 2.210 no previously-included directories found matching 'docs/reviews'
+#16 2.210 warning: no previously-included files found matching 'docs/architecture/codebase-review.md'
+#16 2.210 adding license file 'LICENSE'
+#16 2.210 adding license file 'app/static/vendor/leaflet/LICENSE'
+#16 2.214 writing manifest file 'lena_code3.egg-info/SOURCES.txt'
+#16 2.214 running check
+#16 2.218 creating lena_code3-0.2.0
+#16 2.219 creating lena_code3-0.2.0/app
+#16 2.220 creating lena_code3-0.2.0/app/providers
+#16 2.221 creating lena_code3-0.2.0/app/resources/bootstrap/canonical
+#16 2.223 creating lena_code3-0.2.0/app/resources/bootstrap/curation
+#16 2.224 creating lena_code3-0.2.0/app/resources/bootstrap/drinking_fountains
+#16 2.225 creating lena_code3-0.2.0/app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090
+#16 2.227 creating lena_code3-0.2.0/app/resources/bootstrap/evaluation
+#16 2.228 creating lena_code3-0.2.0/app/resources/bootstrap/i18n
+#16 2.229 creating lena_code3-0.2.0/app/resources/bootstrap/official
+#16 2.230 creating lena_code3-0.2.0/app/resources/bootstrap/safety
+#16 2.231 creating lena_code3-0.2.0/app/resources/bootstrap/toilets
+#16 2.232 creating lena_code3-0.2.0/app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd
+#16 2.233 creating lena_code3-0.2.0/app/resources/bootstrap/wfs
+#16 2.234 creating lena_code3-0.2.0/app/static
+#16 2.235 creating lena_code3-0.2.0/app/static/vendor/leaflet
+#16 2.236 creating lena_code3-0.2.0/app/static/vendor/leaflet/images
+#16 2.237 creating lena_code3-0.2.0/docs
+#16 2.238 creating lena_code3-0.2.0/lena_code3.egg-info
+#16 2.238 creating lena_code3-0.2.0/requirements
+#16 2.239 creating lena_code3-0.2.0/tests
+#16 2.240 creating lena_code3-0.2.0/tests/fixtures
+#16 2.241 copying files to lena_code3-0.2.0...
+#16 2.241 copying .dockerignore -> lena_code3-0.2.0
+#16 2.241 copying .env.example -> lena_code3-0.2.0
+#16 2.243 copying CITATION.cff -> lena_code3-0.2.0
+#16 2.243 copying Dockerfile -> lena_code3-0.2.0
+#16 2.244 copying LICENSE -> lena_code3-0.2.0
+#16 2.245 copying MANIFEST.in -> lena_code3-0.2.0
+#16 2.246 copying README.md -> lena_code3-0.2.0
+#16 2.246 copying THIRD_PARTY_NOTICES.md -> lena_code3-0.2.0
+#16 2.247 copying pyproject.toml -> lena_code3-0.2.0
+#16 2.248 copying app/__init__.py -> lena_code3-0.2.0/app
+#16 2.248 copying app/__main__.py -> lena_code3-0.2.0/app
+#16 2.249 copying app/answer_act_texts.py -> lena_code3-0.2.0/app
+#16 2.249 copying app/answer_plan.py -> lena_code3-0.2.0/app
+#16 2.250 copying app/answer_sentences.py -> lena_code3-0.2.0/app
+#16 2.250 copying app/application_texts.py -> lena_code3-0.2.0/app
+#16 2.250 copying app/candidate_context.py -> lena_code3-0.2.0/app
+#16 2.251 copying app/candidate_contract.py -> lena_code3-0.2.0/app
+#16 2.251 copying app/candidates.py -> lena_code3-0.2.0/app
+#16 2.252 copying app/card_texts.py -> lena_code3-0.2.0/app
+#16 2.252 copying app/config.py -> lena_code3-0.2.0/app
+#16 2.252 copying app/curation.py -> lena_code3-0.2.0/app
+#16 2.253 copying app/dialogue.py -> lena_code3-0.2.0/app
+#16 2.253 copying app/dialogue_flow.py -> lena_code3-0.2.0/app
+#16 2.253 copying app/drinking_fountain_releases.py -> lena_code3-0.2.0/app
+#16 2.254 copying app/drinking_fountain_source.py -> lena_code3-0.2.0/app
+#16 2.254 copying app/drinking_fountain_sync.py -> lena_code3-0.2.0/app
+#16 2.254 copying app/external_services.py -> lena_code3-0.2.0/app
+#16 2.255 copying app/formulation.py -> lena_code3-0.2.0/app
+#16 2.255 copying app/formulator_prose.py -> lena_code3-0.2.0/app
+#16 2.256 copying app/grounding.py -> lena_code3-0.2.0/app
+#16 2.256 copying app/grounding_claims.py -> lena_code3-0.2.0/app
+#16 2.256 copying app/grounding_constraints.py -> lena_code3-0.2.0/app
+#16 2.257 copying app/grounding_content.py -> lena_code3-0.2.0/app
+#16 2.257 copying app/grounding_references.py -> lena_code3-0.2.0/app
+#16 2.257 copying app/grounding_schedules.py -> lena_code3-0.2.0/app
+#16 2.258 copying app/grounding_surface.py -> lena_code3-0.2.0/app
+#16 2.258 copying app/grounding_values.py -> lena_code3-0.2.0/app
+#16 2.258 copying app/hilfebus.py -> lena_code3-0.2.0/app
+#16 2.259 copying app/i18n.py -> lena_code3-0.2.0/app
+#16 2.261 copying app/infrastructure.py -> lena_code3-0.2.0/app
+#16 2.261 copying app/infrastructure_results.py -> lena_code3-0.2.0/app
+#16 2.261 copying app/interactions.py -> lena_code3-0.2.0/app
+#16 2.261 copying app/interpreter.py -> lena_code3-0.2.0/app
+#16 2.261 copying app/kb_loader.py -> lena_code3-0.2.0/app
+#16 2.261 copying app/live_evaluation.py -> lena_code3-0.2.0/app
+#16 2.261 copying app/live_evaluation_checks.py -> lena_code3-0.2.0/app
+#16 2.261 copying app/live_evaluation_plan.py -> lena_code3-0.2.0/app
+#16 2.261 copying app/live_evaluation_runner.py -> lena_code3-0.2.0/app
+#16 2.262 copying app/live_evaluation_runtime.py -> lena_code3-0.2.0/app
+#16 2.263 copying app/llm_budget.py -> lena_code3-0.2.0/app
+#16 2.264 copying app/llm_selection.py -> lena_code3-0.2.0/app
+#16 2.264 copying app/llm_stages.py -> lena_code3-0.2.0/app
+#16 2.265 copying app/logging_setup.py -> lena_code3-0.2.0/app
+#16 2.265 copying app/main.py -> lena_code3-0.2.0/app
+#16 2.266 copying app/maps.py -> lena_code3-0.2.0/app
+#16 2.266 copying app/models.py -> lena_code3-0.2.0/app
+#16 2.267 copying app/multilingual_review.py -> lena_code3-0.2.0/app
+#16 2.268 copying app/official_offer_source.py -> lena_code3-0.2.0/app
+#16 2.268 copying app/policy_facts.py -> lena_code3-0.2.0/app
+#16 2.268 copying app/prompt_comparison.py -> lena_code3-0.2.0/app
+#16 2.268 copying app/prompt_comparison_cases.py -> lena_code3-0.2.0/app
+#16 2.269 copying app/release_storage.py -> lena_code3-0.2.0/app
+#16 2.269 copying app/resources.py -> lena_code3-0.2.0/app
+#16 2.270 copying app/result_ordering.py -> lena_code3-0.2.0/app
+#16 2.270 copying app/result_time.py -> lena_code3-0.2.0/app
+#16 2.270 copying app/retrieval.py -> lena_code3-0.2.0/app
+#16 2.271 copying app/safety.py -> lena_code3-0.2.0/app
+#16 2.271 copying app/service.py -> lena_code3-0.2.0/app
+#16 2.272 copying app/service_check.py -> lena_code3-0.2.0/app
+#16 2.272 copying app/sessions.py -> lena_code3-0.2.0/app
+#16 2.272 copying app/spatial.py -> lena_code3-0.2.0/app
+#16 2.273 copying app/speech.py -> lena_code3-0.2.0/app
+#16 2.273 copying app/spoken_text.py -> lena_code3-0.2.0/app
+#16 2.273 copying app/text_normalization.py -> lena_code3-0.2.0/app
+#16 2.274 copying app/toilet_releases.py -> lena_code3-0.2.0/app
+#16 2.274 copying app/toilet_sync.py -> lena_code3-0.2.0/app
+#16 2.274 copying app/translate_offers.py -> lena_code3-0.2.0/app
+#16 2.275 copying app/translation_contract.py -> lena_code3-0.2.0/app
+#16 2.275 copying app/translation_tokens.py -> lena_code3-0.2.0/app
+#16 2.275 copying app/version.py -> lena_code3-0.2.0/app
+#16 2.276 copying app/wfs_releases.py -> lena_code3-0.2.0/app
+#16 2.276 copying app/wfs_sync.py -> lena_code3-0.2.0/app
+#16 2.276 copying app/providers/__init__.py -> lena_code3-0.2.0/app/providers
+#16 2.277 copying app/providers/diagnostics.py -> lena_code3-0.2.0/app/providers
+#16 2.277 copying app/providers/llm.py -> lena_code3-0.2.0/app/providers
+#16 2.277 copying app/resources/bootstrap/canonical/offers.json -> lena_code3-0.2.0/app/resources/bootstrap/canonical
+#16 2.278 copying app/resources/bootstrap/curation/runtime_manifest.json -> lena_code3-0.2.0/app/resources/bootstrap/curation
+#16 2.278 copying app/resources/bootstrap/curation/social_offers.json -> lena_code3-0.2.0/app/resources/bootstrap/curation
+#16 2.279 copying app/resources/bootstrap/drinking_fountains/active_release.json -> lena_code3-0.2.0/app/resources/bootstrap/drinking_fountains
+#16 2.279 copying app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090/diff.json -> lena_code3-0.2.0/app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090
+#16 2.279 copying app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090/manifest.json -> lena_code3-0.2.0/app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090
+#16 2.280 copying app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090/municipality_boundary.geojson -> lena_code3-0.2.0/app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090
+#16 2.282 copying app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090/records.json -> lena_code3-0.2.0/app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090
+#16 2.282 copying app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090/snapshot.kml -> lena_code3-0.2.0/app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090
+#16 2.283 copying app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090/source_evidence.json -> lena_code3-0.2.0/app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090
+#16 2.283 copying app/resources/bootstrap/evaluation/live_scenarios.json -> lena_code3-0.2.0/app/resources/bootstrap/evaluation
+#16 2.284 copying app/resources/bootstrap/i18n/application_texts.json -> lena_code3-0.2.0/app/resources/bootstrap/i18n
+#16 2.284 copying app/resources/bootstrap/i18n/dynamic_scenarios.json -> lena_code3-0.2.0/app/resources/bootstrap/i18n
+#16 2.285 copying app/resources/bootstrap/i18n/listening_review.json -> lena_code3-0.2.0/app/resources/bootstrap/i18n
+#16 2.285 copying app/resources/bootstrap/i18n/offer_translations.json -> lena_code3-0.2.0/app/resources/bootstrap/i18n
+#16 2.286 copying app/resources/bootstrap/official/verified_offers.json -> lena_code3-0.2.0/app/resources/bootstrap/official
+#16 2.286 copying app/resources/bootstrap/safety/scenarios.json -> lena_code3-0.2.0/app/resources/bootstrap/safety
+#16 2.287 copying app/resources/bootstrap/toilets/active_release.json -> lena_code3-0.2.0/app/resources/bootstrap/toilets
+#16 2.287 copying app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd/diff.json -> lena_code3-0.2.0/app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd
+#16 2.288 copying app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd/manifest.json -> lena_code3-0.2.0/app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd
+#16 2.289 copying app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd/records.json -> lena_code3-0.2.0/app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd
+#16 2.289 copying app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd/snapshot.csv -> lena_code3-0.2.0/app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd
+#16 2.290 copying app/resources/bootstrap/wfs/current.geojson -> lena_code3-0.2.0/app/resources/bootstrap/wfs
+#16 2.290 copying app/resources/bootstrap/wfs/last_change_report.json -> lena_code3-0.2.0/app/resources/bootstrap/wfs
+#16 2.291 copying app/static/app.js -> lena_code3-0.2.0/app/static
+#16 2.291 copying app/static/dialogue.js -> lena_code3-0.2.0/app/static
+#16 2.291 copying app/static/index.html -> lena_code3-0.2.0/app/static
+#16 2.292 copying app/static/styles.css -> lena_code3-0.2.0/app/static
+#16 2.293 copying app/static/vendor/leaflet/LICENSE -> lena_code3-0.2.0/app/static/vendor/leaflet
+#16 2.293 copying app/static/vendor/leaflet/leaflet.css -> lena_code3-0.2.0/app/static/vendor/leaflet
+#16 2.293 copying app/static/vendor/leaflet/leaflet.js -> lena_code3-0.2.0/app/static/vendor/leaflet
+#16 2.294 copying app/static/vendor/leaflet/images/layers-2x.png -> lena_code3-0.2.0/app/static/vendor/leaflet/images
+#16 2.294 copying app/static/vendor/leaflet/images/layers.png -> lena_code3-0.2.0/app/static/vendor/leaflet/images
+#16 2.295 copying app/static/vendor/leaflet/images/marker-icon-2x.png -> lena_code3-0.2.0/app/static/vendor/leaflet/images
+#16 2.295 copying app/static/vendor/leaflet/images/marker-icon.png -> lena_code3-0.2.0/app/static/vendor/leaflet/images
+#16 2.295 copying app/static/vendor/leaflet/images/marker-shadow.png -> lena_code3-0.2.0/app/static/vendor/leaflet/images
+#16 2.296 copying docs/architecture.md -> lena_code3-0.2.0/docs
+#16 2.296 copying docs/configuration.md -> lena_code3-0.2.0/docs
+#16 2.296 copying docs/controlled-answer-acts.md -> lena_code3-0.2.0/docs
+#16 2.297 copying docs/data-flow.md -> lena_code3-0.2.0/docs
+#16 2.297 copying docs/final-implementation-decisions.md -> lena_code3-0.2.0/docs
+#16 2.298 copying docs/formulator-prompt-comparison.md -> lena_code3-0.2.0/docs
+#16 2.298 copying docs/live-provider-evaluation.md -> lena_code3-0.2.0/docs
+#16 2.298 copying docs/manual-evaluation-prerequisites.md -> lena_code3-0.2.0/docs
+#16 2.299 copying docs/release.md -> lena_code3-0.2.0/docs
+#16 2.299 copying docs/reproducibility.md -> lena_code3-0.2.0/docs
+#16 2.300 copying docs/safety-and-error-policy.md -> lena_code3-0.2.0/docs
+#16 2.301 copying docs/setup.md -> lena_code3-0.2.0/docs
+#16 2.301 copying docs/testing.md -> lena_code3-0.2.0/docs
+#16 2.301 copying docs/validator-ablation-decisions.md -> lena_code3-0.2.0/docs
+#16 2.302 copying lena_code3.egg-info/PKG-INFO -> lena_code3-0.2.0/lena_code3.egg-info
+#16 2.303 copying lena_code3.egg-info/SOURCES.txt -> lena_code3-0.2.0/lena_code3.egg-info
+#16 2.303 copying lena_code3.egg-info/dependency_links.txt -> lena_code3-0.2.0/lena_code3.egg-info
+#16 2.304 copying lena_code3.egg-info/requires.txt -> lena_code3-0.2.0/lena_code3.egg-info
+#16 2.304 copying lena_code3.egg-info/top_level.txt -> lena_code3-0.2.0/lena_code3.egg-info
+#16 2.305 copying requirements/build-py312.lock -> lena_code3-0.2.0/requirements
+#16 2.305 copying requirements/constraints-py311.txt -> lena_code3-0.2.0/requirements
+#16 2.306 copying requirements/constraints-py312.txt -> lena_code3-0.2.0/requirements
+#16 2.306 copying requirements/runtime-py312.lock -> lena_code3-0.2.0/requirements
+#16 2.307 copying tests/conftest.py -> lena_code3-0.2.0/tests
+#16 2.307 copying tests/frontend.test.cjs -> lena_code3-0.2.0/tests
+#16 2.308 copying tests/test_answer_plan.py -> lena_code3-0.2.0/tests
+#16 2.308 copying tests/test_answer_sentences.py -> lena_code3-0.2.0/tests
+#16 2.309 copying tests/test_api.py -> lena_code3-0.2.0/tests
+#16 2.309 copying tests/test_architecture_boundaries.py -> lena_code3-0.2.0/tests
+#16 2.310 copying tests/test_candidates.py -> lena_code3-0.2.0/tests
+#16 2.310 copying tests/test_card_translation_completeness.py -> lena_code3-0.2.0/tests
+#16 2.311 copying tests/test_configuration_profiles.py -> lena_code3-0.2.0/tests
+#16 2.311 copying tests/test_curation.py -> lena_code3-0.2.0/tests
+#16 2.311 copying tests/test_dialogue.py -> lena_code3-0.2.0/tests
+#16 2.312 copying tests/test_dialogue_frontend.py -> lena_code3-0.2.0/tests
+#16 2.312 copying tests/test_drinking_fountains.py -> lena_code3-0.2.0/tests
+#16 2.313 copying tests/test_formulation.py -> lena_code3-0.2.0/tests
+#16 2.313 copying tests/test_formulator_factual_freedom.py -> lena_code3-0.2.0/tests
+#16 2.313 copying tests/test_formulator_prose.py -> lena_code3-0.2.0/tests
+#16 2.314 copying tests/test_frontend_security.py -> lena_code3-0.2.0/tests
+#16 2.314 copying tests/test_grounding_audience.py -> lena_code3-0.2.0/tests
+#16 2.314 copying tests/test_grounding_claims.py -> lena_code3-0.2.0/tests
+#16 2.315 copying tests/test_grounding_constraints.py -> lena_code3-0.2.0/tests
+#16 2.315 copying tests/test_grounding_content.py -> lena_code3-0.2.0/tests
+#16 2.315 copying tests/test_grounding_correction_controls.py -> lena_code3-0.2.0/tests
+#16 2.316 copying tests/test_grounding_corrections.py -> lena_code3-0.2.0/tests
+#16 2.316 copying tests/test_grounding_final_false_positives.py -> lena_code3-0.2.0/tests
+#16 2.316 copying tests/test_grounding_lexical_boundaries.py -> lena_code3-0.2.0/tests
+#16 2.317 copying tests/test_grounding_schedule_literals.py -> lena_code3-0.2.0/tests
+#16 2.317 copying tests/test_interpreter.py -> lena_code3-0.2.0/tests
+#16 2.318 copying tests/test_interpreter_diagnostics.py -> lena_code3-0.2.0/tests
+#16 2.318 copying tests/test_kb_loader.py -> lena_code3-0.2.0/tests
+#16 2.318 copying tests/test_live_evaluation.py -> lena_code3-0.2.0/tests
+#16 2.319 copying tests/test_live_evaluation_checks.py -> lena_code3-0.2.0/tests
+#16 2.319 copying tests/test_live_evaluation_fault_injection.py -> lena_code3-0.2.0/tests
+#16 2.319 copying tests/test_llm_selection.py -> lena_code3-0.2.0/tests
+#16 2.320 copying tests/test_observability.py -> lena_code3-0.2.0/tests
+#16 2.321 copying tests/test_offer_evidence_contract.py -> lena_code3-0.2.0/tests
+#16 2.321 copying tests/test_official_offer_source.py -> lena_code3-0.2.0/tests
+#16 2.322 copying tests/test_packaging.py -> lena_code3-0.2.0/tests
+#16 2.323 copying tests/test_prompt_comparison.py -> lena_code3-0.2.0/tests
+#16 2.323 copying tests/test_provider_isolation.py -> lena_code3-0.2.0/tests
+#16 2.324 copying tests/test_provider_timeouts.py -> lena_code3-0.2.0/tests
+#16 2.324 copying tests/test_public_toilets.py -> lena_code3-0.2.0/tests
+#16 2.325 copying tests/test_request_boundaries.py -> lena_code3-0.2.0/tests
+#16 2.326 copying tests/test_result_ordering.py -> lena_code3-0.2.0/tests
+#16 2.326 copying tests/test_retrieval.py -> lena_code3-0.2.0/tests
+#16 2.326 copying tests/test_runtime_loader.py -> lena_code3-0.2.0/tests
+#16 2.328 copying tests/test_safety.py -> lena_code3-0.2.0/tests
+#16 2.328 copying tests/test_safety_policy.py -> lena_code3-0.2.0/tests
+#16 2.329 copying tests/test_session_persistence.py -> lena_code3-0.2.0/tests
+#16 2.329 copying tests/test_sessions.py -> lena_code3-0.2.0/tests
+#16 2.330 copying tests/test_speech_transcription.py -> lena_code3-0.2.0/tests
+#16 2.330 copying tests/test_technical_logging.py -> lena_code3-0.2.0/tests
+#16 2.330 copying tests/test_translation_quality.py -> lena_code3-0.2.0/tests
+#16 2.331 copying tests/test_translation_tokens.py -> lena_code3-0.2.0/tests
+#16 2.331 copying tests/test_validator_ablation_decisions.py -> lena_code3-0.2.0/tests
+#16 2.332 copying tests/test_wfs_releases.py -> lena_code3-0.2.0/tests
+#16 2.332 copying tests/test_wfs_sync.py -> lena_code3-0.2.0/tests
+#16 2.332 copying tests/fixtures/wissensbasis_hilfsangebote_leipzig.md -> lena_code3-0.2.0/tests/fixtures
+#16 2.334 Writing lena_code3-0.2.0/setup.cfg
+#16 2.334 Creating tar archive
+#16 2.934 removing 'lena_code3-0.2.0' (and everything under it)
+#16 3.113 * Building wheel from sdist
+#16 3.145 * Creating isolated environment: venv+pip...
+#16 3.151 * Installing packages in isolated environment:
+#16 3.151   - setuptools>=77
+#16 3.938 * Getting build dependencies for wheel...
+#16 4.441 running egg_info
+#16 4.443 writing lena_code3.egg-info/PKG-INFO
+#16 4.445 writing dependency_links to lena_code3.egg-info/dependency_links.txt
+#16 4.446 writing requirements to lena_code3.egg-info/requires.txt
+#16 4.446 writing top-level names to lena_code3.egg-info/top_level.txt
+#16 4.463 reading manifest file 'lena_code3.egg-info/SOURCES.txt'
+#16 4.467 reading manifest template 'MANIFEST.in'
+#16 4.493 no previously-included directories found matching 'data'
+#16 4.493 no previously-included directories found matching 'runtime'
+#16 4.496 no previously-included directories found matching 'build'
+#16 4.496 no previously-included directories found matching 'dist'
+#16 4.497 warning: no previously-included files found matching '.env'
+#16 4.497 warning: no previously-included files found matching '.env.local'
+#16 4.498 warning: no previously-included files matching '*.py[cod]' found anywhere in distribution
+#16 4.499 warning: no previously-included files matching '__pycache__' found anywhere in distribution
+#16 4.499 warning: no previously-included files matching '.pytest_cache' found anywhere in distribution
+#16 4.500 no previously-included directories found matching 'docs/exec-plans'
+#16 4.500 no previously-included directories found matching 'docs/reviews'
+#16 4.501 warning: no previously-included files found matching 'docs/architecture/codebase-review.md'
+#16 4.501 adding license file 'LICENSE'
+#16 4.501 adding license file 'app/static/vendor/leaflet/LICENSE'
+#16 4.506 writing manifest file 'lena_code3.egg-info/SOURCES.txt'
+#16 4.536 * Building wheel...
+#16 5.024 running bdist_wheel
+#16 5.032 running build
+#16 5.032 running build_py
+#16 5.036 creating build/lib/app
+#16 5.038 copying app/toilet_sync.py -> build/lib/app
+#16 5.039 copying app/grounding_claims.py -> build/lib/app
+#16 5.039 copying app/official_offer_source.py -> build/lib/app
+#16 5.040 copying app/drinking_fountain_sync.py -> build/lib/app
+#16 5.040 copying app/card_texts.py -> build/lib/app
+#16 5.040 copying app/grounding_schedules.py -> build/lib/app
+#16 5.041 copying app/service_check.py -> build/lib/app
+#16 5.043 copying app/infrastructure_results.py -> build/lib/app
+#16 5.044 copying app/kb_loader.py -> build/lib/app
+#16 5.045 copying app/drinking_fountain_releases.py -> build/lib/app
+#16 5.046 copying app/text_normalization.py -> build/lib/app
+#16 5.047 copying app/spoken_text.py -> build/lib/app
+#16 5.048 copying app/main.py -> build/lib/app
+#16 5.049 copying app/llm_stages.py -> build/lib/app
+#16 5.049 copying app/answer_sentences.py -> build/lib/app
+#16 5.050 copying app/speech.py -> build/lib/app
+#16 5.050 copying app/application_texts.py -> build/lib/app
+#16 5.050 copying app/translation_contract.py -> build/lib/app
+#16 5.051 copying app/interpreter.py -> build/lib/app
+#16 5.051 copying app/retrieval.py -> build/lib/app
+#16 5.052 copying app/resources.py -> build/lib/app
+#16 5.053 copying app/policy_facts.py -> build/lib/app
+#16 5.053 copying app/version.py -> build/lib/app
+#16 5.054 copying app/candidate_context.py -> build/lib/app
+#16 5.054 copying app/formulation.py -> build/lib/app
+#16 5.055 copying app/dialogue_flow.py -> build/lib/app
+#16 5.055 copying app/wfs_releases.py -> build/lib/app
+#16 5.056 copying app/live_evaluation_plan.py -> build/lib/app
+#16 5.056 copying app/grounding_content.py -> build/lib/app
+#16 5.056 copying app/live_evaluation_runtime.py -> build/lib/app
+#16 5.057 copying app/models.py -> build/lib/app
+#16 5.057 copying app/external_services.py -> build/lib/app
+#16 5.058 copying app/prompt_comparison.py -> build/lib/app
+#16 5.058 copying app/result_time.py -> build/lib/app
+#16 5.058 copying app/grounding_references.py -> build/lib/app
+#16 5.059 copying app/i18n.py -> build/lib/app
+#16 5.059 copying app/wfs_sync.py -> build/lib/app
+#16 5.059 copying app/spatial.py -> build/lib/app
+#16 5.060 copying app/live_evaluation_runner.py -> build/lib/app
+#16 5.061 copying app/answer_act_texts.py -> build/lib/app
+#16 5.062 copying app/formulator_prose.py -> build/lib/app
+#16 5.063 copying app/maps.py -> build/lib/app
+#16 5.063 copying app/live_evaluation.py -> build/lib/app
+#16 5.064 copying app/drinking_fountain_source.py -> build/lib/app
+#16 5.064 copying app/grounding_values.py -> build/lib/app
+#16 5.065 copying app/interactions.py -> build/lib/app
+#16 5.066 copying app/candidates.py -> build/lib/app
+#16 5.067 copying app/grounding.py -> build/lib/app
+#16 5.068 copying app/multilingual_review.py -> build/lib/app
+#16 5.068 copying app/curation.py -> build/lib/app
+#16 5.069 copying app/translate_offers.py -> build/lib/app
+#16 5.069 copying app/prompt_comparison_cases.py -> build/lib/app
+#16 5.070 copying app/sessions.py -> build/lib/app
+#16 5.070 copying app/toilet_releases.py -> build/lib/app
+#16 5.071 copying app/candidate_contract.py -> build/lib/app
+#16 5.071 copying app/config.py -> build/lib/app
+#16 5.072 copying app/__main__.py -> build/lib/app
+#16 5.072 copying app/service.py -> build/lib/app
+#16 5.073 copying app/dialogue.py -> build/lib/app
+#16 5.073 copying app/grounding_constraints.py -> build/lib/app
+#16 5.073 copying app/grounding_surface.py -> build/lib/app
+#16 5.074 copying app/llm_budget.py -> build/lib/app
+#16 5.074 copying app/llm_selection.py -> build/lib/app
+#16 5.075 copying app/logging_setup.py -> build/lib/app
+#16 5.075 copying app/safety.py -> build/lib/app
+#16 5.076 copying app/__init__.py -> build/lib/app
+#16 5.077 copying app/live_evaluation_checks.py -> build/lib/app
+#16 5.077 copying app/infrastructure.py -> build/lib/app
+#16 5.078 copying app/release_storage.py -> build/lib/app
+#16 5.078 copying app/hilfebus.py -> build/lib/app
+#16 5.079 copying app/answer_plan.py -> build/lib/app
+#16 5.079 copying app/result_ordering.py -> build/lib/app
+#16 5.080 copying app/translation_tokens.py -> build/lib/app
+#16 5.080 creating build/lib/app/providers
+#16 5.081 copying app/providers/diagnostics.py -> build/lib/app/providers
+#16 5.082 copying app/providers/llm.py -> build/lib/app/providers
+#16 5.082 copying app/providers/__init__.py -> build/lib/app/providers
+#16 5.085 running egg_info
+#16 5.087 writing lena_code3.egg-info/PKG-INFO
+#16 5.088 writing dependency_links to lena_code3.egg-info/dependency_links.txt
+#16 5.089 writing requirements to lena_code3.egg-info/requires.txt
+#16 5.089 writing top-level names to lena_code3.egg-info/top_level.txt
+#16 5.102 reading manifest file 'lena_code3.egg-info/SOURCES.txt'
+#16 5.105 reading manifest template 'MANIFEST.in'
+#16 5.129 no previously-included directories found matching 'data'
+#16 5.129 no previously-included directories found matching 'runtime'
+#16 5.129 no previously-included directories found matching 'build'
+#16 5.130 no previously-included directories found matching 'dist'
+#16 5.131 warning: no previously-included files found matching '.env'
+#16 5.132 warning: no previously-included files found matching '.env.local'
+#16 5.133 warning: no previously-included files matching '*.py[cod]' found anywhere in distribution
+#16 5.133 warning: no previously-included files matching '__pycache__' found anywhere in distribution
+#16 5.134 warning: no previously-included files matching '.pytest_cache' found anywhere in distribution
+#16 5.135 no previously-included directories found matching 'docs/exec-plans'
+#16 5.136 no previously-included directories found matching 'docs/reviews'
+#16 5.137 warning: no previously-included files found matching 'docs/architecture/codebase-review.md'
+#16 5.137 adding license file 'LICENSE'
+#16 5.137 adding license file 'app/static/vendor/leaflet/LICENSE'
+#16 5.141 writing manifest file 'lena_code3.egg-info/SOURCES.txt'
+#16 5.147 creating build/lib/app/static
+#16 5.148 copying app/static/styles.css -> build/lib/app/static
+#16 5.149 copying app/static/dialogue.js -> build/lib/app/static
+#16 5.149 copying app/static/app.js -> build/lib/app/static
+#16 5.150 copying app/static/index.html -> build/lib/app/static
+#16 5.151 creating build/lib/app/static/vendor/leaflet
+#16 5.153 copying app/static/vendor/leaflet/leaflet.js -> build/lib/app/static/vendor/leaflet
+#16 5.153 copying app/static/vendor/leaflet/LICENSE -> build/lib/app/static/vendor/leaflet
+#16 5.154 copying app/static/vendor/leaflet/leaflet.css -> build/lib/app/static/vendor/leaflet
+#16 5.155 creating build/lib/app/static/vendor/leaflet/images
+#16 5.156 copying app/static/vendor/leaflet/images/layers-2x.png -> build/lib/app/static/vendor/leaflet/images
+#16 5.156 copying app/static/vendor/leaflet/images/marker-icon-2x.png -> build/lib/app/static/vendor/leaflet/images
+#16 5.157 copying app/static/vendor/leaflet/images/layers.png -> build/lib/app/static/vendor/leaflet/images
+#16 5.157 copying app/static/vendor/leaflet/images/marker-icon.png -> build/lib/app/static/vendor/leaflet/images
+#16 5.157 copying app/static/vendor/leaflet/images/marker-shadow.png -> build/lib/app/static/vendor/leaflet/images
+#16 5.158 creating build/lib/app/resources/bootstrap/evaluation
+#16 5.160 copying app/resources/bootstrap/evaluation/live_scenarios.json -> build/lib/app/resources/bootstrap/evaluation
+#16 5.161 creating build/lib/app/resources/bootstrap/drinking_fountains
+#16 5.161 copying app/resources/bootstrap/drinking_fountains/active_release.json -> build/lib/app/resources/bootstrap/drinking_fountains
+#16 5.162 creating build/lib/app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090
+#16 5.163 copying app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090/records.json -> build/lib/app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090
+#16 5.164 copying app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090/diff.json -> build/lib/app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090
+#16 5.164 copying app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090/source_evidence.json -> build/lib/app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090
+#16 5.165 copying app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090/manifest.json -> build/lib/app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090
+#16 5.165 creating build/lib/app/resources/bootstrap/canonical
+#16 5.166 copying app/resources/bootstrap/canonical/offers.json -> build/lib/app/resources/bootstrap/canonical
+#16 5.167 creating build/lib/app/resources/bootstrap/wfs
+#16 5.167 copying app/resources/bootstrap/wfs/last_change_report.json -> build/lib/app/resources/bootstrap/wfs
+#16 5.168 creating build/lib/app/resources/bootstrap/i18n
+#16 5.169 copying app/resources/bootstrap/i18n/dynamic_scenarios.json -> build/lib/app/resources/bootstrap/i18n
+#16 5.170 copying app/resources/bootstrap/i18n/application_texts.json -> build/lib/app/resources/bootstrap/i18n
+#16 5.172 copying app/resources/bootstrap/i18n/offer_translations.json -> build/lib/app/resources/bootstrap/i18n
+#16 5.174 copying app/resources/bootstrap/i18n/listening_review.json -> build/lib/app/resources/bootstrap/i18n
+#16 5.174 creating build/lib/app/resources/bootstrap/curation
+#16 5.176 copying app/resources/bootstrap/curation/runtime_manifest.json -> build/lib/app/resources/bootstrap/curation
+#16 5.176 copying app/resources/bootstrap/curation/social_offers.json -> build/lib/app/resources/bootstrap/curation
+#16 5.177 creating build/lib/app/resources/bootstrap/toilets
+#16 5.178 copying app/resources/bootstrap/toilets/active_release.json -> build/lib/app/resources/bootstrap/toilets
+#16 5.178 creating build/lib/app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd
+#16 5.180 copying app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd/records.json -> build/lib/app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd
+#16 5.180 copying app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd/diff.json -> build/lib/app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd
+#16 5.180 copying app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd/manifest.json -> build/lib/app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd
+#16 5.181 creating build/lib/app/resources/bootstrap/official
+#16 5.181 copying app/resources/bootstrap/official/verified_offers.json -> build/lib/app/resources/bootstrap/official
+#16 5.182 creating build/lib/app/resources/bootstrap/safety
+#16 5.182 copying app/resources/bootstrap/safety/scenarios.json -> build/lib/app/resources/bootstrap/safety
+#16 5.183 copying app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090/municipality_boundary.geojson -> build/lib/app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090
+#16 5.187 copying app/resources/bootstrap/wfs/current.geojson -> build/lib/app/resources/bootstrap/wfs
+#16 5.188 copying app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd/snapshot.csv -> build/lib/app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd
+#16 5.188 copying app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090/snapshot.kml -> build/lib/app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090
+#16 5.193 warning: build_py: byte-compiling is disabled, skipping.
+#16 5.193 
+#16 5.196 installing to build/bdist.linux-x86_64/wheel
+#16 5.196 running install
+#16 5.202 running install_lib
+#16 5.204 creating build/bdist.linux-x86_64/wheel
+#16 5.205 creating build/bdist.linux-x86_64/wheel/app
+#16 5.206 copying build/lib/app/toilet_sync.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.207 creating build/bdist.linux-x86_64/wheel/app/resources
+#16 5.207 creating build/bdist.linux-x86_64/wheel/app/resources/bootstrap
+#16 5.208 creating build/bdist.linux-x86_64/wheel/app/resources/bootstrap/evaluation
+#16 5.209 copying build/lib/app/resources/bootstrap/evaluation/live_scenarios.json -> build/bdist.linux-x86_64/wheel/./app/resources/bootstrap/evaluation
+#16 5.210 creating build/bdist.linux-x86_64/wheel/app/resources/bootstrap/drinking_fountains
+#16 5.210 creating build/bdist.linux-x86_64/wheel/app/resources/bootstrap/drinking_fountains/releases
+#16 5.211 creating build/bdist.linux-x86_64/wheel/app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090
+#16 5.212 copying build/lib/app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090/municipality_boundary.geojson -> build/bdist.linux-x86_64/wheel/./app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090
+#16 5.216 copying build/lib/app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090/records.json -> build/bdist.linux-x86_64/wheel/./app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090
+#16 5.216 copying build/lib/app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090/snapshot.kml -> build/bdist.linux-x86_64/wheel/./app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090
+#16 5.217 copying build/lib/app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090/diff.json -> build/bdist.linux-x86_64/wheel/./app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090
+#16 5.217 copying build/lib/app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090/source_evidence.json -> build/bdist.linux-x86_64/wheel/./app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090
+#16 5.217 copying build/lib/app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090/manifest.json -> build/bdist.linux-x86_64/wheel/./app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090
+#16 5.218 copying build/lib/app/resources/bootstrap/drinking_fountains/active_release.json -> build/bdist.linux-x86_64/wheel/./app/resources/bootstrap/drinking_fountains
+#16 5.218 creating build/bdist.linux-x86_64/wheel/app/resources/bootstrap/canonical
+#16 5.219 copying build/lib/app/resources/bootstrap/canonical/offers.json -> build/bdist.linux-x86_64/wheel/./app/resources/bootstrap/canonical
+#16 5.220 creating build/bdist.linux-x86_64/wheel/app/resources/bootstrap/wfs
+#16 5.221 copying build/lib/app/resources/bootstrap/wfs/last_change_report.json -> build/bdist.linux-x86_64/wheel/./app/resources/bootstrap/wfs
+#16 5.221 copying build/lib/app/resources/bootstrap/wfs/current.geojson -> build/bdist.linux-x86_64/wheel/./app/resources/bootstrap/wfs
+#16 5.222 creating build/bdist.linux-x86_64/wheel/app/resources/bootstrap/i18n
+#16 5.223 copying build/lib/app/resources/bootstrap/i18n/dynamic_scenarios.json -> build/bdist.linux-x86_64/wheel/./app/resources/bootstrap/i18n
+#16 5.223 copying build/lib/app/resources/bootstrap/i18n/application_texts.json -> build/bdist.linux-x86_64/wheel/./app/resources/bootstrap/i18n
+#16 5.224 copying build/lib/app/resources/bootstrap/i18n/offer_translations.json -> build/bdist.linux-x86_64/wheel/./app/resources/bootstrap/i18n
+#16 5.225 copying build/lib/app/resources/bootstrap/i18n/listening_review.json -> build/bdist.linux-x86_64/wheel/./app/resources/bootstrap/i18n
+#16 5.225 creating build/bdist.linux-x86_64/wheel/app/resources/bootstrap/curation
+#16 5.227 copying build/lib/app/resources/bootstrap/curation/runtime_manifest.json -> build/bdist.linux-x86_64/wheel/./app/resources/bootstrap/curation
+#16 5.227 copying build/lib/app/resources/bootstrap/curation/social_offers.json -> build/bdist.linux-x86_64/wheel/./app/resources/bootstrap/curation
+#16 5.228 creating build/bdist.linux-x86_64/wheel/app/resources/bootstrap/toilets
+#16 5.228 creating build/bdist.linux-x86_64/wheel/app/resources/bootstrap/toilets/releases
+#16 5.229 creating build/bdist.linux-x86_64/wheel/app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd
+#16 5.230 copying build/lib/app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd/snapshot.csv -> build/bdist.linux-x86_64/wheel/./app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd
+#16 5.230 copying build/lib/app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd/records.json -> build/bdist.linux-x86_64/wheel/./app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd
+#16 5.231 copying build/lib/app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd/diff.json -> build/bdist.linux-x86_64/wheel/./app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd
+#16 5.231 copying build/lib/app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd/manifest.json -> build/bdist.linux-x86_64/wheel/./app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd
+#16 5.232 copying build/lib/app/resources/bootstrap/toilets/active_release.json -> build/bdist.linux-x86_64/wheel/./app/resources/bootstrap/toilets
+#16 5.232 creating build/bdist.linux-x86_64/wheel/app/resources/bootstrap/official
+#16 5.233 copying build/lib/app/resources/bootstrap/official/verified_offers.json -> build/bdist.linux-x86_64/wheel/./app/resources/bootstrap/official
+#16 5.234 creating build/bdist.linux-x86_64/wheel/app/resources/bootstrap/safety
+#16 5.234 copying build/lib/app/resources/bootstrap/safety/scenarios.json -> build/bdist.linux-x86_64/wheel/./app/resources/bootstrap/safety
+#16 5.235 copying build/lib/app/grounding_claims.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.235 copying build/lib/app/official_offer_source.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.235 copying build/lib/app/drinking_fountain_sync.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.236 copying build/lib/app/card_texts.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.236 copying build/lib/app/grounding_schedules.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.236 copying build/lib/app/service_check.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.238 copying build/lib/app/infrastructure_results.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.238 copying build/lib/app/kb_loader.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.238 copying build/lib/app/drinking_fountain_releases.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.238 copying build/lib/app/text_normalization.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.238 copying build/lib/app/spoken_text.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.239 copying build/lib/app/main.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.239 copying build/lib/app/llm_stages.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.240 copying build/lib/app/answer_sentences.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.240 copying build/lib/app/speech.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.240 copying build/lib/app/application_texts.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.240 copying build/lib/app/translation_contract.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.241 copying build/lib/app/interpreter.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.242 copying build/lib/app/retrieval.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.242 copying build/lib/app/resources.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.242 copying build/lib/app/policy_facts.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.243 copying build/lib/app/version.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.243 copying build/lib/app/candidate_context.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.243 copying build/lib/app/formulation.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.244 copying build/lib/app/dialogue_flow.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.244 copying build/lib/app/wfs_releases.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.245 copying build/lib/app/live_evaluation_plan.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.245 copying build/lib/app/grounding_content.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.246 copying build/lib/app/live_evaluation_runtime.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.246 copying build/lib/app/models.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.247 copying build/lib/app/external_services.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.247 copying build/lib/app/prompt_comparison.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.247 copying build/lib/app/result_time.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.248 copying build/lib/app/grounding_references.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.248 copying build/lib/app/i18n.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.249 copying build/lib/app/wfs_sync.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.249 copying build/lib/app/spatial.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.249 copying build/lib/app/live_evaluation_runner.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.250 copying build/lib/app/answer_act_texts.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.251 creating build/bdist.linux-x86_64/wheel/app/providers
+#16 5.252 copying build/lib/app/providers/diagnostics.py -> build/bdist.linux-x86_64/wheel/./app/providers
+#16 5.252 copying build/lib/app/providers/llm.py -> build/bdist.linux-x86_64/wheel/./app/providers
+#16 5.253 copying build/lib/app/providers/__init__.py -> build/bdist.linux-x86_64/wheel/./app/providers
+#16 5.253 copying build/lib/app/formulator_prose.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.253 copying build/lib/app/maps.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.253 copying build/lib/app/live_evaluation.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.254 copying build/lib/app/drinking_fountain_source.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.254 copying build/lib/app/grounding_values.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.255 copying build/lib/app/interactions.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.255 copying build/lib/app/candidates.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.255 copying build/lib/app/grounding.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.256 copying build/lib/app/multilingual_review.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.256 copying build/lib/app/curation.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.257 copying build/lib/app/translate_offers.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.257 copying build/lib/app/prompt_comparison_cases.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.257 copying build/lib/app/sessions.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.258 copying build/lib/app/toilet_releases.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.258 copying build/lib/app/candidate_contract.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.259 copying build/lib/app/config.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.259 copying build/lib/app/__main__.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.260 copying build/lib/app/service.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.260 copying build/lib/app/dialogue.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.260 copying build/lib/app/grounding_constraints.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.261 copying build/lib/app/grounding_surface.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.261 copying build/lib/app/llm_budget.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.261 copying build/lib/app/llm_selection.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.262 copying build/lib/app/logging_setup.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.262 copying build/lib/app/safety.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.262 copying build/lib/app/__init__.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.263 copying build/lib/app/live_evaluation_checks.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.264 creating build/bdist.linux-x86_64/wheel/app/static
+#16 5.265 copying build/lib/app/static/styles.css -> build/bdist.linux-x86_64/wheel/./app/static
+#16 5.265 copying build/lib/app/static/dialogue.js -> build/bdist.linux-x86_64/wheel/./app/static
+#16 5.266 creating build/bdist.linux-x86_64/wheel/app/static/vendor
+#16 5.268 creating build/bdist.linux-x86_64/wheel/app/static/vendor/leaflet
+#16 5.269 creating build/bdist.linux-x86_64/wheel/app/static/vendor/leaflet/images
+#16 5.270 copying build/lib/app/static/vendor/leaflet/images/layers-2x.png -> build/bdist.linux-x86_64/wheel/./app/static/vendor/leaflet/images
+#16 5.270 copying build/lib/app/static/vendor/leaflet/images/marker-icon-2x.png -> build/bdist.linux-x86_64/wheel/./app/static/vendor/leaflet/images
+#16 5.270 copying build/lib/app/static/vendor/leaflet/images/layers.png -> build/bdist.linux-x86_64/wheel/./app/static/vendor/leaflet/images
+#16 5.271 copying build/lib/app/static/vendor/leaflet/images/marker-icon.png -> build/bdist.linux-x86_64/wheel/./app/static/vendor/leaflet/images
+#16 5.271 copying build/lib/app/static/vendor/leaflet/images/marker-shadow.png -> build/bdist.linux-x86_64/wheel/./app/static/vendor/leaflet/images
+#16 5.272 copying build/lib/app/static/vendor/leaflet/leaflet.js -> build/bdist.linux-x86_64/wheel/./app/static/vendor/leaflet
+#16 5.272 copying build/lib/app/static/vendor/leaflet/LICENSE -> build/bdist.linux-x86_64/wheel/./app/static/vendor/leaflet
+#16 5.273 copying build/lib/app/static/vendor/leaflet/leaflet.css -> build/bdist.linux-x86_64/wheel/./app/static/vendor/leaflet
+#16 5.273 copying build/lib/app/static/app.js -> build/bdist.linux-x86_64/wheel/./app/static
+#16 5.273 copying build/lib/app/static/index.html -> build/bdist.linux-x86_64/wheel/./app/static
+#16 5.274 copying build/lib/app/infrastructure.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.274 copying build/lib/app/release_storage.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.274 copying build/lib/app/hilfebus.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.275 copying build/lib/app/answer_plan.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.275 copying build/lib/app/result_ordering.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.275 copying build/lib/app/translation_tokens.py -> build/bdist.linux-x86_64/wheel/./app
+#16 5.276 warning: install_lib: byte-compiling is disabled, skipping.
+#16 5.276 
+#16 5.276 running install_egg_info
+#16 5.278 Copying lena_code3.egg-info to build/bdist.linux-x86_64/wheel/./lena_code3-0.2.0-py3.12.egg-info
+#16 5.280 running install_scripts
+#16 5.285 creating build/bdist.linux-x86_64/wheel/lena_code3-0.2.0.dist-info/WHEEL
+#16 5.286 creating '/dist/.tmp-tbelxrds/lena_code3-0.2.0-py3-none-any.whl' and adding 'build/bdist.linux-x86_64/wheel' to it
+#16 5.286 adding 'app/__init__.py'
+#16 5.287 adding 'app/__main__.py'
+#16 5.288 adding 'app/answer_act_texts.py'
+#16 5.288 adding 'app/answer_plan.py'
+#16 5.289 adding 'app/answer_sentences.py'
+#16 5.289 adding 'app/application_texts.py'
+#16 5.290 adding 'app/candidate_context.py'
+#16 5.290 adding 'app/candidate_contract.py'
+#16 5.291 adding 'app/candidates.py'
+#16 5.292 adding 'app/card_texts.py'
+#16 5.292 adding 'app/config.py'
+#16 5.293 adding 'app/curation.py'
+#16 5.294 adding 'app/dialogue.py'
+#16 5.294 adding 'app/dialogue_flow.py'
+#16 5.295 adding 'app/drinking_fountain_releases.py'
+#16 5.296 adding 'app/drinking_fountain_source.py'
+#16 5.296 adding 'app/drinking_fountain_sync.py'
+#16 5.296 adding 'app/external_services.py'
+#16 5.298 adding 'app/formulation.py'
+#16 5.298 adding 'app/formulator_prose.py'
+#16 5.299 adding 'app/grounding.py'
+#16 5.300 adding 'app/grounding_claims.py'
+#16 5.301 adding 'app/grounding_constraints.py'
+#16 5.301 adding 'app/grounding_content.py'
+#16 5.302 adding 'app/grounding_references.py'
+#16 5.302 adding 'app/grounding_schedules.py'
+#16 5.302 adding 'app/grounding_surface.py'
+#16 5.303 adding 'app/grounding_values.py'
+#16 5.303 adding 'app/hilfebus.py'
+#16 5.304 adding 'app/i18n.py'
+#16 5.305 adding 'app/infrastructure.py'
+#16 5.305 adding 'app/infrastructure_results.py'
+#16 5.306 adding 'app/interactions.py'
+#16 5.307 adding 'app/interpreter.py'
+#16 5.307 adding 'app/kb_loader.py'
+#16 5.308 adding 'app/live_evaluation.py'
+#16 5.308 adding 'app/live_evaluation_checks.py'
+#16 5.309 adding 'app/live_evaluation_plan.py'
+#16 5.310 adding 'app/live_evaluation_runner.py'
+#16 5.311 adding 'app/live_evaluation_runtime.py'
+#16 5.311 adding 'app/llm_budget.py'
+#16 5.312 adding 'app/llm_selection.py'
+#16 5.312 adding 'app/llm_stages.py'
+#16 5.313 adding 'app/logging_setup.py'
+#16 5.314 adding 'app/main.py'
+#16 5.314 adding 'app/maps.py'
+#16 5.314 adding 'app/models.py'
+#16 5.315 adding 'app/multilingual_review.py'
+#16 5.315 adding 'app/official_offer_source.py'
+#16 5.315 adding 'app/policy_facts.py'
+#16 5.316 adding 'app/prompt_comparison.py'
+#16 5.317 adding 'app/prompt_comparison_cases.py'
+#16 5.317 adding 'app/release_storage.py'
+#16 5.318 adding 'app/resources.py'
+#16 5.318 adding 'app/result_ordering.py'
+#16 5.319 adding 'app/result_time.py'
+#16 5.319 adding 'app/retrieval.py'
+#16 5.320 adding 'app/safety.py'
+#16 5.322 adding 'app/service.py'
+#16 5.322 adding 'app/service_check.py'
+#16 5.323 adding 'app/sessions.py'
+#16 5.323 adding 'app/spatial.py'
+#16 5.324 adding 'app/speech.py'
+#16 5.324 adding 'app/spoken_text.py'
+#16 5.324 adding 'app/text_normalization.py'
+#16 5.325 adding 'app/toilet_releases.py'
+#16 5.326 adding 'app/toilet_sync.py'
+#16 5.327 adding 'app/translate_offers.py'
+#16 5.328 adding 'app/translation_contract.py'
+#16 5.328 adding 'app/translation_tokens.py'
+#16 5.329 adding 'app/version.py'
+#16 5.329 adding 'app/wfs_releases.py'
+#16 5.330 adding 'app/wfs_sync.py'
+#16 5.330 adding 'app/providers/__init__.py'
+#16 5.331 adding 'app/providers/diagnostics.py'
+#16 5.332 adding 'app/providers/llm.py'
+#16 5.335 adding 'app/resources/bootstrap/canonical/offers.json'
+#16 5.336 adding 'app/resources/bootstrap/curation/runtime_manifest.json'
+#16 5.338 adding 'app/resources/bootstrap/curation/social_offers.json'
+#16 5.338 adding 'app/resources/bootstrap/drinking_fountains/active_release.json'
+#16 5.339 adding 'app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090/diff.json'
+#16 5.340 adding 'app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090/manifest.json'
+#16 5.430 adding 'app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090/municipality_boundary.geojson'
+#16 5.432 adding 'app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090/records.json'
+#16 5.432 adding 'app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090/snapshot.kml'
+#16 5.433 adding 'app/resources/bootstrap/drinking_fountains/releases/20260802T122318Z-58d55e2ab090/source_evidence.json'
+#16 5.434 adding 'app/resources/bootstrap/evaluation/live_scenarios.json'
+#16 5.436 adding 'app/resources/bootstrap/i18n/application_texts.json'
+#16 5.436 adding 'app/resources/bootstrap/i18n/dynamic_scenarios.json'
+#16 5.436 adding 'app/resources/bootstrap/i18n/listening_review.json'
+#16 5.441 adding 'app/resources/bootstrap/i18n/offer_translations.json'
+#16 5.441 adding 'app/resources/bootstrap/official/verified_offers.json'
+#16 5.441 adding 'app/resources/bootstrap/safety/scenarios.json'
+#16 5.442 adding 'app/resources/bootstrap/toilets/active_release.json'
+#16 5.442 adding 'app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd/diff.json'
+#16 5.443 adding 'app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd/manifest.json'
+#16 5.443 adding 'app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd/records.json'
+#16 5.444 adding 'app/resources/bootstrap/toilets/releases/20260802T055552Z-fce215d4e7bd/snapshot.csv'
+#16 5.445 adding 'app/resources/bootstrap/wfs/current.geojson'
+#16 5.445 adding 'app/resources/bootstrap/wfs/last_change_report.json'
+#16 5.447 adding 'app/static/app.js'
+#16 5.448 adding 'app/static/dialogue.js'
+#16 5.448 adding 'app/static/index.html'
+#16 5.449 adding 'app/static/styles.css'
+#16 5.449 adding 'app/static/vendor/leaflet/LICENSE'
+#16 5.450 adding 'app/static/vendor/leaflet/leaflet.css'
+#16 5.456 adding 'app/static/vendor/leaflet/leaflet.js'
+#16 5.456 adding 'app/static/vendor/leaflet/images/layers-2x.png'
+#16 5.456 adding 'app/static/vendor/leaflet/images/layers.png'
+#16 5.457 adding 'app/static/vendor/leaflet/images/marker-icon-2x.png'
+#16 5.457 adding 'app/static/vendor/leaflet/images/marker-icon.png'
+#16 5.458 adding 'app/static/vendor/leaflet/images/marker-shadow.png'
+#16 5.460 adding 'lena_code3-0.2.0.dist-info/licenses/LICENSE'
+#16 5.460 adding 'lena_code3-0.2.0.dist-info/licenses/app/static/vendor/leaflet/LICENSE'
+#16 5.462 adding 'lena_code3-0.2.0.dist-info/METADATA'
+#16 5.462 adding 'lena_code3-0.2.0.dist-info/WHEEL'
+#16 5.462 adding 'lena_code3-0.2.0.dist-info/top_level.txt'
+#16 5.463 adding 'lena_code3-0.2.0.dist-info/RECORD'
+#16 5.464 removing build/bdist.linux-x86_64/wheel
+#16 5.531 Successfully built lena_code3-0.2.0.tar.gz and lena_code3-0.2.0-py3-none-any.whl
+#16 5.834 No broken requirements found.
+#16 9.856 Looking in links: /wheelhouse, /wheelhouse
+#16 9.877 Processing /wheelhouse/aiohappyeyeballs-2.7.1-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 3))
+#16 9.886 Processing /wheelhouse/aiohttp-3.14.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (from -r /locks/runtime-py312.lock (line 5))
+#16 9.899 Processing /wheelhouse/aiosignal-1.4.0-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 8))
+#16 9.909 Processing /wheelhouse/annotated_doc-0.0.4-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 10))
+#16 9.916 Processing /wheelhouse/annotated_types-0.7.0-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 12))
+#16 9.924 Processing /wheelhouse/anyio-4.14.2-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 14))
+#16 9.932 Processing /wheelhouse/attrs-26.1.0-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 16))
+#16 9.940 Processing /wheelhouse/av-17.0.1-cp311-abi3-manylinux_2_28_x86_64.whl (from -r /locks/runtime-py312.lock (line 18))
+#16 10.01 Processing /wheelhouse/certifi-2026.6.17-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 21))
+#16 10.02 Processing /wheelhouse/click-8.4.2-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 23))
+#16 10.03 Processing /wheelhouse/edge_tts-7.3.1-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 25))
+#16 10.04 Processing /wheelhouse/fastapi-0.139.2-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 27))
+#16 10.05 Processing /wheelhouse/frozenlist-1.8.0-cp312-cp312-manylinux1_x86_64.manylinux_2_28_x86_64.manylinux_2_5_x86_64.whl (from -r /locks/runtime-py312.lock (line 29))
+#16 10.05 Processing /wheelhouse/h11-0.16.0-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 33))
+#16 10.06 Processing /wheelhouse/httpcore-1.0.9-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 35))
+#16 10.07 Processing /wheelhouse/httpx-0.28.1-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 37))
+#16 10.08 Processing /wheelhouse/idna-3.18-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 39))
+#16 10.09 Processing /wheelhouse/multidict-6.7.1-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (from -r /locks/runtime-py312.lock (line 41))
+#16 10.10 Processing /wheelhouse/propcache-0.5.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (from -r /locks/runtime-py312.lock (line 45))
+#16 10.10 Processing /wheelhouse/pydantic-2.13.4-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 49))
+#16 10.11 Processing /wheelhouse/pydantic_core-2.46.4-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (from -r /locks/runtime-py312.lock (line 51))
+#16 10.13 Processing /wheelhouse/starlette-1.3.1-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 54))
+#16 10.14 Processing /wheelhouse/tabulate-0.10.0-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 56))
+#16 10.14 Processing /wheelhouse/typing_extensions-4.16.0-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 58))
+#16 10.15 Processing /wheelhouse/typing_inspection-0.4.2-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 60))
+#16 10.16 Processing /wheelhouse/tzdata-2026.3-py2.py3-none-any.whl (from -r /locks/runtime-py312.lock (line 62))
+#16 10.17 Processing /wheelhouse/uvicorn-0.51.0-py3-none-any.whl (from -r /locks/runtime-py312.lock (line 64))
+#16 10.18 Processing /wheelhouse/yarl-1.24.2-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl (from -r /locks/runtime-py312.lock (line 66))
+#16 10.50 Installing collected packages: tzdata, typing-extensions, tabulate, propcache, multidict, idna, h11, frozenlist, click, certifi, av, attrs, annotated-types, annotated-doc, aiohappyeyeballs, yarl, uvicorn, typing-inspection, pydantic-core, httpcore, anyio, aiosignal, starlette, pydantic, httpx, aiohttp, fastapi, edge-tts
+#16 13.51 Successfully installed aiohappyeyeballs-2.7.1 aiohttp-3.14.1 aiosignal-1.4.0 annotated-doc-0.0.4 annotated-types-0.7.0 anyio-4.14.2 attrs-26.1.0 av-17.0.1 certifi-2026.6.17 click-8.4.2 edge-tts-7.3.1 fastapi-0.139.2 frozenlist-1.8.0 h11-0.16.0 httpcore-1.0.9 httpx-0.28.1 idna-3.18 multidict-6.7.1 propcache-0.5.2 pydantic-2.13.4 pydantic-core-2.46.4 starlette-1.3.1 tabulate-0.10.0 typing-extensions-4.16.0 typing-inspection-0.4.2 tzdata-2026.3 uvicorn-0.51.0 yarl-1.24.2
+#16 14.08 Looking in links: /wheelhouse
+#16 14.09 Processing /dist/lena_code3-0.2.0-py3-none-any.whl
+#16 14.10 Installing collected packages: lena-code3
+#16 14.42 Successfully installed lena-code3-0.2.0
+#16 15.04 No broken requirements found.
+#16 DONE 15.3s
+
+#17 exporting to image
+#17 exporting layers
+#17 exporting layers 10.6s done
+#17 exporting manifest sha256:55df226ce9174522a99b0af46301166da03f69746349737ea687dada65c422e3 0.0s done
+#17 exporting config sha256:b5d1eefec3649c276e4612593bf03f95fff8ecf1ab526b169af8466e6312b45e 0.0s done
+#17 exporting attestation manifest sha256:4d2b15ecc1f02d39efcd13592c8048f9b6c58640df8b608a5c8beaaa0eb57ebd 0.0s done
+#17 exporting manifest list sha256:c2027ef5467e0544033e9c4b0c840d41023cf7af79c21d0aa99ffe375c7ce11f 0.0s done
+#17 naming to docker.io/library/lena-card-translation-test:latest
+#17 naming to docker.io/library/lena-card-translation-test:latest done
+#17 unpacking to docker.io/library/lena-card-translation-test:latest
+#17 unpacking to docker.io/library/lena-card-translation-test:latest 10.7s done
+#17 DONE 21.4s

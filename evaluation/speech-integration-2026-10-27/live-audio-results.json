@@ -1,0 +1,146 @@
+{
+  "date": "2026-10-27",
+  "content": "synthetic only",
+  "commit": "209edfafb7ea864e8d053eb6a604a94ae16b3662",
+  "python": "3.14.3",
+  "edge_tts": "7.3.1",
+  "stt_provider": "blablador",
+  "tts_provider": "edge",
+  "human_microphone_and_listening_review": "pending",
+  "languages": {
+    "de": {
+      "input_phrase": "Ich brauche medizinische Hilfe.",
+      "input_ogg": {
+        "bytes": 19433,
+        "seconds": 3.12,
+        "sha256": "aba2775befd4dda100247a305ba0461c28b9ca5b84459339c41ef54ae7ca5724"
+      },
+      "stt_http": 200,
+      "transcript": "Ich brauche medizinische Hilfe.",
+      "tts_input": "session-bound acute_risk policy; preflight, no LLM call",
+      "tts_http": 200,
+      "output_mp3": {
+        "bytes": 61488,
+        "seconds": 10.248,
+        "sha256": "8bd67ab632e977414173dd4c8a1aa095df0a8d0e57ad2b2f3994d60a18878964"
+      },
+      "result": "technical_pass",
+      "seconds": 5.13
+    },
+    "en": {
+      "input_phrase": "I need medical help.",
+      "input_ogg": {
+        "bytes": 15914,
+        "seconds": 2.352,
+        "sha256": "e613ea32bc206534583e4f167ec005142a0e58a66ac751f6a0193e7482e051c1"
+      },
+      "stt_http": 200,
+      "transcript": "I need medical help.",
+      "tts_input": "session-bound acute_risk policy; preflight, no LLM call",
+      "tts_http": 200,
+      "output_mp3": {
+        "bytes": 45936,
+        "seconds": 7.656,
+        "sha256": "111f18e13f70b6d34223e98d44049723ad79078252439b4adc5397f27044904c"
+      },
+      "result": "technical_pass",
+      "seconds": 3.31
+    },
+    "pl": {
+      "input_phrase": "Potrzebuję pomocy medycznej.",
+      "input_ogg": {
+        "bytes": 18975,
+        "seconds": 2.832,
+        "sha256": "5065e8022574319e413a918729040e8467477e3d03b4465cee4e1a63da44f138"
+      },
+      "stt_http": 200,
+      "transcript": "Potrzebuję pomocy medycznej.",
+      "tts_input": "session-bound acute_risk policy; preflight, no LLM call",
+      "tts_http": 200,
+      "output_mp3": {
+        "bytes": 62352,
+        "seconds": 10.392,
+        "sha256": "31d7196876b0cb3ecd7fe9d4efcca0f34aab4092442bb32bbc851e26828966ff"
+      },
+      "result": "technical_pass",
+      "seconds": 4.99
+    },
+    "ro": {
+      "input_phrase": "Am nevoie de ajutor medical.",
+      "input_ogg": {
+        "bytes": 19045,
+        "seconds": 2.976,
+        "sha256": "29e2c2b21d954b22e10c7a986c1e17937eab2c6d0cdbb29ecbe23a32039ab8c3"
+      },
+      "stt_http": 200,
+      "transcript": "Am nevoie de ajutor medical.",
+      "tts_input": "session-bound acute_risk policy; preflight, no LLM call",
+      "tts_http": 200,
+      "output_mp3": {
+        "bytes": 53712,
+        "seconds": 8.952,
+        "sha256": "b8f8bc180784cc4c72ed820014bee10d456e684397eb08ca409baa4fbe9654cd"
+      },
+      "result": "technical_pass",
+      "seconds": 11.83
+    },
+    "ru": {
+      "input_phrase": "Мне нужна медицинская помощь.",
+      "input_ogg": {
+        "bytes": 20784,
+        "seconds": 3.144,
+        "sha256": "cf787b1ad6c6e867dc6858c711ac8983452ff85925fee50a7f931a4a1e8bf6fa"
+      },
+      "stt_http": 200,
+      "transcript": "Мне нужна медицинская помощь.",
+      "tts_input": "session-bound acute_risk policy; preflight, no LLM call",
+      "tts_http": 200,
+      "output_mp3": {
+        "bytes": 59760,
+        "seconds": 9.96,
+        "sha256": "9b28c28012a04290f25dbe2ed1f6041fa219696ffd7fe7f92c618d0efd4fffd5"
+      },
+      "result": "technical_pass",
+      "seconds": 15.18
+    }
+  },
+  "speech_config": {
+    "server_transcription_available": true,
+    "server_synthesis_available": true,
+    "synthesis_format": "mp3",
+    "supported_languages": [
+      "de",
+      "en",
+      "pl",
+      "ro",
+      "ru"
+    ]
+  },
+  "service_check": {
+    "llm": {
+      "provider": "blablador",
+      "configured": true,
+      "result": "ok"
+    },
+    "speech_transcription": {
+      "provider": "blablador",
+      "configured": true,
+      "result": "ok"
+    },
+    "speech_synthesis": {
+      "provider": "edge",
+      "configured": true,
+      "result": "ok",
+      "synthesis": {
+        "result": "ok",
+        "audio_bytes": 11232
+      }
+    },
+    "map_tiles": {
+      "provider": "osm",
+      "configured": true,
+      "result": "browser_side_not_checked"
+    }
+  },
+  "probe_postprocessing": "Nested event-loop call in external probe corrected; independent service check rerun; original five HTTP passes retained."
+}

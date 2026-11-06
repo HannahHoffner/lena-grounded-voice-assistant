@@ -1,0 +1,42 @@
+{
+  "first_attempts": 113,
+  "cross_table": [
+    {
+      "validator": "accepted",
+      "rating": "FU",
+      "n": 1
+    },
+    {
+      "validator": "accepted",
+      "rating": "R",
+      "n": 68
+    },
+    {
+      "validator": "accepted",
+      "rating": "U",
+      "n": 9
+    },
+    {
+      "validator": "rejected",
+      "rating": "FU",
+      "n": 1
+    },
+    {
+      "validator": "rejected",
+      "rating": "R",
+      "n": 30
+    },
+    {
+      "validator": "rejected",
+      "rating": "U",
+      "n": 4
+    }
+  ],
+  "all_text_ratings": {
+    "R": 116,
+    "U": 15,
+    "FU": 2,
+    "FK": 1
+  },
+  "method": "Join item_id; role=erstversuch; U bleibt separat; keine Umwertung."
+}

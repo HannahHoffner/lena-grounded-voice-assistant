@@ -1,0 +1,25 @@
+{
+  "abort_reason": null,
+  "clinical_validation_asserted": false,
+  "completed_at": "2026-10-22T14:00:24.763009+00:00",
+  "content_evaluation_complete": false,
+  "content_gate_passed": false,
+  "content_mismatch_count": 1,
+  "contract_gate_passed": false,
+  "counts": {
+    "failures": 8,
+    "formulator_calls": 23,
+    "interpreter_calls": 31,
+    "provider_calls": 59,
+    "requests": 34,
+    "selector_calls": 5
+  },
+  "critical_content_error_count": 0,
+  "linguistic_review_status": "pending",
+  "next_stage_started": false,
+  "product_release_asserted": false,
+  "run_id": "run_50d9cdb41a564aab909d737f0811546d",
+  "stage": "end-to-end",
+  "status": "completed",
+  "unverified_metric_count": 54
+}

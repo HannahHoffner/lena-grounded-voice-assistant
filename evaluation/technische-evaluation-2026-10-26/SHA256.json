@@ -1,0 +1,18 @@
+{
+  "measurement-profile.json": "ce2026cd746c653beb0b9eabae0f46f331c7a61124a8c02b01811176adb9f381",
+  "measurement-summary.json": "4d2b0a248a4efce30908873249788b541ddfa485968f6c905812770f0f53d9dc",
+  "RESULT_ASSESSMENT.md": "c2ec4e29606231558839fc018a23a29f79719b31b6d20d9073ae60fabb8679a1",
+  "runtime/live-evaluations/run_4a90aba53e164c4593d14cd2d39f0237/manifest.json": "be6d776498e6278dd1275b0628a0ce02d9948f04a91d10fdb287f6f36db1554f",
+  "runtime/live-evaluations/run_4a90aba53e164c4593d14cd2d39f0237/stage-results.jsonl": "bec1f6b5671f2175b3b7da41551536e4c7f4d0d2a87d66daa03bcb1bf238fa7a",
+  "runtime/live-evaluations/run_4a90aba53e164c4593d14cd2d39f0237/summary.json": "46171d670cd3ba63df0b137cec99728e1fa70672ae64aebc98f17782c8a86d08",
+  "runtime/live-evaluations/run_642870f9c3c746e999acba1c094ca81f/manifest.json": "8f9edfc2febddaac57e68e4f7b296f7f61b0901f30b47594a96d03687159797f",
+  "runtime/live-evaluations/run_642870f9c3c746e999acba1c094ca81f/stage-results.jsonl": "466379ce7844cf4aaff888fccd6cfd8fde0a61f40b8407e10c03263ed12b631c",
+  "runtime/live-evaluations/run_642870f9c3c746e999acba1c094ca81f/summary.json": "b89d045e54b06c89c376725a68ee199df6dc56fde15aa8dfab02c165fd97242f",
+  "runtime/live-evaluations/run_7d26ad94463c490fbdbb8f02122e4c28/manifest.json": "329b1a415a651bf6ae11c49d9242166f2fb61f10f92060fe42a46fc11ccc88fb",
+  "runtime/live-evaluations/run_7d26ad94463c490fbdbb8f02122e4c28/stage-results.jsonl": "c11e3d788ab46c0e9e516943c1b31194721783ccee0e9828c610796e26359fc3",
+  "runtime/live-evaluations/run_7d26ad94463c490fbdbb8f02122e4c28/summary.json": "879d0c62f446b837dc8d21ce4f5e1971ad70f6632762dc2201723d7fd82c38c7",
+  "runtime/live-evaluations/run_f61552f6c5fc4e4daaa83024b4163a7d/manifest.json": "53587613aa8d13a1da0f13baa76255718ab06d88bf6383943b888a48ce2cd113",
+  "runtime/live-evaluations/run_f61552f6c5fc4e4daaa83024b4163a7d/stage-results.jsonl": "30c127e491d2ea1cb12f1a07c83ef0caa092d3620621eb1e8219a2397c5cad11",
+  "runtime/live-evaluations/run_f61552f6c5fc4e4daaa83024b4163a7d/summary.json": "dd74d77827fdabe3f196c2638fc0f273e0f347cb17366a152a7acf01d7fe6441",
+  "source-manifest.json": "2259d32533a8cddfba240f69c0489e87ae9e00c9216a1fdcac593e4dbf75a3f4"
+}

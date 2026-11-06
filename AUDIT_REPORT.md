@@ -88,7 +88,7 @@ Build-Netzwerk bleibt nötig: Registry, Ubuntu-Snapshot und Python-Paketindex. H
 
 ### Wissenschaftliche Primärbelege
 
-Alle **31** in `../thesis/Evaluation/technische-evaluation-2026-10-22/SHA256.json` aufgeführten Dateien stimmen mit ihren SHA-256-Werten überein; keine zusätzlichen unindizierten Dateien außer dem Index selbst. JSONL-Zeilen und Kennzahlen wurden zusätzlich gelesen/gezählt. Der Hashnachweis belegt Integrität relativ zum mitgelieferten Index, keine unabhängige Zeitstempelung oder fachliche Wahrheit.
+Alle **31** in `evaluation/technische-evaluation-2026-10-22/SHA256.json` aufgeführten Dateien stimmen mit ihren SHA-256-Werten überein; keine zusätzlichen unindizierten Dateien außer dem Index selbst. JSONL-Zeilen und Kennzahlen wurden zusätzlich gelesen/gezählt. Der Hashnachweis belegt Integrität relativ zum mitgelieferten Index, keine unabhängige Zeitstempelung oder fachliche Wahrheit.
 
 | Lauf / Messreihe vom 22.10.2026 | Fälle / Requests / Provideraufrufe | Technisch beanstandete Fälle | Inhaltsbefund / Gates |
 |---|---:|---:|---|

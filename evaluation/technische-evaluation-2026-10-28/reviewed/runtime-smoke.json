@@ -1,0 +1,14 @@
+{
+  "kb_loaded": true,
+  "without_credentials_controlled_fallback": true,
+  "session_survives_restart": true,
+  "session_survives_container_replacement": true,
+  "docker_healthcheck": "healthy",
+  "read_only_loopback": true,
+  "installed_text_contract": "7/27",
+  "installed_grounding_validator": "10",
+  "application_text_version": "11",
+  "image_id": "sha256:9f715e024211f59787e8ec08febe3e1b38e70597a0585c8b80be3e6fd5494f41",
+  "live_provider_calls": 0,
+  "status": "passed"
+}

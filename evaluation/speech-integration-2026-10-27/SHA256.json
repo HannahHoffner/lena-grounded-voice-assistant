@@ -1,0 +1,17 @@
+{
+  "de-policy-output.mp3": "8bd67ab632e977414173dd4c8a1aa095df0a8d0e57ad2b2f3994d60a18878964",
+  "de-synthetic-input.ogg": "aba2775befd4dda100247a305ba0461c28b9ca5b84459339c41ef54ae7ca5724",
+  "en-policy-output.mp3": "111f18e13f70b6d34223e98d44049723ad79078252439b4adc5397f27044904c",
+  "en-synthetic-input.ogg": "e613ea32bc206534583e4f167ec005142a0e58a66ac751f6a0193e7482e051c1",
+  "live-audio-results.json": "6d53069e0c17996a090e7a219d9c1bd374c9219323380368694d2b78e0495440",
+  "live_audio_check.py": "90d75f379cf42277821769679a525fbfc11aed55b5d1ad1de9a9232d820910f7",
+  "pl-policy-output.mp3": "31d7196876b0cb3ecd7fe9d4efcca0f34aab4092442bb32bbc851e26828966ff",
+  "pl-synthetic-input.ogg": "5065e8022574319e413a918729040e8467477e3d03b4465cee4e1a63da44f138",
+  "README.md": "40dc751b37f7b3898918ae471f3a5f0390082ba6a0ab70522322f2d8866f664a",
+  "regression-results.json": "249af1e6ada6ff7a4c4990d2a5e74ae048fd9065de14e96c97f2724c87c05719",
+  "ro-policy-output.mp3": "b8f8bc180784cc4c72ed820014bee10d456e684397eb08ca409baa4fbe9654cd",
+  "ro-synthetic-input.ogg": "29e2c2b21d954b22e10c7a986c1e17937eab2c6d0cdbb29ecbe23a32039ab8c3",
+  "ru-policy-output.mp3": "9b28c28012a04290f25dbe2ed1f6041fa219696ffd7fe7f92c618d0efd4fffd5",
+  "ru-synthetic-input.ogg": "cf787b1ad6c6e867dc6858c711ac8983452ff85925fee50a7f931a4a1e8bf6fa",
+  "user-confirmation.json": "83f4ad3b14d8de7c6e8ceb404bc498dca3be54ad4aa5026155b553afb28fa2c5"
+}

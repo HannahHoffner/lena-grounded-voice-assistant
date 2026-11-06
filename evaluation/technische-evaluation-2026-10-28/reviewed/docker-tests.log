@@ -1,0 +1,137 @@
+........................................................................ [  4%]
+........................................................................ [  8%]
+........................................................................ [ 12%]
+........................................................................ [ 16%]
+........................................................................ [ 21%]
+........................................................................ [ 25%]
+........................................................................ [ 29%]
+..........................................................x............. [ 33%]
+........................................................................ [ 38%]
+........................................................................ [ 42%]
+........................................................................ [ 46%]
+........................................................................ [ 50%]
+........................................................................ [ 55%]
+........................................................................ [ 59%]
+........................................................................ [ 63%]
+........................................................................ [ 67%]
+........................................................................ [ 72%]
+........................................................................ [ 76%]
+........................................................................ [ 80%]
+........................................................................ [ 84%]
+........................................................................ [ 89%]
+........................................................................ [ 93%]
+........................................................................ [ 97%]
+........................................                                 [100%]
+=============================== warnings summary ===============================
+../opt/build/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /opt/build/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1695 passed, 1 xfailed, 1 warning in 318.67s (0:05:18)
+No broken requirements found.
+TAP version 13
+# Subtest: Firefox-style Ogg recording keeps recording status and releases microphone before STT
+ok 1 - Firefox-style Ogg recording keeps recording status and releases microphone before STT
+  ---
+  duration_ms: 21.41813
+  ...
+# Subtest: a failed recorder constructor still releases the granted microphone
+ok 2 - a failed recorder constructor still releases the granted microphone
+  ---
+  duration_ms: 3.899027
+  ...
+# Subtest: STT service failure differs from unintelligible or invalid audio
+ok 3 - STT service failure differs from unintelligible or invalid audio
+  ---
+  duration_ms: 3.762491
+  ...
+# Subtest: a successful response enables the next clarification
+ok 4 - a successful response enables the next clarification
+  ---
+  duration_ms: 3.221101
+  ...
+# Subtest: relocalizing an in-flight choice does not allow duplicate submission
+ok 5 - relocalizing an in-flight choice does not allow duplicate submission
+  ---
+  duration_ms: 4.810591
+  ...
+# Subtest: typing leaves the dialogue usable and sends no request
+ok 6 - typing leaves the dialogue usable and sends no request
+  ---
+  duration_ms: 4.453041
+  ...
+# Subtest: query submission is single-flight and choice payload excludes category
+ok 7 - query submission is single-flight and choice payload excludes category
+  ---
+  duration_ms: 6.094523
+  ...
+# Subtest: query failure releases the guard and restores dialogue choices
+ok 8 - query failure releases the guard and restores dialogue choices
+  ---
+  duration_ms: 5.595676
+  ...
+# Subtest: TTS sends the active session and releases audio on interruption
+ok 9 - TTS sends the active session and releases audio on interruption
+  ---
+  duration_ms: 13.276893
+  ...
+# Subtest: Start clears private content and ignores an old query without unlocking a new query
+ok 10 - Start clears private content and ignores an old query without unlocking a new query
+  ---
+  duration_ms: 8.086299
+  ...
+# Subtest: inactivity clears visible content, session and audio and returns to language selection
+ok 11 - inactivity clears visible content, session and audio and returns to language selection
+  ---
+  duration_ms: 6.121525
+  ...
+# Subtest: reset discards deferred STT success and failure
+ok 12 - reset discards deferred STT success and failure
+  ---
+  duration_ms: 11.645792
+  ...
+# Subtest: a microphone grant arriving after reset is immediately released
+ok 13 - a microphone grant arriving after reset is immediately released
+  ---
+  duration_ms: 8.469033
+  ...
+# Subtest: reset stops recording without submitting the discarded audio
+ok 14 - reset stops recording without submitting the discarded audio
+  ---
+  duration_ms: 9.20348
+  ...
+# Subtest: a failed old query cannot replace the reset view with an error
+ok 15 - a failed old query cannot replace the reset view with an error
+  ---
+  duration_ms: 5.038537
+  ...
+# Subtest: same playback button stops instead of issuing a second TTS call
+ok 16 - same playback button stops instead of issuing a second TTS call
+  ---
+  duration_ms: 9.199797
+  ...
+# Subtest: language change ignores a previous-language query response while retaining the session
+ok 17 - language change ignores a previous-language query response while retaining the session
+  ---
+  duration_ms: 5.504728
+  ...
+# Subtest: map base tiles follow the server map profile and never fall back to a hard-coded tile host
+ok 18 - map base tiles follow the server map profile and never fall back to a hard-coded tile host
+  ---
+  duration_ms: 8.298875
+  ...
+# Subtest: client config exposes server speech availability without enabling unsupported speech
+ok 19 - client config exposes server speech availability without enabling unsupported speech
+  ---
+  duration_ms: 2.244511
+  ...
+1..19
+# tests 19
+# suites 0
+# pass 19
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 359.022815

@@ -1,0 +1,121 @@
+........................................................................ [  5%]
+........................................................................ [ 11%]
+........................................................................ [ 17%]
+........................................................................ [ 23%]
+........................................................................ [ 29%]
+...........x............................................................ [ 35%]
+........................................................................ [ 41%]
+........................................................................ [ 47%]
+........................................................................ [ 53%]
+........................................................................ [ 59%]
+........................................................................ [ 64%]
+........................................................................ [ 70%]
+........................................................................ [ 76%]
+........................................................................ [ 82%]
+........................................................................ [ 88%]
+........................................................................ [ 94%]
+....................................................................     [100%]
+=============================== warnings summary ===============================
+../opt/build/lib/python3.12/site-packages/fastapi/testclient.py:1
+  /opt/build/lib/python3.12/site-packages/fastapi/testclient.py:1: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient as TestClient  # noqa
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+------------ generated xml file: /reports/container-regression.xml -------------
+1219 passed, 1 xfailed, 1 warning in 212.73s (0:03:32)
+No broken requirements found.
+TAP version 13
+# Subtest: Firefox-style Ogg recording keeps recording status and releases microphone before STT
+ok 1 - Firefox-style Ogg recording keeps recording status and releases microphone before STT
+  ---
+  duration_ms: 13.480475
+  ...
+# Subtest: a failed recorder constructor still releases the granted microphone
+ok 2 - a failed recorder constructor still releases the granted microphone
+  ---
+  duration_ms: 3.382764
+  ...
+# Subtest: STT service failure differs from unintelligible or invalid audio
+ok 3 - STT service failure differs from unintelligible or invalid audio
+  ---
+  duration_ms: 3.553768
+  ...
+# Subtest: a successful response enables the next clarification
+ok 4 - a successful response enables the next clarification
+  ---
+  duration_ms: 2.770437
+  ...
+# Subtest: relocalizing an in-flight choice does not allow duplicate submission
+ok 5 - relocalizing an in-flight choice does not allow duplicate submission
+  ---
+  duration_ms: 3.970633
+  ...
+# Subtest: typing leaves the dialogue usable and sends no request
+ok 6 - typing leaves the dialogue usable and sends no request
+  ---
+  duration_ms: 6.57828
+  ...
+# Subtest: query submission is single-flight and choice payload excludes category
+ok 7 - query submission is single-flight and choice payload excludes category
+  ---
+  duration_ms: 4.37347
+  ...
+# Subtest: query failure releases the guard and restores dialogue choices
+ok 8 - query failure releases the guard and restores dialogue choices
+  ---
+  duration_ms: 4.432757
+  ...
+# Subtest: TTS sends the active session and releases audio on interruption
+ok 9 - TTS sends the active session and releases audio on interruption
+  ---
+  duration_ms: 12.036717
+  ...
+# Subtest: Start clears private content and ignores an old query without unlocking a new query
+ok 10 - Start clears private content and ignores an old query without unlocking a new query
+  ---
+  duration_ms: 6.378643
+  ...
+# Subtest: inactivity clears visible content, session and audio and returns to language selection
+ok 11 - inactivity clears visible content, session and audio and returns to language selection
+  ---
+  duration_ms: 5.607994
+  ...
+# Subtest: reset discards deferred STT success and failure
+ok 12 - reset discards deferred STT success and failure
+  ---
+  duration_ms: 8.600675
+  ...
+# Subtest: a microphone grant arriving after reset is immediately released
+ok 13 - a microphone grant arriving after reset is immediately released
+  ---
+  duration_ms: 5.574629
+  ...
+# Subtest: reset stops recording without submitting the discarded audio
+ok 14 - reset stops recording without submitting the discarded audio
+  ---
+  duration_ms: 7.080197
+  ...
+# Subtest: a failed old query cannot replace the reset view with an error
+ok 15 - a failed old query cannot replace the reset view with an error
+  ---
+  duration_ms: 4.301746
+  ...
+# Subtest: same playback button stops instead of issuing a second TTS call
+ok 16 - same playback button stops instead of issuing a second TTS call
+  ---
+  duration_ms: 6.011693
+  ...
+# Subtest: language change ignores a previous-language query response while retaining the session
+ok 17 - language change ignores a previous-language query response while retaining the session
+  ---
+  duration_ms: 3.954221
+  ...
+1..17
+# tests 17
+# suites 0
+# pass 17
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 253.612389

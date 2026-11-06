@@ -1,0 +1,31 @@
+{
+  "started_utc": "2026-10-26T15:12:38.865201+00:00",
+  "git_head": "02a361265ac92a502f3e88dafc973d6302255308",
+  "git_status_app": "",
+  "queries_sha256": "043a2560221005a11aad760bd785168b8174b5056bdd8b353b7b1a26f9e22751",
+  "run_script_sha256": "583c26c54d04dbbb1daca21b612c39964f5e26fefb41a8c6f88f353ee1bb12c0",
+  "app_source_manifest_sha256": "1d2e94da4f4fbf1e31dc93090067b177828dcde567695582c1a9550c98033f10",
+  "runtime_kb_fingerprint": "9471e7051acb8d4e0fc62d59c1d74bb54f72cec1c28b6cffe291ac15499ec0d9",
+  "formulator_contract": "7",
+  "formulator_prompt": "25",
+  "grounding_validator": "7",
+  "models": {
+    "interpreter": "alias-fast",
+    "selector": "alias-fast",
+    "formulator": "alias-fast"
+  },
+  "max_tokens": 4096,
+  "timeouts": [
+    15.0,
+    30.0,
+    30.0
+  ],
+  "budget_seconds": 45.0,
+  "seed": 261026,
+  "concurrency": 2,
+  "requests": 120,
+  "finished_utc": "2026-10-26T15:29:03.010101+00:00",
+  "completed_requests": 120,
+  "aborted": false,
+  "app_source_unchanged": true
+}

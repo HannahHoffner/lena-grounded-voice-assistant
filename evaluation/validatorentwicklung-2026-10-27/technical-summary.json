@@ -1,0 +1,159 @@
+{
+  "baseline": {
+    "requests": 120,
+    "template_total": 83,
+    "model_total": 37,
+    "without_formulator": 7,
+    "formulator_to_template": 76,
+    "first_parsed": 113,
+    "first_validator_rejections": {
+      "content_not_covered": 53,
+      "formulator_invalid_fact": 1,
+      "no_result_boundary_missing": 4,
+      "target_claim_contradicted": 1,
+      "email_not_cited": 1,
+      "price_service_mismatch": 3,
+      "current_availability_unsupported": 1,
+      "service_fact_missing": 20,
+      "phone_not_exact": 4,
+      "fee_claim_unsupported": 1,
+      "domain_boundary_missing": 1
+    },
+    "all_validator_rejections": {
+      "content_not_covered": 99,
+      "formulator_invalid_fact": 2,
+      "no_result_boundary_missing": 7,
+      "target_claim_contradicted": 4,
+      "email_not_cited": 1,
+      "price_service_mismatch": 3,
+      "current_availability_unsupported": 1,
+      "service_fact_missing": 33,
+      "phone_not_exact": 5,
+      "time_not_cited": 3,
+      "proper_name_not_exact": 2,
+      "number_not_cited": 2,
+      "fee_claim_unsupported": 1,
+      "formulator_contract_violation": 1,
+      "domain_boundary_missing": 2
+    },
+    "pre_validation_errors": {}
+  },
+  "new": {
+    "requests": 120,
+    "template_total": 21,
+    "model_total": 99,
+    "without_formulator": 6,
+    "formulator_to_template": 15,
+    "first_parsed": 113,
+    "first_validator_rejections": {
+      "service_fact_missing": 3,
+      "domain_boundary_missing": 4,
+      "target_claim_contradicted": 3,
+      "formulator_contract_violation": 1,
+      "phone_not_exact": 8,
+      "formulator_invalid_language": 4,
+      "email_not_cited": 2,
+      "proper_name_not_exact": 1,
+      "time_not_cited": 5,
+      "price_service_mismatch": 1,
+      "formulator_invalid_fact": 2,
+      "current_availability_unsupported": 1
+    },
+    "all_validator_rejections": {
+      "service_fact_missing": 6,
+      "domain_boundary_missing": 7,
+      "target_claim_contradicted": 6,
+      "formulator_contract_violation": 1,
+      "phone_not_exact": 8,
+      "formulator_invalid_language": 6,
+      "email_not_cited": 3,
+      "proper_name_not_exact": 1,
+      "price_service_mismatch": 2,
+      "time_not_cited": 6,
+      "formulator_invalid_fact": 2,
+      "service_condition_mismatch": 1,
+      "current_availability_unsupported": 1
+    },
+    "pre_validation_errors": {
+      "formulator_schema_error": 1
+    }
+  },
+  "wound_cases": [
+    {
+      "query_id": "q10-de",
+      "answer_type": "grounded_result",
+      "cards": [
+        "25",
+        "21"
+      ],
+      "answer": "UVO bietet aufsuchende medizinische Versorgung und Weitervermittlung – melde dich per Telefon 015777682195 oder E‑Mail uvo@cab‑leipzig.de."
+    },
+    {
+      "query_id": "q10-en",
+      "answer_type": "grounded_result",
+      "cards": [
+        "10",
+        "21"
+      ],
+      "answer": "You can get a medical consultation at Tagestreff Oase on Thursdays at 15:00, and they can also accompany you to the hospital if needed."
+    },
+    {
+      "query_id": "q10-pl",
+      "answer_type": "grounded_result",
+      "cards": [
+        "25",
+        "21"
+      ],
+      "answer": "UVO zapewnia opiekę medyczną w terenie, w tym opatrunki na rany; możesz zadzwonić pod 015777682195 lub napisać na uvo@cab-leipzig.de. Mobilna oferta Medibus działa w środę 18:30, w piątek 10:00 i 14:00 oraz w niedzielę 20:00 przy Hauptbahnhof."
+    },
+    {
+      "query_id": "q10-ru",
+      "answer_type": "grounded_result",
+      "cards": [
+        "10",
+        "25",
+        "21"
+      ],
+      "answer": "UVO предоставляет выездную медицинскую помощь: среда 18:30 ч на Hauptbahnhof, пятница 10:00 ч (Koehlerstraße/Dresdner Straße) и 14:00 ч (Hauptbahnhof), воскресенье 20:00 ч на Hauptbahnhof. В Tagestreff Oase можно получить сопровождение в больницу и запись к врачу (четверг с 15:00 ч); звоните 0341 56124357 или пишите benjamin.mueller@diakonie-leipzig.de."
+    },
+    {
+      "query_id": "q10-ro",
+      "answer_type": "grounded_result",
+      "cards": [
+        "10",
+        "21"
+      ],
+      "answer": "La Tagestreff Oase poți merge la consultație medicală în joia de la 15:00 și poți cere însoțire la autorități și la spital; telefon 0341 56124357."
+    }
+  ],
+  "displayed_responses": 120,
+  "responses_with_cards": 120,
+  "bus_cards": 120,
+  "bus_named_in_final_text": 24,
+  "fixed_hint_operational_phone_occurrences": 15,
+  "bus_cards_with_location": 4,
+  "bus_markers": 4,
+  "bus_office_in_evidence": 0,
+  "bus_office_in_cards": 0,
+  "bus_office_in_markers": 0,
+  "bus_staff_phone_in_evidence": 0,
+  "answers_over_600": 0,
+  "displayed_names": [
+    {
+      "id": "10",
+      "name": "Tagestreff Oase",
+      "count": 55
+    },
+    {
+      "id": "8",
+      "name": "Übernachtungshaus für wohnungslose Frauen",
+      "count": 4
+    },
+    {
+      "id": "9",
+      "name": "Tagestreff Insel",
+      "count": 23
+    }
+  ],
+  "human_correctness_evaluation": "pending; no automated R/FK/FU ratings"
+}

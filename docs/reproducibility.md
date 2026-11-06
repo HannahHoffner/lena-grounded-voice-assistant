@@ -17,6 +17,24 @@ ohne Netzwerk als UID 10001. Ein echter Containerneustart entfernte den temporä
 Zustand. Native ARM64-Ausführung sowie zusätzliche Hostsysteme sind nicht geprüft.
 Diese Bereitstellungsprüfung ersetzt keine fachliche oder Live-Provider-Evaluation.
 
+## Archivierte Evaluationsbelege
+
+Die vollständigen manuellen, technischen und formativen Nachweise liegen
+unter [`evaluation/`](../evaluation/README.md) im Anwendungsrepository.
+Aus dessen Wurzel, mit Python >= 3.11 und ohne Zusatzpakete oder Netzwerk:
+
+```text
+python evaluation/pruefe_evidenz.py
+```
+
+Das wiederholt die Konsistenz- und Hashprüfung archivierter Belege; es führt
+keine neuen Modellaufrufe oder fachlichen Bewertungen aus. Originalbelege,
+SHA-256-Indizes und historische Commitzuordnungen bleiben unverändert.
+Gitexporte enthalten die Belege. Dockerkontext, Wheel und sdist dienen dem
+Softwarebetrieb und enthalten diesen separaten Evaluationsbestand nicht.
+Das bereits veröffentlichte Zenodo-Archiv v0.2.0 enthält die am 06.11.2026
+übernommenen Originalbelege noch nicht.
+
 ## Fixierte Umgebung
 
 | Bestandteil | Festlegung |

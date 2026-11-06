@@ -1,0 +1,9 @@
+{
+  "commit": "557a487a43d0edc3cac57f4bbc80670673ddc066",
+  "prior_regression_directory": "C:\\Users\\User\\AppData\\Local\\LENA\\verification\\2026-10-27-validator-final-false-positives\\reviewed",
+  "app_test_files_byte_identical": 167,
+  "native_and_docker_python": "1665 passed, 1 strict xfail",
+  "frontend_tests": 19,
+  "full_suites_repeated_for_measurement_only": false,
+  "prior_verification_sha256": "4c83fb2bcf86fd44a3b679f7eb3a3e6ce94b699e7539104ae39e70e4b0623cb8"
+}

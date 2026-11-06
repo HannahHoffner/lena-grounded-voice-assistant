@@ -1,0 +1,53 @@
+{
+  "application_text_version": "9",
+  "component_call_limits": {
+    "formulator": 0,
+    "interpreter": 15,
+    "selector": 0
+  },
+  "configured_timeouts": {
+    "formulator": 30.0,
+    "interpreter": 15.0,
+    "selector": 30.0
+  },
+  "created_at": "2026-10-22T13:51:16.476646+00:00",
+  "drinking_fountain_release_id": "20260802T122318Z-58d55e2ab090",
+  "end_to_end_assessment_version": "3",
+  "evidence_contract_version": "4",
+  "failure_limit": 16,
+  "formulator_contract_version": "5",
+  "formulator_measurement_mode": "application_path_with_bounded_retry",
+  "formulator_prompt_version": "22",
+  "git_commit": "597e1f0216c72eedd01b7b9e6d49be67ca8150f9",
+  "git_dirty": false,
+  "global_budget": 45.0,
+  "grounding_validator_version": "3",
+  "interpreter_contract_version": "4",
+  "interpreter_prompt_version": "11",
+  "maximum_tokens": {
+    "formulator": 4096,
+    "interpreter": 4096,
+    "selector": 4096
+  },
+  "provider_base_domain": "api.blablador.fz-juelich.de",
+  "provider_call_limit": 15,
+  "provider_name": "blablador",
+  "redacted_formulator_model_identifier": "alias-fast",
+  "redacted_interpreter_model_identifier": "alias-fast",
+  "redacted_model_identifier": "alias-large",
+  "redacted_selector_model_identifier": "alias-fast",
+  "request_limit": 15,
+  "run_id": "run_1977f38ae9474934b478bb4c5a83fa4c",
+  "runtime_kb_fingerprint": "9471e7051acb8d4e0fc62d59c1d74bb54f72cec1c28b6cffe291ac15499ec0d9",
+  "runtime_limit_seconds": 300.0,
+  "safety_policy_version": "2",
+  "scenario_hash": "0b99cff95d403bd3fdd242ffb73c96e0f21f804ca40ecda4afdcbd46c6c43dbf",
+  "selector_contract_version": "1",
+  "selector_prompt_version": "3",
+  "social_release_id": "legacy-3b72f95a88f9",
+  "software_version": "0.2.0",
+  "stage": "interpreter",
+  "synthetic_data_only": true,
+  "synthetic_scenario_catalog_version": "3",
+  "toilet_release_id": "20260802T055552Z-fce215d4e7bd"
+}

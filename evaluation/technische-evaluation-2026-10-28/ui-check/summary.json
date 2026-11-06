@@ -1,0 +1,34 @@
+{
+  "provider_calls": 0,
+  "new_manual_quality_ratings": false,
+  "results": [
+    {
+      "language": "en",
+      "tiles": 5,
+      "frontend_errors": [],
+      "phone_annotations_translated": true,
+      "screenshot": "en-cards.png"
+    },
+    {
+      "language": "pl",
+      "tiles": 3,
+      "frontend_errors": [],
+      "phone_annotations_translated": true,
+      "screenshot": "pl-cards.png"
+    },
+    {
+      "language": "ro",
+      "tiles": 1,
+      "frontend_errors": [],
+      "phone_annotations_translated": true,
+      "screenshot": "ro-cards.png"
+    },
+    {
+      "language": "ru",
+      "tiles": 1,
+      "frontend_errors": [],
+      "phone_annotations_translated": true,
+      "screenshot": "ru-cards.png"
+    }
+  ]
+}
